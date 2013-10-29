@@ -22,7 +22,7 @@ class TracksInfo(object):
     def loadFile(self, inputPath):
         """Load in a text file with lines of formant TrackName TrackPath"""
         self.pathMap = dict()
-        inputFile open(inputPath, "r")
+        inputFile = open(inputPath, "r")
         lineNo = 0
         for line in inputFile:
             lineNo += 1

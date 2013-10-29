@@ -103,7 +103,7 @@ class TrackData(object):
 on pybedtools """
 class BedTrackData(TrackData):
     def __init__(self, seqName, start, end, data, track):
-        super.__init__(self, seqName, start, end, data, track)
+        super(BedTrackData, self).__init__(seqName, start, end, data, track)
 
     def loadBedInterval(self, bedPath, useScore=False, updateMap=False):
         if not os.path.isfile(bedPath):
@@ -111,7 +111,7 @@ class BedTrackData(TrackData):
         bedTool = BedTool(bedPath)
         interval = Interval(self.seqName, self.start, self.end)
         # todo: check how efficient this is
-        for overlap in bedTool.allHits(interval):
+        for overlap in bedTool.all_hits(interval):
             start = max(self.start, overlap.start)
             end = min(self.end, overlap.end)
             assert start < end
@@ -119,5 +119,5 @@ class BedTrackData(TrackData):
                 val = overlap.score
             else:
                 val = overlap.name                
-            self.setRange(start, end, updateMap)
+            self.setRange(start, end, val, updateMap)
             
