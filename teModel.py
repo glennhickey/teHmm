@@ -47,9 +47,12 @@ class TEModel(object):
         self.__dict__.update(tmp_dict) 
 
     def save(self, modelPath):
+        dataTemp = self.data
+        self.data = None
         modelFile = open(modelPath,'wb')
-        cPickle.dump(self.__dict__, modelFile, 2)
+        pickle.dump(self.__dict__, modelFile, 2)
         modelFile.close()
+        self.data = dataTemp
         
     def loadTrackData(self, tracksInfoPath, seqName, start, end,
                       forTraining = False):

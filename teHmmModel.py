@@ -32,6 +32,12 @@ class TEHMMModel(TEModel):
         super(TEHMMModel, self).loadTrackData(tracksInfoPath, seqName,
                                               start, end, forTraining)
         self.flattenObservations()
+
+    def save(self, modelPath):
+        flatDataBackup = self.flatData
+        self.flatData = None
+        super(TEHMMModel, self).save(modelPath)
+        self.flatData = flatDataBackup
         
     def flattenObservations(self):
         """ hack to flatten observations into 1-d array since scikit hmm

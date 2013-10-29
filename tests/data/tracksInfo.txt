@@ -1,0 +1,3 @@
+cb tests/data/alyrata_chromBand.bed
+kmer tests/data/alyrata_kmer14.bed
+te2 tests/data/alyrata_scaffold1_teii3.7.bed
