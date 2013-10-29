@@ -45,6 +45,19 @@ class TestCase(TestBase):
         hmmModel.train()
         hmmModel.score()
 
+    def testPickle(self):
+        hmmModel = TEHMMModel()
+        hmmModel.initTracks(self.tiPath)
+        hmmModel.loadTrackData(self.tiPath, "scaffold_1", 3000050, 3000070,
+                               True)
+        hmmModel.create(2)
+        hmmModel.train()
+        picklePath = self.getTempFilePath()
+        hmmModel.save(picklePath)
+        hmmModel2 = TEHMMModel()
+        hmmModel2.load(picklePath)
+        assert hmmModel.toText() == hmmModel2.toText()
+
 def main():
     sys.argv = sys.argv[:1]
     unittest.main()

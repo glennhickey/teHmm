@@ -87,9 +87,8 @@ class TEHMMModel(TEModel):
         return self.hmm.score(self.flatData)
         
     def toText(self):
-        s = "NumStates = %d" % self.hmm.n_components
-        
-        
-        
-
-
+        s = "NumStates = %d\n" % self.hmm.n_components
+        s += "Start probs = %s\n" % self.hmm.startprob_
+        s += "Transitions =\n%s\n" % str(self.hmm.transmat_)
+        s += "Emissions =\n%s\n" % str(self.hmm.emissionprob_)
+        return s

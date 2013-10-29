@@ -32,7 +32,6 @@ def main(argv=None):
     hmmModel = TEHMMModel()
     hmmModel.load(args.inputModel)
     print hmmModel.toText()
-    print hmmModel.hmm
     
 if __name__ == "__main__":
     sys.exit(main())
