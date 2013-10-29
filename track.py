@@ -26,16 +26,16 @@ class TrackCategoryMap(object):
     def __init__(self):
         self.catMap = dict()
         
-    def update(val):
+    def update(self, val):
         if val not in self.catMap:
             newVal = len(self.catMap) + 1
             assert newVal not in self.catMap
             self.catMap[val] = newVal
         
-    def has(val):
+    def has(self, val):
         return val in self.catMap
         
-    def getMap(val):
+    def getMap(self, val):
         return self.catMap[val]
 
 """ map a range of values to an integer category """
@@ -45,13 +45,13 @@ class TrackRangeMap(object):
         self.intervalSize = intervalSize
         self.rangeSet = sortedset()
 
-    def update(val):
+    def update(self, val):
         pass
 
-    def has(val):
+    def has(self, val):
         return True
 
-    def getMap(val):
+    def getMap(self, val):
         return math.floor(val / self.intervalSize) + 1
         
 

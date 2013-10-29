@@ -37,11 +37,26 @@ class TestCase(unittest.TestCase):
         data = np.zeros((1, 20), np.int)
         bedData = BedTrackData("scaffold_1", 3000050, 3000070, data, track)
         bedData.loadBedInterval(ti.pathMap["cb"], False)
-        print data
         for i in xrange(10):
             assert data[0,i] == 4
         for i in xrange(11,20):
             assert data[0,i] == 5
+
+    def testCatMap(self):
+        ti = self.getTracksInfo()
+        track = Track("cb", 0, TrackCategoryMap())
+        data = np.zeros((1, 20), np.int)
+        bedData = BedTrackData("scaffold_1", 3000050, 3000070, data, track)
+        bedData.loadBedInterval(ti.pathMap["cb"], useScore=True,
+                                updateMap=True)
+        for i in xrange(10):
+            assert data[0,i] == 1
+        for i in xrange(11,20):
+            assert data[0,i] == 2
+
+        
+
+        
 
 def main():
     sys.argv = sys.argv[:1]
