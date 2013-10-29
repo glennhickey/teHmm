@@ -86,6 +86,10 @@ class TEHMMModel(TEModel):
         """ Return the log probability of the data """
         return self.hmm.score(self.flatData)
         
+    def toText(self):
+        s = "NumStates = %d" % self.hmm.n_components
+        
+        
         
 
 

@@ -42,8 +42,8 @@ class TEModel(object):
 
     def load(self, modelPath):
         modelFile = open(modelPath,'rb')
-        tmp_dict = cPickle.load(modelFile)
-        f.close()                  
+        tmp_dict = pickle.load(modelFile)
+        modelFile.close()                  
         self.__dict__.update(tmp_dict) 
 
     def save(self, modelPath):
