@@ -9,10 +9,6 @@ import os
 import argparse
 
 from teHmm.tracksInfo import TracksInfo
-from teHmm.track import *
-from teHmm.tests.common import getTestDirPath
-from teHmm.tests.common import TestBase
-from teHmm.tests.bedTrackTest import getTracksInfo
 from teHmm.teHmmModel import TEHMMModel
 
 
