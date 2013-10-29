@@ -35,7 +35,7 @@ class TracksInfo(object):
                 elif toks[0] in self.pathMap:
                     raise RuntimeError("Duplicate ine %d of %s" % (lineNo,
                                                                    inputPath))
-                elif not os.path.isfile(tosk[1]):
+                elif not os.path.isfile(toks[1]):
                     raise RuntimeError("Track file %s not found" % toks[1])
                 
                 self.pathMap[toks[0]] = toks[1]
@@ -52,5 +52,8 @@ class TracksInfo(object):
         else:
             return self.pathMap[trackName]
     
-        
-                 
+    def save(self, path):
+        outputFile = open(path, "w")
+        for (trackName, trackPath) in self.pathMap.items():
+            outputFile.write("%s %s\n" % (trackName, trackPath))
+        outputFile.close()
