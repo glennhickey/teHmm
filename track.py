@@ -67,8 +67,8 @@ class TrackData(object):
         assert end > start
         self.end = end
 
-        self.rows = data.shape[0]
-        self.cols = data.shape[1]
+        self.rows = data.shape[1]
+        self.cols = data.shape[0]
         assert track.number < self.rows
         assert self.end - self.start == self.cols 
         self.data = data
@@ -92,12 +92,12 @@ class TrackData(object):
                 mappedVal = self.track.valMap.getMap(val)
         #todo: change to numpy iterator nditer
         for i in xrange(start, end):
-            self.data[self.track.number][i - self.start] = mappedVal
+            self.data[i - self.start][self.track.number] = mappedVal
 
     def getVal(self, pos):
         assert pos >= self.start
         assert pos < self.start + self.getLength()
-        return self.data[self.track.number][pos - self.start]
+        return self.data[pos - self.start][self.track.number]
 
 """ Implementation of reading track from a Bed File.  Currently based
 on pybedtools """

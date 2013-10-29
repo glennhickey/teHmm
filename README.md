@@ -3,8 +3,9 @@ teHmm
 
 Prototype code for identification of transposable elements in annotated DNA sequence using a HMM.  
 
-Dependencies
+Dependencies (Make sure PATH and PYTHONPATH are updated accordingly)
 -----
 * numpy
-* bedtools (bin directory needs to be in path)
+* bedtools
 * pybedtools
+* scikit-learn

@@ -20,7 +20,7 @@ class TEModel(object):
         #: list of tracks
         self.tracks = None
         #: annotation array
-        self.trackData = None
+        self.data = None
         
     def initTracks(self, tracksInfoPath):
         """either the TEModel is already trained and loaded from a pickle,
@@ -36,7 +36,7 @@ class TEModel(object):
     def checkTrackNumbers(self):
         assert self.tracks is not None
         numbers = dict()
-        for track in self.tracks:
+        for trackName, track in self.tracks.items():
             assert track.number not in numbers
             numbers[track.number] = True
 
@@ -58,15 +58,16 @@ class TEModel(object):
         self.checkTrackNumbers()
         numTracks = len(self.tracks)
         trackLen = end - start
-        if self.trackData is None or self.trackData.shape[0] != numTracks \
-           or self.trackData.shape[1] != trackLen:
+        if self.data is None or self.data.shape[1] != numTracks \
+           or self.data.shape[0] != trackLen:
             # note will need to review hardcoding of np.int here
-            self.trackData = np.empty((numTracks, trackLen), np.int)
-        for x in np.nditer(self.trackData, op_flags='write'):
+            self.data = np.empty((trackLen, numTracks), np.int)
+        for x in np.nditer(self.data, op_flags=['readwrite']):
             x[...] = 0
 
         tinfo = TracksInfo(tracksInfoPath)
-        for trackName, trackPath in tinfo.pathMap:
+        for trackName, trackPath in tinfo.pathMap.items():
+            trackExt = os.path.splitext(trackPath)[1]
             if trackExt != ".bed":
                 sys.stderr.write("Warning: non-BED file skipped %s\n" %
                                  trackPath)
@@ -76,8 +77,8 @@ class TEModel(object):
                                  trackName)
                 continue
             track = self.tracks[trackName]
-            trackData = BedTrackData(seqName, start, end, self.data, track)
-            trackData.loadBedInterval(trackPath, False, forTraining)
+            bedData = BedTrackData(seqName, start, end, self.data, track)
+            bedData.loadBedInterval(trackPath, False, forTraining)
 
     def tracks(self):
         for trackName, track in self.tracks:

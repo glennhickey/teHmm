@@ -32,25 +32,25 @@ class TestCase(TestBase):
     def testBedQuery(self):
         ti = getTracksInfo()
         track = Track("cb", 0, None)
-        data = np.zeros((1, 20), np.int)
+        data = np.zeros((20, 1), np.int)
         bedData = BedTrackData("scaffold_1", 3000050, 3000070, data, track)
         bedData.loadBedInterval(ti.pathMap["cb"], False)
         for i in xrange(10):
-            assert data[0,i] == 4
+            assert data[i, 0] == 4
         for i in xrange(11,20):
-            assert data[0,i] == 5
+            assert data[i, 0] == 5
 
     def testCatMap(self):
         ti = getTracksInfo()
         track = Track("cb", 0, TrackCategoryMap())
-        data = np.zeros((1, 20), np.int)
+        data = np.zeros((20, 1), np.int)
         bedData = BedTrackData("scaffold_1", 3000050, 3000070, data, track)
         bedData.loadBedInterval(ti.pathMap["cb"], useScore=True,
                                 updateMap=True)
         for i in xrange(10):
-            assert data[0,i] == 1
+            assert data[i, 0] == 1
         for i in xrange(11,20):
-            assert data[0,i] == 2
+            assert data[i, 0] == 2
 
 def main():
     sys.argv = sys.argv[:1]

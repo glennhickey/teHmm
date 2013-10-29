@@ -29,7 +29,21 @@ class TestCase(TestBase):
         hmmModel = TEHMMModel()
         hmmModel.initTracks(self.tiPath)
         assert len(hmmModel.tracks) == getTracksInfo().getNumTracks()
-        
+
+    def testLoadData(self):
+        hmmModel = TEHMMModel()
+        hmmModel.initTracks(self.tiPath)
+        hmmModel.loadTrackData(self.tiPath, "scaffold_1", 3000050, 3000070,
+                               True)
+
+    def testTrain(self):
+        hmmModel = TEHMMModel()
+        hmmModel.initTracks(self.tiPath)
+        hmmModel.loadTrackData(self.tiPath, "scaffold_1", 3000050, 3000070,
+                               True)
+        hmmModel.create(2)
+        hmmModel.train()
+        hmmModel.score()
 
 def main():
     sys.argv = sys.argv[:1]
