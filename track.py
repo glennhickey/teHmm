@@ -8,9 +8,21 @@
 import os
 import sys
 import numpy as np
+from pybedtools import BedTool, Interval
 
+"""meta data for a track that may get saved as part of a trained model"""
+class Track(object):
+    def __init__(self, name = None, number = None, valMap = None):
+        #: Name of track
+        self.name = name
+        #: Unique integer id, also will be track's row in data array
+        self.number = number
+        #: Optional mapping class (see below) to convert data values into
+        #: numeric format
+        self.valMap = valMap
+        
 """ map a value to an integer category """
-def TrackCategoryMap(object):
+class TrackCategoryMap(object):
     def __init__(self):
         self.catMap = dict()
         
@@ -27,7 +39,7 @@ def TrackCategoryMap(object):
         return self.catMap[val]
 
 """ map a range of values to an integer category """
-def TrackRangeMap(object):
+class TrackRangeMap(object):
     def __init__self(self, intervalSize):
         assert intervalSize > 0
         self.intervalSize = intervalSize
@@ -43,25 +55,27 @@ def TrackRangeMap(object):
         return math.floor(val / self.intervalSize) + 1
         
 
-""" Vector of annotations for a genomic region
+""" Vector of annotations for a genomic region.  Array and row index
+are passed as input.
 """
-def Track(object):
-    def __init__(self, seqName, start, end, dataType=int, valMap=None):
+class TrackData(object):
+    def __init__(self, seqName, start, end, data, track):
         #: Name of Sequence (or Chromosome)
         self.seqName = seqName
         #: Start Position in sequence
         self.start = start
         assert end > start
-        #: Init empty array.  Note that 0 is same as no value here
-        self.data = np.zeroes((end - start,), dtype=dataType)
-        #: Map input values to numeric values if necessary
-        self.valMap = valMap
+        self.end = end
+
+        self.rows = data.shape[0]
+        self.cols = data.shape[1]
+        assert track.number < self.rows
+        assert self.end - self.start == self.cols 
+        self.data = data
+        self.track = track
 
     def getLength(self):
-        return self.data.shape[0]
-
-    def getRange(self):
-        return (self.start, self.start + self.getLength())
+        return self.cols
     
     def setRange(self, start, end, val, updateMap=False):
         """ set an array entry, mapping to a numeric value using
@@ -69,17 +83,41 @@ def Track(object):
         assert start >= self.start
         assert end <= self.start + self.getLength()
         mappedVal = val
-        if self.valMap is not None:
-            if updateMap is True and self.valMap.has(val) is False:
-                self.valMap.update(val)
-            if self.valMap.has(val) is False:
+        if self.track.valMap is not None:
+            if updateMap is True and self.track.valMap.has(val) is False:
+                self.track.valMap.update(val)
+            if self.track.valMap.has(val) is False:
                 mappedVal = 0
             else:
-                mappedVal = self.valMap.getMap(val)
+                mappedVal = self.track.valMap.getMap(val)
+        #todo: change to numpy iterator nditer
         for i in xrange(start, end):
-            self.data[i - self.start] = mappedVal
+            self.data[self.track.number][i - self.start] = mappedVal
 
     def getVal(self, pos):
         assert pos >= self.start
         assert pos < self.start + self.getLength()
-        return self.data[pos - self.start]
+        return self.data[self.track.number][pos - self.start]
+
+""" Implementation of reading track from a Bed File.  Currently based
+on pybedtools """
+class BedTrackData(TrackData):
+    def __init__(self, seqName, start, end, data, track):
+        super.__init__(self, seqName, start, end, data, track)
+
+    def loadBedInterval(self, bedPath, useScore=False, updateMap=False):
+        if not os.path.isfile(bedPath):
+            raise RuntimeError("BED file not found %s" % bedPath)
+        bedTool = BedTool(bedPath)
+        interval = Interval(self.seqName, self.start, self.end)
+        # todo: check how efficient this is
+        for overlap in bedTool.allHits(interval):
+            start = max(self.start, overlap.start)
+            end = min(self.end, overlap.end)
+            assert start < end
+            if useScore is True:
+                val = overlap.score
+            else:
+                val = overlap.name                
+            self.setRange(start, end, updateMap)
+            

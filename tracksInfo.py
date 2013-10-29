@@ -11,7 +11,7 @@ import sys
 """ Read some tracks info.  For now just a map between track name
 and track path.  
 """
-def TracksInfo(object):
+class TracksInfo(object):
     def __init__(self, inputPath = None):
         #: Store list of paths as mapped to track names
         #: (spaces not supported for now)
@@ -39,6 +39,7 @@ def TracksInfo(object):
                     raise RuntimeError("Track file %s not found" % toks[1])
                 
                 self.pathMap[toks[0]] = toks[1]
+        inputFile.close()
 
     def getNumTracks(self):
         """Number of tracks for model"""
