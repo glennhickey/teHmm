@@ -106,7 +106,7 @@ class TEHMMModel(TEModel):
         """
         prob, states = self.hmm.decode(self.flatData)
         assert len(states) == len(self.flatData)
-        return (prob, states)
+        return (prob, self.unflattenStates(states))
         
     def toText(self):
         s = "NumStates = %d\n" % self.hmm.n_components
