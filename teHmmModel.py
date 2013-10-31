@@ -26,6 +26,8 @@ class TEHMMModel(TEModel):
         self.flatMap = None
         #: 1-d version of data (unique entry for each vector)
         self.flatData = None
+        #: reverse version of flatMap
+        self.flatMapBack = None
 
     def loadTrackData(self, tracksInfoPath, seqName, start, end,
                       forTraining = False):
@@ -43,6 +45,7 @@ class TEHMMModel(TEModel):
         """ hack to flatten observations into 1-d array since scikit hmm
         doesn't support multidemnsional output """
         self.flatMap = dict()
+        self.flatMapBack = dict()
         self.flatData = np.zeros((self.data.shape[0], ), dtype=np.int)
         for col in xrange(self.data.shape[0]):
             entry = tuple(self.data[col])
@@ -51,7 +54,18 @@ class TEHMMModel(TEModel):
             else:
                 val = len(self.flatMap)
                 self.flatMap[entry] = val
+                self.flatMapBack[val] = entry
             self.flatData[col] = val
+
+    def unflattenStates(self, states):
+        """ transforms the 1-d array back into a multidimensional array """
+        numTracks = len(self.tracks)        
+        unpackedStates = np.empty((len(states), numTracks), np.int)
+        for i in xrange(len(states)):
+            uState = self.flatMapBack[states[i]]
+            for j in xrange(numTracks):
+                unpackedStates[i,j] = uState[j]
+        return unpackedStates
 
     def create(self, numStates):
         """ Create the sckit learn multinomial hmm """

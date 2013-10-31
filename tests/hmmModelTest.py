@@ -58,6 +58,17 @@ class TestCase(TestBase):
         hmmModel2.load(picklePath)
         assert hmmModel.toText() == hmmModel2.toText()
 
+    def testPack(self):
+        hmmModel = TEHMMModel()
+        hmmModel.initTracks(self.tiPath)
+        hmmModel.loadTrackData(self.tiPath, "scaffold_1", 3000050, 3000070,
+                               True)
+        hmmModel.create(2)
+        flatStates = hmmModel.flatData
+        normalStates = hmmModel.data
+        unpackedStates = hmmModel.unflattenStates(flatStates)
+        assert np.array_equal(normalStates, unpackedStates)
+
 def main():
     sys.argv = sys.argv[:1]
     unittest.main()
