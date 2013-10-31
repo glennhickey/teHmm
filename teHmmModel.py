@@ -85,6 +85,14 @@ class TEHMMModel(TEModel):
     def score(self):
         """ Return the log probability of the data """
         return self.hmm.score(self.flatData)
+
+    def viterbi(self):
+        """ Return the output of the Viterbi algorithm on the loaded
+        data: a tuple of (log likelihood of best path, and the path itself)
+        """
+        prob, states = self.hmm.decode(self.flatData)
+        assert len(states) == len(self.flatData)
+        return (prob, states)
         
     def toText(self):
         s = "NumStates = %d\n" % self.hmm.n_components
