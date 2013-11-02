@@ -24,8 +24,8 @@ class TEHMMModel(TEModel):
         self.hmm = None
         #: map from self.data -> self.flatData
         self.flatMap = None
-        #: 1-d version of data (unique entry for each vector)
-        self.flatData = None
+        #: 1-d version of dataList (unique entry for each vector)
+        self.flatDataList = None
         #: reverse version of flatMap
         self.flatMapBack = None
 
@@ -36,26 +36,29 @@ class TEHMMModel(TEModel):
         self.flattenObservations()
 
     def save(self, modelPath):
-        flatDataBackup = self.flatData
+        flatDataBackup = self.flatDataList
         self.flatData = None
         super(TEHMMModel, self).save(modelPath)
-        self.flatData = flatDataBackup
+        self.flatDataList = flatDataBackup
         
     def flattenObservations(self):
         """ hack to flatten observations into 1-d array since scikit hmm
         doesn't support multidemnsional output """
         self.flatMap = dict()
         self.flatMapBack = dict()
-        self.flatData = np.zeros((self.data.shape[0], ), dtype=np.int)
-        for col in xrange(self.data.shape[0]):
-            entry = tuple(self.data[col])
-            if entry in self.flatMap:
-                val = self.flatMap[entry]
-            else:
-                val = len(self.flatMap)
-                self.flatMap[entry] = val
-                self.flatMapBack[val] = entry
-            self.flatData[col] = val
+        self.flatDataList = []
+        for data in self.dataList:
+            flatData = np.zeros((data.shape[0], ), dtype=np.int)
+            for col in xrange(data.shape[0]):
+                entry = tuple(data[col])
+                if entry in self.flatMap:
+                    val = self.flatMap[entry]
+                else:
+                    val = len(self.flatMap)
+                    self.flatMap[entry] = val
+                    self.flatMapBack[val] = entry
+                flatData[col] = val
+            self.flatDataList.append(flatData)
 
     def unflattenStates(self, states):
         """ transforms the 1-d array back into a multidimensional array """
@@ -94,19 +97,25 @@ class TEHMMModel(TEModel):
         Note that tracks and track data must already be read.  Should be
         wrapped up in simpler interface later... """
 
-        self.hmm.fit([self.flatData])
+        self.hmm.fit(self.flatDataList)
 
     def score(self):
         """ Return the log probability of the data """
-        return self.hmm.score(self.flatData)
+        score = 0.0
+        for flatData in self.flatDataList:
+            score += self.hmm.score(flatData)
+        return score
 
     def viterbi(self):
         """ Return the output of the Viterbi algorithm on the loaded
         data: a tuple of (log likelihood of best path, and the path itself)
         """
-        prob, states = self.hmm.decode(self.flatData)
-        assert len(states) == len(self.flatData)
-        return (prob, self.unflattenStates(states))
+        output = []
+        for flatData in self.flatDataList:
+            prob, states = self.hmm.decode(self.flatData)
+            assert len(states) == len(self.flatData)
+            ouput.append(prob, self.unflattenStates(states))
+        return output
         
     def toText(self):
         s = "NumStates = %d\n" % self.hmm.n_components

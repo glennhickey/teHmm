@@ -19,8 +19,8 @@ class TEModel(object):
     def __init__(self):
         #: list of tracks
         self.tracks = None
-        #: annotation array
-        self.data = None
+        #: list of numpy annotation arrays
+        self.dataList = None
         
     def initTracks(self, tracksInfoPath):
         """either the TEModel is already trained and loaded from a pickle,
@@ -47,25 +47,32 @@ class TEModel(object):
         self.__dict__.update(tmp_dict) 
 
     def save(self, modelPath):
-        dataTemp = self.data
-        self.data = None
+        dataTemp = self.dataList
+        self.dataList = None
         modelFile = open(modelPath,'wb')
         pickle.dump(self.__dict__, modelFile, 2)
         modelFile.close()
-        self.data = dataTemp
-        
+        self.dataList = dataTemp
+
+    def loadMultipleTackData(self, tracksInfoPath, bedPath,
+                             forTraining = False):
+        """call loadTrackData on each interval of bed file"""
+        def loadFeature(feature):
+            self.loadTrackData(tracksInfoPath, feature.chrom, feature.start,
+                               feature.end, forTraining)
+        bedTool = BedTool(bedPath)
+        bedTool.each(loadFeature)
+    
     def loadTrackData(self, tracksInfoPath, seqName, start, end,
                       forTraining = False):
-        """load up a slice of track data"""
+        """load up a slice of track data and append it to self.dataList"""
         assert self.tracks is not None and len(self.tracks) > 0
         self.checkTrackNumbers()
         numTracks = len(self.tracks)
         trackLen = end - start
-        if self.data is None or self.data.shape[1] != numTracks \
-           or self.data.shape[0] != trackLen:
-            # note will need to review hardcoding of np.int here
-            self.data = np.empty((trackLen, numTracks), np.int)
-        for x in np.nditer(self.data, op_flags=['readwrite']):
+        
+        data = np.empty((trackLen, numTracks), np.int)
+        for x in np.nditer(data, op_flags=['readwrite']):
             x[...] = 0
 
         tinfo = TracksInfo(tracksInfoPath)
@@ -80,8 +87,12 @@ class TEModel(object):
                                  trackName)
                 continue
             track = self.tracks[trackName]
-            bedData = BedTrackData(seqName, start, end, self.data, track)
+            bedData = BedTrackData(seqName, start, end, data, track)
             bedData.loadBedInterval(trackPath, False, forTraining)
+            
+        if self.dataList is None:
+            self.dataList = []
+        self.dataList.append(data)
 
     def tracks(self):
         for trackName, track in self.tracks:

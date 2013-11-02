@@ -64,8 +64,8 @@ class TestCase(TestBase):
         hmmModel.loadTrackData(self.tiPath, "scaffold_1", 3000050, 3000070,
                                True)
         hmmModel.create(2)
-        flatStates = hmmModel.flatData
-        normalStates = hmmModel.data
+        flatStates = hmmModel.flatDataList[0]
+        normalStates = hmmModel.dataList[0]
         unpackedStates = hmmModel.unflattenStates(flatStates)
         assert np.array_equal(normalStates, unpackedStates)
 
