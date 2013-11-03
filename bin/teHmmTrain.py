@@ -23,10 +23,8 @@ def main(argv=None):
     parser.add_argument("tracksInfo", help="Path of Tracks Info file "
                         "containing paths to genome annotation tracks")
     parser.add_argument("outputModel", help="Path of output hmm")
-    parser.add_argument("sequence", help="Name of sequence (ex chr1, "
-                        " scaffold_1) etc.")
-    parser.add_argument("start", help="Start position", type=int)
-    parser.add_argument("end", help="End position (last plus 1)", type=int)
+    parser.add_argument("trainingBed", help="Path of BED file containing elements to train"
+                        " model on")
     parser.add_argument("--numStates", help="Number of states in model",
                         type = int, default=2)
     parser.add_argument("--iter", help="Number of EM iterations",
@@ -36,10 +34,8 @@ def main(argv=None):
 
     hmmModel = TEHMMModel()
     hmmModel.initTracks(args.tracksInfo)
-    hmmModel.loadTrackData(args.tracksInfo, args.sequence, args.start,
-                           args.end, True)
-
-    hmmModel.create(args.numStates)
+    hmmModel.loadMultipleTrackData(args.tracksInfo, args.trainingBed, True)
+    hmmModel.create(args.numStates, args.iter)
     hmmModel.train()
     hmmModel.save(args.outputModel)
     

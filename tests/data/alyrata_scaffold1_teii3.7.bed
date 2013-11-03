@@ -1,4 +1,4 @@
-chrom	chromStart	chromEnd	name	score	strand	thickStart	thickEnd	reserved
+#chrom	chromStart	chromEnd	name	score	strand	thickStart	thickEnd	reserved
 scaffold_1	22086	22379	13378-305812968+	352	+	22086	22379	16711680
 scaffold_1	22087	22901	2855-574973880+ATA	105	+	22087	22901	16711680
 scaffold_1	22367	22906	22256-15347983+ATTA	305	+	22367	22906	16711680

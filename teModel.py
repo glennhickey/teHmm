@@ -11,6 +11,7 @@ import numpy as np
 import pickle
 from tracksInfo import TracksInfo
 from track import Track, BedTrackData, TrackCategoryMap
+from pybedtools import BedTool, Interval
 
 """
 Model for a transposable element.  Gets trained by a set of tracks.  
@@ -54,14 +55,13 @@ class TEModel(object):
         modelFile.close()
         self.dataList = dataTemp
 
-    def loadMultipleTackData(self, tracksInfoPath, bedPath,
+    def loadMultipleTrackData(self, tracksInfoPath, bedPath,
                              forTraining = False):
         """call loadTrackData on each interval of bed file"""
-        def loadFeature(feature):
+        bedTool = BedTool(bedPath)
+        for feature in bedTool:
             self.loadTrackData(tracksInfoPath, feature.chrom, feature.start,
                                feature.end, forTraining)
-        bedTool = BedTool(bedPath)
-        bedTool.each(loadFeature)
     
     def loadTrackData(self, tracksInfoPath, seqName, start, end,
                       forTraining = False):

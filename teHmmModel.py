@@ -70,7 +70,7 @@ class TEHMMModel(TEModel):
                 unpackedStates[i,j] = uState[j]
         return unpackedStates
 
-    def create(self, numStates):
+    def create(self, numStates, numIter = 10):
         """ Create the sckit learn multinomial hmm """
 
         # Create some crappy start values to try to get model to not crash
@@ -89,7 +89,8 @@ class TEHMMModel(TEModel):
 
         self.hmm = MultinomialHMM(n_components = numStates,
                                   startprob = startprob,
-                                  transmat = transmat)
+                                  transmat = transmat,
+                                  n_iter = numIter)
         self.hmm.emissionprob_ = emissionprob
 
     def train(self):
