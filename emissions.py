@@ -111,7 +111,12 @@ class IndependentMultinomialEmissionModel(object):
                     obsStats[track][state, obsVal] += posteriors[i, state]
         return obsStats
         
-    def maximimze(self, stats):
+    def maximimze(self, obsStats):
         for track in xrange(self.numTracks):
-            self.params[track] = (stats['obs']
-                                  / stats['obs'].sum(1)[:, np.newaxis])
+            for state in xrange(self.numStates):
+                totalSymbol = 0.0
+                for symbol in xrange(self.numSymbolsPerTrack[track]):
+                    totalSymbol += obsStats[track][state, symbol]
+                for symbol in xrange(self.numSymbolsPerTrack[track]):
+                    symbolProb = obsStats[track][state, symbol] / totalSymbol
+                    self.logProbs[track][state, symbol] = symbolProb
