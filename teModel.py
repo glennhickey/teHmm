@@ -97,4 +97,11 @@ class TEModel(object):
     def tracks(self):
         for trackName, track in self.tracks:
             yield track
-        
+
+    def getNumSymbolsPerTrack(self):
+        nspt = [0] * len(self.tracks)
+        for trackName, track in self.tracks.items():
+            # always have at least 1 track value '0'
+            numSymbols = 1 + len(track.valMap)
+            nspt[track.number] = numSymbols
+        return nspt

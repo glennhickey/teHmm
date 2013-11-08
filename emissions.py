@@ -33,8 +33,11 @@ class IndependentMultinomialEmissionModel(object):
         self.numTracks = len(numSymbolsPerTrack)
         self.numSymbolsPerTrack = numSymbolsPerTrack
         # [TRACK, STATE, SYMBOL]
-        self.logProbs = []
+        self.logProbs = None
 
+    def getLogProbs(self):
+        return self.logProbs
+    
     def initParams(self, params = None):
         """ initalize emission parameters such that all values are
         equally probable for each category"""
@@ -47,11 +50,10 @@ class IndependentMultinomialEmissionModel(object):
                     stateList.append(
                         normalize(1. + np.zeros(self.numSymbolsPerTrack[i],
                                                 dtype=np.float)))
-            self.logProbs.append(stateList)
-        
+                self.logProbs.append(stateList)
         else:
             self.logProbs = params
-        
+
         assert len(self.logProbs) == self.numTracks
         for i in xrange(self.numTracks):
             assert len(self.logProbs[i]) == self.numStates
@@ -62,7 +64,7 @@ class IndependentMultinomialEmissionModel(object):
         """ Compute the log probability of a single observation, obs given
         a state."""
         assert state < self.numStates
-        logProb = 0. 
+        logProb = 0.
         for track in xrange(self.numTracks):
             obsSymbol = singleObs[track]
             assert obsSymbol < self.numSymbolsPerTrack[track]
@@ -104,14 +106,16 @@ class IndependentMultinomialEmissionModel(object):
         """ For each observation, add the posterior probability of each state at
         that position, to the emission table.  Note that tracks are also
         treated completely independently here"""
+        assert obs.shape[1] == self.numTracks
+        
         for i in xrange(len(obs)):
             for track in xrange(self.numTracks):
                 for state in xrange(self.numStates):
-                    obsVal = obs[i][track]
+                    obsVal = obs[i,track]
                     obsStats[track][state, obsVal] += posteriors[i, state]
         return obsStats
         
-    def maximimze(self, obsStats):
+    def maximize(self, obsStats):
         for track in xrange(self.numTracks):
             for state in xrange(self.numStates):
                 totalSymbol = 0.0
@@ -119,4 +123,4 @@ class IndependentMultinomialEmissionModel(object):
                     totalSymbol += obsStats[track][state, symbol]
                 for symbol in xrange(self.numSymbolsPerTrack[track]):
                     symbolProb = obsStats[track][state, symbol] / totalSymbol
-                    self.logProbs[track][state, symbol] = symbolProb
+                    self.logProbs[track][state][symbol] = symbolProb

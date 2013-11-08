@@ -9,9 +9,82 @@ import os
 import sys
 import numpy as np
 import pickle
-from teModel import TEModel
+import string
+from .teModel import TEModel
+from .emissions import IndependentMultinomialEmissionModel
+
+from sklearn.hmm import _BaseHMM
 from sklearn.hmm import MultinomialHMM
 from sklearn.hmm import GaussianHMM
+from sklearn.utils import check_random_state, deprecated
+from sklearn.utils.extmath import logsumexp
+from sklearn.base import BaseEstimator
+from sklearn.hmm import cluster
+from sklearn.hmm import _hmmc
+from sklearn.hmm import normalize
+from sklearn.hmm import NEGINF
+
+"""
+This class is based on the MultinomialHMM from sckikit-learn, but we make
+the emission model a parameter. The custom emission model we support at this
+point is a multi-*dimensional* multinomial. 
+"""
+class TEHmm(_BaseHMM):
+    def __init__(self, emissionModel, n_components=1, startprob=None,
+                 transmat=None, startprob_prior=None, transmat_prior=None,
+                 algorithm="viterbi", random_state=None,
+                 n_iter=10, thresh=1e-2, params=string.ascii_letters,
+                 init_params=string.ascii_letters):
+        """Create a hidden Markov model with multinomial emissions.
+        emissionModel must have already been created"""
+        _BaseHMM.__init__(self, n_components, startprob, transmat,
+                          startprob_prior=startprob_prior,
+                          transmat_prior=transmat_prior,
+                          algorithm=algorithm,
+                          random_state=random_state,
+                          n_iter=n_iter,
+                          thresh=thresh,
+                          params=params,
+                          init_params=init_params)
+        self.emissionModel = emissionModel
+
+    def _compute_log_likelihood(self, obs):
+        return self.emissionModel.allLogProbs(obs)
+
+    def _generate_sample_from_state(self, state, random_state=None):
+        return self.emissionModel.sample(state)
+
+    def _init(self, obs, params='ste'):
+        super(TEHmm, self)._init(obs, params=params)
+        self.emissionModel.initParams()
+
+    def _initialize_sufficient_statistics(self):
+        stats = super(TEHmm, self)._initialize_sufficient_statistics()
+        stats['obs'] = self.emissionModel.initStats()
+        return stats
+    
+    def _accumulate_sufficient_statistics(self, stats, obs, framelogprob,
+                                          posteriors, fwdlattice, bwdlattice,
+                                          params):
+        super(TEHmm, self)._accumulate_sufficient_statistics(
+            stats, obs, framelogprob, posteriors, fwdlattice, bwdlattice,
+            params)
+        if 'e' in params:
+            self.emissionModel.accumulateStats(obs, stats['obs'], posteriors)
+
+    def _do_mstep(self, stats, params):
+        super(TEHmm, self)._do_mstep(stats, params)
+        if 'e' in params:
+            self.emissionModel.maximize(stats['obs'])
+
+    def fit(self, obs, **kwargs):
+        err_msg = ("Input must be both positive integer array and "
+                   "every element must be continuous, but %s was given.")
+
+#        if not self._check_input_symbols(obs):
+#            raise ValueError(err_msg % obs)
+
+        return _BaseHMM.fit(self, obs, **kwargs)
 
 """
 HMM Model for a transposable element.  Gets trained by a set of tracks.
@@ -73,38 +146,30 @@ class TEHMMModel(TEModel):
     def create(self, numStates, numIter = 10):
         """ Create the sckit learn multinomial hmm """
 
-        # Create some crappy start values to try to get model to not crash
-        startprob = []
-        for i in xrange(numStates):
-            startprob.append(1. / float(numStates))
-        transmat = []
-        for i in xrange(numStates):
-            transmat.append(startprob)
-        emissionrow = []
-        for i in xrange(len(self.tracks)):
-            emissionrow.append(1. / float(len(self.tracks)))
-        emissionprob = []
-        for i in xrange(numStates):
-            emissionprob.append(emissionrow)
-
-        self.hmm = MultinomialHMM(n_components = numStates,
-                                  startprob = startprob,
-                                  transmat = transmat,
+        flatEmissionModel = IndependentMultinomialEmissionModel(
+            numStates=numStates,
+            numSymbolsPerTrack=self.getNumSymbolsPerTrack())
+        
+        self.hmm = TEHmm(emissionModel = flatEmissionModel,
+                         n_components = numStates,
+       # self.hmm = MultinomialHMM(n_components = numStates,
                                   n_iter = numIter)
-        self.hmm.emissionprob_ = emissionprob
 
     def train(self):
         """ Use EM to estimate best parameters from scratch (unsupervised)
         Note that tracks and track data must already be read.  Should be
         wrapped up in simpler interface later... """
 
-        self.hmm.fit(self.flatDataList)
+        #self.hmm.fit(self.flatDataList)
+        self.hmm.fit(self.dataList)
 
     def score(self):
         """ Return the log probability of the data """
         score = 0.0
-        for flatData in self.flatDataList:
-            score += self.hmm.score(flatData)
+        #for flatData in self.flatDataList:
+        #    score += self.hmm.score(flatData)
+        for data in self.dataList:
+            score += self.hmm.score(data)
         return score
 
     def viterbi(self):
@@ -112,15 +177,20 @@ class TEHMMModel(TEModel):
         data: a tuple of (log likelihood of best path, and the path itself)
         """
         output = []
+        #for flatData in self.flatDataList:
+        #    prob, states = self.hmm.decode(self.flatData)
+        #    assert len(states) == len(self.flatData)
+        #    ouput.append(prob, self.unflattenStates(states))
         for flatData in self.flatDataList:
             prob, states = self.hmm.decode(self.flatData)
             assert len(states) == len(self.flatData)
             ouput.append(prob, self.unflattenStates(states))
+
         return output
         
     def toText(self):
         s = "NumStates = %d\n" % self.hmm.n_components
         s += "Start probs = %s\n" % self.hmm.startprob_
         s += "Transitions =\n%s\n" % str(self.hmm.transmat_)
-        s += "Emissions =\n%s\n" % str(self.hmm.emissionprob_)
+        s += "Emissions =\n%s\n" % str(self.hmm.emissionModel.getLogProbs())
         return s

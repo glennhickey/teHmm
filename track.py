@@ -38,6 +38,9 @@ class TrackCategoryMap(object):
     def getMap(self, val):
         return self.catMap[val]
 
+    def __len__(self):
+        return len(self.catMap)
+
 """ map a range of values to an integer category """
 class TrackRangeMap(object):
     def __init__self(self, intervalSize):
