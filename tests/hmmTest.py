@@ -9,10 +9,13 @@ import os
 
 from teHmm.tracksInfo import TracksInfo
 from teHmm.track import *
-from teHmm.tests.common import getTestDirPath
-from teHmm.tests.common import TestBase
-from teHmm.tests.bedTrackTest import getTracksInfo
-from teHmm.teHmmModel import TEHMMModel
+from teHmm.hmm import MultitrackHmm
+
+from .common import getTestDirPath
+from .common import TestBase
+from .bedTrackTest import getTracksInfo
+from .bedTrackTest import getTracksInfoPath
+
 
 class TestCase(TestBase):
 
@@ -26,18 +29,18 @@ class TestCase(TestBase):
         super(TestCase, self).tearDown()
 
     def testInit(self):
-        hmmModel = TEHMMModel()
+        hmmModel = HmmModel()
         hmmModel.initTracks(self.tiPath)
         assert len(hmmModel.tracks) == getTracksInfo().getNumTracks()
 
     def testLoadData(self):
-        hmmModel = TEHMMModel()
+        hmmModel = HmmModel()
         hmmModel.initTracks(self.tiPath)
         hmmModel.loadTrackData(self.tiPath, "scaffold_1", 3000050, 3000070,
                                True)
 
     def testTrain(self):
-        hmmModel = TEHMMModel()
+        hmmModel = HmmModel()
         hmmModel.initTracks(self.tiPath)
         hmmModel.loadTrackData(self.tiPath, "scaffold_1", 3000050, 3000070,
                                True)
@@ -46,7 +49,7 @@ class TestCase(TestBase):
         hmmModel.score()
 
     def testPickle(self):
-        hmmModel = TEHMMModel()
+        hmmModel = HmmModel()
         hmmModel.initTracks(self.tiPath)
         hmmModel.loadTrackData(self.tiPath, "scaffold_1", 3000050, 3000070,
                                True)
@@ -54,12 +57,12 @@ class TestCase(TestBase):
         hmmModel.train()
         picklePath = self.getTempFilePath()
         hmmModel.save(picklePath)
-        hmmModel2 = TEHMMModel()
+        hmmModel2 = HmmModel()
         hmmModel2.load(picklePath)
         assert hmmModel.toText() == hmmModel2.toText()
 
     def testPack(self):
-        hmmModel = TEHMMModel()
+        hmmModel = HmmModel()
         hmmModel.initTracks(self.tiPath)
         hmmModel.loadTrackData(self.tiPath, "scaffold_1", 3000050, 3000070,
                                True)

@@ -9,7 +9,7 @@ import os
 import numpy as np
 import math
 
-from teHmm.emissions import IndependentMultinomialEmissionModel
+from teHmm.emission import IndependentMultinomialEmissionModel
 from teHmm.tests.common import getTestDirPath
 from teHmm.tests.common import TestBase
 from teHmm.tests.bedTrackTest import getTracksInfo

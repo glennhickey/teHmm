@@ -9,12 +9,12 @@ import sys
 import os
 from teHmm.tests.bedTrackTest import TestCase as bedTrackTest
 from teHmm.tests.emissionTest import TestCase as emissionTest
-from teHmm.tests.hmmModelTest import TestCase as hmmModelTest
+from teHmm.tests.hmmTest import TestCase as hmmTest
 
 def allSuites(): 
     allTests = unittest.TestSuite((unittest.makeSuite(bedTrackTest, 'test'),
                                    unittest.makeSuite(emissionTest, 'test'),
-                                   unittest.makeSuite(hmmModelTest, 'test')))
+                                   unittest.makeSuite(hmmTest, 'test')))
     return allTests
         
 def main():    
