@@ -26,8 +26,8 @@ class TestCase(TestBase):
         #two states, 1 track, 2 symbols
         em = IndependentMultinomialEmissionModel(numStates=2,
                                                  numSymbolsPerTrack = [2])
-        state1 = [math.log(0.2), math.log(0.8)]
-        state2 = [math.log(0.5), math.log(0.5)]
+        state1 = [0.2, 0.8]
+        state2 = [0.5, 0.5]
         track1 = [state1, state2]
         em.initParams([track1])
         return em
@@ -36,10 +36,10 @@ class TestCase(TestBase):
         #2 states, 2 tracks, 2 symbols in track 0, and 3 symbols in track 2
         em = IndependentMultinomialEmissionModel(numStates = 2,
                                                  numSymbolsPerTrack=[2, 3])
-        state1track1 = [math.log(0.2), math.log(0.8)]
-        state2track1 = [math.log(0.5), math.log(0.5)]
-        state1track2 = [math.log(0.1), math.log(0.3), math.log(0.6)]
-        state2track2 = [math.log(0.7), math.log(0.1), math.log(0.2)]
+        state1track1 = [0.2, 0.8]
+        state2track1 = [0.5, 0.5]
+        state1track2 = [0.1, 0.3, 0.6]
+        state2track2 = [0.7, 0.1, 0.2]
  
         track1 = [state1track1, state2track1]
         track2 = [state1track2, state2track2]

@@ -10,6 +10,7 @@ import sys
 import numpy as np
 import pickle
 import string
+import copy
 
 from sklearn.hmm import _BaseHMM
 from sklearn.hmm import MultinomialHMM
@@ -28,32 +29,42 @@ The probability of an observation in this model is the product of probabilities
 for each track because we make the simplifying assumption that the tracks are
 independent """
 class IndependentMultinomialEmissionModel(object):
-    def __init__(self, numStates, numSymbolsPerTrack):
+    def __init__(self, numStates, numSymbolsPerTrack, params = None):
         self.numStates = numStates
         self.numTracks = len(numSymbolsPerTrack)
         self.numSymbolsPerTrack = numSymbolsPerTrack
         # [TRACK, STATE, SYMBOL]
         self.logProbs = None
+        self.initParams(params)
 
     def getLogProbs(self):
         return self.logProbs
+
+    def getNumStates(self):
+        return self.numStates
+
+    def getNumTracks(self):
+        return self.getNumTracks
     
     def initParams(self, params = None):
         """ initalize emission parameters such that all values are
-        equally probable for each category"""
+        equally probable for each category.  if params is specifed, then
+        assume it is the emission probability matrix and set our log probs
+        to the log of it."""
         self.logProbs = []
         #todo: numpyify
-        if params is None:
-            for i in xrange(self.numTracks):
-                stateList = []
-                for j in xrange(self.numStates):
-                    stateList.append(
-                        normalize(1. + np.zeros(self.numSymbolsPerTrack[i],
-                                                dtype=np.float)))
-                self.logProbs.append(stateList)
-        else:
-            self.logProbs = params
 
+        for i in xrange(self.numTracks):
+            stateList = []
+            for j in xrange(self.numStates):
+                if params is None:
+                    dist = normalize(1. + np.zeros(
+                        self.numSymbolsPerTrack[i], dtype=np.float))
+                else:
+                    dist = np.array(params[i][j], dtype=np.float)
+                stateList.append(np.log(dist))               
+            self.logProbs.append(stateList)
+            
         assert len(self.logProbs) == self.numTracks
         for i in xrange(self.numTracks):
             assert len(self.logProbs[i]) == self.numStates
