@@ -2,6 +2,9 @@
 
 #Copyright (C) 2013 by Glenn Hickey
 #
+# Class derived from _BaseHMM and MultinomialHMM from sklearn/tests/hmm.py
+# (2010 - 2013, scikit-learn developers (BSD License))
+#
 #Released under the MIT license, see LICENSE.txt
 #!/usr/bin/env python
 
@@ -27,7 +30,7 @@ point is a multi-*dimensional* multinomial.
 """
 class MultitrackHmm(_BaseHMM):
     def __init__(self, emissionModel,
-                 n_components=1, startprob=None,
+                 startprob=None,
                  transmat=None, startprob_prior=None, transmat_prior=None,
                  algorithm="viterbi", random_state=None,
                  n_iter=10, thresh=1e-2, params=string.ascii_letters,
@@ -35,7 +38,8 @@ class MultitrackHmm(_BaseHMM):
         
         """Create a hidden Markov model that supports multiple tracks.
         emissionModel must have already been created"""
-        _BaseHMM.__init__(self, n_components, startprob, transmat,
+        _BaseHMM.__init__(self, emissionModel.getNumStates(), startprob,
+                          transmat,
                           startprob_prior=startprob_prior,
                           transmat_prior=transmat_prior,
                           algorithm=algorithm,
