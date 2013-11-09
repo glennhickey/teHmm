@@ -34,6 +34,7 @@ class IndependentMultinomialEmissionModel(object):
         self.numTracks = len(numSymbolsPerTrack)
         self.numSymbolsPerTrack = numSymbolsPerTrack
         # [TRACK, STATE, SYMBOL]
+        self.probs = None
         self.logProbs = None
         self.initParams(params)
 
@@ -52,24 +53,30 @@ class IndependentMultinomialEmissionModel(object):
         assume it is the emission probability matrix and set our log probs
         to the log of it."""
         self.logProbs = []
+        self.probs = []
         #todo: numpyify
 
         for i in xrange(self.numTracks):
             stateList = []
+            logStateList = []
             for j in xrange(self.numStates):
                 if params is None:
                     dist = normalize(1. + np.zeros(
                         self.numSymbolsPerTrack[i], dtype=np.float))
                 else:
                     dist = np.array(params[i][j], dtype=np.float)
-                stateList.append(np.log(dist))               
-            self.logProbs.append(stateList)
+                stateList.append(dist)
+                logStateList.append(np.log(dist))
+            self.probs.append(stateList)
+            self.logProbs.append(logStateList)
             
         assert len(self.logProbs) == self.numTracks
         for i in xrange(self.numTracks):
             assert len(self.logProbs[i]) == self.numStates
             for j in xrange(self.numStates):
                 assert len(self.logProbs[i][j]) == self.numSymbolsPerTrack[i]
+                assert np.array_equal(self.logProbs[i][j],
+                                      np.log(self.probs[i][j]))
 
     def singleLogProb(self, state, singleObs):
         """ Compute the log probability of a single observation, obs given
@@ -134,4 +141,4 @@ class IndependentMultinomialEmissionModel(object):
                     totalSymbol += obsStats[track][state, symbol]
                 for symbol in xrange(self.numSymbolsPerTrack[track]):
                     symbolProb = obsStats[track][state, symbol] / totalSymbol
-                    self.logProbs[track][state][symbol] = symbolProb
+                    self.logProbs[track][state][symbol] = np.log(symbolProb)

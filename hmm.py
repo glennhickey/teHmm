@@ -21,6 +21,8 @@ from sklearn.hmm import MultinomialHMM
 from sklearn.hmm import _hmmc
 from sklearn.hmm import normalize
 from sklearn.hmm import NEGINF
+from sklearn.utils import check_random_state, deprecated
+
     
 
 """
@@ -38,8 +40,9 @@ class MultitrackHmm(_BaseHMM):
         
         """Create a hidden Markov model that supports multiple tracks.
         emissionModel must have already been created"""
-        _BaseHMM.__init__(self, emissionModel.getNumStates(), startprob,
-                          transmat,
+        _BaseHMM.__init__(self, n_components=emissionModel.getNumStates(),
+                          startprob=startprob,
+                          transmat=transmat,
                           startprob_prior=startprob_prior,
                           transmat_prior=transmat_prior,
                           algorithm=algorithm,
@@ -108,6 +111,10 @@ class MultitrackHmm(_BaseHMM):
 
     def _init(self, obs, params='ste'):
         super(MultitrackHmm, self)._init(obs, params=params)
+        self.random_state = check_random_state(self.random_state)
+        # note that we diverge here from MultinomialHMM which only
+        # inits the emission model if 'e' is specified in params and then
+        # it does a full random (instead of flat)
         self.emissionModel.initParams()
 
     def _initialize_sufficient_statistics(self):
