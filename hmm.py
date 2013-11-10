@@ -31,16 +31,20 @@ the emission model a parameter. The custom emission model we support at this
 point is a multi-*dimensional* multinomial. 
 """
 class MultitrackHmm(_BaseHMM):
-    def __init__(self, emissionModel,
+    def __init__(self, emissionModel=None,
                  startprob=None,
                  transmat=None, startprob_prior=None, transmat_prior=None,
                  algorithm="viterbi", random_state=None,
                  n_iter=10, thresh=1e-2, params=string.ascii_letters,
                  init_params=string.ascii_letters):
+        if emissionModel is not None:
+            n_components = emissionModel.getNumStates()
+        else:
+            n_components = 1
         
         """Create a hidden Markov model that supports multiple tracks.
         emissionModel must have already been created"""
-        _BaseHMM.__init__(self, n_components=emissionModel.getNumStates(),
+        _BaseHMM.__init__(self, n_components=n_components,
                           startprob=startprob,
                           transmat=transmat,
                           startprob_prior=startprob_prior,
@@ -98,6 +102,9 @@ class MultitrackHmm(_BaseHMM):
         s += "Transitions =\n%s\n" % str(self.transmat_)
         s += "Emissions =\n%s\n" % str(self.emissionModel.getLogProbs())
         return s
+
+    def getTrackList(self):
+        return self.trackList
     
     ###########################################################################
     #       SCIKIT LEARN BASEHMM OVERRIDES BELOW 

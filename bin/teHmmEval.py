@@ -8,9 +8,8 @@ import sys
 import os
 import argparse
 
-from teHmm.tracksInfo import TracksInfo
-from teHmm.teHmmModel import TEHMMModel
-
+from teHmm.track import TrackData
+from teHmm.hmm import MultitrackHmm
 
 def main(argv=None):
     if argv is None:
@@ -26,7 +25,7 @@ def main(argv=None):
                         "containing paths to genome annotation tracks")
     parser.add_argument("inputModel", help="Path of hmm created with"
                         "teHmmTrain.py")
-    parser.add_argument("sequence", help="Name of sequence (ex chr1, "
+    parser.add_argument("chrom", help="Name of sequence (ex chr1, "
                         " scaffold_1) etc.")
     parser.add_argument("start", help="Start position", type=int)
     parser.add_argument("end", help="End position (last plus 1)", type=int)
@@ -36,11 +35,23 @@ def main(argv=None):
     
     args = parser.parse_args()
 
-    hmmModel = TEHMMModel()
-    hmmModel.load(args.inputModel)
-    hmmModel.loadTrackData(args.tracksInfo, args.sequence, args.start,
-                           args.end, False)
-    print hmmModel.score()
+    # load model created with teHmmTrain.py
+    hmm = MultitrackHmm()
+    hmm.load(args.inputModel)
+
+    # load the input
+    # read the tracks, while intersecting them with the given interval
+    trackData = TrackData()
+    # note we pass in the trackList that was saved as part of the model
+    # because we do not want to generate a new one.
+    trackData.loadTrackData(args.tracksInfo,
+                            [(args.chrom, args.start, args.end)],
+                            hmm.getTrackList())
+
+    # do the viterbi algorithm
+    vitLogProb, vitStates = hmm.viterbi(trackData)[0]
+
+    print "Viterbi (log) score: %f" % vitLogProb
 
     if args.viterbi is not None:
         prob, states = hmmModel.viterbi()

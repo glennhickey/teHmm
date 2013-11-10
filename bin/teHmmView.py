@@ -8,8 +8,8 @@ import sys
 import os
 import argparse
 
-from teHmm.tracksInfo import TracksInfo
-from teHmm.teHmmModel import TEHMMModel
+from teHmm.track import TrackData
+from teHmm.hmm import MultitrackHmm
 
 
 def main(argv=None):
@@ -25,9 +25,12 @@ def main(argv=None):
     
     args = parser.parse_args()
 
-    hmmModel = TEHMMModel()
-    hmmModel.load(args.inputModel)
-    print hmmModel.toText()
+    # load model created with teHmmTrain.py
+    hmm = MultitrackHmm()
+    hmm.load(args.inputModel)
+
+    # crappy print method
+    print hmm.toText()
     
 if __name__ == "__main__":
     sys.exit(main())
