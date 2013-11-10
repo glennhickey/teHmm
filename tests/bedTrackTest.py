@@ -40,7 +40,7 @@ class TestCase(TestBase):
         ti = getTracksInfo()
         ti = getTracksInfo()
         cbBedPath = ti.getPath("cb")
-        intervals = readBedIntervals(cbBedPath, "scaffold_1", 0, 3000060)
+        intervals = readBedIntervals(cbBedPath, 3, "scaffold_1", 0, 3000060)
         assert len(intervals) == 2
         assert intervals[0] == ("scaffold_1", 0, 2000040)
         assert intervals[1] == ("scaffold_1", 2000040, 3000060)

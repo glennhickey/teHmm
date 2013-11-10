@@ -52,15 +52,24 @@ def readBedData(bedPath, chrom, start, end):
 
 ###########################################################################
 
-def readBedIntervals(bedPath, chrom = None, start = None, end = None):
+def readBedIntervals(bedPath, ncol = 3, chrom = None, start = None, end = None):
     if not os.path.isfile(bedPath):
         raise RuntimeError("Bed interval file %s not found" % bedPath)
+    assert ncol == 3 or ncol == 4
+    outIntervals = []
     bedTool = BedTool(bedPath)
     if chrom is None:
-        return [(feat.chrom, feat.start, feat.end) for feat in bedTool]
+        bedIntervals = bedTool
     else:
         assert start is not None and end is not None
         interval = Interval(chrom, start, end)            
-        return [(feat.chrom, max(start, feat.start), min(end, feat.end))
-                for feat in bedTool.all_hits(interval)]
+        bedIntervals = bedTool.all_hits(interval)
+
+    for feat in bedIntervals:
+        outInterval = (feat.chrom, feat.start, feat.end)
+        if ncol == 4:
+            outInterval += (feat.name,)
+        outIntervals.append(outInterval)
+        
+    return outIntervals
 
