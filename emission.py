@@ -140,5 +140,7 @@ class IndependentMultinomialEmissionModel(object):
                 for symbol in xrange(self.numSymbolsPerTrack[track]):
                     totalSymbol += obsStats[track][state, symbol]
                 for symbol in xrange(self.numSymbolsPerTrack[track]):
-                    symbolProb = obsStats[track][state, symbol] / totalSymbol
+                    denom = max(1e-20, totalSymbol)
+                    symbolProb = obsStats[track][state, symbol] / denom
+                    symbolProb = max(1e-20, symbolProb)
                     self.logProbs[track][state][symbol] = np.log(symbolProb)
