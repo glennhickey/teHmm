@@ -113,15 +113,15 @@ class IndependentMultinomialEmissionModel(object):
         symbol = (cdf > rand).argmax()
         return symbol
 
-    def initStats(self):
+    def initStats(self, val=0.0):
         """ Initialize an array to hold the accumulation statistics
         looks something like obsStats[TRAC][STATE][SYMBOL] = total probability
         of that STATE/SYMBOL pair across all observations """
         obsStats = []
         for track in xrange(self.numTracks):
-            obsStats.append(np.zeros((self.numStates,
-                                      self.numSymbolsPerTrack[track]),
-                                     dtype=np.float))
+            obsStats.append(val + np.zeros((self.numStates,
+                                            self.numSymbolsPerTrack[track]),
+                                           dtype=np.float))
         return obsStats
 
     def accumulateStats(self, obs, obsStats, posteriors):
@@ -181,7 +181,8 @@ class IndependentMultinomialEmissionModel(object):
         numTables = len(trackTableList)
         assert numTables > 0
         assert len(bedIntervals) > 0
-        obsStats = self.initStats()
+        obsStats = self.initStats(1.)
+        
         lastHit = 0
         for interval in bedIntervals:
             for tableIdx in xrange(lastHit, numTables):
