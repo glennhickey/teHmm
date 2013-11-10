@@ -97,6 +97,8 @@ class TrackTable(object):
         #: End coordinate (last coordinate plus 1)
         self.end = end
         assert end > start
+        #: mimic numpy array
+        self.shape = (len(self), self.getNumTracks())
 
     def __len__(self):
         """ Number of columns in the table """
@@ -206,6 +208,14 @@ class TrackData(object):
 
     def getNumTrackTables(self):
         return len(self.trackTableList)
+
+    def getNumSymbolsPerTrack(self):
+        nspt = [0] * self.getNumTracks()        
+        for i in xrange(self.getNumTracks()):
+            track = self.trackList.getTrackByNumber(i)
+            # plus 1 for "0" symbol
+            nspt[i] = len(track.getValueMap()) + 1
+        return nspt
     
     def loadTrackData(self, tracksInfoPath, intervals, trackList = None):
         """ load track data for list of given intervals.  tracks is either
