@@ -19,6 +19,9 @@ def getTracksInfoPath():
 def getTracksInfo():
     return TracksInfo(getTracksInfoPath())
 
+def getStatesPath():
+    return getTestDirPath("tests/data/states.bed")
+
 class TestCase(TestBase):
 
     def setUp(self):
@@ -97,6 +100,12 @@ class TestCase(TestBase):
 
         for i in xrange(len(tableList[1])):
             assert tableList[1][i][cbTrack.number] == 2
+
+    def testReadStates(self):
+        bedIntervals = readBedIntervals(getStatesPath(), ncol=4)
+        for interval in bedIntervals:
+            assert interval[3] == 0 or interval[3] == 1
+        
 
 def main():
     sys.argv = sys.argv[:1]

@@ -11,6 +11,9 @@ import numpy as np
 import pickle
 import string
 import copy
+import itertools
+from numpy.testing import assert_array_equal, assert_array_almost_equal
+from operator import mul
 
 from sklearn.hmm import _BaseHMM
 from sklearn.hmm import MultinomialHMM
@@ -77,6 +80,7 @@ class IndependentMultinomialEmissionModel(object):
                 assert len(self.logProbs[i][j]) == self.numSymbolsPerTrack[i]
                 assert np.array_equal(self.logProbs[i][j],
                                       np.log(self.probs[i][j]))
+        self.validate()
 
     def singleLogProb(self, state, singleObs):
         """ Compute the log probability of a single observation, obs given
@@ -144,3 +148,61 @@ class IndependentMultinomialEmissionModel(object):
                     symbolProb = obsStats[track][state, symbol] / denom
                     symbolProb = max(1e-20, symbolProb)
                     self.logProbs[track][state][symbol] = np.log(symbolProb)
+        self.validate()
+
+    def validate(self):
+        """ make sure everything sums to 1 """
+        allSymbols = []
+        if self.numTracks == 1:
+            for i in xrange(self.numSymbolsPerTrack[0]):
+                allSymbols.append([i])
+        else:
+            valArrays = []
+            for track in xrange(self.numTracks):
+                valArrays.append(
+                    [x for x in xrange(self.numSymbolsPerTrack[track])])
+            for val in itertools.product(*valArrays):
+                allSymbols.append(val)
+        assert len(allSymbols) == reduce(mul, self.numSymbolsPerTrack, 1)
+        
+        for state in xrange(self.numStates):
+            total = 0.
+            for val in allSymbols:
+                assert len(val) == self.numTracks
+                total += np.exp(self.singleLogProb(state, val))
+            assert_array_almost_equal(total, 1.)                    
+
+    def supervisedTrain(self, trackData, bedIntervals):
+        """ count the various emissions for each state.  Note that the
+        iteration in this function assumes that both trackData and
+        bedIntervals are sorted."""
+
+        trackTableList = trackData.getTrackTableList()
+        numTables = len(trackTableList)
+        assert numTables > 0
+        assert len(bedIntervals) > 0
+        obsStats = self.initStats()
+        lastHit = 0
+        for interval in bedIntervals:
+            for tableIdx in xrange(lastHit, numTables):
+                table = trackTableList[tableIdx]
+                overlap = table.getOverlap(interval)
+                if overlap is not None:
+                    lastHit = tableIdx
+                    self.__updateCounts(overlap, table, obsStats)
+                else:
+                    break
+
+        self.maximize(obsStats)
+        self.validate()
+
+    def __updateCounts(self, bedInterval, trackTable, obsStats):
+        """ Update the emission counts in obsStats using statistics from the
+        known hidden states in bedInterval"""
+        for pos in xrange(bedInterval[1], bedInterval[2]):
+            # convert to position within track table
+            tablePos = pos - trackTable.getStart()
+            emissions = trackTable[tablePos]
+            state = bedInterval[3]
+            for track in xrange(self.getNumTracks()):
+                obsStats[track][state, emissions[track]] += 1.

@@ -66,6 +66,33 @@ class MultitrackHmm(_BaseHMM):
         self.trackList = trackData.getTrackList()
         self.fit(trackData.getTrackTableList())
 
+    def supervisedTrain(self, trackData, bedIntervals):
+        """ Train directly from set of known states (4th column in the
+        bedIntervals provided.  We assume that the most likely parameters
+        are also just the expected values, which works for our basic
+        multinomial distribution."""
+        # NOTE bedIntervals must be sorted! 
+        N = self.emissionModel.getNumStates()
+        transitionCount = np.zeros((N,N), np.float)
+        prevInterval is None
+        for interval in bedIntervals:
+            state = bedIntervals[3]
+            assert state < N
+            transitionCount[state,state] += bedInterval[1] - bedInterval[0] - 1
+            if prevInterval is not None and prevInterval[0] == interval[0]:
+                if bedInterval[1] <= prevInterval[2]:
+                    raise RuntimeError("Overlapping or out of order training"
+                                       " intervals: (%s, %d, %d, %d) and "
+                                       " (%s, %d, %d, %d)" % prevInterval +
+                                       interval)
+                transitionCount[prevInterval[3], state] += 1
+        
+        self.transmat_ = normalize(np.maximum(transitionCount, 10e-20), axis = 1)
+        self.startprob_ = normalize(np.maximum(transitionCount, 10e-20))
+        
+        self.emissionModel.supervisedTrain(trackData, bedIntervals)
+        
+
     def logProb(self, trackData):
         """ Return the log probability of the data (one score for each
         interval"""

@@ -116,6 +116,23 @@ class TrackTable(object):
         """ Write a row of data """
         raise RuntimeError("Not implemented")
 
+    def getOverlap(self, bedInterval):
+        """ Compute overlap with a bed coordinate. return None if do not
+        intersect"""
+        overlap = None
+        chrom, start, end = bedInterval[0], bedInterval[1], bedInterval[2]
+        if self.chrom == chrom and self.start < end and self.end > start:
+            overlap = max(self.start, start), min(self.end, end)
+            for i in xrange(3, len(bedInterval)):
+                overlap += (bedInterval[i],)                
+        return overlap
+
+    def getStart(self):
+        return start
+
+    def getEnd(self):
+        return end
+
 ###########################################################################
 
 """Track Table where every value is an integer"""

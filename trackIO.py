@@ -36,7 +36,7 @@ def readTrackData(trackPath, chrom, start, end):
 
 def readBedData(bedPath, chrom, start, end):
     data = [None] * (end - start)
-    bedTool = BedTool(bedPath) 
+    bedTool = BedTool(bedPath).sort()
     interval = Interval(chrom, start, end)
     
     # todo: check how efficient this is
@@ -52,12 +52,16 @@ def readBedData(bedPath, chrom, start, end):
 
 ###########################################################################
 
-def readBedIntervals(bedPath, ncol = 3, chrom = None, start = None, end = None):
+def readBedIntervals(bedPath, ncol = 3, 
+                     chrom = None, start = None, end = None):
+    """ Read bed intervals from a bed file (or a specifeid range therein).
+    NOTE: intervals are sorted by their coordinates"""
+    
     if not os.path.isfile(bedPath):
         raise RuntimeError("Bed interval file %s not found" % bedPath)
     assert ncol == 3 or ncol == 4
     outIntervals = []
-    bedTool = BedTool(bedPath)
+    bedTool = BedTool(bedPath).sort()
     if chrom is None:
         bedIntervals = bedTool
     else:
@@ -68,7 +72,7 @@ def readBedIntervals(bedPath, ncol = 3, chrom = None, start = None, end = None):
     for feat in bedIntervals:
         outInterval = (feat.chrom, feat.start, feat.end)
         if ncol == 4:
-            outInterval += (feat.name,)
+            outInterval += (int(feat.name),)
         outIntervals.append(outInterval)
         
     return outIntervals

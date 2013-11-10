@@ -10,9 +10,18 @@ import numpy as np
 import math
 
 from teHmm.emission import IndependentMultinomialEmissionModel
+from teHmm.track import TrackData
 from teHmm.tests.common import getTestDirPath
 from teHmm.tests.common import TestBase
-from teHmm.tests.bedTrackTest import getTracksInfo
+from teHmm.tests.bedTrackTest import getTracksInfoPath
+
+def getBedStates():
+    return [
+        ("scaffold_1", 0,10, 0),
+        ("scaffold_1", 10, 30, 1),
+        ("scaffold_1", 1000, 1040, 0),
+        ("scaffold_1", 100000, 100020, 0),
+        ("scaffold_2", 6000120, 6000122, 1)]
 
 class TestCase(TestBase):
 
@@ -90,6 +99,18 @@ class TestCase(TestBase):
         assert obsStats[0][1][0] == 0.02 + 0.02
         assert obsStats[0][0][1] == 0.3
         assert obsStats[0][1][1] == 0.4
+
+    def testSupervisedTrain(self):
+        bedIntervals = getBedStates()
+        trackData = TrackData()
+        trackData.loadTrackData(getTracksInfoPath(), bedIntervals)
+        em = IndependentMultinomialEmissionModel(
+            2, trackData.getNumSymbolsPerTrack())
+        em.supervisedTrain(trackData, bedIntervals)
+        
+        
+
+        
 
 
 def main():
