@@ -233,7 +233,7 @@ class TrackData(object):
 
         self.trackTableList = []
         for interval in intervals:
-            assert len(interval) == 3 and interval[2] > interval[1]
+            assert len(interval) >= 3 and interval[2] > interval[1]
             self.__loadTrackDataInterval(tinfo, interval[0], interval[1],
                                          interval[2], initTracks)
 
