@@ -8,7 +8,6 @@
 import os
 import sys
 import numpy as np
-from pybedtools import BedTool, Interval
 from .tracksInfo import TracksInfo
 from .trackIO import readTrackData
 
