@@ -23,7 +23,7 @@ from teHmm.tests.common import getTestDirPath
 from teHmm.tests.common import TestBase
 from teHmm.tests.bedTrackTest import getTracksInfo
 from teHmm.tests.bedTrackTest import getTracksInfoPath
-
+from teHmm.tests.emissionTest import getBedStates
 
 class TestCase(TestBase):
 
@@ -219,7 +219,16 @@ class TestCase(TestBase):
             assert_array_equal(state_sequence, state_sequence3)
 
         
-        
+    def testSupervisedLearn(self):
+        bedIntervals = getBedStates()
+        trackData = TrackData()
+        trackData.loadTrackData(getTracksInfoPath(), bedIntervals)
+        assert len(trackData.getTrackTableList()) == len(bedIntervals)
+
+        em = IndependentMultinomialEmissionModel(
+            2, trackData.getNumSymbolsPerTrack())
+
+        # todo!
         
 
 def main():

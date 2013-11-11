@@ -13,6 +13,8 @@ import sys
 import numpy as np
 import pickle
 import string
+from numpy.testing import assert_array_equal, assert_array_almost_equal
+
 from .emission import IndependentMultinomialEmissionModel
 from .track import TrackList, TrackTable, Track
 
@@ -65,6 +67,7 @@ class MultitrackHmm(_BaseHMM):
         """ Use EM to estimate best parameters from scratch (unsupervised)"""
         self.trackList = trackData.getTrackList()
         self.fit(trackData.getTrackTableList())
+        self.validate()
 
     def supervisedTrain(self, trackData, bedIntervals):
         """ Train directly from set of known states (4th column in the
@@ -74,13 +77,13 @@ class MultitrackHmm(_BaseHMM):
         # NOTE bedIntervals must be sorted! 
         N = self.emissionModel.getNumStates()
         transitionCount = np.zeros((N,N), np.float)
-        prevInterval is None
+        prevInterval = None
         for interval in bedIntervals:
-            state = bedIntervals[3]
+            state = interval[3]
             assert state < N
-            transitionCount[state,state] += bedInterval[1] - bedInterval[0] - 1
+            transitionCount[state,state] += interval[2] - interval[1] - 1
             if prevInterval is not None and prevInterval[0] == interval[0]:
-                if bedInterval[1] <= prevInterval[2]:
+                if interval[1] <= prevInterval[2]:
                     raise RuntimeError("Overlapping or out of order training"
                                        " intervals: (%s, %d, %d, %d) and "
                                        " (%s, %d, %d, %d)" % prevInterval +
@@ -91,6 +94,7 @@ class MultitrackHmm(_BaseHMM):
         self.startprob_ = normalize(np.maximum(transitionCount, 10e-20))
         
         self.emissionModel.supervisedTrain(trackData, bedIntervals)
+        self.validate()
         
 
     def logProb(self, trackData):
@@ -117,6 +121,7 @@ class MultitrackHmm(_BaseHMM):
         tmp_dict = pickle.load(f)
         f.close()
         self.__dict__.update(tmp_dict)
+        self.validate()
 
     def save(self, path):
         f = open(path, "wb")
@@ -132,7 +137,14 @@ class MultitrackHmm(_BaseHMM):
 
     def getTrackList(self):
         return self.trackList
-    
+
+    def validate(self):
+        assert_array_almost_equal(np.sum(self.startprob_), 1.)
+        for i in xrange(self.emissionModel.getNumStates()):
+            assert_array_almost_equal(np.sum(self.transmat_[i]), 1.)
+            assert_array_almost_equal(np.sum(self.transmat_.T[i]), 1.)
+        self.emissionModel.validate()
+        
     ###########################################################################
     #       SCIKIT LEARN BASEHMM OVERRIDES BELOW 
     ###########################################################################
