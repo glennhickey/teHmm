@@ -16,7 +16,7 @@ import string
 from numpy.testing import assert_array_equal, assert_array_almost_equal
 
 from .emission import IndependentMultinomialEmissionModel
-from .track import TrackList, TrackTable, Track
+from .track import TrackList, TrackTable, Track, MISSING_DATA_VALUE
 
 from sklearn.hmm import _BaseHMM
 from sklearn.hmm import MultinomialHMM
@@ -38,7 +38,8 @@ class MultitrackHmm(_BaseHMM):
                  transmat=None, startprob_prior=None, transmat_prior=None,
                  algorithm="viterbi", random_state=None,
                  n_iter=10, thresh=1e-2, params=string.ascii_letters,
-                 init_params=string.ascii_letters):
+                 init_params=string.ascii_letters,
+                 state_name_map=None):
         if emissionModel is not None:
             n_components = emissionModel.getNumStates()
         else:
@@ -62,6 +63,8 @@ class MultitrackHmm(_BaseHMM):
         self.emissionModel = emissionModel
         #: a TrackList object specifying information about the tracks
         self.trackList = None
+        #: a map between state values and names (track.CategoryMap)
+        self.stateNameMap = state_name_map
 
     def train(self, trackData):
         """ Use EM to estimate best parameters from scratch (unsupervised)"""
@@ -80,6 +83,10 @@ class MultitrackHmm(_BaseHMM):
         prevInterval = None
         for interval in bedIntervals:
             state = interval[3]
+            if self.stateNameMap is not None:
+                state = self.stateNameMap.getMap(interval[3])
+                assert state != MISSING_DATA_VALUE
+            state = int(state)
             assert state < N
             transitionCount[state,state] += interval[2] - interval[1] - 1
             if prevInterval is not None and prevInterval[0] == interval[0]:
@@ -113,6 +120,8 @@ class MultitrackHmm(_BaseHMM):
         output = []
         for trackTable in trackData.getTrackTableList():
             prob, states = self.decode(trackTable)
+            if self.stateNameMap is not None:
+                states = map(self.stateNameMap.getMapBack, states)
             output.append((prob,states))
         return output
 

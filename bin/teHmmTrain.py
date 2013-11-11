@@ -12,6 +12,7 @@ from teHmm.track import TrackData
 from teHmm.trackIO import readBedIntervals
 from teHmm.hmm import MultitrackHmm
 from teHmm.emission import IndependentMultinomialEmissionModel
+from teHmm.track import CategoryMap
 
 def main(argv=None):
     if argv is None:
@@ -49,10 +50,11 @@ def main(argv=None):
     trackData = TrackData()
     trackData.loadTrackData(args.tracksInfo, bedIntervals)
 
+    catMap = None
     # state number is overrided by the input bed file in supervised mode
     if args.supervised is True:
-        print "C"
-        args.numStates = countStates(bedIntervals)
+        catMap = mapStateNames(bedIntervals)
+        args.numStates = len(catMap)
         
     # create the independent emission model
     numSymbolsPerTrack = trackData.getNumSymbolsPerTrack()
@@ -60,7 +62,7 @@ def main(argv=None):
                                                         numSymbolsPerTrack)
 
     # create the hmm
-    hmm = MultitrackHmm(emissionModel, n_iter=args.iter)
+    hmm = MultitrackHmm(emissionModel, n_iter=args.iter, state_name_map=catMap)
 
     # do the training
     if args.supervised is False:
@@ -72,27 +74,16 @@ def main(argv=None):
     hmm.save(args.outputModel)
 
 
-def countStates(bedIntervals):
-    """ check the supervised training states. return number of unique states"""
-    stateSet = set()
-    maxElem = 0
-    minElem = len(bedIntervals)
+def mapStateNames(bedIntervals):
+    """ sanitize the states (column 4) of each bed interval, mapping to unique
+    integer.  return the map"""
+    catMap = CategoryMap()
     for interval in bedIntervals:
-        try:
-            stateVal = int(interval[3])
-        except:
-            raise RuntimeError("Invalid bed value %s found.  Supervised states"
-                               " must be integers" % interval[3])
-        stateSet.add(stateVal)
-        maxElem = max(maxElem, stateVal)
-        minElem = min(minElem, stateVal)
-    if minElem != 0 or maxElem != len(stateSet) - 1:
-        raise RuntimeError("Supervised training states must be integers"
-                           " from 0 to N (with no missing values in between"
-                           ". instead we got %d different values in range"
-                           "[%d, %d]" % (len(stateSet), minElem, maxElem))
-    return len(stateSet)
-           
+        if len(interval) < 4 or interval[3] is None:
+            raise RuntimeError("Could not read state from 4th column" %
+                               str(interval))
+        catMap.update(interval[3])
+    return catMap
     
 if __name__ == "__main__":
     sys.exit(main())
