@@ -103,13 +103,10 @@ class TestCase(TestBase):
     def testSupervisedTrain(self):
         bedIntervals = getBedStates()
         trackData = TrackData()
-        trackData.loadTrackData(getTracksInfoPath(), bedIntervals)
+        trackData.loadTrackData(getTracksInfoPath(), bedIntervals)            
         em = IndependentMultinomialEmissionModel(
             2, trackData.getNumSymbolsPerTrack())
         em.supervisedTrain(trackData, bedIntervals)
-        
-        
-
         
 
 

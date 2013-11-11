@@ -119,19 +119,23 @@ class TrackTable(object):
     def getOverlap(self, bedInterval):
         """ Compute overlap with a bed coordinate. return None if do not
         intersect"""
+        assert len(bedInterval) > 2
         overlap = None
         chrom, start, end = bedInterval[0], bedInterval[1], bedInterval[2]
         if self.chrom == chrom and self.start < end and self.end > start:
-            overlap = max(self.start, start), min(self.end, end)
+            overlap = self.chrom, max(self.start, start), min(self.end, end)
             for i in xrange(3, len(bedInterval)):
-                overlap += (bedInterval[i],)                
+                overlap += (bedInterval[i],)
         return overlap
 
+    def getChrom(self):
+        return self.chrom
+    
     def getStart(self):
-        return start
+        return self.start
 
     def getEnd(self):
-        return end
+        return self.end
 
 ###########################################################################
 

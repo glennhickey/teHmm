@@ -48,7 +48,7 @@ class IndependentMultinomialEmissionModel(object):
         return self.numStates
 
     def getNumTracks(self):
-        return self.getNumTracks
+        return self.numTracks
     
     def initParams(self, params = None):
         """ initalize emission parameters such that all values are
@@ -185,13 +185,15 @@ class IndependentMultinomialEmissionModel(object):
         
         lastHit = 0
         for interval in bedIntervals:
+            hit = False
             for tableIdx in xrange(lastHit, numTables):
                 table = trackTableList[tableIdx]
                 overlap = table.getOverlap(interval)
                 if overlap is not None:
                     lastHit = tableIdx
+                    hit = True
                     self.__updateCounts(overlap, table, obsStats)
-                else:
+                elif hit is True:
                     break
 
         self.maximize(obsStats)
