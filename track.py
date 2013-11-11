@@ -11,6 +11,8 @@ import numpy as np
 from .tracksInfo import TracksInfo
 from .trackIO import readTrackData
 
+MISSING_DATA_VALUE = np.iinfo(np.int32).max
+
 ###########################################################################
 
 """meta data for a track that may get saved as part of a trained model"""
@@ -163,13 +165,13 @@ class IntegerTrackTable(TrackTable):
 """ map a value to an integer category """
 class CategoryMap(object):
     def __init__(self):
-        self.unknown = 0
+        self.unknown = MISSING_DATA_VALUE
         self.catMap = dict()
         self.catMapBack = dict()
         
     def update(self, val):
         if val not in self.catMap:
-            newVal = len(self.catMap) + 1
+            newVal = len(self.catMap)
             assert newVal not in self.catMap
             self.catMap[val] = newVal
             self.catMapBack[newVal] = val
@@ -233,8 +235,7 @@ class TrackData(object):
         nspt = [0] * self.getNumTracks()        
         for i in xrange(self.getNumTracks()):
             track = self.trackList.getTrackByNumber(i)
-            # plus 1 for "0" symbol
-            nspt[i] = len(track.getValueMap()) + 1
+            nspt[i] = len(track.getValueMap())
         return nspt
     
     def loadTrackData(self, tracksInfoPath, intervals, trackList = None):
@@ -276,6 +277,7 @@ class TrackData(object):
             if rawArray is not None:
                 track = self.getTrackList().getTrackByName(trackName)
                 vmap = track.getValueMap()
+                assert MISSING_DATA_VALUE not in rawArray
                 rawArray = [vmap.getMap(x, update=init) for x in rawArray]
                 trackTable.writeRow(track.getNumber(), rawArray)
 

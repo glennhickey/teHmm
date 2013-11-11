@@ -26,6 +26,8 @@ from sklearn.hmm import _hmmc
 from sklearn.hmm import normalize
 from sklearn.hmm import NEGINF
 
+from .track import MISSING_DATA_VALUE
+
 """ Generlization of the sckit-learn multinomial to k dimensions.  Ie that the
 observations are k-dimensional vectors -- one element for each track.
 The probability of an observation in this model is the product of probabilities
@@ -61,8 +63,11 @@ class IndependentMultinomialEmissionModel(object):
         else:
             valArrays = []
             for track in xrange(self.numTracks):
-                valArrays.append(
-                    [x for x in xrange(self.numSymbolsPerTrack[track])])
+                if self.numSymbolsPerTrack[track] > 0:
+                    valArrays.append(
+                        [x for x in xrange(self.numSymbolsPerTrack[track])])
+                else:
+                    valArrays.append([MISSING_DATA_VALUE])
             for val in itertools.product(*valArrays):
                 yield val
     
@@ -74,7 +79,6 @@ class IndependentMultinomialEmissionModel(object):
         self.logProbs = []
         self.probs = []
         #todo: numpyify
-
         for i in xrange(self.numTracks):
             stateList = []
             logStateList = []
@@ -105,9 +109,10 @@ class IndependentMultinomialEmissionModel(object):
         logProb = 0.
         for track in xrange(self.numTracks):
             obsSymbol = singleObs[track]
-            assert obsSymbol < self.numSymbolsPerTrack[track]
-            # independence assumption means we can just add the tracks
-            logProb += self.logProbs[track][state][obsSymbol]
+            if obsSymbol != MISSING_DATA_VALUE:
+                assert obsSymbol < self.numSymbolsPerTrack[track]
+                # independence assumption means we can just add the tracks
+                logProb += self.logProbs[track][state][obsSymbol]
         return logProb
 
     def allLogProbs(self, obs):
@@ -150,7 +155,8 @@ class IndependentMultinomialEmissionModel(object):
             for track in xrange(self.numTracks):
                 for state in xrange(self.numStates):
                     obsVal = obs[i,track]
-                    obsStats[track][state, obsVal] += posteriors[i, state]
+                    if obsVal != MISSING_DATA_VALUE:
+                        obsStats[track][state, obsVal] += posteriors[i, state]
         return obsStats
         
     def maximize(self, obsStats):
@@ -169,15 +175,17 @@ class IndependentMultinomialEmissionModel(object):
     def validate(self):
         """ make sure everything sums to 1 """
         allSymbols = [x for x in self.getSymbols()]
-        assert len(allSymbols) == reduce(mul, self.numSymbolsPerTrack, 1)
+        assert len(allSymbols) == reduce(lambda x,y : max(x,1) * max(y,1),
+                                          self.numSymbolsPerTrack, 1)
         
         for state in xrange(self.numStates):
             total = 0.
             for val in allSymbols:
                 assert len(val) == self.numTracks
                 total += np.exp(self.singleLogProb(state, val))
-            assert_array_almost_equal(total, 1.)                    
-
+            if len(allSymbols) > 0:
+                assert_array_almost_equal(total, 1.)                    
+            
     def supervisedTrain(self, trackData, bedIntervals):
         """ count the various emissions for each state.  Note that the
         iteration in this function assumes that both trackData and
@@ -214,4 +222,5 @@ class IndependentMultinomialEmissionModel(object):
             emissions = trackTable[tablePos]
             state = bedInterval[3]
             for track in xrange(self.getNumTracks()):
-                obsStats[track][state, emissions[track]] += 1.
+                if emissions[track] != MISSING_DATA_VALUE:
+                    obsStats[track][state, emissions[track]] += 1.
