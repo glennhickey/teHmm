@@ -49,6 +49,22 @@ class IndependentMultinomialEmissionModel(object):
 
     def getNumTracks(self):
         return self.numTracks
+
+    def getNumSymbolsPerTrack(self):
+        return self.numSymbolsPerTrack
+
+    def getSymbols(self):
+        """ iterate over all possible vectors of symbosl """
+        if self.numTracks == 1:
+            for i in xrange(self.numSymbolsPerTrack[0]):
+                yield [i]
+        else:
+            valArrays = []
+            for track in xrange(self.numTracks):
+                valArrays.append(
+                    [x for x in xrange(self.numSymbolsPerTrack[track])])
+            for val in itertools.product(*valArrays):
+                yield val
     
     def initParams(self, params = None):
         """ initalize emission parameters such that all values are
@@ -152,17 +168,7 @@ class IndependentMultinomialEmissionModel(object):
 
     def validate(self):
         """ make sure everything sums to 1 """
-        allSymbols = []
-        if self.numTracks == 1:
-            for i in xrange(self.numSymbolsPerTrack[0]):
-                allSymbols.append([i])
-        else:
-            valArrays = []
-            for track in xrange(self.numTracks):
-                valArrays.append(
-                    [x for x in xrange(self.numSymbolsPerTrack[track])])
-            for val in itertools.product(*valArrays):
-                allSymbols.append(val)
+        allSymbols = [x for x in self.getSymbols()]
         assert len(allSymbols) == reduce(mul, self.numSymbolsPerTrack, 1)
         
         for state in xrange(self.numStates):
