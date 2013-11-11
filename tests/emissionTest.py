@@ -8,6 +8,8 @@ import sys
 import os
 import numpy as np
 import math
+from numpy.testing import assert_array_equal, assert_array_almost_equal
+import itertools
 
 from teHmm.emission import IndependentMultinomialEmissionModel
 from teHmm.track import TrackData
@@ -103,10 +105,43 @@ class TestCase(TestBase):
     def testSupervisedTrain(self):
         bedIntervals = getBedStates()
         trackData = TrackData()
-        trackData.loadTrackData(getTracksInfoPath(), bedIntervals)            
+        trackData.loadTrackData(getTracksInfoPath(), bedIntervals)
+        assert len(trackData.getTrackTableList()) == len(bedIntervals)
+
         em = IndependentMultinomialEmissionModel(
             2, trackData.getNumSymbolsPerTrack())
         em.supervisedTrain(trackData, bedIntervals)
+
+        # count frequency of symbols for a given track
+        for track in xrange(3):            
+            counts = [dict(), dict()]
+            totals = [0, 0]
+
+            # init to ones like we do in emisisonModel
+            for i in xrange(em.getNumSymbolsPerTrack()[track]):
+                counts[0][i] = 1
+                counts[1][i] = 1
+                totals[0] += 1
+                totals[1] += 1
+                
+            for tableIdx, table in enumerate(trackData.getTrackTableList()):
+                state = bedIntervals[tableIdx][3]
+                count = counts[state]
+                for i in xrange(len(table)):
+                    val = table[i][track]
+                    if val in count:
+                        count[val] += 1
+                        totals[state] += 1
+
+            # compute track frequency from model by marginalizing and compare
+            for state in xrange(2):
+                for val in counts[state]:
+                    frac = float(counts[state][val]) / float(totals[state])
+                    prob = 0.0
+                    for val3d in em.getSymbols():
+                        if val3d[track] == val:
+                            prob += np.exp(em.singleLogProb(state, val3d))
+                    assert_array_almost_equal(prob, frac)
         
 
 
