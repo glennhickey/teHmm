@@ -7,6 +7,7 @@
 
 import os
 import sys
+import xml.etree.ElementTree as ET
 
 """ Read some tracks info.  For now just a map between track name
 and track path.  
@@ -20,26 +21,11 @@ class TracksInfo(object):
             self.loadFile(inputPath)
 
     def loadFile(self, inputPath):
-        """Load in a text file with lines of formant TrackName TrackPath"""
-        self.pathMap = dict()
-        inputFile = open(inputPath, "r")
-        lineNo = 0
-        for line in inputFile:
-            lineNo += 1
-            strippedLine = line.strip()
-            if len(strippedLine) > 0 and strippedLine[0] != '#':
-                toks = strippedLine.split()
-                if len(toks) != 2:
-                    raise RuntimeError("Line %d of %s is invalid" % (lineNo,
-                                                                     inputPath))
-                elif toks[0] in self.pathMap:
-                    raise RuntimeError("Duplicate ine %d of %s" % (lineNo,
-                                                                   inputPath))
-                elif not os.path.isfile(toks[1]):
-                    raise RuntimeError("Track file %s not found" % toks[1])
-                
-                self.pathMap[toks[0]] = toks[1]
-        inputFile.close()
+        """Load in an xml file that contains a list of track elements right
+        below its root node.  Will extend to contain more options..."""
+        root = ET.parse(inputPath).getroot()
+        for child in root.findall("track"):
+            self.pathMap[child.attrib["name"]] = child.attrib["path"]
 
     def getNumTracks(self):
         """Number of tracks for model"""
@@ -53,7 +39,10 @@ class TracksInfo(object):
             return self.pathMap[trackName]
     
     def save(self, path):
-        outputFile = open(path, "w")
+        root = ET.Element("teModelConfig")
         for (trackName, trackPath) in self.pathMap.items():
-            outputFile.write("%s %s\n" % (trackName, trackPath))
-        outputFile.close()
+            track = ET.SubElement(root, "track")
+            track.set("name", trackName)
+            track.set("path", path)
+        ET.ElementTree(root).write(path)
+        

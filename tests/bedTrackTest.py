@@ -14,7 +14,7 @@ from teHmm.tests.common import getTestDirPath
 from teHmm.tests.common import TestBase
 
 def getTracksInfoPath():
-    return getTestDirPath("tests/data/tracksInfo.txt")
+    return getTestDirPath("tests/data/tracksInfo.xml")
 
 def getTracksInfo():
     return TracksInfo(getTracksInfoPath())
