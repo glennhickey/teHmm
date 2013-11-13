@@ -7,7 +7,6 @@ import unittest
 import sys
 import os
 
-from teHmm.tracksInfo import TracksInfo
 from teHmm.trackIO import *
 from teHmm.track import *
 from teHmm.tests.common import getTestDirPath
@@ -16,8 +15,8 @@ from teHmm.tests.common import TestBase
 def getTracksInfoPath():
     return getTestDirPath("tests/data/tracksInfo.xml")
 
-def getTracksInfo():
-    return TracksInfo(getTracksInfoPath())
+def getTrackList():
+    return TrackList(getTracksInfoPath())
 
 def getStatesPath():
     return getTestDirPath("tests/data/states.bed")
@@ -31,8 +30,8 @@ class TestCase(TestBase):
         super(TestCase, self).tearDown()
 
     def testBedQuery(self):
-        ti = getTracksInfo()
-        cbBedPath = ti.getPath("cb")
+        ti = getTrackList()
+        cbBedPath = ti.getTrackByName("cb").getPath()
         bedData = readTrackData(cbBedPath, "scaffold_1", 3000050, 3000070)
         for i in xrange(10):
             assert int(bedData[i]) == 4
@@ -40,9 +39,8 @@ class TestCase(TestBase):
             assert int(bedData[i]) == 5
 
     def testBedIntervals(self):
-        ti = getTracksInfo()
-        ti = getTracksInfo()
-        cbBedPath = ti.getPath("cb")
+        ti = getTrackList()
+        cbBedPath = ti.getTrackByName("cb").getPath()
         intervals = readBedIntervals(cbBedPath, 3, "scaffold_1", 0, 3000060)
         assert len(intervals) == 2
         assert intervals[0] == ("scaffold_1", 0, 2000040)

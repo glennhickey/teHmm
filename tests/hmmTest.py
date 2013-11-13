@@ -21,7 +21,6 @@ from teHmm.emission import IndependentMultinomialEmissionModel
 
 from teHmm.tests.common import getTestDirPath
 from teHmm.tests.common import TestBase
-from teHmm.tests.bedTrackTest import getTracksInfo
 from teHmm.tests.bedTrackTest import getTracksInfoPath
 from teHmm.tests.emissionTest import getBedStates
 
@@ -29,9 +28,6 @@ class TestCase(TestBase):
 
     def setUp(self):
         super(TestCase, self).setUp()
-        self.tiPath = self.getTempFilePath()
-        ti = getTracksInfo()
-        ti.save(self.tiPath)
 
         ## Copied from MultinomialHMMTestCase in sklearn/tests/test_hmm.py 
         self.prng = np.random.RandomState(9)

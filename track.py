@@ -8,23 +8,32 @@
 import os
 import sys
 import numpy as np
-from .tracksInfo import TracksInfo
+import xml.etree.ElementTree as ET
+
 from .trackIO import readTrackData
 
 MISSING_DATA_VALUE = np.iinfo(np.int32).max
 
 ###########################################################################
 
-"""meta data for a track that may get saved as part of a trained model"""
+"""meta data for a track that may get saved as part of a trained model,
+and can also be specified in the xml file"""
 class Track(object):
-    def __init__(self, name = None, number = None, valMap = None):
+    def __init__(self, name = None, number = None, path = None,
+                 dist = "Multinomial", binSize = 1):
         #: Name of track
         self.name = name
         #: Unique integer id, also will be track's row in data array
         self.number = number
         #: Optional mapping class (see below) to convert data values into
         #: numeric format
-        self.valMap = valMap
+        self.valMap = CategoryMap()
+        #: Path of the bedfile.
+        self.path = path
+        #: Distribution type (only multinomial for now)
+        self.dist = dist
+        #: Number of bins for mapping numeric values to discrete states
+        self.binSize = binSize
 
     def getValueMap(self):
         return self.valMap
@@ -32,25 +41,47 @@ class Track(object):
     def getNumber(self):
         return self.number
 
-###########################################################################
+    def getName(self):
+        return self.name
 
+    def getDist(self):
+        return self.dist
+
+    def getPath(self):
+        return self.path
+
+    def fromXMLElement(self, elem, number=-1):
+        self.name = elem.attrib["name"]
+        self.number = number
+        self.path = elem.attrib["path"]
+        if "dist" in elem.attrib:
+            self.dist = elem.attrib["dist"]
+        if "binSize" in elem.attrib:
+            self.binSize = int(elem.attrib["binSize"])
+
+###########################################################################
 """list of tracks (see above) that we can index by name or number as well as
-load from or save to a file. this strucuture needs to accompany a trained """
+load from or save to a file. this strucuture needs to accompany a trained
+model. """
 class TrackList(object):
-   def __init__(self):
+   def __init__(self, xmlPath = None):
        #: list of tracks.  track.number = its position in this list
        self.trackList = []
        #: map a track name to its position in the list
        self.trackMap = dict()
+       if xmlPath is not None:
+           self.loadXML(xmlPath)
 
    def getTrackByName(self, name):
        if name in self.trackMap:
            trackIdx = self.trackMap[name]
+           assert self.trackList[trackIdx].number == trackIdx
            return self.trackList[trackIdx]
        return None
 
    def getTrackByNumber(self, idx):
        if idx < len(self.trackList):
+           assert self.trackList[idx].number == idx
            return self.trackList[idx]
        return None
 
@@ -73,6 +104,15 @@ class TrackList(object):
        pickle.dump(self.__dict__, f, 2)
        f.close()
 
+   def loadXML(self, path):
+       """Load in an xml file that contains a list of track elements right
+       below its root node.  Will extend to contain more options..."""
+       root = ET.parse(path).getroot()
+       for child in root.findall("track"):
+           track = Track()
+           track.fromXMLElement(child)
+           self.addTrack(track)
+
    def __check(self):
        for i,track in enumerate(self.trackList):
            assert track.number == i
@@ -81,6 +121,10 @@ class TrackList(object):
 
    def __len__(self):
        return len(self.trackList)
+
+   def __iter__(self):
+       for track in self.trackList:
+           yield track
 
 ###########################################################################
 
@@ -238,16 +282,17 @@ class TrackData(object):
             nspt[i] = len(track.getValueMap())
         return nspt
     
-    def loadTrackData(self, tracksInfoPath, intervals, trackList = None):
+    def loadTrackData(self, trackListPath, intervals, trackList = None):
         """ load track data for list of given intervals.  tracks is either
         a TrackList object loaded from a saved pickle, or None in
         which case they will be generated from the data.  each interval
         is a 3-tuple of chrom,start,end"""
         assert len(intervals) > 0
-        tinfo = TracksInfo(tracksInfoPath)
+        inputTrackList = TrackList(trackListPath)
         if trackList is None:
             initTracks = True
-            self.__initTracks(tinfo)
+            self.trackList = inputTrackList
+            # note, need to make sure category maps get properly set
         else:
             initTracks = False
             self.trackList = trackList
@@ -256,19 +301,14 @@ class TrackData(object):
         self.trackTableList = []
         for interval in intervals:
             assert len(interval) >= 3 and interval[2] > interval[1]
-            self.__loadTrackDataInterval(tinfo, interval[0], interval[1],
-                                         interval[2], initTracks)
+            self.__loadTrackDataInterval(inputTrackList, interval[0],
+                                         interval[1], interval[2], initTracks)
 
-    def __initTracks(self, tinfo):
-        """ intialize the trackc metadata from the tracksInfo file """
-        self.trackList = TrackList()
-        for trackName, trackPath in tinfo.pathMap.items():
-            track = Track(trackName, len(self.trackList) - 1, CategoryMap())
-            self.trackList.addTrack(track)
-
-    def __loadTrackDataInterval(self, tracksInfo, chrom, start, end, init):
+    def __loadTrackDataInterval(self, inputTrackList, chrom, start, end, init):
         trackTable = IntegerTrackTable(self.getNumTracks(), chrom, start, end)
-        for trackName, trackPath in tracksInfo.pathMap.items():
+        for inputTrack in inputTrackList:
+            trackName = inputTrack.getName()
+            trackPath = inputTrack.getPath()
             if self.trackList.getTrackByName(trackName) is None:
                 sys.stderr.write("Warning: track %s not learned\n" %
                                  trackName)
