@@ -186,6 +186,7 @@ class MultitrackHmm(_BaseHMM):
             stats, obs, framelogprob, posteriors, fwdlattice, bwdlattice,
             params)
         if 'e' in params:
+            logging.debug("beginning Emissions E-substep")
             self.emissionModel.accumulateStats(obs, stats['obs'], posteriors)
         logging.debug("ending MultitrackHMM E-step")
 
