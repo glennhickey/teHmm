@@ -272,8 +272,9 @@ class NoMap(CategoryMap):
         super(NoMap, self).__init__()
 
     def getMap(self, val, update=False):
+        super(NoMap, self).update(val, update)
         return val
-
+    
     def getMapBack(self, val):
         return val    
 
@@ -292,7 +293,10 @@ class BinaryMap(CategoryMap):
         return 0
 
     def getMapBack(self, val):
-        return val    
+        return val
+
+    def __len__(self):
+        return 2
 
 ###########################################################################
     
