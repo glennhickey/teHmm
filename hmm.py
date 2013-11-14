@@ -13,6 +13,7 @@ import sys
 import numpy as np
 import pickle
 import string
+import logging
 from numpy.testing import assert_array_equal, assert_array_almost_equal
 
 from .emission import IndependentMultinomialEmissionModel
@@ -180,16 +181,20 @@ class MultitrackHmm(_BaseHMM):
     def _accumulate_sufficient_statistics(self, stats, obs, framelogprob,
                                           posteriors, fwdlattice, bwdlattice,
                                           params):
+        logging.debug("beginning MultitrackHMM E-step")
         super(MultitrackHmm, self)._accumulate_sufficient_statistics(
             stats, obs, framelogprob, posteriors, fwdlattice, bwdlattice,
             params)
         if 'e' in params:
             self.emissionModel.accumulateStats(obs, stats['obs'], posteriors)
+        logging.debug("ending MultitrackHMM E-step")
 
     def _do_mstep(self, stats, params):
+        logging.debug("beginning MultitrackHMM M-step")
         super(MultitrackHmm, self)._do_mstep(stats, params)
         if 'e' in params:
             self.emissionModel.maximize(stats['obs'])
+        logging.debug("ending MultitrackHMM M-step")
 
     def fit(self, obs, **kwargs):
         return _BaseHMM.fit(self, obs, **kwargs)
