@@ -10,7 +10,7 @@ import argparse
 import logging
 
 from teHmm.track import TrackData
-from teHmm.trackIO import readBedIntervals
+from teHmm.trackIO import readBedIntervals, getMergedBedIntervals
 from teHmm.hmm import MultitrackHmm
 from teHmm.emission import IndependentMultinomialEmissionModel
 from teHmm.track import CategoryMap
@@ -40,25 +40,34 @@ def main(argv=None):
                         " NOTE: The number of states will be determined "
                         "from the bed.  States must be labled 0,1,2 etc.",
                         action = "store_true", default = False)
+    parser.add_argument("--verbose", help="Print out detailed logging messages",
+                        action = "store_true", default = False)
+
     
     args = parser.parse_args()
+    if args.verbose is True:
+        logging.basicConfig(level=logging.DEBUG)
 
     # read training intervals from the bed file
     logging.info("loading training intervals from %s" % args.trainingBed)
-    bedIntervals = readBedIntervals(args.trainingBed, ncol=4)
-    if bedIntervals is None or len(bedIntervals) < 1:
+    mergedIntervals = getMergedBedIntervals(args.trainingBed, ncol=4)
+    if mergedIntervals is None or len(mergedIntervals) < 1:
         raise RuntimeError("Could not read any intervals from %s" %
                            args.trainingBed)
+
     # read the tracks, while intersecting them with the training intervals
     logging.info("loading tracks %s" % args.tracksInfo)
     trackData = TrackData()
-    trackData.loadTrackData(args.tracksInfo, bedIntervals)
+    trackData.loadTrackData(args.tracksInfo, mergedIntervals)
 
     catMap = None
+    truthIntervals = None
     # state number is overrided by the input bed file in supervised mode
     if args.supervised is True:
         logging.info("processing supervised state names")
-        catMap = mapStateNames(bedIntervals)
+        # we reload because we don't want to be merging them here
+        truthIntervals = readBedIntervals(args.trainingBed, ncol=4)
+        catMap = mapStateNames(truthIntervals)
         args.numStates = len(catMap)
         
     # create the independent emission model
@@ -76,7 +85,7 @@ def main(argv=None):
         hmm.train(trackData)
     else:
         logging.info("training from input bed states")
-        hmm.supervisedTrain(trackData, bedIntervals)
+        hmm.supervisedTrain(trackData, truthIntervals)
 
     # write the model to a pickle
     logging.info("saving trained model to %s" % args.outputModel)
@@ -85,13 +94,14 @@ def main(argv=None):
 
 def mapStateNames(bedIntervals):
     """ sanitize the states (column 4) of each bed interval, mapping to unique
-    integer.  return the map"""
+    integer in place.  return the map"""
     catMap = CategoryMap()
-    for interval in bedIntervals:
+    for idx, interval in enumerate(bedIntervals):
         if len(interval) < 4 or interval[3] is None:
             raise RuntimeError("Could not read state from 4th column" %
                                str(interval))
-        catMap.update(interval[3])
+        bedIntervals[idx] = (interval[0], interval[1], interval[2],
+                             catMap.getMap(interval[3], update=True))
     return catMap
     
 if __name__ == "__main__":

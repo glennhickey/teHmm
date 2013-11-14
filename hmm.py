@@ -77,17 +77,15 @@ class MultitrackHmm(_BaseHMM):
         """ Train directly from set of known states (4th column in the
         bedIntervals provided.  We assume that the most likely parameters
         are also just the expected values, which works for our basic
-        multinomial distribution."""
+        multinomial distribution. Note that the states should already
+        have been mapped to integers"""
         # NOTE bedIntervals must be sorted! 
         N = self.emissionModel.getNumStates()
         transitionCount = np.zeros((N,N), np.float)
         prevInterval = None
+        logging.debug("beginning supervised transition stats")
         for interval in bedIntervals:
-            state = interval[3]
-            if self.stateNameMap is not None:
-                state = self.stateNameMap.getMap(interval[3])
-                assert state != MISSING_DATA_VALUE
-            state = int(state)
+            state = int(interval[3])
             assert state < N
             transitionCount[state,state] += interval[2] - interval[1] - 1
             if prevInterval is not None and prevInterval[0] == interval[0]:
@@ -100,7 +98,8 @@ class MultitrackHmm(_BaseHMM):
         
         self.transmat_ = normalize(np.maximum(transitionCount, 10e-20), axis = 1)
         self.startprob_ = normalize(np.maximum(transitionCount, 10e-20))
-        
+
+        logging.debug("beginning supervised emission stats")
         self.emissionModel.supervisedTrain(trackData, bedIntervals)
         self.validate()
         

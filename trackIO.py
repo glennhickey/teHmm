@@ -123,3 +123,22 @@ def readBedIntervals(bedPath, ncol = 3,
         
     return outIntervals
 
+###########################################################################
+
+def getMergedBedIntervals(bedPath, ncol=3):
+    """ Merge all contiguous and overlapping intervals""" 
+
+    if not os.path.isfile(bedPath):
+        raise RuntimeError("Bed interval file %s not found" % bedPath)
+    logging.debug("mergeBedIntervals(%s)" % bedPath)
+    outIntervals = []
+    bedTool = BedTool(bedPath)
+    for feat in bedTool.merge():
+        outInterval = (feat.chrom, feat.start, feat.end)
+        if ncol == 4:
+            outInterval += (feat.name,)
+        outIntervals.append(outInterval)
+    logging.debug("finished mergeBedIntervals(%s)" % bedPath)
+
+    return outIntervals
+
