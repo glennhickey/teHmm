@@ -7,6 +7,7 @@ import unittest
 import sys
 import os
 import argparse
+import logging
 
 from teHmm.track import TrackData
 from teHmm.trackIO import readBedIntervals
@@ -17,6 +18,7 @@ from teHmm.track import CategoryMap
 def main(argv=None):
     if argv is None:
         argv = sys.argv
+    logging.basicConfig(level=logging.INFO)
 
     parser = argparse.ArgumentParser(
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
@@ -42,21 +44,25 @@ def main(argv=None):
     args = parser.parse_args()
 
     # read training intervals from the bed file
+    logging.info("loading training intervals from %s" % args.trainingBed)
     bedIntervals = readBedIntervals(args.trainingBed, ncol=4)
     if bedIntervals is None or len(bedIntervals) < 1:
         raise RuntimeError("Could not read any intervals from %s" %
                            args.trainingBed)
     # read the tracks, while intersecting them with the training intervals
+    logging.info("loading tracks %s" % args.tracksInfo)
     trackData = TrackData()
     trackData.loadTrackData(args.tracksInfo, bedIntervals)
 
     catMap = None
     # state number is overrided by the input bed file in supervised mode
     if args.supervised is True:
+        logging.info("processing supervised state names")
         catMap = mapStateNames(bedIntervals)
         args.numStates = len(catMap)
         
     # create the independent emission model
+    logging.info("creating model")
     numSymbolsPerTrack = trackData.getNumSymbolsPerTrack()
     emissionModel = IndependentMultinomialEmissionModel(args.numStates,
                                                         numSymbolsPerTrack)
@@ -66,11 +72,14 @@ def main(argv=None):
 
     # do the training
     if args.supervised is False:
+        logging.info("training via EM")
         hmm.train(trackData)
     else:
+        logging.info("training from input bed states")
         hmm.supervisedTrain(trackData, bedIntervals)
 
     # write the model to a pickle
+    logging.info("saving trained model to %s" % args.outputModel)
     hmm.save(args.outputModel)
 
 

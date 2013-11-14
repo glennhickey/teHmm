@@ -7,6 +7,7 @@
 
 import os
 import sys
+import logging
 from pybedtools import BedTool, Interval
 
 """ all track-data specific io code goes here.  Just BED implemented for now,
@@ -53,14 +54,20 @@ def readBedData(bedPath, chrom, start, end, **kwargs):
         sort = kwargs["sort"] == True
 
     data = [defVal] * (end - start)
+    logging.debug("readBedData(%s)" % bedPath)
     bedTool = BedTool(bedPath)
     if sort is True:
+        logging.debug("sortBed(%s)" % bedPath)
         bedTool = bedTool.sort()
         
     interval = Interval(chrom, start, end)
 
     # todo: check how efficient this is
-    for overlap in bedTool.all_hits(interval):
+    logging.debug("intersecting (%s,%d,%d) and %s" % (
+        chrom, start, end, bedPath))
+    intersections = bedTool.all_hits(interval)
+    logging.debug("loading data from intersections")
+    for overlap in intersections:
         oStart = max(start, overlap.start)
         oEnd = min(end, overlap.end)
         val = overlap.name
@@ -77,6 +84,7 @@ def readBedData(bedPath, chrom, start, end, **kwargs):
         for i in xrange(oEnd - oStart):
             data[i + oStart - start] = val
 
+    logging.debug("done readBedData(%s)" % bedPath)
     return data
 
 ###########################################################################
@@ -91,21 +99,27 @@ def readBedIntervals(bedPath, ncol = 3,
         raise RuntimeError("Bed interval file %s not found" % bedPath)
     assert ncol == 3 or ncol == 4
     outIntervals = []
+    logging.debug("readBedIntervals(%s)" % bedPath)
     bedTool = BedTool(bedPath)
     if sort is True:
         bedTool = bedTool.sort()
+        logging.debug("sortBed(%s)" % bedPath)
     if chrom is None:
         bedIntervals = bedTool
     else:
         assert start is not None and end is not None
-        interval = Interval(chrom, start, end)            
+        interval = Interval(chrom, start, end)
+        logging.debug("intersecting (%s,%d,%d) and %s" % (chrom, start, end,
+                                                          bedPath))
         bedIntervals = bedTool.all_hits(interval)
 
+    logging.debug("appending bed intervals")
     for feat in bedIntervals:
         outInterval = (feat.chrom, feat.start, feat.end)
         if ncol == 4:
             outInterval += (feat.name,)
         outIntervals.append(outInterval)
+    logging.debug("finished readBedIntervals(%s)" % bedPath)
         
     return outIntervals
 
