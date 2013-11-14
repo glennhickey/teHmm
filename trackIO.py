@@ -95,7 +95,7 @@ def readBedIntervals(bedPath, ncol = 3,
     for feat in bedIntervals:
         outInterval = (feat.chrom, feat.start, feat.end)
         if ncol == 4:
-            outInterval += (int(feat.name),)
+            outInterval += (feat.name,)
         outIntervals.append(outInterval)
         
     return outIntervals

@@ -108,7 +108,7 @@ class TestCase(TestBase):
     def testReadStates(self):
         bedIntervals = readBedIntervals(getStatesPath(), ncol=4)
         for interval in bedIntervals:
-            assert interval[3] == 0 or interval[3] == 1
+            assert int(interval[3]) == 0 or int(interval[3]) == 1
 
     def testBinaryTrack(self):
         trackData = TrackData()
