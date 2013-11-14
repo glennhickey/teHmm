@@ -37,6 +37,7 @@ def readTrackData(trackPath, chrom, start, end, **kwargs):
 def readBedData(bedPath, chrom, start, end, **kwargs):
 
     valCol = None
+    sort = False
     if kwargs is not None and "valCol" in kwargs:
         valCol = int(kwargs["valCol"])
     valMap = None
@@ -47,10 +48,15 @@ def readBedData(bedPath, chrom, start, end, **kwargs):
         defVal = valMap.getMissingVal()
     updateMap = False
     if kwargs is not None and "updateValMap" in kwargs:
-        updateMap = kwargs["updateValMap"]        
+        updateMap = kwargs["updateValMap"]
+    if kwargs is not None and "sort" in kwargs:
+        sort = kwargs["sort"] == True
 
     data = [defVal] * (end - start)
-    bedTool = BedTool(bedPath).sort()
+    bedTool = BedTool(bedPath)
+    if sort is True:
+        bedTool = bedTool.sort()
+        
     interval = Interval(chrom, start, end)
 
     # todo: check how efficient this is
@@ -76,7 +82,8 @@ def readBedData(bedPath, chrom, start, end, **kwargs):
 ###########################################################################
 
 def readBedIntervals(bedPath, ncol = 3, 
-                     chrom = None, start = None, end = None):
+                     chrom = None, start = None, end = None,
+                     sort = False):
     """ Read bed intervals from a bed file (or a specifeid range therein).
     NOTE: intervals are sorted by their coordinates"""
     
@@ -84,7 +91,9 @@ def readBedIntervals(bedPath, ncol = 3,
         raise RuntimeError("Bed interval file %s not found" % bedPath)
     assert ncol == 3 or ncol == 4
     outIntervals = []
-    bedTool = BedTool(bedPath).sort()
+    bedTool = BedTool(bedPath)
+    if sort is True:
+        bedTool = bedTool.sort()
     if chrom is None:
         bedIntervals = bedTool
     else:
