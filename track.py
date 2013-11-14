@@ -19,21 +19,45 @@ MISSING_DATA_VALUE = np.iinfo(np.int32).max
 """meta data for a track that may get saved as part of a trained model,
 and can also be specified in the xml file"""
 class Track(object):
-    def __init__(self, name = None, number = None, path = None,
-                 dist = "Multinomial", binSize = 1):
+    def __init__(self, xmlElement=None, number=-1):
         #: Name of track
-        self.name = name
+        self.name = None
         #: Unique integer id, also will be track's row in data array
         self.number = number
         #: Optional mapping class (see below) to convert data values into
         #: numeric format
-        self.valMap = CategoryMap()
+        self.valMap = None
         #: Path of the bedfile.
-        self.path = path
+        self.path = None
         #: Distribution type (only multinomial for now)
-        self.dist = dist
+        self.dist = "multinomial"
         #: Number of bins for mapping numeric values to discrete states
-        self.binSize = binSize
+        self.binSize = 1
+        #: Bed column to take value from (default 3==name)
+        self.valCol = 3
+
+        if xmlElement is not None:
+            self._fromXMLElement(xmlElement)
+        self._init()
+
+    def _init(self):
+        if self.dist == "multinomial":
+            self.valMap = CategoryMap()
+        elif self.dist == "binary":
+            self.valMap = BinaryMap()
+            self.binSize = None
+            self.valCol = 0
+        assert self.dist == "multinomial" or self.dist == "binary"
+
+    def _fromXMLElement(self, elem, number=-1):
+        self.name = elem.attrib["name"]
+        self.path =  elem.attrib["path"]
+        if "distribution" in elem.attrib:
+            self.dist = elem.attrib["distribution"]
+        if "binSize" in elem.attrib:
+            self.binSize = int(elem.attrib["binSize"])
+        if "valCol" in elem.attrib:
+            self.valCol = int(elem.attrib["valCol"])       
 
     def getValueMap(self):
         return self.valMap
@@ -50,14 +74,12 @@ class Track(object):
     def getPath(self):
         return self.path
 
-    def fromXMLElement(self, elem, number=-1):
-        self.name = elem.attrib["name"]
-        self.number = number
-        self.path = elem.attrib["path"]
-        if "dist" in elem.attrib:
-            self.dist = elem.attrib["dist"]
-        if "binSize" in elem.attrib:
-            self.binSize = int(elem.attrib["binSize"])
+    def getValCol(self):
+        return self.valCol
+
+    def getBinSize(self):
+        return self.binSize
+
 
 ###########################################################################
 """list of tracks (see above) that we can index by name or number as well as
@@ -109,8 +131,7 @@ class TrackList(object):
        below its root node.  Will extend to contain more options..."""
        root = ET.parse(path).getroot()
        for child in root.findall("track"):
-           track = Track()
-           track.fromXMLElement(child)
+           track = Track(child)
            self.addTrack(track)
 
    def __check(self):
@@ -235,6 +256,9 @@ class CategoryMap(object):
             return self.unknown
         return self.catMapBack[val]
 
+    def getMissingVal(self):
+        return self.unknown
+
     def __len__(self):
         return len(self.catMap)
 
@@ -246,12 +270,29 @@ class NoMap(CategoryMap):
     def __init__(self):
         super(NoMap, self).__init__()
 
-    def getMap(self, val):
+    def getMap(self, val, update=False):
         return val
 
     def getMapBack(self, val):
         return val    
+
+###########################################################################
     
+""" Act like a cateogry map but dont do any mapping.  By default everything
+is 0, unless it's present then it's a 1"""
+class BinaryMap(CategoryMap):
+    def __init__(self):
+        super(BinaryMap, self).__init__()
+        self.unknown = 0
+
+    def getMap(self, val, update=False):
+        if val is not None:
+            return 1
+        return 0
+
+    def getMapBack(self, val):
+        return val    
+
 ###########################################################################
     
 """ Data Array formed by a series of tracks over the same coordinates of the
@@ -313,12 +354,12 @@ class TrackData(object):
                 sys.stderr.write("Warning: track %s not learned\n" %
                                  trackName)
                 continue
-            rawArray = readTrackData(trackPath, chrom, start, end)
+            rawArray = readTrackData(trackPath, chrom, start, end,
+                                     valCol=inputTrack.getValCol(),
+                                     valMap=inputTrack.getValueMap(),
+                                     updateValMap=init)
             if rawArray is not None:
                 track = self.getTrackList().getTrackByName(trackName)
-                vmap = track.getValueMap()
-                assert MISSING_DATA_VALUE not in rawArray
-                rawArray = [vmap.getMap(x, update=init) for x in rawArray]
                 trackTable.writeRow(track.getNumber(), rawArray)
 
         self.trackTableList.append(trackTable)

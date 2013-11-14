@@ -14,7 +14,7 @@ will eventually add WIG and maybe eventually bigbed / bigwig """
 
 ###########################################################################
 
-def readTrackData(trackPath, chrom, start, end):
+def readTrackData(trackPath, chrom, start, end, **kwargs):
     """ read genome annotation track into python list of values.  a value
     is returned for every element in range (default value is None).  The
     type of file is detected from the extension"""
@@ -26,7 +26,7 @@ def readTrackData(trackPath, chrom, start, end):
 
     trackExt = os.path.splitext(trackPath)[1]
     if trackExt == ".bed":
-        return readBedData(trackPath, chrom, start, end)
+        return readBedData(trackPath, chrom, start, end, **kwargs)
     else:
         sys.stderr.write("Warning: non-BED file skipped %s\n" %
                          trackPath)
@@ -34,17 +34,40 @@ def readTrackData(trackPath, chrom, start, end):
 
 ###########################################################################
 
-def readBedData(bedPath, chrom, start, end):
-    data = [None] * (end - start)
+def readBedData(bedPath, chrom, start, end, **kwargs):
+
+    valCol = None
+    if kwargs is not None and "valCol" in kwargs:
+        valCol = int(kwargs["valCol"])
+    valMap = None
+    if kwargs is not None and "valMap" in kwargs:
+        valMap = kwargs["valMap"]
+    defVal = None
+    if valMap is not None:
+        defVal = valMap.getMissingVal()
+    updateMap = False
+    if kwargs is not None and "updateValMap" in kwargs:
+        updateMap = kwargs["updateValMap"]        
+
+    data = [defVal] * (end - start)
     bedTool = BedTool(bedPath).sort()
     interval = Interval(chrom, start, end)
-    
+
     # todo: check how efficient this is
     for overlap in bedTool.all_hits(interval):
-        # todo: parameterize bed column we want to use
         oStart = max(start, overlap.start)
         oEnd = min(end, overlap.end)
         val = overlap.name
+        if valCol is not None:
+            if valCol == 0:
+                val = 1
+            elif valCol == 4:
+                val = overlap.score
+            else:
+                assert valCol == 3
+        if valMap is not None:
+            val = valMap.getMap(val, update=updateMap)
+            
         for i in xrange(oEnd - oStart):
             data[i + oStart - start] = val
 

@@ -12,11 +12,14 @@ from teHmm.track import *
 from teHmm.tests.common import getTestDirPath
 from teHmm.tests.common import TestBase
 
-def getTracksInfoPath():
-    return getTestDirPath("tests/data/tracksInfo.xml")
+def getTracksInfoPath(idx = 1):
+    if idx == 1:
+        return getTestDirPath("tests/data/tracksInfo.xml")
+    else:
+        return getTestDirPath("tests/data/tracksInfo%d.xml" % idx)
 
-def getTrackList():
-    return TrackList(getTracksInfoPath())
+def getTrackList(idx = 1):
+    return TrackList(getTracksInfoPath(idx))
 
 def getStatesPath():
     return getTestDirPath("tests/data/states.bed")
@@ -81,6 +84,9 @@ class TestCase(TestBase):
         trackList = trackData.getTrackList()
         assert len(trackList) == 3
         assert trackList.getTrackByName("cb").name == "cb"
+        assert trackList.getTrackByName("cb").getValCol() == 4
+        assert trackList.getTrackByName("cb").getBinSize() == 1
+        assert trackList.getTrackByName("cb").getDist() == "multinomial"
         assert trackList.getTrackByName("kmer").name == "kmer"
         assert trackList.getTrackByName("blin") == None
 
@@ -103,7 +109,35 @@ class TestCase(TestBase):
         bedIntervals = readBedIntervals(getStatesPath(), ncol=4)
         for interval in bedIntervals:
             assert interval[3] == 0 or interval[3] == 1
+
+    def testBinaryTrack(self):
+        trackData = TrackData()
+        trackData.loadTrackData(getTracksInfoPath(2),
+                                [("scaffold_1", 0, 200004),
+                                ("scaffold_Q", 2000040, 3000060)])
+        assert trackData.getNumTracks() == 3
+        trackList = trackData.getTrackList()
+        assert len(trackList) == 3
+        assert trackList.getTrackByName("cb").name == "cb"
+        assert trackList.getTrackByName("cb").getDist() == "binary"
+        assert trackList.getTrackByName("kmer").name == "kmer"
+        assert trackList.getTrackByName("blin") == None
+
+        tableList = trackData.getTrackTableList()
+        assert len(tableList) == 2
+        assert tableList[0].getNumTracks() == 3
+        assert tableList[1].getNumTracks() == 3
+        assert len(tableList[0]) == 200004
+        assert len(tableList[1]) == 3000060 - 2000040
+
+        cbTrack = trackList.getTrackByName("cb")
         
+        for i in xrange(len(tableList[0])):
+            assert tableList[0][i][cbTrack.number] == 1
+
+        for i in xrange(len(tableList[1])):
+            assert tableList[1][i][cbTrack.number] == 0
+
 
 def main():
     sys.argv = sys.argv[:1]
