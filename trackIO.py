@@ -116,8 +116,10 @@ def readBedIntervals(bedPath, ncol = 3,
     logging.debug("appending bed intervals")
     for feat in bedIntervals:
         outInterval = (feat.chrom, feat.start, feat.end)
-        if ncol == 4:
+        if ncol >= 4:
             outInterval += (feat.name,)
+        if ncol >= 5:
+            outInterval += (feat.score,)
         outIntervals.append(outInterval)
     logging.debug("finished readBedIntervals(%s)" % bedPath)
         
@@ -135,8 +137,10 @@ def getMergedBedIntervals(bedPath, ncol=3):
     bedTool = BedTool(bedPath)
     for feat in bedTool.merge():
         outInterval = (feat.chrom, feat.start, feat.end)
-        if ncol == 4:
+        if ncol >= 4:
             outInterval += (feat.name,)
+        if ncol >= 5:
+            outInterval += (feat.score,)
         outIntervals.append(outInterval)
     logging.debug("finished mergeBedIntervals(%s)" % bedPath)
 
