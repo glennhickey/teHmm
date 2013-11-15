@@ -235,8 +235,24 @@ class TestCase(TestBase):
 
         em = IndependentMultinomialEmissionModel(
             2, trackData.getNumSymbolsPerTrack())
+        hmm = MultitrackHmm(em)
+        hmm.supervisedTrain(trackData, bedIntervals)
+        hmm.validate()
 
-        # todo!
+        # crappy check for start probs.  need to test transition too!
+        freq = [0.0] * em.getNumStates()
+        total = 0.0
+        for interval in bedIntervals:
+           state = interval[3]
+           freq[state] += float(interval[2]) - float(interval[1])
+           total += float(interval[2]) - float(interval[1])
+
+        sprobs = hmm.getStartProbs()
+        assert len(sprobs) == em.getNumStates()
+        for state in xrange(em.getNumStates()):
+            assert_array_almost_equal(freq[state] / total, sprobs[state])
+
+        # transition probabilites todo!
         
 
 def main():

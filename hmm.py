@@ -14,6 +14,7 @@ import numpy as np
 import pickle
 import string
 import logging
+from collections import Iterable
 from numpy.testing import assert_array_equal, assert_array_almost_equal
 
 from .emission import IndependentMultinomialEmissionModel
@@ -82,12 +83,14 @@ class MultitrackHmm(_BaseHMM):
         # NOTE bedIntervals must be sorted! 
         N = self.emissionModel.getNumStates()
         transitionCount = np.zeros((N,N), np.float)
+        freqCount = np.zeros((N,), np.float)
         prevInterval = None
         logging.debug("beginning supervised transition stats")
         for interval in bedIntervals:
             state = int(interval[3])
             assert state < N
             transitionCount[state,state] += interval[2] - interval[1] - 1
+            freqCount[state] += interval[2] - interval[1]
             if prevInterval is not None and prevInterval[0] == interval[0]:
                 if interval[1] <= prevInterval[2]:
                     raise RuntimeError("Overlapping or out of order training"
@@ -97,7 +100,7 @@ class MultitrackHmm(_BaseHMM):
                 transitionCount[prevInterval[3], state] += 1
         
         self.transmat_ = normalize(np.maximum(transitionCount, 10e-20), axis = 1)
-        self.startprob_ = normalize(np.maximum(transitionCount, 10e-20))
+        self.startprob_ = normalize(np.maximum(freqCount, 10e-20))
 
         logging.debug("beginning supervised emission stats")
         self.emissionModel.supervisedTrain(trackData, bedIntervals)
@@ -133,6 +136,7 @@ class MultitrackHmm(_BaseHMM):
         self.validate()
 
     def save(self, path):
+        self.validate()
         f = open(path, "wb")
         pickle.dump(self.__dict__, f, 2)
         f.close()
@@ -147,7 +151,14 @@ class MultitrackHmm(_BaseHMM):
     def getTrackList(self):
         return self.trackList
 
+    def getStartProbs(self):
+        return self.startprob_
+
     def validate(self):
+        assert len(self.startprob_) == self.emissionModel.getNumStates()
+        assert not isinstance(self.startprob_[0], Iterable)
+        assert len(self.transmat_) == self.emissionModel.getNumStates()
+        assert len(self.transmat_[0]) == self.emissionModel.getNumStates()
         assert_array_almost_equal(np.sum(self.startprob_), 1.)
         for i in xrange(self.emissionModel.getNumStates()):
             assert_array_almost_equal(np.sum(self.transmat_[i]), 1.)
