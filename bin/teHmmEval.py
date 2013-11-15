@@ -55,8 +55,24 @@ def main(argv=None):
 
     if args.bed is not None:
         vitOutFile = open(args.bed, "w")
-        vitOutFile.write("Viterbi Score: %f\nPath:\n%s\n" % (vitLogProb,
-                                                             str(vitStates)))
-        
+        vitOutFile.write("#Viterbi Score: %f\n" % (vitLogProb))
+        statesToBed(args.chrom, args.start, args.end, vitStates, vitOutFile)
+        vitOutFile.close()
+
+def statesToBed(chrom, start, end, states, bedFile):
+    """write a sequence of states out in bed format where intervals are
+    maximum runs of contiguous states."""
+    assert len(states) == end - start
+    prevInterval = (chrom, start, start + 1, states[0])
+    for state in states[1:] + [None]:
+        if state != prevInterval[3]:
+            assert prevInterval[3] is not None
+            bedFile.write("%s\t%d\t%d\t%s\n" % prevInterval)
+            prevInterval = (prevInterval[0], prevInterval[2] + 1,
+                            prevInterval[2] + 2, state)
+        else:
+            prevInterval = (prevInterval[0], prevInterval[1],
+                            prevInterval[2] + 1, prevInterval[3])
+         
 if __name__ == "__main__":
     sys.exit(main())
