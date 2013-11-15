@@ -122,6 +122,18 @@ class TestCase(TestBase):
         self.assertAlmostEqual(np.exp(logprob), 0.01344 * 0.1 * 0.1 * 0.1)
         assert_array_equal(state_sequence, [1, 0, 0])
 
+        # make sure that it still works using a TrackTable structure instead
+        # of a numpy array
+        trackTable4 = IntegerTrackTable(4, "scaffold_1", 10, 13)
+        for row in xrange(4):
+            trackTable4.writeRow(row, [trackObs4[0][row],
+                                       trackObs4[1][row],
+                                       trackObs4[2][row]])
+        logprob, state_sequence = trackHmm3.decode(trackTable4)
+        self.assertAlmostEqual(np.exp(logprob), 0.01344 * 0.1 * 0.1 * 0.1)
+        assert_array_equal(state_sequence, [1, 0, 0])
+        
+
     def testPredict(self):
         observations = [0, 1, 2]
         h = MultinomialHMM(self.n_components,
