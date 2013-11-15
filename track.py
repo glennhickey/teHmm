@@ -13,7 +13,8 @@ import xml.etree.ElementTree as ET
 
 from .trackIO import readTrackData
 
-MISSING_DATA_VALUE = np.iinfo(np.int32).max
+INTEGER_ARRAY_TYPE = np.int16
+MISSING_DATA_VALUE = np.iinfo(INTEGER_ARRAY_TYPE).max
 
 ###########################################################################
 
@@ -213,7 +214,7 @@ class IntegerTrackTable(TrackTable):
         super(IntegerTrackTable, self).__init__(numTracks, chrom, start, end)
         
         #: (end-start) X (numTracks) integer data array
-        self.data = np.empty((end-start, numTracks), np.int)
+        self.data = np.empty((end-start, numTracks), INTEGER_ARRAY_TYPE)
 
     def __getitem__(self, index):
         return self.data[index]
