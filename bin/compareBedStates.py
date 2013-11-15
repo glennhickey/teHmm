@@ -46,7 +46,6 @@ def compareIntervals(intervals1, intervals2, col):
 
     assert intervals1[0][0] == intervals2[0][0]
     assert intervals1[0][1] == intervals2[0][1]
-    print intervals1[-1][2], intervals2[-1][2]
     assert intervals1[-1][2] == intervals2[-1][2]
  
     stats = dict()
