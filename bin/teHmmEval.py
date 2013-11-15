@@ -29,7 +29,7 @@ def main(argv=None):
                         " scaffold_1) etc.")
     parser.add_argument("start", help="Start position", type=int)
     parser.add_argument("end", help="End position (last plus 1)", type=int)
-    parser.add_argument("--viterbi", help="path of file to write viterbi "
+    parser.add_argument("--bed", help="path of file to write viterbi "
                         "output to (most likely sequence of hidden states)",
                         default=None)
     
@@ -53,10 +53,10 @@ def main(argv=None):
 
     print "Viterbi (log) score: %f" % vitLogProb
 
-    if args.viterbi is not None:
-        prob, states = hmmModel.viterbi()
-        vitOutFile = open(args.viterbi, "w")
-        vitOutFile.write("Viterbi Score: %f\nPath:\n%s\n" % (prob,str(states)))
+    if args.bed is not None:
+        vitOutFile = open(args.bed, "w")
+        vitOutFile.write("Viterbi Score: %f\nPath:\n%s\n" % (vitLogProb,
+                                                             str(vitStates)))
         
 if __name__ == "__main__":
     sys.exit(main())
