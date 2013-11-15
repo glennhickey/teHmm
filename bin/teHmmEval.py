@@ -67,9 +67,10 @@ def statesToBed(chrom, start, end, states, bedFile):
     for state in states[1:] + [None]:
         if state != prevInterval[3]:
             assert prevInterval[3] is not None
+            assert prevInterval[1] >= start and prevInterval[2] <= end
             bedFile.write("%s\t%d\t%d\t%s\n" % prevInterval)
-            prevInterval = (prevInterval[0], prevInterval[2] + 1,
-                            prevInterval[2] + 2, state)
+            prevInterval = (prevInterval[0], prevInterval[2],
+                            prevInterval[2] + 1, state)
         else:
             prevInterval = (prevInterval[0], prevInterval[1],
                             prevInterval[2] + 1, prevInterval[3])
