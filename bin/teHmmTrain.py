@@ -18,8 +18,7 @@ from teHmm.track import CategoryMap
 def main(argv=None):
     if argv is None:
         argv = sys.argv
-    logging.basicConfig(level=logging.INFO)
-
+        
     parser = argparse.ArgumentParser(
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
         description="Create a teHMM")
@@ -47,6 +46,8 @@ def main(argv=None):
     args = parser.parse_args()
     if args.verbose is True:
         logging.basicConfig(level=logging.DEBUG)
+    else:
+        logging.basicConfig(level=logging.INFO)        
 
     # read training intervals from the bed file
     logging.info("loading training intervals from %s" % args.trainingBed)
