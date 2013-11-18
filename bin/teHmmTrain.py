@@ -32,7 +32,7 @@ def main(argv=None):
     parser.add_argument("--numStates", help="Number of states in model",
                         type = int, default=2)
     parser.add_argument("--iter", help="Number of EM iterations",
-                        type = int, default=1000)
+                        type = int, default=10)
     parser.add_argument("--supervised", help="Use name (4th) column of "
                         "<traingingBed> for the true hidden states of the"
                         " model.  Transition parameters will be estimated"
