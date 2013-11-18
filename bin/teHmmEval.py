@@ -15,7 +15,6 @@ from teHmm.hmm import MultitrackHmm
 def main(argv=None):
     if argv is None:
         argv = sys.argv
-    logging.basicConfig(level=logging.INFO)        
 
     parser = argparse.ArgumentParser(
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
@@ -40,6 +39,8 @@ def main(argv=None):
     args = parser.parse_args()
     if args.verbose is True:
         logging.basicConfig(level=logging.DEBUG)
+    else:
+        logging.basicConfig(level=logging.INFO)        
         
     # load model created with teHmmTrain.py
     logging.info("loading model %s" % args.inputModel)
