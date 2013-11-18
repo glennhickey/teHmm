@@ -12,6 +12,8 @@ import pickle
 import string
 import copy
 import itertools
+import logging
+import time
 from numpy.testing import assert_array_equal, assert_array_almost_equal
 from operator import mul
 
@@ -107,22 +109,26 @@ class IndependentMultinomialEmissionModel(object):
         a state."""
         assert state < self.numStates
         logProb = 0.
-        for track in xrange(self.numTracks):
-            obsSymbol = singleObs[track]
+        for track, obsSymbol in enumerate(singleObs):
             if obsSymbol != MISSING_DATA_VALUE:
                 assert obsSymbol < self.numSymbolsPerTrack[track]
                 # independence assumption means we can just add the tracks
                 logProb += self.logProbs[track][state][obsSymbol]
+
         return logProb
 
     def allLogProbs(self, obs):
         """ obs is an array of observation vectors.  return an array of log
         probabilities.  this output array contains the probabilitiy for
         each state for each observation"""
+        logging.debug("%s Computing multinomial log prob for %d %d-track "
+                      "observations" % (time.strftime("%H:%M:%S"),
+                                        obs.shape[0], self.getNumTracks()))
         allLogProbs = np.zeros((obs.shape[0], self.numStates), dtype=np.float)
         for i in xrange(len(obs)):
             for state in xrange(self.numStates):
                 allLogProbs[i, state] = self.singleLogProb(state, obs[i])
+        logging.debug("%s Done computing log prob" % time.strftime("%H:%M:%S"))
         return allLogProbs
     
     def sample(self, state):
