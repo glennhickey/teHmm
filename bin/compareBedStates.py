@@ -8,6 +8,7 @@ import sys
 import os
 import argparse
 import logging
+import numpy as np
 
 from teHmm.trackIO import readBedIntervals
 
@@ -25,7 +26,7 @@ def main(argv=None):
         " that both bed files must be sorted and cover the exact same regions"
         " of the same genome.")
 
-    parser.add_argument("bed1", help="Bed file")
+    parser.add_argument("bed1", help="Bed file (TRUTH)")
     parser.add_argument("bed2", help="Bed file covering same regions in same"
                         " order as bed1")
     parser.add_argument("--col", help="Column of bed files to use for state"
@@ -38,7 +39,14 @@ def main(argv=None):
 
     intervals1 = readBedIntervals(args.bed1, ncol = args.col)
     intervals2 = readBedIntervals(args.bed2, ncol = args.col)
-    stats = compareIntervals(intervals1, intervals2, args.col)
+    stats = compareIntervals(intervals1, intervals2, args.col - 1)
+
+    totalRight, totalWrong, accMap = summarizeComparision(stats)
+    print stats
+    print "Accuaracy: %d / %d = %f" % (totalRight, totalWrong,
+                                       float(totalRight)/float(totalWrong))
+    print "State-by-state (Precision, Recall):"
+    print accMap
 
 def compareIntervals(intervals1, intervals2, col):
     """ return dictionary that maps each state to (i1 but not i2, i2 but not i1,
@@ -53,14 +61,16 @@ def compareIntervals(intervals1, intervals2, col):
     p2 = 0
     for p1 in xrange(len(intervals1)):
         i1 = intervals1[p1]
+        assert len(i1) > col
         for pos in xrange(i1[2] - i1[1]):
             i2 = intervals2[p2]
+            assert len(i2) > col
             chrom = i1[0]
             coord = i1[1] + pos
             if i2[0] != chrom or not (coord >= i2[1] and coord < i2[2]):
                 p2 += 1
-                i2 = intervals[p2]
-                assert i2[0] == chrom and coord >= i2[1] and cord < i2[2]
+                i2 = intervals2[p2]
+                assert i2[0] == chrom and coord >= i2[1] and coord < i2[2]
             state1 = i1[col]
             state2 = i2[col]
             if state1 not in stats:
@@ -74,6 +84,21 @@ def compareIntervals(intervals1, intervals2, col):
                 stats[state2][1] += 1
 
     return stats
+
+def summarizeComparision(stats):
+    totalRight = 0
+    totalWrong = 0
+    accMap = dict()
+    for state, stat in stats.items():
+        totalRight += stat[2]
+        totalWrong += stat[0] + stat[1]
+        tp = float(stat[2])
+        fn = float(stat[0])
+        fp = float(stat[1])
+        accMap[state] = (tp / (np.finfo(float).eps + tp + fp),
+                         tp / (np.finfo(float).eps + tp + fn))
+    return (totalRight, totalWrong, accMap)
+        
     
 if __name__ == "__main__":
     sys.exit(main())
