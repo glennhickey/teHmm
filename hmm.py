@@ -80,7 +80,8 @@ class MultitrackHmm(_BaseHMM):
         are also just the expected values, which works for our basic
         multinomial distribution. Note that the states should already
         have been mapped to integers"""
-        # NOTE bedIntervals must be sorted! 
+        # NOTE bedIntervals must be sorted!
+        self.trackList = trackData.getTrackList()
         N = self.emissionModel.getNumStates()
         transitionCount = np.zeros((N,N), np.float)
         freqCount = np.zeros((N,), np.float)
@@ -99,7 +100,8 @@ class MultitrackHmm(_BaseHMM):
                                        interval)
                 transitionCount[prevInterval[3], state] += 1
         
-        self.transmat_ = normalize(np.maximum(transitionCount, 10e-20), axis = 1)
+        self.transmat_ = normalize(np.maximum(
+            transitionCount, 10e-20), axis = 1)
         self.startprob_ = normalize(np.maximum(freqCount, 10e-20))
 
         logging.debug("beginning supervised emission stats")
@@ -142,10 +144,27 @@ class MultitrackHmm(_BaseHMM):
         f.close()
         
     def toText(self):
-        s = "NumStates = %d\n" % self.n_components
-        s += "Start probs = %s\n" % self.startprob_
-        s += "Transitions =\n%s\n" % str(self.transmat_)
-        s += "Emissions =\n%s\n" % str(self.emissionModel.getLogProbs())
+        states = [x for x in xrange(self.n_components)]
+        if self.stateNameMap is not None:
+            states = map(self.stateNameMap.getMapBack, states)
+        s = "\nNumStates = %d:\n%s\n" % (self.n_components, str(states))
+        sp = [(states[i], self.startprob_[i])
+              for i in xrange(self.n_components)] 
+        s += "\nStart probs =\n%s\n" % str(sp)
+        s += "\nTransitions =\n%s\n" % str(self.transmat_)
+        s += "\nEmissions =\n"
+        em = self.emissionModel
+        emProbs = em.getLogProbs()
+        for state, stateName in enumerate(states):
+            s += "State %s:\n" % stateName
+            for trackNo in xrange(em.getNumTracks()):
+                track = self.trackList.getTrackByNumber(trackNo)
+                s += "  Track %d %s:\n" % (track.getNumber(), track.getName())
+                numSymbolsPerTrack =  em.getNumSymbolsPerTrack()
+                for symbol in xrange(numSymbolsPerTrack[trackNo]):
+                    symbolName = track.getValueMap().getMapBack(symbol)
+                    s += "    %s: %f\n" % (symbolName,
+                                           np.exp(emProbs[trackNo][state][symbol]))
         return s
 
     def getTrackList(self):
