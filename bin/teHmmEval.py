@@ -7,6 +7,7 @@ import unittest
 import sys
 import os
 import argparse
+import logging
 
 from teHmm.track import TrackData
 from teHmm.hmm import MultitrackHmm
@@ -14,6 +15,7 @@ from teHmm.hmm import MultitrackHmm
 def main(argv=None):
     if argv is None:
         argv = sys.argv
+    logging.basicConfig(level=logging.INFO)        
 
     parser = argparse.ArgumentParser(
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
@@ -32,10 +34,15 @@ def main(argv=None):
     parser.add_argument("--bed", help="path of file to write viterbi "
                         "output to (most likely sequence of hidden states)",
                         default=None)
+    parser.add_argument("--verbose", help="Print out detailed logging messages",
+                        action = "store_true", default = False)
     
     args = parser.parse_args()
-
+    if args.verbose is True:
+        logging.basicConfig(level=logging.DEBUG)
+        
     # load model created with teHmmTrain.py
+    logging.info("loading model %s" % args.inputModel)
     hmm = MultitrackHmm()
     hmm.load(args.inputModel)
 
@@ -44,11 +51,13 @@ def main(argv=None):
     trackData = TrackData()
     # note we pass in the trackList that was saved as part of the model
     # because we do not want to generate a new one.
+    logging.info("loading tracks %s" % args.tracksInfo)
     trackData.loadTrackData(args.tracksInfo,
                             [(args.chrom, args.start, args.end)],
                             hmm.getTrackList())
 
     # do the viterbi algorithm
+    logging.info("running viterbi algorithm")
     vitLogProb, vitStates = hmm.viterbi(trackData)[0]
 
     print "Viterbi (log) score: %f" % vitLogProb
