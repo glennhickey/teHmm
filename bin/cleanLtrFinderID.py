@@ -8,7 +8,16 @@ import os
 import argparse
 
 """
-Replace TSD|left|LTR_TE|78 with TSD|left|LTR_TE etc..
+Take the Bed output of ltr_finder, and make some different bed files that we can use for the model by changing the ids
+
+output.bed : Uniuqe id's removed
+output_sym.bed : and right and left removed
+output_tsd_as_gap.bed : tsd states removed
+output_sym_tsd_as_gap.bed : tsd states removed and right and left removed
+output_tsd_as_ltr.bed : tsd states changed to ltr
+output_sym_tsd_as_ltr.bed : tsd states changed to ltr right and left removed
+output_single.bed : all annotated elems get same id 
+
 """
 
 def main(argv=None):
@@ -18,32 +27,36 @@ def main(argv=None):
     parser = argparse.ArgumentParser(
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
         description="Remove ltr_finder ids from 4th column")
-    parser.add_argument("--a", help="path of input file", default="stdin")
-
-    args = parser.parse_args()
-
-    ifile = sys.stdin
-    if args.a != "stdin":
-        ifile = open(args.a)
-
-    args = parser.parse_args()
-
-    ifile = sys.stdin
-    if args.a != "stdin":
-        ifile = open(args.a)
+    parser.add_argument("inBed", help="bed with ltr results to process")
+    parser.add_argument("outBed", help="bed to write output to.  Will also "
+                        "write outBed_sym.bed outBed_tsd_as_gap.bed etc.")
     
-    for line in ifile:
-        if line.lstrip()[0] == "#":
-            sys.stdout.write(line)
-        else:
-            tokens = line.split()
-            ntoks = len(tokens)
-            if ntoks > 3:
-                tokens[3] = tokens[3][:tokens[3].rfind("|")]
-            sys.stdout.write("\t".join(tokens) + "\n")
+    args = parser.parse_args()
+    assert os.path.exists(args.inBed)
+    baseOut, ext = os.path.splitext(args.outBed)
 
-    if args.a != "stdin":
-        ifile.close()
+    os.system("sed -e \"s/|LTR_TE|[0-9]*//g\" -e \"s/|-//g\" %s > %s" % (
+        args.inBed, args.outBed))
+
+    symBed = baseOut + "_sym" + ext
+    os.system("sed -e \"s/|left//g\" -e \"s/|right//g\" %s > %s" % (args.outBed,
+                                                                    symBed))
+
+    tsd_as_gapsBed = baseOut + "_tsd_as_gap" + ext
+    os.system("grep -v TSD %s > %s" % (args.outBed, tsd_as_gapsBed))
+
+    sym_tsd_as_gapsBed = baseOut + "_sym_tsd_as_gap" + ext
+    os.system("grep -v TSD %s > %s" % (symBed, sym_tsd_as_gapsBed))
+
+    tsd_as_ltrBed = baseOut + "_tsd_as_ltr" + ext
+    os.system("sed -e \"s/TSD/LTR/g\" %s > %s" % (args.outBed, tsd_as_ltrBed))
+
+    sym_tsd_as_ltrBed = baseOut + "_sym_tsd_as_ltr" + ext
+    os.system("sed -e \"s/TSD/LTR/g\" %s > %s" % (symBed, sym_tsd_as_ltrBed))
+
+    singleBed = baseOut + "_single" + ext
+    os.system("sed -e \"s/LTR/inside/g\" %s > %s" % (sym_tsd_as_ltrBed,
+                                                     singleBed))
         
 if __name__ == "__main__":
     sys.exit(main())
