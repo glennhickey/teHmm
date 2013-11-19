@@ -32,14 +32,26 @@ def main(argv=None):
 
     bedIntervals = BedTool(args.inputBed).sort()
     prevInterval = None
+
+    # this code has been way to buggy for something so simple
+    # keep extra list to check for sure even though it's a waste of
+    # time and space
+    sanity = []
+    
     for interval in bedIntervals:
         if (prevInterval is not None and
             interval.chrom == prevInterval.chrom and
             interval.start < prevInterval.end):
-                interval.start = prevInterval.end
+            interval.start = prevInterval.end
+            
         if interval.end > interval.start:
             sys.stdout.write("%s" % str(interval))
-        prevInterval = interval
+            sanity.append(interval)
+            prevInterval = interval
+
+    for i in xrange(len(sanity) - 1):
+        if sanity[i].chrom == sanity[i+1].chrom:
+            assert sanity[i+1].start >= sanity[i].end
     
 if __name__ == "__main__":
     sys.exit(main())
