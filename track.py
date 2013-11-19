@@ -13,7 +13,7 @@ import xml.etree.ElementTree as ET
 
 from .trackIO import readTrackData
 
-INTEGER_ARRAY_TYPE = np.int16
+INTEGER_ARRAY_TYPE = np.uint16
 
 ###########################################################################
 
@@ -209,11 +209,11 @@ class TrackTable(object):
 
 """Track Table where every value is an integer"""
 class IntegerTrackTable(TrackTable):
-    def __init__(self, numTracks, chrom, start, end):
+    def __init__(self, numTracks, chrom, start, end, dtype=INTEGER_ARRAY_TYPE):
         super(IntegerTrackTable, self).__init__(numTracks, chrom, start, end)
         
         #: (end-start) X (numTracks) integer data array
-        self.data = np.empty((end-start, numTracks), dtype=INTEGER_ARRAY_TYPE)
+        self.data = np.empty((end-start, numTracks), dtype=dtype)
 
     def __getitem__(self, index):
         return self.data[index]
@@ -352,7 +352,13 @@ class TrackData(object):
                                          interval[1], interval[2], initTracks)
 
     def __loadTrackDataInterval(self, inputTrackList, chrom, start, end, init):
-        trackTable = IntegerTrackTable(self.getNumTracks(), chrom, start, end)
+        dtype = np.uint8
+        for track in self.trackList:
+            if track.getDist() != "binary":
+                dtype = INTEGER_ARRAY_TYPE
+
+        trackTable = IntegerTrackTable(self.getNumTracks(), chrom, start, end,
+                                       dtype=dtype)
         for inputTrack in inputTrackList:
             trackName = inputTrack.getName()
             trackPath = inputTrack.getPath()
