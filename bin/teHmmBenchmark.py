@@ -72,7 +72,6 @@ def main(argv=None):
        command += " && compareBedStates.py %s %s > %s" % (inBed,
                                                           evalBed,
                                                           compPath)
-       print command
        commands.append(command)
 
     runParallelShellCommands(commands, args.numProc)
