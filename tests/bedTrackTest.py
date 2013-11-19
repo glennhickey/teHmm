@@ -68,7 +68,7 @@ class TestCase(TestBase):
                     [catMap.getMap(x) for x in [track] * len(table)])
             assert catMap.getMap(0) == 2
             assert catMap.getMap(1) == 3
-            assert catMap.getMap(3) == MISSING_DATA_VALUE
+            assert catMap.getMap(3) == catMap.getMissingVal()
 
             for col in xrange(len(table)): 
                 for track in xrange(3):                

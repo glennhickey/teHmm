@@ -14,7 +14,6 @@ import xml.etree.ElementTree as ET
 from .trackIO import readTrackData
 
 INTEGER_ARRAY_TYPE = np.int16
-MISSING_DATA_VALUE = np.iinfo(INTEGER_ARRAY_TYPE).max
 
 ###########################################################################
 
@@ -232,7 +231,6 @@ class IntegerTrackTable(TrackTable):
 """ map a value to an integer category """
 class CategoryMap(object):
     def __init__(self):
-        self.unknown = MISSING_DATA_VALUE
         self.catMap = dict()
         self.catMapBack = dict()
         
@@ -251,7 +249,7 @@ class CategoryMap(object):
             self.update(val)
         if self.has(val) is True:
             return self.catMap[val]
-        return self.unknown
+        return self.getMissingVal()
 
     def getMapBack(self, val):
         if val == self.unknown:
@@ -259,7 +257,7 @@ class CategoryMap(object):
         return self.catMapBack[val]
 
     def getMissingVal(self):
-        return self.unknown
+        return len(self)
 
     def __len__(self):
         return len(self.catMap)
@@ -286,7 +284,6 @@ is 0, unless it's present then it's a 1"""
 class BinaryMap(CategoryMap):
     def __init__(self):
         super(BinaryMap, self).__init__()
-        self.unknown = 0
 
     def getMap(self, val, update=False):
         if val is not None:
@@ -295,6 +292,9 @@ class BinaryMap(CategoryMap):
 
     def getMapBack(self, val):
         return val
+
+    def getMissingVal(self):
+        return 0
 
     def __len__(self):
         return 2

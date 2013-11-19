@@ -18,7 +18,7 @@ from collections import Iterable
 from numpy.testing import assert_array_equal, assert_array_almost_equal
 
 from .emission import IndependentMultinomialEmissionModel
-from .track import TrackList, TrackTable, Track, MISSING_DATA_VALUE
+from .track import TrackList, TrackTable, Track
 
 from sklearn.hmm import _BaseHMM
 from sklearn.hmm import MultinomialHMM
