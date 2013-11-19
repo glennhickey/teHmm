@@ -43,8 +43,9 @@ def main(argv=None):
 
     totalRight, totalWrong, accMap = summarizeComparision(stats)
     print stats
+    totalBoth = totalRight + totalWrong
     print "Accuaracy: %d / %d = %f" % (totalRight, totalWrong,
-                                       float(totalRight)/float(totalWrong))
+                                       float(totalRight)/float(totalBoth))
     print "State-by-state (Precision, Recall):"
     print accMap
 
@@ -69,6 +70,7 @@ def compareIntervals(intervals1, intervals2, col):
             coord = i1[1] + pos
             if i2[0] != chrom or not (coord >= i2[1] and coord < i2[2]):
                 p2 += 1
+                i2back = i2
                 i2 = intervals2[p2]
                 assert i2[0] == chrom and coord >= i2[1] and coord < i2[2]
             state1 = i1[col]

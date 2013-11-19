@@ -11,6 +11,7 @@ import logging
 
 from teHmm.track import TrackData
 from teHmm.hmm import MultitrackHmm
+from teHmm.trackIO import getMergedBedIntervals
 
 def main(argv=None):
     if argv is None:
@@ -26,10 +27,7 @@ def main(argv=None):
                         "containing paths to genome annotation tracks")
     parser.add_argument("inputModel", help="Path of hmm created with"
                         "teHmmTrain.py")
-    parser.add_argument("chrom", help="Name of sequence (ex chr1, "
-                        " scaffold_1) etc.")
-    parser.add_argument("start", help="Start position", type=int)
-    parser.add_argument("end", help="End position (last plus 1)", type=int)
+    parser.add_argument("bedRegions", help="Intervals to process")
     parser.add_argument("--bed", help="path of file to write viterbi "
                         "output to (most likely sequence of hidden states)",
                         default=None)
@@ -47,26 +45,41 @@ def main(argv=None):
     hmm = MultitrackHmm()
     hmm.load(args.inputModel)
 
+    # read intervals from the bed file
+    logging.info("loading target intervals from %s" % args.bedRegions)
+    mergedIntervals = getMergedBedIntervals(args.bedRegions, ncol=4)
+    if mergedIntervals is None or len(mergedIntervals) < 1:
+        raise RuntimeError("Could not read any intervals from %s" %
+                           args.bedRegions)
+
+
     # load the input
     # read the tracks, while intersecting them with the given interval
     trackData = TrackData()
     # note we pass in the trackList that was saved as part of the model
     # because we do not want to generate a new one.
     logging.info("loading tracks %s" % args.tracksInfo)
-    trackData.loadTrackData(args.tracksInfo,
-                            [(args.chrom, args.start, args.end)],
+    trackData.loadTrackData(args.tracksInfo, mergedIntervals, 
                             hmm.getTrackList())
 
     # do the viterbi algorithm
     logging.info("running viterbi algorithm")
-    vitLogProb, vitStates = hmm.viterbi(trackData)[0]
-
-    print "Viterbi (log) score: %f" % vitLogProb
 
     if args.bed is not None:
         vitOutFile = open(args.bed, "w")
-        vitOutFile.write("#Viterbi Score: %f\n" % (vitLogProb))
-        statesToBed(args.chrom, args.start, args.end, vitStates, vitOutFile)
+    totalScore = 0
+    tableIndex = 0
+    for vitLogProb, vitStates in hmm.viterbi(trackData):
+        totalScore += vitLogProb
+        if args.bed is not None:
+            vitOutFile.write("#Viterbi Score: %f\n" % (vitLogProb))
+            trackTable = trackData.getTrackTableList()[tableIndex]
+            tableIndex += 1
+            statesToBed(trackTable.getChrom(), trackTable.getStart(),
+                        trackTable.getEnd(), vitStates, vitOutFile)
+
+    print "Viterbi (log) score: %f" % totalScore
+    if args.bed is not None:
         vitOutFile.close()
 
 def statesToBed(chrom, start, end, states, bedFile):
