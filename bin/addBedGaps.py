@@ -41,19 +41,26 @@ def main(argv=None):
     assert os.path.isfile(args.tgtBed)
     assert args.outBed != args.allBed and args.outBed != args.tgtBed
     tempFile = "%s_temp" % args.outBed
+    tempFile2 = "%s_temp2" % args.outBed
 
-    # make sure that the state label is present
+    # make sure that the state label is present in allBed
     os.system("setBedCol.py 3 %s --a %s > %s" % (args.state, args.allBed,
-                                             args.outBed))
+                                                 args.outBed))
+
+    # make sure that there are no overlaps in tgtBed
+    os.system("removeBedOverlaps.py %s > %s" % (args.tgtBed, tempFile2))
 
     # substract tgtbed from state-appended all.bed and store in tempFile
-    os.system("subtractBed -a %s -b %s > %s" % (args.outBed, args.tgtBed,
+    os.system("subtractBed -a %s -b %s > %s" % (args.outBed, tempFile2,
                                                 tempFile))
 
     # concatenate tempFile to tgtBed and sort into output
-    os.system("cat %s %s | sortBed > %s" % (tempFile, args.tgtBed, args.outBed))
+    os.system("cat %s %s | sortBed > %s" % (tempFile, tempFile2, args.outBed))
 
+    # remove the temp files.  note that they will trail if anything
+    # went wrong above. 
     os.system("rm -f %s" % tempFile)
+    os.system("rm -f %s" % tempFile2)
     
     
 if __name__ == "__main__":
