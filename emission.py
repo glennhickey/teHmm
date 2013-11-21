@@ -16,7 +16,7 @@ import logging
 import time
 from numpy.testing import assert_array_equal, assert_array_almost_equal
 from operator import mul
-from ._emission import fastAllLogProbs
+from ._emission import canFast, fastAllLogProbs, fastAccumulateStats
 from .track import TrackTable
 from sklearn.hmm import _BaseHMM
 from sklearn.hmm import MultinomialHMM
@@ -117,7 +117,7 @@ class IndependentMultinomialEmissionModel(object):
                       "observations" % (time.strftime("%H:%M:%S"),
                                         obs.shape[0], self.getNumTracks()))
         allLogProbs = np.zeros((obs.shape[0], self.numStates), dtype=np.float)
-        if isinstance(obs, TrackTable) or isinstance(obs, np.ndarray):
+        if canFast(obs):
             logging.debug("Cython log prob enabled")
             fastAllLogProbs(obs, self.logProbs, allLogProbs)
         else:
@@ -152,12 +152,19 @@ class IndependentMultinomialEmissionModel(object):
         that position, to the emission table.  Note that tracks are also
         treated completely independently here"""
         assert obs.shape[1] == self.numTracks
-        
-        for i in xrange(len(obs)):
-            for track in xrange(self.numTracks):
-                for state in xrange(self.numStates):
-                    obsVal = obs[i,track]
-                    obsStats[track][state, obsVal] += posteriors[i, state]
+        logging.debug("%s Begin emission.accumulateStast for %d obs" % (
+            time.strftime("%H:%M:%S"), len(obs)))
+        if canFast(obs):
+            logging.debug("Cython emission.accumulateStats enabled")
+            fastAccumulateStats(obs, obsStats, posteriors)
+        else:
+            for i in xrange(len(obs)):
+                for track in xrange(self.numTracks):
+                    for state in xrange(self.numStates):
+                        obsVal = obs[i,track]
+                        obsStats[track][state, obsVal] += posteriors[i, state]
+        logging.debug("%s Done emission.accumulateStast for %d obs" % (
+            time.strftime("%H:%M:%S"), len(obs)))
         return obsStats
         
     def maximize(self, obsStats):
