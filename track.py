@@ -205,6 +205,9 @@ class TrackTable(object):
     def getEnd(self):
         return self.end
 
+    def getNumPyArray(self):
+        raise RuntimeError("Not implemented")
+
 ###########################################################################
 
 """Track Table where every value is an integer"""
@@ -225,6 +228,9 @@ class IntegerTrackTable(TrackTable):
         assert len(rowArray) == len(self)
         for i in xrange(len(self)):
             self.data[i][row] = rowArray[i]
+
+    def getNumPyArray(self):
+        return self.data
             
 ###########################################################################
             

@@ -16,7 +16,8 @@ import logging
 import time
 from numpy.testing import assert_array_equal, assert_array_almost_equal
 from operator import mul
-
+from ._emission import fastAllLogProbs
+from .track import TrackTable
 from sklearn.hmm import _BaseHMM
 from sklearn.hmm import MultinomialHMM
 from sklearn.hmm import GaussianHMM
@@ -116,9 +117,13 @@ class IndependentMultinomialEmissionModel(object):
                       "observations" % (time.strftime("%H:%M:%S"),
                                         obs.shape[0], self.getNumTracks()))
         allLogProbs = np.zeros((obs.shape[0], self.numStates), dtype=np.float)
-        for i in xrange(len(obs)):
-            for state in xrange(self.numStates):
-                allLogProbs[i, state] = self.singleLogProb(state, obs[i])
+        if isinstance(obs, TrackTable) or isinstance(obs, np.ndarray):
+            logging.debug("Cython log prob enabled")
+            fastAllLogProbs(obs, self.logProbs, allLogProbs)
+        else:
+            for i in xrange(len(obs)):
+                for state in xrange(self.numStates):
+                    allLogProbs[i, state] = self.singleLogProb(state, obs[i])
         logging.debug("%s Done computing log prob" % time.strftime("%H:%M:%S"))
         return allLogProbs
     
@@ -173,7 +178,8 @@ class IndependentMultinomialEmissionModel(object):
         allSymbols = [x for x in self.getSymbols()]
         assert len(allSymbols) == reduce(lambda x,y : max(x,1) * max(y,1),
                                           self.numSymbolsPerTrack, 1)
-        
+        assert isinstance(self.logProbs, np.ndarray)
+        assert len(self.logProbs.shape) == 3
         for state in xrange(self.numStates):
             total = 0.
             for val in allSymbols:
