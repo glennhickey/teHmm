@@ -104,7 +104,6 @@ class MultitrackHmm(_BaseHMM):
             transitionCount, 10e-20), axis = 1)
         self.startprob_ = normalize(np.maximum(freqCount, 10e-20))
 
-        logging.debug("beginning supervised emission stats")
         self.emissionModel.supervisedTrain(trackData, bedIntervals)
         self.validate()
         

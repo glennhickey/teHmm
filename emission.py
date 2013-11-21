@@ -16,7 +16,7 @@ import logging
 import time
 from numpy.testing import assert_array_equal, assert_array_almost_equal
 from operator import mul
-from ._emission import canFast, fastAllLogProbs, fastAccumulateStats
+from ._emission import canFast, fastAllLogProbs, fastAccumulateStats, fastUpdateCounts
 from .track import TrackTable
 from sklearn.hmm import _BaseHMM
 from sklearn.hmm import MultinomialHMM
@@ -199,7 +199,8 @@ class IndependentMultinomialEmissionModel(object):
         """ count the various emissions for each state.  Note that the
         iteration in this function assumes that both trackData and
         bedIntervals are sorted."""
-
+        logging.debug("%s beginning supervised emission stats" % (
+             time.strftime("%H:%M:%S")))
         trackTableList = trackData.getTrackTableList()
         numTables = len(trackTableList)
         assert numTables > 0
@@ -215,11 +216,18 @@ class IndependentMultinomialEmissionModel(object):
                 if overlap is not None:
                     lastHit = tableIdx
                     hit = True
-                    self.__updateCounts(overlap, table, obsStats)
+                    if canFast(table) is True:
+                        fastUpdateCounts(overlap, table, obsStats)
+                    else:
+                        self.__updateCounts(overlap, table, obsStats)
                 elif hit is True:
                     break
-
+        logging.debug("%s beginning supervised emission max" % (
+            time.strftime("%H:%M:%S")))
         self.maximize(obsStats)
+        logging.debug("%s done supervised emission" % (
+                          time.strftime("%H:%M:%S")))
+
         self.validate()
 
     def __updateCounts(self, bedInterval, trackTable, obsStats):

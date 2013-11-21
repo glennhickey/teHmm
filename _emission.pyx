@@ -129,3 +129,78 @@ def _fastAccumulateStats32(itype_t nObs, itype_t nTracks, itype_t nStates,
             for state in xrange(nStates):
                 obsVal = obs[i,track]
                 obsStats[track][state, obsVal] += posteriors[i, state]
+
+@cython.boundscheck(False)
+def _fastAccumulateStats32(itype_t nObs, itype_t nTracks, itype_t nStates,
+                            np.ndarray[np.int32_t, ndim=2] obs, obsStats,
+                            posteriors):
+    for i in xrange(nObs):
+        for track in xrange(nTracks):
+            for state in xrange(nStates):
+                obsVal = obs[i,track]
+                obsStats[track][state, obsVal] += posteriors[i, state]
+
+@cython.boundscheck(False)
+def fastUpdateCounts(bedInterval, trackTable, obsStats):
+    assert isinstance(trackTable, TrackTable)
+    
+    obs = trackTable.getNumPyArray()
+
+    assert isinstance(obs, np.ndarray)
+    assert len(obs.shape) == 2
+    
+    cdef itype_t tableStart = trackTable.getStart()
+    cdef itype_t start = bedInterval[1]
+    cdef itype_t end = bedInterval[2]
+    cdef itype_t symbol = bedInterval[3]
+    cdef itype_t nObs = obs.shape[0]
+    cdef itype_t nTracks = obs.shape[1]
+    cdef itype_t nStates = obsStats[0].shape[0]
+
+    if obs.dtype == np.int32:
+        _fastUpdateCounts32(nObs, nTracks, nStates, start, end, symbol,
+                            tableStart, obs, obsStats)
+    elif obs.dtype == np.uint16:
+        _fastUpdateCountsU16(nObs, nTracks, nStates, start, end, symbol,
+                             tableStart, obs, obsStats)
+    elif obs.dtype == np.uint8:
+        _fastUpdateCountsU8(nObs, nTracks, nStates, start, end, symbol,
+                            tableStart, obs, obsStats)
+    else:
+        assert False
+
+@cython.boundscheck(False)
+def _fastUpdateCounts32(itype_t nObs, itype_t nTracks, itype_t nStates,
+                        itype_t start, itype_t end, itype_t symbol,
+                        itype_t tableStart, 
+                        np.ndarray[np.int32_t, ndim=2] obs,
+                        obsStats):
+    for pos in xrange(start, end):
+        # convert to position within track table
+        tablePos = pos - tableStart
+        for track in xrange(nTracks):
+            obsStats[track][symbol, obs[tablePos, track]] += 1.
+
+@cython.boundscheck(False)
+def _fastUpdateCountsU16(itype_t nObs, itype_t nTracks, itype_t nStates,
+                        itype_t start, itype_t end, itype_t symbol,
+                        itype_t tableStart, 
+                        np.ndarray[np.uint16_t, ndim=2] obs,
+                        obsStats):
+    for pos in xrange(start, end):
+        # convert to position within track table
+        tablePos = pos - tableStart
+        for track in xrange(nTracks):
+            obsStats[track][symbol, obs[tablePos, track]] += 1.
+
+@cython.boundscheck(False)
+def _fastUpdateCountsU8(itype_t nObs, itype_t nTracks, itype_t nStates,
+                        itype_t start, itype_t end, itype_t symbol,
+                        itype_t tableStart, 
+                        np.ndarray[np.uint8_t, ndim=2] obs,
+                        obsStats):
+    for pos in xrange(start, end):
+        # convert to position within track table
+        tablePos = pos - tableStart
+        for track in xrange(nTracks):
+            obsStats[track][symbol, obs[tablePos, track]] += 1.
