@@ -39,7 +39,7 @@ def main(argv=None):
         verbose = ""
 
     if not os.path.exists(args.outputDir):
-        runShellCommand("mkdir %s" % args.outputDir)
+        os.makedirs(args.outputDir)
 
     #todo: try to get timing for each command
     commands = []
