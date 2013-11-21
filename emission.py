@@ -39,7 +39,6 @@ class IndependentMultinomialEmissionModel(object):
         self.numTracks = len(numSymbolsPerTrack)
         self.numSymbolsPerTrack = numSymbolsPerTrack
         # [TRACK, STATE, SYMBOL]
-        self.probs = None
         self.logProbs = None
         self.initParams(params)
 
@@ -76,9 +75,9 @@ class IndependentMultinomialEmissionModel(object):
         equally probable for each category.  if params is specifed, then
         assume it is the emission probability matrix and set our log probs
         to the log of it."""
-        self.logProbs = []
-        self.probs = []
-        #todo: numpyify
+        self.logProbs = np.zeros((self.numTracks, self.numStates,
+                                  1 + max(self.numSymbolsPerTrack)),
+                                 dtype=np.float)
         for i in xrange(self.numTracks):
             stateList = []
             logStateList = []
@@ -90,18 +89,14 @@ class IndependentMultinomialEmissionModel(object):
                     dist = np.array(params[i][j], dtype=np.float)
                 # tack a 1 at the end of dist.  it'll be our uknown value
                 dist = np.append(dist, [1.])
-                stateList.append(dist)
-                logStateList.append(np.log(dist))
-            self.probs.append(stateList)
-            self.logProbs.append(logStateList)
+                for k in xrange(len(dist)):
+                    self.logProbs[i, j, k] = np.log(dist[k])
             
         assert len(self.logProbs) == self.numTracks
         for i in xrange(self.numTracks):
             assert len(self.logProbs[i]) == self.numStates
             for j in xrange(self.numStates):
-                assert len(self.logProbs[i][j]) == self.numSymbolsPerTrack[i]+1
-                assert np.array_equal(self.logProbs[i][j],
-                                      np.log(self.probs[i][j]))
+                assert len(self.logProbs[i][j]) >= self.numSymbolsPerTrack[i]+1
         self.validate()
 
     def singleLogProb(self, state, singleObs):
