@@ -35,7 +35,7 @@ def main(argv=None):
     parser.add_argument("--allTrackCombinations", help="Rerun with all"
                         " possible combinations of tracks from the input"
                         " tracksInfo file.  Note that this number gets big"
-                        " pretty fast.")
+                        " pretty fast.", action = "store_true", default= False)
     parser.add_argument("--emStates", help="By default the supervised mode"
                         " of teHmmTrain is activated.  This option overrides"
                         " that and uses the EM mode and the given number of "
@@ -54,9 +54,9 @@ def main(argv=None):
 
     inputTrackList = TrackList(args.tracksInfo)
 
-    sizeRange = (len(inputTrackList), len(inputTrackList))
+    sizeRange = (len(inputTrackList), len(inputTrackList) + 1)
     if args.allTrackCombinations is True:
-        sizeRange = (1, len(inputTrackList))
+        sizeRange = (1, len(inputTrackList) + 1)
 
     if args.emStates is not None:
         trainFlags = "--numStates %d" % args.emStates
@@ -66,7 +66,7 @@ def main(argv=None):
     #todo: try to get timing for each command
     commands = []
 
-    for pn, pList in enumerate(permuteTrackList(inputTrackList)):
+    for pn, pList in enumerate(permuteTrackList(inputTrackList, sizeRange)):
         if len(pList) == len(inputTrackList):
             outDir = args.outputDir
         else:
@@ -111,16 +111,12 @@ def main(argv=None):
     runParallelShellCommands(commands, args.numProc)
 
 
-def permuteTrackList(trackList, sizeRange = None):
+def permuteTrackList(trackList, sizeRange):
     """ generate tracklists of all combinations of tracks in the input list
     optionally using size range to limit the different sizes tried. so, for
     example, given input list [t1, t2, t3] and sizeRange=None this
     will gneerate [t1] [t2] [t3] [t1,t2] [t1,t3] [t2,t3] [t1,t2,t3] """
-    if sizeRange is None:
-        sizeRange = (1, len(trackList))
-    else:
-        sizeRange = (min(len(trackList), sizeRange[0]),
-                     min(len(trackList), sizeRange[1]))
+    assert sizeRange[0] > 0 and sizeRange[1] <= len(trackList) + 1
     for outLen in xrange(*sizeRange):
         for perm in itertools.permutations([x for x in xrange(outLen)]):
             permList = TrackList()
