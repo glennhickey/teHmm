@@ -66,7 +66,7 @@ def main(argv=None):
     #todo: try to get timing for each command
     commands = []
 
-    for pn, pList in enumerate(permuteTrackList(inputTrackList, sizeRange)):
+    for pn, pList in enumerate(subsetTrackList(inputTrackList, sizeRange)):
         if len(pList) == len(inputTrackList):
             outDir = args.outputDir
         else:
@@ -111,14 +111,14 @@ def main(argv=None):
     runParallelShellCommands(commands, args.numProc)
 
 
-def permuteTrackList(trackList, sizeRange):
+def subsetTrackList(trackList, sizeRange):
     """ generate tracklists of all combinations of tracks in the input list
     optionally using size range to limit the different sizes tried. so, for
     example, given input list [t1, t2, t3] and sizeRange=None this
     will gneerate [t1] [t2] [t3] [t1,t2] [t1,t3] [t2,t3] [t1,t2,t3] """
     assert sizeRange[0] > 0 and sizeRange[1] <= len(trackList) + 1
     for outLen in xrange(*sizeRange):
-        for perm in itertools.permutations([x for x in xrange(outLen)]):
+        for perm in itertools.combinations([x for x in xrange(outLen)]):
             permList = TrackList()
             for trackNo in perm:
                 track = copy.deepcopy(trackList.getTrackByNumber(trackNo))
