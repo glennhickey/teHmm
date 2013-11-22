@@ -118,7 +118,7 @@ def subsetTrackList(trackList, sizeRange):
     will gneerate [t1] [t2] [t3] [t1,t2] [t1,t3] [t2,t3] [t1,t2,t3] """
     assert sizeRange[0] > 0 and sizeRange[1] <= len(trackList) + 1
     for outLen in xrange(*sizeRange):
-        for perm in itertools.combinations([x for x in xrange(len(TrackList))],
+        for perm in itertools.combinations([x for x in xrange(len(trackList))],
                                             outLen):
             permList = TrackList()
             for trackNo in perm:
