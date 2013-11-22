@@ -8,6 +8,7 @@ import sys
 import os
 import argparse
 import logging
+import numpy as np
 
 from teHmm.track import TrackData
 from teHmm.hmm import MultitrackHmm
@@ -87,7 +88,11 @@ def statesToBed(chrom, start, end, states, bedFile):
     maximum runs of contiguous states."""
     assert len(states) == end - start
     prevInterval = (chrom, start, start + 1, states[0])
-    for state in states[1:] + [None]:
+    for i in xrange(1, len(states) + 1):
+        if i < len(states):
+            state = states[i]
+        else:
+            state = None
         if state != prevInterval[3]:
             assert prevInterval[3] is not None
             assert prevInterval[1] >= start and prevInterval[2] <= end
