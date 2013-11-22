@@ -58,7 +58,21 @@ class Track(object):
         if "binSize" in elem.attrib:
             self.binSize = int(elem.attrib["binSize"])
         if "valCol" in elem.attrib:
-            self.valCol = int(elem.attrib["valCol"])       
+            self.valCol = int(elem.attrib["valCol"])
+
+    def toXMLElement(self):
+        elem = ET.Element("track")
+        if self.name is not None:
+            elem.attrib["name"] = str(self.name)
+        if self.path is not None:
+            elem.attrib["path"] = str(self.path)
+        if self.dist is not None:
+            elem.attrib["distribution"] = str(self.dist)
+        if self.binSize is not None:
+            elem.attrib["binSize"] = str(self.binSize)
+        if self.valCol is not None:
+            elem.attrib["valCol"] = str(self.valCol)
+        return elem
 
     def getValueMap(self):
         return self.valMap
@@ -134,6 +148,12 @@ class TrackList(object):
        for child in root.findall("track"):
            track = Track(child)
            self.addTrack(track)
+
+   def saveXML(self, path):
+       root = ET.Element("teModelConfig")
+       for track in self.trackList:
+           root.append(track.toXMLElement())
+       ET.ElementTree(root).write(path)
 
    def __check(self):
        for i,track in enumerate(self.trackList):
