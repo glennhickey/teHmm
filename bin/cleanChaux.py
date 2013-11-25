@@ -10,7 +10,7 @@ import argparse
 from pybedtools import BedTool, Interval
 
 """
-Remove everything past the first | in the name column
+Remove everything past the first | and / in the name column
 """
 
 def main(argv=None):
@@ -19,7 +19,7 @@ def main(argv=None):
 
     parser = argparse.ArgumentParser(
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
-        description="Cut names off at first |")
+        description="Cut names off at first | and or /")
     parser.add_argument("inBed", help="bed with ltr results to process")
     parser.add_argument("outBed", help="bed to write output to.")
 
@@ -29,6 +29,7 @@ def main(argv=None):
 
     for interval in BedTool(args.inBed).sort():
         interval.name = interval.name[:interval.name.find("|")]
+        interval.name = interval.name[:interval.name.find("/")]
         outFile.write(str(interval))
 
     outFile.close()
