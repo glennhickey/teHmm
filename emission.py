@@ -55,17 +55,21 @@ class IndependentMultinomialEmissionModel(object):
     def getNumSymbolsPerTrack(self):
         return self.numSymbolsPerTrack
 
+    def getTrackSymbols(self, track):
+        for i in xrange(self.numSymbolsPerTrack[track]):
+            yield i
+        
     def getSymbols(self):
         """ iterate over all possible vectors of symbosl """
         if self.numTracks == 1:
-            for i in xrange(self.numSymbolsPerTrack[0]):
+            for i in self.getTrackSymbols(0):
                 yield [i]
         else:
             valArrays = []
             for track in xrange(self.numTracks):
                 if self.numSymbolsPerTrack[track] > 0:
                     valArrays.append(
-                        [x for x in xrange(self.numSymbolsPerTrack[track])])
+                        [x for x in self.getTrackSymbols(track)])
                 else:
                     valArrays.append([0])
             for val in itertools.product(*valArrays):
@@ -171,9 +175,9 @@ class IndependentMultinomialEmissionModel(object):
         for track in xrange(self.numTracks):
             for state in xrange(self.numStates):
                 totalSymbol = 0.0
-                for symbol in xrange(self.numSymbolsPerTrack[track]):
+                for symbol in self.getTrackSymbols(track):
                     totalSymbol += obsStats[track][state, symbol]
-                for symbol in xrange(self.numSymbolsPerTrack[track]):
+                for symbol in self.getTrackSymbols(track):
                     denom = max(1e-20, totalSymbol)
                     symbolProb = obsStats[track][state, symbol] / denom
                     symbolProb = max(1e-20, symbolProb)
