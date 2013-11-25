@@ -35,12 +35,14 @@ The probability of an observation in this model is the product of probabilities
 for each track because we make the simplifying assumption that the tracks are
 independent """
 class IndependentMultinomialEmissionModel(object):
-    def __init__(self, numStates, numSymbolsPerTrack, params = None):
+    def __init__(self, numStates, numSymbolsPerTrack, params = None,
+                 zeroAsMissingData = True):
         self.numStates = numStates
         self.numTracks = len(numSymbolsPerTrack)
         self.numSymbolsPerTrack = numSymbolsPerTrack
         # [TRACK, STATE, SYMBOL]
         self.logProbs = None
+        self.zeroAsMissingData = zeroAsMissingData
         self.initParams(params)
 
     def getLogProbs(self):
@@ -56,7 +58,10 @@ class IndependentMultinomialEmissionModel(object):
         return self.numSymbolsPerTrack
 
     def getTrackSymbols(self, track):
-        for i in xrange(self.numSymbolsPerTrack[track]):
+        offset = 0
+        if self.zeroAsMissingData is True:
+            offset = 1
+        for i in xrange(offset, self.numSymbolsPerTrack[track] + offset):
             yield i
         
     def getSymbols(self):
@@ -80,9 +85,13 @@ class IndependentMultinomialEmissionModel(object):
         equally probable for each category.  if params is specifed, then
         assume it is the emission probability matrix and set our log probs
         to the log of it."""
+        offset = 0
+        if self.zeroAsMissingData:
+            offset = 1
         self.logProbs = np.zeros((self.numTracks, self.numStates,
-                                  1 + max(self.numSymbolsPerTrack)),
+                                  offset + max(self.numSymbolsPerTrack)),
                                  dtype=np.float)
+
         for i in xrange(self.numTracks):
             stateList = []
             logStateList = []
@@ -92,8 +101,9 @@ class IndependentMultinomialEmissionModel(object):
                         self.numSymbolsPerTrack[i], dtype=np.float))
                 else:
                     dist = np.array(params[i][j], dtype=np.float)
-                # tack a 1 at the end of dist.  it'll be our uknown value
-                dist = np.append(dist, [1.])
+                # tack a 1 at the front of dist.  it'll be our uknown value
+                if self.zeroAsMissingData == True:
+                    dist = np.append([1.], dist)
                 for k in xrange(len(dist)):
                     self.logProbs[i, j, k] = np.log(dist[k])
             
@@ -101,7 +111,8 @@ class IndependentMultinomialEmissionModel(object):
         for i in xrange(self.numTracks):
             assert len(self.logProbs[i]) == self.numStates
             for j in xrange(self.numStates):
-                assert len(self.logProbs[i][j]) >= self.numSymbolsPerTrack[i]+1
+                    assert (len(self.logProbs[i][j]) >=
+                            self.numSymbolsPerTrack[i] + offset)
         self.validate()
 
     def singleLogProb(self, state, singleObs):

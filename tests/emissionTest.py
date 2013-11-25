@@ -59,15 +59,16 @@ class TestCase(TestBase):
         
     def testSingleObs(self):
         em = self.createSimpleModel1()
-        assert em.singleLogProb(0, [0]) == math.log(0.2)
-        assert em.singleLogProb(0, [1]) == math.log(0.8)
-        assert em.singleLogProb(1, [0]) == math.log(0.5)
+        assert em.singleLogProb(0, [1]) == math.log(0.2)
+        assert em.singleLogProb(0, [2]) == math.log(0.8)
         assert em.singleLogProb(1, [1]) == math.log(0.5)
+        assert em.singleLogProb(1, [2]) == math.log(0.5)
+        assert em.singleLogProb(1, [0]) == 0
 
         em = self.createSimpleModel2()
-        assert em.singleLogProb(0, [0, 1]) == math.log(0.2) + math.log(0.3)
-        assert em.singleLogProb(0, [1, 0]) == math.log(0.8) + math.log(0.1)
-        assert em.singleLogProb(1, [1, 2]) == math.log(0.5) + math.log(0.2)
+        assert em.singleLogProb(0, [1, 2]) == math.log(0.2) + math.log(0.3)
+        assert em.singleLogProb(0, [2, 1]) == math.log(0.8) + math.log(0.1)
+        assert em.singleLogProb(1, [2, 3]) == math.log(0.5) + math.log(0.2)
 
 
     def testAllObs(self):
@@ -76,7 +77,7 @@ class TestCase(TestBase):
         truth = np.array([[math.log(0.2), math.log(0.5)],
                           [math.log(0.2), math.log(0.5)],
                           [math.log(0.8), math.log(0.5)]])
-        obs = np.array([[0], [0], [1]])
+        obs = np.array([[1], [1], [2]])
         assert np.array_equal(em.allLogProbs(obs), truth)
 
     def testInitStats(self):
@@ -91,7 +92,7 @@ class TestCase(TestBase):
         assert obsStats[0].shape == (2, 2+1)
         assert obsStats[1].shape == (2, 3+1)
 
-    def testAccumulateStats(self):
+    def testAccumultestats(self):
         em = self.createSimpleModel1()
         obsStats = em.initStats()
         obs = np.array([[0], [0], [1]])
@@ -107,7 +108,6 @@ class TestCase(TestBase):
         trackData = TrackData()
         trackData.loadTrackData(getTracksInfoPath(), bedIntervals)
         assert len(trackData.getTrackTableList()) == len(bedIntervals)
-
         em = IndependentMultinomialEmissionModel(
             2, trackData.getNumSymbolsPerTrack())
         em.supervisedTrain(trackData, bedIntervals)
@@ -118,7 +118,7 @@ class TestCase(TestBase):
             totals = [0, 0]
 
             # init to ones like we do in emisisonModel
-            for i in xrange(em.getNumSymbolsPerTrack()[track]):
+            for i in em.getTrackSymbols(track):
                 counts[0][i] = 1
                 counts[1][i] = 1
                 totals[0] += 1
@@ -142,6 +142,7 @@ class TestCase(TestBase):
                         if val3d[track] == val:
                             prob += np.exp(em.singleLogProb(state, val3d))
                     assert_array_almost_equal(prob, frac)
+
         
 
 

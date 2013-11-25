@@ -66,14 +66,14 @@ class TestCase(TestBase):
                 mappedTable.writeRow(
                     track,
                     [catMap.getMap(x) for x in [track] * len(table)])
-            assert catMap.getMap(0) == 2
-            assert catMap.getMap(1) == 3
+            assert catMap.getMap(0) == 3
+            assert catMap.getMap(1) == 4
             assert catMap.getMap(3) == catMap.getMissingVal()
 
             for col in xrange(len(table)): 
                 for track in xrange(3):                
                     assert table[col][track] == track
-                    assert mappedTable[col][track] == track + 2
+                    assert mappedTable[col][track] == track + 3
 
     def testTrackData(self):
         trackData = TrackData()
@@ -100,10 +100,10 @@ class TestCase(TestBase):
         cbTrack = trackList.getTrackByName("cb")
         
         for i in xrange(len(tableList[0])):
-            assert tableList[0][i][cbTrack.number] == 0
+            assert tableList[0][i][cbTrack.number] == 2
 
         for i in xrange(len(tableList[1])):
-            assert tableList[1][i][cbTrack.number] == 1
+            assert tableList[1][i][cbTrack.number] == 3
 
     def testReadStates(self):
         bedIntervals = readBedIntervals(getStatesPath(), ncol=4)

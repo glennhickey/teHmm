@@ -43,6 +43,8 @@ class Track(object):
 
     def _init(self):
         if self.dist == "multinomial":
+            self.valMap = DefaultCategoryMap()
+        if self.dist == "sparse_multinomial":
             self.valMap = CategoryMap()
         elif self.dist == "binary":
             self.valMap = BinaryMap()
@@ -55,6 +57,7 @@ class Track(object):
         self.path =  elem.attrib["path"]
         if "distribution" in elem.attrib:
             self.dist = elem.attrib["distribution"]
+            assert self.dist in ["binary", "multinomial", "sparse_multinomial"]
         if "binSize" in elem.attrib:
             self.binSize = int(elem.attrib["binSize"])
         if "valCol" in elem.attrib:
@@ -259,10 +262,11 @@ class CategoryMap(object):
     def __init__(self):
         self.catMap = dict()
         self.catMapBack = dict()
+        self.reserved = 1
         
     def update(self, val):
         if val not in self.catMap:
-            newVal = len(self.catMap)
+            newVal = len(self.catMap) + self.reserved
             assert newVal not in self.catMap
             self.catMap[val] = newVal
             self.catMapBack[newVal] = val
@@ -283,11 +287,27 @@ class CategoryMap(object):
         return self.catMapBack[val]
 
     def getMissingVal(self):
-        return len(self)
+        return 0
 
     def __len__(self):
         return len(self.catMap)
 
+
+###########################################################################
+
+class DefaultCategoryMap(CategoryMap):
+    """ hack category map to store default values as 1 instead of 0.  they
+    will be treated like normal observations and not marginalized out like 0s"""
+    def __init__(self):
+        super(DefaultCategoryMap, self).__init__()
+        self.reserved = 2
+
+    def getMissingVal(self):
+        return 1
+
+    def __len__(self):
+        return max(2, len(self.catMap))
+    
 ###########################################################################
     
 """ Act like a cateogry map but dont do any mapping.  still useful for
@@ -318,9 +338,6 @@ class BinaryMap(CategoryMap):
 
     def getMapBack(self, val):
         return val
-
-    def getMissingVal(self):
-        return 0
 
     def __len__(self):
         return 2
