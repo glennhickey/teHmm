@@ -29,7 +29,8 @@ def main(argv=None):
 
     for interval in BedTool(args.inBed).sort():
         interval.name = interval.name[:interval.name.find("|")]
-        interval.name = interval.name[:interval.name.find("/")]
+        if "/" in interval.name:
+            interval.name = interval.name[:interval.name.find("/")]
         outFile.write(str(interval))
 
     outFile.close()
