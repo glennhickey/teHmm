@@ -133,10 +133,10 @@ class TestCase(TestBase):
         cbTrack = trackList.getTrackByName("cb")
         
         for i in xrange(len(tableList[0])):
-            assert tableList[0][i][cbTrack.number] == 1
+            assert tableList[0][i][cbTrack.number] == 2
 
         for i in xrange(len(tableList[1])):
-            assert tableList[1][i][cbTrack.number] == 0
+            assert tableList[1][i][cbTrack.number] == 1
 
 
 def main():
