@@ -318,11 +318,14 @@ class BinaryMap(CategoryMap):
 
     def getMap(self, val, update=False):
         if val is not None:
-            return 1
-        return 0
+            return 2
+        return 1
 
     def getMapBack(self, val):
         return val
+
+    def getMissingVal(self):
+        return 1
 
     def __len__(self):
         return 2
