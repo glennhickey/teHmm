@@ -18,10 +18,12 @@ def main(argv=None):
 
     parser = argparse.ArgumentParser(
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
-        description="Create a teHMM")
+        description="Print out paramaters of a teHMM")
 
     parser.add_argument("inputModel", help="Path of teHMM model created with"
                         " teHmmTrain.py")
+    parser.add_argument("--nameMap", help="Print out name map tables",
+                        action="store_true", default=False)
     
     args = parser.parse_args()
 
@@ -31,6 +33,17 @@ def main(argv=None):
 
     # crappy print method
     print hmm.toText()
+
+    if args.nameMap is True:
+        print "State Maps:"
+        trackList = hmm.trackList
+        if trackList is None:
+            print "TrackList: None"
+        else:
+            for track in trackList:
+                print "Track: %s" % track.getName()
+                print " map %s " % track.getValueMap().catMap
+                print " pam %s " % track.getValueMap().catMapBack
     
 if __name__ == "__main__":
     sys.exit(main())
