@@ -54,7 +54,7 @@ def readBedData(bedPath, chrom, start, end, **kwargs):
         sort = kwargs["sort"] == True
 
     data = [defVal] * (end - start)
-    logging.debug("readBedData(%s)" % bedPath)
+    logging.debug("readBedData(%s, update=%s)" % (bedPath, updateMap))
     bedTool = BedTool(bedPath)
     if sort is True:
         logging.debug("sortBed(%s)" % bedPath)
@@ -67,6 +67,7 @@ def readBedData(bedPath, chrom, start, end, **kwargs):
         chrom, start, end, bedPath))
     intersections = bedTool.all_hits(interval)
     logging.debug("loading data from intersections")
+    basesRead = 0
     for overlap in intersections:
         oStart = max(start, overlap.start)
         oEnd = min(end, overlap.end)
@@ -83,8 +84,9 @@ def readBedData(bedPath, chrom, start, end, **kwargs):
             
         for i in xrange(oEnd - oStart):
             data[i + oStart - start] = val
+        basesRead += oEnd - oStart
 
-    logging.debug("done readBedData(%s)" % bedPath)
+    logging.debug("done readBedData(%s). %d bases read" % (bedPath, basesRead))
     return data
 
 ###########################################################################

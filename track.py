@@ -282,7 +282,10 @@ class CategoryMap(object):
         return self.getMissingVal()
 
     def getMapBack(self, val):
-        return self.catMapBack[val]
+        if val in self.catMapBack:
+            return self.catMapBack[val]
+        else:
+            return self.getMissingVal()
 
     def getMissingVal(self):
         return self.reserved - 1
