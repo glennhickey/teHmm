@@ -40,6 +40,9 @@ def main(argv=None):
                         " of teHmmTrain is activated.  This option overrides"
                         " that and uses the EM mode and the given number of "
                         "states instead", type=int, default=None)
+    parser.add_argument("--cross", help="Do 50/50 cross validation by training"
+                        " on first half input and validating on second",
+                        action="store_true", default=False)
     
     args = parser.parse_args()
     if args.verbose is True:
@@ -77,12 +80,26 @@ def main(argv=None):
         pList.saveXML(trackPath)
         
         for inBed in args.inBeds:
-            # train
+            
             base = os.path.basename(inBed)
+            truthBed = inBed
+            testBed = inBed
+            if args.cross is True:
+                truthBed = os.path.join(outDir,
+                                        os.path.splitext(base)[0] +
+                                        "_truth_temp.bed")
+                testBed = os.path.join(outDir,
+                                       os.path.splitext(base)[0] +
+                                       "_test_temp.bed")
+                splitBed(inBed, truthBed, testBed)
+
+                                        
+            
+            # train
             modPath = os.path.join(outDir,
                                    os.path.splitext(base)[0] + ".mod")
             command = "teHmmTrain.py %s %s %s %s %s" % (trackPath,
-                                                        inBed,
+                                                        truthBed,
                                                         modPath,
                                                         verbose,
                                                         trainFlags)
@@ -97,13 +114,13 @@ def main(argv=None):
                                    os.path.splitext(base)[0] + "_eval.bed")
             command += " && teHmmEval.py %s %s %s --bed %s %s" % (trackPath,
                                                                   modPath,
-                                                                  inBed,
+                                                                  testBed,
                                                                   evalBed,
                                                                   verbose)
             # compare
             compPath = os.path.join(outDir,
                                     os.path.splitext(base)[0] + "_comp.txt")
-            command += " && compareBedStates.py %s %s > %s" % (inBed,
+            command += " && compareBedStates.py %s %s > %s" % (testBed,
                                                                evalBed,
                                                                compPath)
             commands.append(command)
@@ -125,6 +142,23 @@ def subsetTrackList(trackList, sizeRange):
                 track = copy.deepcopy(trackList.getTrackByNumber(trackNo))
                 permList.addTrack(track)
             yield permList
+
+def splitBed(inBed, outBed1, outBed2):
+    inFile = open(inBed, "r")
+    numLines = len([x for x in inFile])
+    inFile.close()
+    inFile = open(inBed, "r")
+    cutLine = numLines / 2
+    outFile1 = open(outBed1, "w")
+    outFile2 = open(outBed2, "w")
+    for lineNo, line in enumerate(inFile):
+        if numLines == 1 or lineNo < cutLine:
+            outFile1.write(line)
+        if numLines == 1 or lineNo >= cutLine:
+            outFile2.write(line)
+    inFile.close()
+    outFile1.close()
+    outFile2.close()
     
 if __name__ == "__main__":
     sys.exit(main())
