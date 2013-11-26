@@ -96,7 +96,7 @@ def main(argv=None):
 def mapStateNames(bedIntervals):
     """ sanitize the states (column 4) of each bed interval, mapping to unique
     integer in place.  return the map"""
-    catMap = CategoryMap()
+    catMap = CategoryMap(reserved=0)
     for idx, interval in enumerate(bedIntervals):
         if len(interval) < 4 or interval[3] is None:
             raise RuntimeError("Could not read state from 4th column" %

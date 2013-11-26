@@ -43,9 +43,9 @@ class Track(object):
 
     def _init(self):
         if self.dist == "multinomial":
-            self.valMap = DefaultCategoryMap()
+            self.valMap = CategoryMap(reserved=2)
         if self.dist == "sparse_multinomial":
-            self.valMap = CategoryMap()
+            self.valMap = CategoryMap(reserved=1)
         elif self.dist == "binary":
             self.valMap = BinaryMap()
             self.binSize = None
@@ -259,10 +259,10 @@ class IntegerTrackTable(TrackTable):
             
 """ map a value to an integer category """
 class CategoryMap(object):
-    def __init__(self):
+    def __init__(self, reserved = 1):
         self.catMap = dict()
         self.catMapBack = dict()
-        self.reserved = 1
+        self.reserved = reserved
         
     def update(self, val):
         if val not in self.catMap:
@@ -287,23 +287,10 @@ class CategoryMap(object):
         return self.catMapBack[val]
 
     def getMissingVal(self):
-        return 0
+        return self.reserved - 1
 
     def __len__(self):
         return len(self.catMap) + self.reserved
-
-
-###########################################################################
-
-class DefaultCategoryMap(CategoryMap):
-    """ hack category map to store default values as 1 instead of 0.  they
-    will be treated like normal observations and not marginalized out like 0s"""
-    def __init__(self):
-        super(DefaultCategoryMap, self).__init__()
-        self.reserved = 2
-
-    def getMissingVal(self):
-        return 1
     
 ###########################################################################
     
