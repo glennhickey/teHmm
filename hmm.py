@@ -162,8 +162,8 @@ class MultitrackHmm(_BaseHMM):
                 numSymbolsPerTrack =  em.getNumSymbolsPerTrack()
                 for symbol in em.getTrackSymbols(trackNo):
                     symbolName = track.getValueMap().getMapBack(symbol)
-                    s += "    %s: %f\n" % (symbolName,
-                                           np.exp(emProbs[trackNo][state][symbol]))
+                    s += "    %s) %s: %f\n" % (symbol, symbolName,
+                                               np.exp(emProbs[trackNo][state][symbol]))
         return s
 
     def getTrackList(self):
