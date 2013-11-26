@@ -290,7 +290,7 @@ class CategoryMap(object):
         return 0
 
     def __len__(self):
-        return len(self.catMap)
+        return len(self.catMap) + self.reserved
 
 
 ###########################################################################
@@ -304,9 +304,6 @@ class DefaultCategoryMap(CategoryMap):
 
     def getMissingVal(self):
         return 1
-
-    def __len__(self):
-        return max(2, len(self.catMap))
     
 ###########################################################################
     

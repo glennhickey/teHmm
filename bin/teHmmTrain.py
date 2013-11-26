@@ -69,7 +69,7 @@ def main(argv=None):
         # we reload because we don't want to be merging them here
         truthIntervals = readBedIntervals(args.trainingBed, ncol=4)
         catMap = mapStateNames(truthIntervals)
-        args.numStates = len(catMap)
+        args.numStates = len(catMap) + 1
         
     # create the independent emission model
     logging.info("creating model")
