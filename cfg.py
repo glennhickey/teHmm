@@ -118,7 +118,7 @@ class MultitrackCfg(object):
             # opens up a new nest pair)
             for nextState in self.nestStates:
                 cnf1 = self.getCnf(nextState)
-                self.logProbs[state, state, nextState] = np.log(
+                self.logProbs[state, state, cnf1] = np.log(
                     1. / (len(self.emittingStates)))
 
         # do the cfg stype productions (CNF_1 -> XCNF_2; CNF_2 -> YX)

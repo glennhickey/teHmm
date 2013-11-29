@@ -90,9 +90,9 @@ class TestCase(TestBase):
 
         obs = np.array([[0],[0],[1],[0]], dtype=np.int16)
         cfgProb, cfgStates = cfg.decode(obs)
-        # 1 is a pair only state.  no way it should be here 
+        # 1 is a pair only state.  no way it should be here
         assert 1 not in cfgStates
-        
+        assert_array_equal(cfgStates, [0,0,2,0])
         
 
 def main():
