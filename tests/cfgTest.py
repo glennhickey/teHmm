@@ -53,6 +53,26 @@ class TestCase(TestBase):
         hmmProb, hmmStates = hmm.decode(obs)
         cfgProb, cfgStates = cfg.decode(obs)
         assert_array_almost_equal(hmmProb, cfgProb)
+
+    def testTraceBack(self):
+        # a model with 2 states.  state 0 has a .75 chance of emitting 0
+        # state 1 has a 0.95 chance of emitting 1
+        emissionModel = IndependentMultinomialEmissionModel(
+            2, [2], zeroAsMissingData=False)
+        emProbs = np.zeros((1, 2, 2), dtype=np.float)
+        emProbs[0,0] = [0.75, 0.25]
+        emProbs[0,1] = [0.05, 0.95]
+        emissionModel.logProbs = emProbs
+
+        hmm = MultitrackHmm(emissionModel)
+        cfg = MultitrackCfg(emissionModel)
+        obs = np.array([[0],[0],[1],[0]], dtype=np.int16)
+        hmmProb, hmmStates = hmm.decode(obs)
+        cfgProb, cfgStates = cfg.decode(obs)
+        assert_array_almost_equal(hmmProb, cfgProb)
+        assert_array_almost_equal(hmmStates, [0, 0, 1, 0])
+        assert_array_almost_equal(hmmStates, cfgStates)
+        
         
 
 def main():

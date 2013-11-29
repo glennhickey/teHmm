@@ -200,17 +200,37 @@ class MultitrackCfg(object):
                                      self.table[k+1, j, r2State]
                                 if lp > self.table[i, j, lState]:
                                     self.table[i, j, lState] = lp
-                                    self.tb[i, j, lState] = [j, r1State, r2State]
+                                    self.tb[i, j, lState] = [k, r1State, r2State]
 
         score = max([self.startProbs[i] + self.table[0, len(obs)-1, i]  \
                      for i in xrange(self.M)])
         return score
 
+    def __traceBack(self, obs):
+        """ depth first search to determine most likely states from the
+        traceback table (self.tb) that was constructed during __cyk"""
+        trace = -1 + np.zeros(len(self.table))
+        top = np.argmax([self.startProbs[i] + self.table[0, len(obs)-1, i]\
+                             for i in xrange(self.M)])
+        self.assigned = 0
+        def tbRecursive(i, j, state, trace):
+            size = j - i + 1
+            if size == 1:
+                trace[i] = state
+                self.assigned += 1
+            else:
+                (k, r1State, r2State) = self.tb[i, j, state]
+                assert k != j
+                tbRecursive(i, k, r1State, trace)
+                tbRecursive(k+1, j, r2State, trace)
+        tbRecursive(0, len(self.tb) - 1, top, trace)
+        assert self.assigned == len(obs)
+        return trace
+            
     def decode(self, obs):
         """ return tuple of log prob and most likely state sequence.  same
         as in the hmm. """
-        # todo: implement traceback
-        return self.__cyk(obs), None
+        return self.__cyk(obs), self.__traceBack(obs)
                                 
                 
             
