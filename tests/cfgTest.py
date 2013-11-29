@@ -90,6 +90,7 @@ class TestCase(TestBase):
 
         obs = np.array([[0],[0],[1],[0]], dtype=np.int16)
         cfgProb, cfgStates = cfg.decode(obs)
+        print cfgStates
         
         
 
