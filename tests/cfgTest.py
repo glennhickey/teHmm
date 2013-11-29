@@ -36,8 +36,23 @@ class TestCase(TestBase):
             10, [3], zeroAsMissingData=False)
         cfg = MultitrackCfg(emissionModel)
         cfg = MultitrackCfg(emissionModel, [3,8])
-        
+        cfg.validate()
 
+    def testDefaultVsHmm(self):
+        emissionModel = IndependentMultinomialEmissionModel(
+            10, [3], zeroAsMissingData=False)
+        hmm = MultitrackHmm(emissionModel)
+        cfg = MultitrackCfg(emissionModel)
+
+    def testDefaultHmmViterbi(self):
+        emissionModel = IndependentMultinomialEmissionModel(
+            5, [3], zeroAsMissingData=False)
+        hmm = MultitrackHmm(emissionModel)
+        cfg = MultitrackCfg(emissionModel)
+        obs = np.array([[0],[0],[1],[2]], dtype=np.int16)
+        hmmProb, hmmStates = hmm.decode(obs)
+        cfgProb, cfgStates = cfg.decode(obs)
+        assert_array_almost_equal(hmmProb, cfgProb)
         
 
 def main():

@@ -41,6 +41,7 @@ class MultitrackCfg(object):
                  nestStates=[]):
         self.emissionModel = emissionModel
         self.logProbs = None
+        self.startProbs = None
 
         # all states that can emit a column
         self.emittingStates = [x for x in xrange(emissionModel.getNumStates())]
@@ -95,6 +96,15 @@ class MultitrackCfg(object):
     def initParams(self):
         """ Allocate the production (transition) probability matrix and
         initialize it to a flat distribution where everything has equal prob."""
+        self.startProbs = NEGINF + np.zeros((self.M,), dtype=np.float)
+        for state in self.hmmStates:
+            self.startProbs[state] = np.log(
+                    1. / (len(self.emittingStates)))
+        for i in xrange(0, len(self.cnfStates), 2):
+            cnf1 = self.cnfStates[i]
+            self.startProbs[cnf1] = np.log(
+                    1. / (len(self.emittingStates)))
+        
         self.logProbs = NEGINF + \
                         np.zeros((self.M, self.M, self.M), dtype=np.float)
 
@@ -135,6 +145,12 @@ class MultitrackCfg(object):
     def validate(self):
         """ check that all the probabilities in the production matrix rows add
         up to one"""
+        
+        total = 0.
+        for state in xrange(self.M):
+            total += np.exp(self.startProbs[state])
+        assert_array_almost_equal(total, 1.)
+        
         for origin in xrange(self.M):
             total = 0.
             for next1 in xrange(self.M):
@@ -144,3 +160,58 @@ class MultitrackCfg(object):
                 assert_array_almost_equal(total, 0.)
             else:
                 assert_array_almost_equal(total, 1.)
+
+    def __initDPTable(self, obs):
+        """ Create the 2D dynamic programming table for CYK etc. and initialise
+        all the 1-length entries for each (emitting) state"""
+        self.table = NEGINF + np.zeros((len(obs), len(obs), self.M),
+                                      dtype = np.float)
+        emLogProbs = self.emissionModel.allLogProbs(obs)
+        # todo: how fast is this type of loop?
+        assert len(emLogProbs) == len(obs)
+        for i in xrange(len(obs)):
+            self.table[i,i] = emLogProbs[i]
+
+    def __initTraceBackTable(self, obs):
+        """ Create a dynamic programming traceback (for CYK) table to remember
+        which states got used """
+        self.tb = -1 + np.zeros((len(obs), len(obs), self.M, 3),
+                                dtype = np.int64)
+
+    def __cyk(self, obs):
+        """ Do the CYK dynamic programming algorithm (like viterbi) to
+        compute the maximum likelihood CFG derivation of the observations."""
+        self.__initDPTable(obs)
+        self.__initTraceBackTable(obs)
+        
+        for size in xrange(2, len(obs) + 1):
+            for i in xrange(len(obs) + 1 - size):
+                j = i + size - 1
+                for k in xrange(i, i + size - 1):
+                    # test that X_ij -> Yi_k Zk+1_j (everything inclusive)
+                    # TODO: optimize loops for hmm vs cfg states the brute
+                    # for below is extremely wasteful (O(M^3)) insead of
+                    # O(grammar size)
+                    for lState in xrange(self.M):
+                        for r1State in xrange(self.M):
+                            for r2State in xrange(self.M):
+                                lp = self.logProbs[lState, r1State, r2State] + \
+                                     self.table[i, k, r1State] +\
+                                     self.table[k+1, j, r2State]
+                                if lp > self.table[i, j, lState]:
+                                    self.table[i, j, lState] = lp
+                                    self.tb[i, j, lState] = [j, r1State, r2State]
+
+        score = max([self.startProbs[i] + self.table[0, len(obs)-1, i]  \
+                     for i in xrange(self.M)])
+        return score
+
+    def decode(self, obs):
+        """ return tuple of log prob and most likely state sequence.  same
+        as in the hmm. """
+        # todo: implement traceback
+        return self.__cyk(obs), None
+                                
+                
+            
+            
