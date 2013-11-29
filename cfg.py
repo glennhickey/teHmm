@@ -170,7 +170,8 @@ class MultitrackCfg(object):
         # todo: how fast is this type of loop?
         assert len(emLogProbs) == len(obs)
         for i in xrange(len(obs)):
-            self.table[i,i] = emLogProbs[i]
+            for j in xrange(len(emLogProbs[i])):
+                self.table[i,i,j] = emLogProbs[i,j]
 
     def __initTraceBackTable(self, obs):
         """ Create a dynamic programming traceback (for CYK) table to remember

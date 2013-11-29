@@ -72,6 +72,24 @@ class TestCase(TestBase):
         assert_array_almost_equal(hmmProb, cfgProb)
         assert_array_almost_equal(hmmStates, [0, 0, 1, 0])
         assert_array_almost_equal(hmmStates, cfgStates)
+
+    def testBasicNesting(self):
+        # a model with 3 states.  state 0 has a .75 chance of emitting 0
+        # state 1 has a 0.95 chance of emitting 1
+        # state 2 has a 0.99 chance of emitting 1
+        emissionModel = IndependentMultinomialEmissionModel(
+            3, [2], zeroAsMissingData=False)
+        emProbs = np.zeros((1, 3, 2), dtype=np.float)
+        emProbs[0,0] = [0.75, 0.25]
+        emProbs[0,1] = [0.05, 0.95]
+        emProbs[0,2] = [0.01, 0.99]
+        emissionModel.logProbs = emProbs
+        
+        # state 1 is a nested pair state! 
+        cfg = MultitrackCfg(emissionModel, [1])
+
+        obs = np.array([[0],[0],[1],[0]], dtype=np.int16)
+        cfgProb, cfgStates = cfg.decode(obs)
         
         
 
