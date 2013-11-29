@@ -76,13 +76,13 @@ class TestCase(TestBase):
     def testBasicNesting(self):
         # a model with 3 states.  state 0 has a .75 chance of emitting 0
         # state 1 has a 0.95 chance of emitting 1
-        # state 2 has a 0.99 chance of emitting 1
+        # state 2 has a 0.90 chance of emitting 1
         emissionModel = IndependentMultinomialEmissionModel(
             3, [2], zeroAsMissingData=False)
         emProbs = np.zeros((1, 3, 2), dtype=np.float)
         emProbs[0,0] = [0.75, 0.25]
         emProbs[0,1] = [0.05, 0.95]
-        emProbs[0,2] = [0.01, 0.99]
+        emProbs[0,2] = [0.01, 0.90]
         emissionModel.logProbs = emProbs
         
         # state 1 is a nested pair state! 
@@ -90,7 +90,8 @@ class TestCase(TestBase):
 
         obs = np.array([[0],[0],[1],[0]], dtype=np.int16)
         cfgProb, cfgStates = cfg.decode(obs)
-        print cfgStates
+        # 1 is a pair only state.  no way it should be here 
+        assert 1 not in cfgStates
         
         
 
