@@ -11,12 +11,14 @@ from teHmm.tests.bedTrackTest import TestCase as bedTrackTest
 from teHmm.tests.emissionTest import TestCase as emissionTest
 from teHmm.tests.hmmTest import TestCase as hmmTest
 from teHmm.tests.compareTest import TestCase as compareTest
+from teHmm.tests.cfgTest import TestCase as cfgTest
 
 def allSuites(): 
     allTests = unittest.TestSuite((unittest.makeSuite(bedTrackTest, 'test'),
                                    unittest.makeSuite(emissionTest, 'test'),
                                    unittest.makeSuite(hmmTest, 'test'),
-                                   unittest.makeSuite(compareTest, 'test')))
+                                   unittest.makeSuite(compareTest, 'test'),
+                                   unittest.makeSuite(cfgTest, 'test')))
     return allTests
         
 def main():    
