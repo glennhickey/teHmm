@@ -255,3 +255,34 @@ class IndependentMultinomialEmissionModel(object):
             state = bedInterval[3]
             for track in xrange(self.getNumTracks()):
                 obsStats[track][state, emissions[track]] += 1.
+
+""" Simple pair emission model that supports emitting 1 or two states
+simultaneousy.  Based on a normal emission but makes a simple distribution
+for pairs """
+class PairEmissionModel(object):
+   def __init__(self, emissionModel, pairPriors):
+       # base emissionmodel
+       self.em = emissionModel
+       # input observations can be linked as candidate pairs.  pairsPrior
+       # models our confidence in these linkings (for each state).  For exameple,
+       # if pairPrior is 0.95 for the LTR state, then emitting two linked
+       # symbols is pr[emit obs1] X pr[emit obs2] X 0.95.  If they are not linked
+       # then the prob is pr[emit obs1] X pr[emit obs2] X 0.05, etc.
+       #
+       # if None then ignored entirely
+       pp = []
+       for i in pairPriors:
+           if i is None:
+               pp.append(0, 0)
+           else:
+               pp.append([np.log(1. - pairPriors), np.log(1. - pairPriors)])
+       self.logPriors = np.array(pp, dtype=np.float)
+       assert len(self.logPriors) == self.em.getNumStates()
+       
+   def pairLogProb(state, logProb1, logProb2, match):
+       """ compute the pair probability from two independent emission logprobs
+       given a state and whether or not there is a match.
+       Note that this function should eventually be in _cfg.pyx or something"""
+       assert match == 0 or match == 1
+       return logProb1 + logProb2 + self.logPriors[state, match]
+   
