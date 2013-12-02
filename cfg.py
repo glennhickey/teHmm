@@ -194,14 +194,14 @@ class MultitrackCfg(object):
         # todo: how fast is this type of loop?
         assert len(emLogProbs) == len(obs)
         for i in xrange(len(obs)):
-            for j in xrange(len(emLogProbs[i])):
+            for j in self.hmmStates:
                 self.dp[i,i,j] = emLogProbs[i,j]
 
         baseMatch = alignmentTrack is not None
         # pair emissions where emitted columns are right beside eachother
         for i in xrange(len(obs)-1):
             match = baseMatch and alignmentTrack[i] == alignmentTrack[i+1]
-            for j in xrange(len(emLogProbs[i])):
+            for j in self.nestStates:
                 self.dp[i,i+1,j] = self.pairEmissionModel.pairLogProb(
                     j, emLogProbs[i,j], emLogProbs[i+1,j], match)
                                                           

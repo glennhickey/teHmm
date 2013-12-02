@@ -99,7 +99,7 @@ class TestCase(TestBase):
         # state 1 is a nested pair state! 
         pairModel = PairEmissionModel(emissionModel, [1.0] *
                                       emissionModel.getNumStates())
-        cfg = MultitrackCfg(emissionModel, pairModel)
+        cfg = MultitrackCfg(emissionModel, pairModel, nestStates = [1])
 
 
         obs = np.array([[0],[0],[1],[0]], dtype=np.int16)
