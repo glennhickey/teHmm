@@ -273,13 +273,15 @@ class PairEmissionModel(object):
        pp = []
        for i in pairPriors:
            if i is None:
-               pp.append(0, 0)
+               pp.append([0, 0])
+           elif i == 1:
+               pp.append([NEGINF, 0.])
            else:
-               pp.append([np.log(1. - pairPriors), np.log(1. - pairPriors)])
+               pp.append([np.log(1. - i), np.log(i)])
        self.logPriors = np.array(pp, dtype=np.float)
        assert len(self.logPriors) == self.em.getNumStates()
        
-   def pairLogProb(state, logProb1, logProb2, match):
+   def pairLogProb(self, state, logProb1, logProb2, match):
        """ compute the pair probability from two independent emission logprobs
        given a state and whether or not there is a match.
        Note that this function should eventually be in _cfg.pyx or something"""

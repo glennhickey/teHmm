@@ -48,11 +48,12 @@ The first two are Chmosky Normal Form, but we add the last two kinds because
 we want to explicitly model pair emissions.
 """
 class MultitrackCfg(object):
-    def __init__(self, emissionModel=None,
+    def __init__(self, emissionModel, pairEmissionModel,
                  nestStates=[]):
         """ For now we take in an emission model (that was used for the HMM)
         and a list singling out a few states as nested / pair emission states"""
         self.emissionModel = emissionModel
+        self.pairEmissionModel = pairEmissionModel
         self.logProbs1 = None
         self.logProbs2 = None
         self.startProbs = None
@@ -184,7 +185,7 @@ class MultitrackCfg(object):
                                                self.helper2[origin, i]])
             assert_array_almost_equal(total, 1.)                
 
-    def __initDPTable(self, obs):
+    def __initDPTable(self, obs, alignmentTrack):
         """ Create the 2D dynamic programming table for CYK etc. and initialise
         all the 1-length entries for each (emitting) state"""
         self.dp = NEGINF + np.zeros((len(obs), len(obs), self.M),
@@ -195,23 +196,31 @@ class MultitrackCfg(object):
         for i in xrange(len(obs)):
             for j in xrange(len(emLogProbs[i])):
                 self.dp[i,i,j] = emLogProbs[i,j]
-        # todo: init 'aa' states from pair model!!
 
+        baseMatch = alignmentTrack is not None
+        # pair emissions where emitted columns are right beside eachother
+        for i in xrange(len(obs)-1):
+            match = baseMatch and alignmentTrack[i] == alignmentTrack[i+1]
+            for j in xrange(len(emLogProbs[i])):
+                self.dp[i,i+1,j] = self.pairEmissionModel.pairLogProb(
+                    j, emLogProbs[i,j], emLogProbs[i+1,j], match)
+                                                          
     def __initTraceBackTable(self, obs):
         """ Create a dynamic programming traceback (for CYK) table to remember
         which states got used """
         self.tb = -1 + np.zeros((len(obs), len(obs), self.M, 3),
                                 dtype = np.int64)
 
-    def __cyk(self, obs):
+    def __cyk(self, obs, alignmentTrack = None):
         """ Do the CYK dynamic programming algorithm (like viterbi) to
         compute the maximum likelihood CFG derivation of the observations."""
-        self.__initDPTable(obs)
+        self.__initDPTable(obs, alignmentTrack)
         self.__initTraceBackTable(obs)
-        
+        match = alignmentTrack is not None
         for size in xrange(2, len(obs) + 1):
             for i in xrange(len(obs) + 1 - size):
                 j = i + size - 1
+                match = match and alignmentTrack[i] == alignmentTrack[j]
                 for lState in self.emittingStates:
                     for q in xrange(len(self.helperDim1)):
                         r1State = self.helper1[lState, q, 0]
@@ -226,11 +235,13 @@ class MultitrackCfg(object):
                     if size > 2 and i > 0 and j < (len(obs) - 1):
                         for q in xrange(len(self.helperDim2)):
                             rState = self.helper2[lState, q]
-                            ##### TODO: Pair emission  ###########
                             lp = self.logProbs2[lState, rState] +\
                                  self.dp[i+1, j-1, rState] +\
-                                 self.dp[i, i, lState] +\
-                                 self.dp[j, j, lState]
+                                 self.pairEmissionModel.pairLogProb(\
+                                lState, \
+                                self.dp[i, i, lState], \
+                                self.dp[j, j, lState], \
+                                match)
                             if lp > self.dp[i, j, lState]:
                                 self.dp[i, j, lState] = lp
                                 self.tb[i, j, lState] = [k, r1State, r2State]
@@ -247,17 +258,20 @@ class MultitrackCfg(object):
                              for i in xrange(self.M)])
         self.assigned = 0
         def tbRecursive(i, j, state, trace):
+            assert i >= 0
+            assert j >= i
             size = j - i + 1
             if size == 1:
                 trace[i] = state
                 self.assigned += 1
             else:
                 (k, r1State, r2State) = self.tb[i, j, state]
-                assert k != j
-                tbRecursive(i, k, r1State, trace)
-                tbRecursive(k+1, j, r2State, trace)
+                if k != -1:
+                    #TODO: Trace back display for pair states
+                    tbRecursive(i, k, r1State, trace)
+                    tbRecursive(k+1, j, r2State, trace)
         tbRecursive(0, len(self.tb) - 1, top, trace)
-        assert self.assigned == len(obs)
+        assert self.assigned <= len(obs)
         return trace
             
     def decode(self, obs):

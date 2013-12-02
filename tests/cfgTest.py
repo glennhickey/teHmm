@@ -16,7 +16,7 @@ from teHmm.tracksInfo import TracksInfo
 from teHmm.track import *
 from teHmm.hmm import MultitrackHmm
 from teHmm.cfg import MultitrackCfg
-from teHmm.emission import IndependentMultinomialEmissionModel
+from teHmm.emission import IndependentMultinomialEmissionModel, PairEmissionModel
 
 from teHmm.tests.common import getTestDirPath
 from teHmm.tests.common import TestBase
@@ -34,7 +34,9 @@ class TestCase(TestBase):
     def testInit(self):
         emissionModel = IndependentMultinomialEmissionModel(
             10, [3], zeroAsMissingData=False)
-        cfg = MultitrackCfg(emissionModel)
+        pairModel = PairEmissionModel(emissionModel, [1.0] *
+                                      emissionModel.getNumStates())
+        cfg = MultitrackCfg(emissionModel, pairModel)
         cfg = MultitrackCfg(emissionModel, [3,8])
         cfg.validate()
 
@@ -42,13 +44,19 @@ class TestCase(TestBase):
         emissionModel = IndependentMultinomialEmissionModel(
             10, [3], zeroAsMissingData=False)
         hmm = MultitrackHmm(emissionModel)
-        cfg = MultitrackCfg(emissionModel)
+        pairModel = PairEmissionModel(emissionModel, [1.0] *
+                                      emissionModel.getNumStates())
+        cfg = MultitrackCfg(emissionModel, pairModel)
+
 
     def testDefaultHmmViterbi(self):
         emissionModel = IndependentMultinomialEmissionModel(
             5, [3], zeroAsMissingData=False)
         hmm = MultitrackHmm(emissionModel)
-        cfg = MultitrackCfg(emissionModel)
+        pairModel = PairEmissionModel(emissionModel, [1.0] *
+                                      emissionModel.getNumStates())
+        cfg = MultitrackCfg(emissionModel, pairModel)
+
         obs = np.array([[0],[0],[1],[2]], dtype=np.int16)
         hmmProb, hmmStates = hmm.decode(obs)
         cfgProb, cfgStates = cfg.decode(obs)
@@ -65,7 +73,10 @@ class TestCase(TestBase):
         emissionModel.logProbs = emProbs
 
         hmm = MultitrackHmm(emissionModel)
-        cfg = MultitrackCfg(emissionModel)
+        pairModel = PairEmissionModel(emissionModel, [1.0] *
+                                      emissionModel.getNumStates())
+        cfg = MultitrackCfg(emissionModel, pairModel)
+
         obs = np.array([[0],[0],[1],[0]], dtype=np.int16)
         hmmProb, hmmStates = hmm.decode(obs)
         cfgProb, cfgStates = cfg.decode(obs)
@@ -86,7 +97,10 @@ class TestCase(TestBase):
         emissionModel.logProbs = emProbs
         
         # state 1 is a nested pair state! 
-        cfg = MultitrackCfg(emissionModel, [1])
+        pairModel = PairEmissionModel(emissionModel, [1.0] *
+                                      emissionModel.getNumStates())
+        cfg = MultitrackCfg(emissionModel, pairModel)
+
 
         obs = np.array([[0],[0],[1],[0]], dtype=np.int16)
         cfgProb, cfgStates = cfg.decode(obs)
