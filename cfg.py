@@ -250,7 +250,9 @@ class MultitrackCfg(object):
                             assert lp <= 0
                             if lp > self.dp[i, j, lState]:
                                 self.dp[i, j, lState] = lp
-                                self.tb[i, j, lState] = [k, r1State, r2State]
+                                #cheap hack: set k to -2 to remebmer this is
+                                # a pair emission
+                                self.tb[i, j, lState] = [-2, rState, rState]
 
         score = max([self.startProbs[i] + self.dp[0, len(obs)-1, i]  \
                      for i in self.emittingStates])
@@ -272,8 +274,14 @@ class MultitrackCfg(object):
                 self.assigned += 1
             else:
                 (k, r1State, r2State) = self.tb[i, j, state]
-                if k != -1:
-                    #TODO: Trace back display for pair states
+                if k == -2:
+                    #cheap hack, k set to -2 to flag a pair emission
+                    trace[i] = state
+                    trace[j] = state
+                    assert r1State == r2State
+                    tbRecursive(i+1, j-1, r1State, trace)
+                elif k != -1:
+                    #TODO: Trace back display for pair consecutive states
                     tbRecursive(i, k, r1State, trace)
                     tbRecursive(k+1, j, r2State, trace)
         tbRecursive(0, len(self.tb) - 1, top, trace)
