@@ -50,14 +50,18 @@ class Track(object):
             self.valMap = BinaryMap()
             self.binSize = None
             self.valCol = 0
-        assert self.dist == "multinomial" or self.dist == "binary"
+        elif self.dist == "alignment":
+            self.valMap = CategoryMap(reserved=0)
+        assert self.dist == "multinomial" or self.dist == "binary" \
+               or self.dist == "alignment"
 
     def _fromXMLElement(self, elem, number=-1):
         self.name = elem.attrib["name"]
         self.path =  elem.attrib["path"]
         if "distribution" in elem.attrib:
             self.dist = elem.attrib["distribution"]
-            assert self.dist in ["binary", "multinomial", "sparse_multinomial"]
+            assert self.dist in ["binary", "multinomial", "sparse_multinomial",
+                                 "alignment"]
         if "binSize" in elem.attrib:
             self.binSize = int(elem.attrib["binSize"])
         if "valCol" in elem.attrib:
@@ -107,6 +111,8 @@ class TrackList(object):
    def __init__(self, xmlPath = None):
        #: list of tracks.  track.number = its position in this list
        self.trackList = []
+       #: keep alignment track separate because it's special
+       self.alignmentTrack = None
        #: map a track name to its position in the list
        self.trackMap = dict()
        if xmlPath is not None:
@@ -125,11 +131,18 @@ class TrackList(object):
            return self.trackList[idx]
        return None
 
+   def getAlignmentTrack(self):
+       return self.alignmentTrack
+
    def addTrack(self, track):
-       track.number = len(self.trackList)
-       self.trackList.append(track)
-       assert track.name not in self.trackMap
-       self.trackMap[track.name] = track.number
+       if track.dist == "alignment":
+           track.number = 0
+           self.alignmentTrack = track
+       else:
+           track.number = len(self.trackList)
+           self.trackList.append(track)
+           assert track.name not in self.trackMap
+           self.trackMap[track.name] = track.number
        self.__check()
 
    def load(self, path):
@@ -148,14 +161,22 @@ class TrackList(object):
        """Load in an xml file that contains a list of track elements right
        below its root node.  Will extend to contain more options..."""
        root = ET.parse(path).getroot()
+       alignmentCount = 0
        for child in root.findall("track"):
            track = Track(child)
+           if track.dist == "alignment":
+               alignmentCount += 1
+           if alignmentCount > 1:
+               raise RuntimeError("Only one track with alignment "
+                                  "distribution permitted")
            self.addTrack(track)
 
    def saveXML(self, path):
        root = ET.Element("teModelConfig")
        for track in self.trackList:
            root.append(track.toXMLElement())
+       if self.alignmentTrack is not None:
+           root.append(self.alignmentTrack.toXMLElement())
        ET.ElementTree(root).write(path)
 
    def __check(self):
@@ -340,6 +361,8 @@ class TrackData(object):
         self.trackList = None
         #: list of track tables (of type TrackTable)
         self.trackTableList = None
+        #: separate list for alignment track because it's so specual
+        self.alignmentTrackTableList = None
 
     def getNumTracks(self):
         return len(self.trackList)
@@ -349,6 +372,9 @@ class TrackData(object):
 
     def getTrackTableList(self):
         return self.trackTableList
+
+    def getAlignmentTrackTableList(self):
+        return self.alignmentTrackTableList
 
     def getNumTrackTables(self):
         return len(self.trackTableList)
@@ -377,6 +403,7 @@ class TrackData(object):
         self.trackIdx = dict()
 
         self.trackTableList = []
+        self.alignmentTrackTableList = []
         for interval in intervals:
             assert len(interval) >= 3 and interval[2] > interval[1]
             self.__loadTrackDataInterval(inputTrackList, interval[0],
@@ -406,6 +433,18 @@ class TrackData(object):
                 trackTable.writeRow(track.getNumber(), rawArray)
 
         self.trackTableList.append(trackTable)
+
+        if self.trackList.getAlignmentTrack() is not None:
+            alignmentTrackTable = IntegerTrackTable(1, chrom, start, end,
+                                                    dtype = INTEGER_ARRAY_TYPE)
+            trackName = inputTrack.getName()
+            trackPath = inputTrack.getPath()
+            rowArray = readTrackData(trackPath, chrom, start, end,
+                                     valCol=inputTrack.getValCol(),
+                                     valMap=inputTrack.getValueMap(),
+                                     updateValMap=True)
+            alignmentTrackTable.writeRow(0, rowArray)
+            self.alignmentTrackTableList.append(alignmentTrackTable)
 
             
             
