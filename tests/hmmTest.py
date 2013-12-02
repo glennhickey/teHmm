@@ -135,7 +135,7 @@ class TestCase(TestBase):
         assert_array_equal(state_sequence, [1, 0, 0])
         
 
-    def stestPredict(self):
+    def testPredict(self):
         observations = [0, 1, 2]
         h = MultinomialHMM(self.n_components,
                            startprob=self.startprob,
@@ -171,7 +171,7 @@ class TestCase(TestBase):
             [0.86397706, 0.13602294],
         ])
 
-    def stestFit(self):
+    def testFit(self):
         h = MultinomialHMM(self.n_components,
                            startprob=self.startprob,
                            transmat=self.transmat)
@@ -229,7 +229,7 @@ class TestCase(TestBase):
             assert_array_equal(state_sequence, state_sequence3)
 
         
-    def stestSupervisedLearn(self):
+    def testSupervisedLearn(self):
         bedIntervals = getBedStates()
         trackData = TrackData()
         trackData.loadTrackData(getTracksInfoPath(), bedIntervals)
