@@ -51,7 +51,7 @@ class Track(object):
             self.binSize = None
             self.valCol = 0
         elif self.dist == "alignment":
-            self.valMap = CategoryMap(reserved=0)
+            self.valMap = CategoryMap(reserved=1)
         assert self.dist == "multinomial" or self.dist == "binary" \
                or self.dist == "alignment"
 

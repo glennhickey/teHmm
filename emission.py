@@ -131,16 +131,16 @@ class IndependentMultinomialEmissionModel(object):
         logging.debug("%s Computing multinomial log prob for %d %d-track "
                       "observations" % (time.strftime("%H:%M:%S"),
                                         obs.shape[0], self.getNumTracks()))
-        allLogProbs = np.zeros((obs.shape[0], self.numStates), dtype=np.float)
+        obsLogProbs = np.zeros((obs.shape[0], self.numStates), dtype=np.float)
         if canFast(obs):
             logging.debug("Cython log prob enabled")
-            fastAllLogProbs(obs, self.logProbs, allLogProbs)
+            fastAllLogProbs(obs, self.logProbs, obsLogProbs)
         else:
             for i in xrange(len(obs)):
                 for state in xrange(self.numStates):
-                    allLogProbs[i, state] = self.singleLogProb(state, obs[i])
+                    obsLogProbs[i, state] = self.singleLogProb(state, obs[i])
         logging.debug("%s Done computing log prob" % time.strftime("%H:%M:%S"))
-        return allLogProbs
+        return obsLogProbs
     
     def sample(self, state):
         return None
@@ -280,12 +280,13 @@ class PairEmissionModel(object):
                pp.append([np.log(1. - i), np.log(i)])
        self.logPriors = np.array(pp, dtype=np.float)
        assert len(self.logPriors) == self.em.getNumStates()
+       assert self.logPriors.shape == (self.em.getNumStates(), 2)
        
    def pairLogProb(self, state, logProb1, logProb2, match):
        """ compute the pair probability from two independent emission logprobs
        given a state and whether or not there is a match.
        Note that this function should eventually be in _cfg.pyx or something"""
        assert match == 0 or match == 1
+       assert state < len(self.logPriors)
        return logProb1 + logProb2 + self.logPriors[state, match]
-
    

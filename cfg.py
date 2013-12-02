@@ -57,6 +57,7 @@ class MultitrackCfg(object):
         self.logProbs1 = None
         self.logProbs2 = None
         self.startProbs = None
+        self.defAlignmentSymbol = 0
 
         # all states that can emit a column
         self.M = self.emissionModel.getNumStates()
@@ -190,20 +191,22 @@ class MultitrackCfg(object):
         all the 1-length entries for each (emitting) state"""
         self.dp = NEGINF + np.zeros((len(obs), len(obs), self.M),
                                       dtype = np.float)
-        emLogProbs = self.emissionModel.allLogProbs(obs)
+        self.emLogProbs = self.emissionModel.allLogProbs(obs)
         # todo: how fast is this type of loop?
-        assert len(emLogProbs) == len(obs)
+        assert len(self.emLogProbs) == len(obs)
         for i in xrange(len(obs)):
             for j in self.hmmStates:
-                self.dp[i,i,j] = emLogProbs[i,j]
+                self.dp[i,i,j] = self.emLogProbs[i,j]
 
         baseMatch = alignmentTrack is not None
         # pair emissions where emitted columns are right beside eachother
         for i in xrange(len(obs)-1):
-            match = baseMatch and alignmentTrack[i] == alignmentTrack[i+1]
+            match = baseMatch and\
+                    alignmentTrack[i,0] != self.defAlignmentSymbol and\
+                    alignmentTrack[i,0] == alignmentTrack[i+1,0]
             for j in self.nestStates:
                 self.dp[i,i+1,j] = self.pairEmissionModel.pairLogProb(
-                    j, emLogProbs[i,j], emLogProbs[i+1,j], match)
+                    j, self.emLogProbs[i,j], self.emLogProbs[i+1,j], match)
                                                           
     def __initTraceBackTable(self, obs):
         """ Create a dynamic programming traceback (for CYK) table to remember
@@ -216,13 +219,15 @@ class MultitrackCfg(object):
         compute the maximum likelihood CFG derivation of the observations."""
         self.__initDPTable(obs, alignmentTrack)
         self.__initTraceBackTable(obs)
-        match = alignmentTrack is not None
+        baseMatch = alignmentTrack is not None
         for size in xrange(2, len(obs) + 1):
             for i in xrange(len(obs) + 1 - size):
                 j = i + size - 1
-                match = match and alignmentTrack[i] == alignmentTrack[j]
+                match = baseMatch and\
+                        alignmentTrack[i,0] != self.defAlignmentSymbol and\
+                        alignmentTrack[i,0] == alignmentTrack[j,0]
                 for lState in self.emittingStates:
-                    for q in xrange(len(self.helperDim1)):
+                    for q in xrange(self.helperDim1[lState]):
                         r1State = self.helper1[lState, q, 0]
                         r2State = self.helper1[lState, q, 1]
                         for k in xrange(i, i + size - 1):
@@ -232,16 +237,17 @@ class MultitrackCfg(object):
                             if lp > self.dp[i, j, lState]:
                                 self.dp[i, j, lState] = lp
                                 self.tb[i, j, lState] = [k, r1State, r2State]
-                    if size > 2 and i > 0 and j < (len(obs) - 1):
-                        for q in xrange(len(self.helperDim2)):
+                    if size > 2:
+                        for q in xrange(self.helperDim2[lState]):
                             rState = self.helper2[lState, q]
                             lp = self.logProbs2[lState, rState] +\
                                  self.dp[i+1, j-1, rState] +\
                                  self.pairEmissionModel.pairLogProb(\
                                 lState, \
-                                self.dp[i, i, lState], \
-                                self.dp[j, j, lState], \
+                                self.emLogProbs[i, lState], \
+                                self.emLogProbs[j, lState], \
                                 match)
+                            assert lp <= 0
                             if lp > self.dp[i, j, lState]:
                                 self.dp[i, j, lState] = lp
                                 self.tb[i, j, lState] = [k, r1State, r2State]
@@ -274,10 +280,11 @@ class MultitrackCfg(object):
         assert self.assigned <= len(obs)
         return trace
             
-    def decode(self, obs):
+    def decode(self, obs, alignmentTrack = None, defAlignmentSymbol=0):
         """ return tuple of log prob and most likely state sequence.  same
         as in the hmm. """
-        return self.__cyk(obs), self.__traceBack(obs)
+        self.defAlignmentSymbol = defAlignmentSymbol
+        return self.__cyk(obs, alignmentTrack), self.__traceBack(obs)
                                 
                 
             

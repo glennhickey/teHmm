@@ -70,7 +70,7 @@ class TestCase(TestBase):
         emProbs = np.zeros((1, 2, 2), dtype=np.float)
         emProbs[0,0] = [0.75, 0.25]
         emProbs[0,1] = [0.05, 0.95]
-        emissionModel.logProbs = emProbs
+        emissionModel.logProbs = np.log(emProbs)
 
         hmm = MultitrackHmm(emissionModel)
         pairModel = PairEmissionModel(emissionModel, [1.0] *
@@ -94,7 +94,7 @@ class TestCase(TestBase):
         emProbs[0,0] = [0.75, 0.25]
         emProbs[0,1] = [0.05, 0.95]
         emProbs[0,2] = [0.01, 0.90]
-        emissionModel.logProbs = emProbs
+        emissionModel.logProbs = np.log(emProbs)
         
         # state 1 is a nested pair state! 
         pairModel = PairEmissionModel(emissionModel, [1.0] *
@@ -107,6 +107,18 @@ class TestCase(TestBase):
         # 1 is a pair only state.  no way it should be here
         assert 1 not in cfgStates
         assert_array_equal(cfgStates, [0,0,2,0])
+
+        obs = np.array([[1],[0],[0],[1]], dtype=np.int16)
+        cfgProb, cfgStates = cfg.decode(obs)
+        assert_array_equal(cfgStates, [2,0,0,2])
+
+        alignment = np.array([[1],[0],[0],[1]], dtype=np.int16)
+        cfgProb, cfgStates = cfg.decode(obs, alignmentTrack = alignment,
+                                        defAlignmentSymbol=0)
+        assert_array_equal(cfgStates, [1,0,0,1])
+
+        
+                       
         
 
 def main():
