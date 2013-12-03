@@ -117,6 +117,10 @@ class TestCase(TestBase):
                                         defAlignmentSymbol=0)
         assert_array_equal(cfgStates, [1,0,0,1])
 
+        alignment = np.array([[1],[0],[0],[2]], dtype=np.int16)
+        cfgProb, cfgStates = cfg.decode(obs, alignmentTrack = alignment,
+                                        defAlignmentSymbol=0)
+        assert_array_equal(cfgStates, [2,0,0,2])
         
                        
         

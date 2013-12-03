@@ -293,6 +293,9 @@ class MultitrackCfg(object):
         as in the hmm. """
         self.defAlignmentSymbol = defAlignmentSymbol
         return self.__cyk(obs, alignmentTrack), self.__traceBack(obs)
+
+    def supervisedTrain(self, trackData, bedIntervals):
+        
                                 
                 
             
