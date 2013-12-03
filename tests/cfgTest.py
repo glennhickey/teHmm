@@ -121,8 +121,23 @@ class TestCase(TestBase):
         cfgProb, cfgStates = cfg.decode(obs, alignmentTrack = alignment,
                                         defAlignmentSymbol=0)
         assert_array_equal(cfgStates, [2,0,0,2])
-        
-                       
+                               
+    def testSupervisedLearn(self):
+        bedIntervals = getBedStates()
+        trackData = TrackData()
+        trackData.loadTrackData(getTracksInfoPath(), bedIntervals)
+        assert len(trackData.getTrackTableList()) == len(bedIntervals)
+
+        em = IndependentMultinomialEmissionModel(
+            2, trackData.getNumSymbolsPerTrack(),zeroAsMissingData=False)
+        hmm = MultitrackHmm(em)
+        pairModel = PairEmissionModel(em, [1.0] *
+                                      em.getNumStates())
+        cfg = MultitrackCfg(em, pairModel, nestStates = [1])
+
+        cfg.supervisedTrain(trackData, bedIntervals)
+        cfg.validate()
+
         
 
 def main():

@@ -19,6 +19,7 @@ from numpy.testing import assert_array_equal, assert_array_almost_equal
 
 from .emission import IndependentMultinomialEmissionModel
 from .track import TrackList, TrackTable, Track
+from .hmm import MultitrackHmm, EPSILON
 
 from sklearn.hmm import _BaseHMM
 from sklearn.hmm import MultinomialHMM
@@ -295,8 +296,43 @@ class MultitrackCfg(object):
         return self.__cyk(obs, alignmentTrack), self.__traceBack(obs)
 
     def supervisedTrain(self, trackData, bedIntervals):
-        pass
-                                
-                
+        """ Production porbabilites determined by frequencies two states
+        are adjacent in the training data.  In fact, we mostly piggyback
+        off the HMM training for now, using left-right adjacency as proxy
+        for nesting events as well (not sure there's much way around this
+        in fact..."""
+        self.initParams()        
+
+        hmm = MultitrackHmm(self.emissionModel)
+        hmm.supervisedTrain(trackData, bedIntervals)
+
+        assert (self.startProbs.shape == hmm.getStartProbs().shape)
+        self.startProbs = np.log(hmm.getStartProbs())
+
+        # map hmm transitions to X -> X Y productions
+        # for each hmm transition, P(X->Y) we let
+        # P(X->XY) = = P(X->YX) = P(X->Y) /2
+        hmmProbs = hmm.transmat_
+        for lState in self.hmmStates:
+            for rState in self.emittingStates:
+                hp = hmmProbs[lState, rState]
+                if lState != rState:
+                    hp /= 2.                
+                self.logProbs1[lState, lState, rState] = np.log(hp)
+                self.logProbs1[lState, rState, lState] = np.log(hp)
+
+        # like above but we also split across the table2
+        for lState in self.nestStates:
+            for rState in self.emittingStates:
+                hp = hmmProbs[lState, rState]
+                if lState != rState:
+                    hp /= 3.
+                else:
+                    hp /= 2.
+                self.logProbs1[lState, lState, rState] = np.log(hp)
+                self.logProbs1[lState, rState, lState] = np.log(hp)
+                self.logProbs2[lState, rState] = np.log(hp)
+
+        
             
             

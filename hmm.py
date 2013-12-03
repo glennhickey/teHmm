@@ -27,7 +27,7 @@ from sklearn.hmm import normalize
 from sklearn.hmm import NEGINF
 from sklearn.utils import check_random_state, deprecated
 
-    
+EPSILON=10e-20    
 
 """
 This class is based on the MultinomialHMM from sckikit-learn, but we make
@@ -101,8 +101,8 @@ class MultitrackHmm(_BaseHMM):
                 transitionCount[prevInterval[3], state] += 1
         
         self.transmat_ = normalize(np.maximum(
-            transitionCount, 10e-20), axis = 1)
-        self.startprob_ = normalize(np.maximum(freqCount, 10e-20))
+            transitionCount, EPSILON), axis = 1)
+        self.startprob_ = normalize(np.maximum(freqCount, EPSILON))
 
         self.emissionModel.supervisedTrain(trackData, bedIntervals)
         self.validate()
