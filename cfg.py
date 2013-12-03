@@ -2,9 +2,6 @@
 
 #Copyright (C) 2013 by Glenn Hickey
 #
-# Class derived from _BaseHMM and MultinomialHMM from sklearn/tests/hmm.py
-# (2010 - 2013, scikit-learn developers (BSD License))
-#
 #Released under the MIT license, see LICENSE.txt
 #!/usr/bin/env python
 
@@ -21,9 +18,6 @@ from .emission import IndependentMultinomialEmissionModel
 from .track import TrackList, TrackTable, Track
 from .hmm import MultitrackHmm, EPSILON
 
-from sklearn.hmm import _BaseHMM
-from sklearn.hmm import MultinomialHMM
-from sklearn.hmm import _hmmc
 from sklearn.hmm import normalize
 from sklearn.hmm import NEGINF
 from sklearn.utils import check_random_state, deprecated
