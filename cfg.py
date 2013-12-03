@@ -58,6 +58,7 @@ class MultitrackCfg(object):
         self.logProbs2 = None
         self.startProbs = None
         self.defAlignmentSymbol = 0
+        self.PAIRFLAG = -2
 
         # all states that can emit a column
         self.M = self.emissionModel.getNumStates()
@@ -189,6 +190,12 @@ class MultitrackCfg(object):
     def __initDPTable(self, obs, alignmentTrack):
         """ Create the 2D dynamic programming table for CYK etc. and initialise
         all the 1-length entries for each (emitting) state"""
+
+        # Create a dynamic programming traceback (for CYK) table to remember
+        #which states got used 
+        self.tb = -1 + np.zeros((len(obs), len(obs), self.M, 3),
+                                dtype = np.int64)
+
         self.dp = NEGINF + np.zeros((len(obs), len(obs), self.M),
                                       dtype = np.float)
         self.emLogProbs = self.emissionModel.allLogProbs(obs)
@@ -207,18 +214,12 @@ class MultitrackCfg(object):
             for j in self.nestStates:
                 self.dp[i,i+1,j] = self.pairEmissionModel.pairLogProb(
                     j, self.emLogProbs[i,j], self.emLogProbs[i+1,j], match)
-                                                          
-    def __initTraceBackTable(self, obs):
-        """ Create a dynamic programming traceback (for CYK) table to remember
-        which states got used """
-        self.tb = -1 + np.zeros((len(obs), len(obs), self.M, 3),
-                                dtype = np.int64)
+                self.tb[i, i+1, j] = [self.PAIRFLAG, 0, 0]
 
     def __cyk(self, obs, alignmentTrack = None):
         """ Do the CYK dynamic programming algorithm (like viterbi) to
         compute the maximum likelihood CFG derivation of the observations."""
         self.__initDPTable(obs, alignmentTrack)
-        self.__initTraceBackTable(obs)
         baseMatch = alignmentTrack is not None
         for size in xrange(2, len(obs) + 1):
             for i in xrange(len(obs) + 1 - size):
@@ -250,9 +251,8 @@ class MultitrackCfg(object):
                             assert lp <= 0
                             if lp > self.dp[i, j, lState]:
                                 self.dp[i, j, lState] = lp
-                                #cheap hack: set k to -2 to remebmer this is
-                                # a pair emission
-                                self.tb[i, j, lState] = [-2, rState, rState]
+                                self.tb[i, j, lState] = [self.PAIRFLAG,
+                                                         rState, rState]
 
         score = max([self.startProbs[i] + self.dp[0, len(obs)-1, i]  \
                      for i in self.emittingStates])
@@ -274,14 +274,14 @@ class MultitrackCfg(object):
                 self.assigned += 1
             else:
                 (k, r1State, r2State) = self.tb[i, j, state]
-                if k == -2:
+                if k == self.PAIRFLAG:
                     #cheap hack, k set to -2 to flag a pair emission
                     trace[i] = state
                     trace[j] = state
                     assert r1State == r2State
-                    tbRecursive(i+1, j-1, r1State, trace)
-                elif k != -1:
-                    #TODO: Trace back display for pair consecutive states
+                    if size > 2:
+                        tbRecursive(i+1, j-1, r1State, trace)
+                else:
                     tbRecursive(i, k, r1State, trace)
                     tbRecursive(k+1, j, r2State, trace)
         tbRecursive(0, len(self.tb) - 1, top, trace)
