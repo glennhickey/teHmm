@@ -295,7 +295,7 @@ class MultitrackCfg(object):
         return self.__cyk(obs, alignmentTrack), self.__traceBack(obs)
 
     def supervisedTrain(self, trackData, bedIntervals):
-        
+        pass
                                 
                 
             
