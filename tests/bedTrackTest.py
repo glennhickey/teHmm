@@ -85,7 +85,6 @@ class TestCase(TestBase):
         assert len(trackList) == 3
         assert trackList.getTrackByName("cb").name == "cb"
         assert trackList.getTrackByName("cb").getValCol() == 4
-        assert trackList.getTrackByName("cb").getBinSize() == 1
         assert trackList.getTrackByName("cb").getDist() == "multinomial"
         assert trackList.getTrackByName("kmer").name == "kmer"
         assert trackList.getTrackByName("blin") == None
@@ -138,7 +137,36 @@ class TestCase(TestBase):
         for i in xrange(len(tableList[1])):
             assert tableList[1][i][cbTrack.number] == 1
 
+    def testScale(self):
+        trackData1 = TrackData()
+        trackData1.loadTrackData(getTracksInfoPath(),
+                                 [("scaffold_1", 0, 10)])
 
+        trackData2 = TrackData()
+        trackData2.loadTrackData(getTracksInfoPath(2),
+                                 [("scaffold_1", 0, 10)])
+
+        tableList1 = trackData1.getTrackTableList()
+        tableList2 = trackData2.getTrackTableList()
+        track1 = trackData1.getTrackList().getTrackByName("kmer")
+        track2 = trackData2.getTrackList().getTrackByName("kmer")
+        trackNo1 = track1.getNumber()
+        trackNo2 = track2.getNumber()
+        assert len(tableList1) == len(tableList2)
+        assert len(tableList1) == 1
+        for i in xrange(len(tableList1[0])):
+            bedVal = tableList1[0][i][trackNo1]
+            bedVal2 = tableList2[0][i][trackNo2]
+            bedVal = track1.getValueMap().getMapBack(bedVal)
+            for j in xrange(len(tableList1[0])):
+                bedValJ = tableList1[0][j][trackNo1]
+                bedValJ2 = tableList2[0][j][trackNo2]
+                bedValJ = track1.getValueMap().getMapBack(bedValJ)
+                if int(0.1 * float(bedVal)) == int(0.1 * float(bedValJ)): 
+                    assert bedVal2 == bedValJ2
+                else:
+                    assert bedVal2 != bedValJ2
+            
 def main():
     sys.argv = sys.argv[:1]
     unittest.main()

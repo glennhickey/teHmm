@@ -92,10 +92,13 @@ def readBedData(bedPath, chrom, start, end, **kwargs):
             if valCol == 0:
                 val = 1
             elif valCol == 4:
+                assert overlap.score is not None and overlap.score != ""
                 val = overlap.score
             else:
                 assert valCol == 3
+                assert overlap.name is not None and overlap.name != ""
         if valMap is not None:
+            ov  = val
             val = valMap.getMap(val, update=updateMap)
             
         for i in xrange(oEnd - oStart):
