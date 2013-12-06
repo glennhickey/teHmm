@@ -269,11 +269,11 @@ class CategoryMap(object):
         self.catMap = dict()
         self.catMapBack = dict()
         self.reserved = reserved
-        self.scaleFn = lambda x: x
-        self.scaleInvFn = lambda x: x
+        self.scaleFac = None
+        self.logScaleFac = None
         
     def update(self, inVal):
-        val = self.scaleFn(inVal)
+        val = self.__scale(inVal)
         if val not in self.catMap:
             newVal = len(self.catMap) + self.reserved
             assert val not in self.catMap
@@ -281,11 +281,11 @@ class CategoryMap(object):
             self.catMapBack[newVal] = val
         
     def has(self, inVal):
-        val = self.scaleFn(inVal)
+        val = self.__scale(inVal)
         return val in self.catMap
         
     def getMap(self, inVal, update = False):
-        val = self.scaleFn(inVal)
+        val = self.__scale(inVal)
         if val is not None and update is True and val not in self.catMap:
             self.update(inVal)
         if val in self.catMap:
@@ -294,7 +294,7 @@ class CategoryMap(object):
 
     def getMapBack(self, val):
         if val in self.catMapBack:
-            return self.scaleInvFn(self.catMapBack[val])
+            return self.__scaleInv(self.catMapBack[val])
         else:
             return self.getMissingVal()
 
@@ -305,12 +305,29 @@ class CategoryMap(object):
         return len(self.catMap) + max(0, self.reserved - 1)
 
     def setScale(self, scale):
-        self.scaleFn = lambda x: int(scale * float(x))
-        self.scaleInvFn = lambda x: float(x) / float(scale)
-
+        self.scaleFac = scale
+        self.logScaleFac = None
+        
     def setLogScale(self, logScale):
-        self.scaleFn = lambda x: int(np.log(float(x) + EPSILON) * logScale)
-        self.scaelInvFn = lambda x: np.exp(float(x) / float(logScale))
+        self.logScaleFac = logScale
+        self.scaleFac = None
+
+    def __scale(self, x):
+        if self.scaleFac is not None:
+            return int(self.scaleFac * float(x))
+        elif self.logScaleFac is not None:
+            return int(np.log(float(x) + EPSILON) * logScaleFac)
+        else:
+            return x
+
+    def __scaleInv(self, x):
+        if self.scaleFac is not None:
+            return float(x) / float(self.scaleFac)
+        elif self.logScaleFac is not None:
+            return np.exp(float(x) / float(logScaleFac))
+        else:
+            return x
+
     
 ###########################################################################
     
