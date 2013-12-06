@@ -10,7 +10,8 @@ import argparse
 
 from teHmm.track import TrackData
 from teHmm.hmm import MultitrackHmm
-
+from teHmm.cfg import MultitrackCfg
+from teHmm.modelIO import loadModel
 
 def main(argv=None):
     if argv is None:
@@ -28,15 +29,14 @@ def main(argv=None):
     args = parser.parse_args()
 
     # load model created with teHmmTrain.py
-    hmm = MultitrackHmm()
-    hmm.load(args.inputModel)
+    model = loadModel(args.inputModel)
 
     # crappy print method
-    print hmm.toText()
+    print model.toText()
 
     if args.nameMap is True:
         print "State Maps:"
-        trackList = hmm.trackList
+        trackList = model.trackList
         if trackList is None:
             print "TrackList: None"
         else:

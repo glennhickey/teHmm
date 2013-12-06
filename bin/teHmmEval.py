@@ -13,6 +13,7 @@ import numpy as np
 from teHmm.track import TrackData
 from teHmm.hmm import MultitrackHmm
 from teHmm.trackIO import getMergedBedIntervals
+from teHmm.modelIO import loadModel
 
 def main(argv=None):
     if argv is None:
@@ -43,8 +44,7 @@ def main(argv=None):
         
     # load model created with teHmmTrain.py
     logging.info("loading model %s" % args.inputModel)
-    hmm = MultitrackHmm()
-    hmm.load(args.inputModel)
+    model = loadModel(args.inputModel)
 
     # read intervals from the bed file
     logging.info("loading target intervals from %s" % args.bedRegions)
@@ -61,7 +61,7 @@ def main(argv=None):
     # because we do not want to generate a new one.
     logging.info("loading tracks %s" % args.tracksInfo)
     trackData.loadTrackData(args.tracksInfo, mergedIntervals, 
-                            hmm.getTrackList())
+                            model.getTrackList())
 
     # do the viterbi algorithm
     logging.info("running viterbi algorithm")
@@ -70,7 +70,7 @@ def main(argv=None):
         vitOutFile = open(args.bed, "w")
     totalScore = 0
     tableIndex = 0
-    for vitLogProb, vitStates in hmm.viterbi(trackData):
+    for vitLogProb, vitStates in model.viterbi(trackData):
         totalScore += vitLogProb
         if args.bed is not None:
             vitOutFile.write("#Viterbi Score: %f\n" % (vitLogProb))

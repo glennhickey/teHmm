@@ -29,6 +29,7 @@ from sklearn.utils import check_random_state, deprecated
 
 EPSILON=10e-20    
 
+
 """
 This class is based on the MultinomialHMM from sckikit-learn, but we make
 the emission model a parameter. The custom emission model we support at this
@@ -128,19 +129,6 @@ class MultitrackHmm(_BaseHMM):
                 states = map(self.stateNameMap.getMapBack, states)
             output.append((prob,states))
         return output
-
-    def load(self, path):
-        f = open(path, "rb")
-        tmp_dict = pickle.load(f)
-        f.close()
-        self.__dict__.update(tmp_dict)
-        self.validate()
-
-    def save(self, path):
-        self.validate()
-        f = open(path, "wb")
-        pickle.dump(self.__dict__, f, 2)
-        f.close()
         
     def toText(self):
         states = [x for x in xrange(self.n_components)]
