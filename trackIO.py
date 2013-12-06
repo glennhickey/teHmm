@@ -9,6 +9,7 @@ import os
 import sys
 import logging
 from pybedtools import BedTool, Interval
+from .common import runShellCommand
 
 """ all track-data specific io code goes here.  Just BED implemented for now,
 will eventually add WIG and maybe eventually bigbed / bigwig """
@@ -26,12 +27,27 @@ def readTrackData(trackPath, chrom, start, end, **kwargs):
         return None
 
     trackExt = os.path.splitext(trackPath)[1]
+    tempPath = None
+    if trackExt == ".bw" or trackExt == ".bigwig":
+        #just writing in current directory.  something more principaled might
+        #be safer / nicer eventually
+        tempPath = os.path.splitext(os.path.basename(trackPath))[0] \
+                   + "_temp.bed"
+        logging.info("Extracting wig to temp bed %s. Make sure to erase"
+                     " in event of crash" % os.path.abspath(tempPath)) 
+        runShellCommand("bigWigToBedGraph %s %s -chrom=%s -start=%d -end=%d" %
+                        (trackPath, tempPath, chrom, start, end))
+        trackExt = ".bed"
+        trackPath = tempPath
     if trackExt == ".bed":
-        return readBedData(trackPath, chrom, start, end, **kwargs)
-    else:
+        data = readBedData(trackPath, chrom, start, end, **kwargs)
+    else:     
         sys.stderr.write("Warning: non-BED file skipped %s\n" %
                          trackPath)
-    return None
+        
+    if tempPath is not None:
+        runShellCommand("rm -f %s" % tempPath)
+    return data
 
 ###########################################################################
 
