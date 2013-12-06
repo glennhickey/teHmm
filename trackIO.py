@@ -7,6 +7,8 @@
 
 import os
 import sys
+import string
+import random
 import logging
 from pybedtools import BedTool, Interval
 from .common import runShellCommand
@@ -31,8 +33,12 @@ def readTrackData(trackPath, chrom, start, end, **kwargs):
     if trackExt == ".bw" or trackExt == ".bigwig":
         #just writing in current directory.  something more principaled might
         #be safer / nicer eventually
+        # make a little id tag:
+        S = string.ascii_uppercase + string.digits
+        tag = ''.join(random.choice(S) for x in range(5))
+  
         tempPath = os.path.splitext(os.path.basename(trackPath))[0] \
-                   + "_temp.bed"
+                   + "_temp%s.bed" % tag
         logging.info("Extracting wig to temp bed %s. Make sure to erase"
                      " in event of crash" % os.path.abspath(tempPath)) 
         runShellCommand("bigWigToBedGraph %s %s -chrom=%s -start=%d -end=%d" %
