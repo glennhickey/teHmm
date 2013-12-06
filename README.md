@@ -11,6 +11,7 @@ Dependencies
 * bedtools
 * pybedtools
 * scikit-learn
+* bigWigtoBedGraph (for BigWig support.  Can be downloaded here http://hgdownload.cse.ucsc.edu/admin/exe/ for linux or mac
 
 Input
 -----
