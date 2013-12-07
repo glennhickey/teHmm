@@ -30,7 +30,7 @@ def readTrackData(trackPath, chrom, start, end, **kwargs):
 
     trackExt = os.path.splitext(trackPath)[1]
     tempPath = None
-    if trackExt == ".bw" or trackExt == ".bigwig":
+    if trackExt == ".bw" or trackExt == ".bigwig" or trackExt == ".wg":
         #just writing in current directory.  something more principaled might
         #be safer / nicer eventually
         # make a little id tag:
