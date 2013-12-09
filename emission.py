@@ -119,7 +119,6 @@ class IndependentMultinomialEmissionModel(object):
                     assert (len(self.logProbs[i][j]) >=
                             self.numSymbolsPerTrack[i] + offset)
         self.validate()
-        logging.debug("Valid")
 
     def singleLogProb(self, state, singleObs):
         """ Compute the log probability of a single observation, obs given
