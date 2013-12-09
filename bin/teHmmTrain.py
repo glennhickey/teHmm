@@ -74,6 +74,7 @@ def main(argv=None):
     # create the independent emission model
     logging.info("creating emission model")
     numSymbolsPerTrack = trackData.getNumSymbolsPerTrack()
+    logging.debug("numSymbolsPerTrack=%s" % numSymbolsPerTrack)
     emissionModel = IndependentMultinomialEmissionModel(args.numStates,
                                                         numSymbolsPerTrack)
 
