@@ -72,12 +72,13 @@ def main(argv=None):
         args.numStates = len(catMap)
         
     # create the independent emission model
-    logging.info("creating model")
+    logging.info("creating emission model")
     numSymbolsPerTrack = trackData.getNumSymbolsPerTrack()
     emissionModel = IndependentMultinomialEmissionModel(args.numStates,
                                                         numSymbolsPerTrack)
 
     # create the hmm
+    logging.info("creating hmm model")
     hmm = MultitrackHmm(emissionModel, n_iter=args.iter, state_name_map=catMap)
 
     # do the training
