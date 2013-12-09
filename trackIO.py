@@ -45,6 +45,9 @@ def readTrackData(trackPath, chrom, start, end, **kwargs):
                         (trackPath, tempPath, chrom, start, end))
         trackExt = ".bed"
         trackPath = tempPath
+        if (kwargs is None):
+            kwargs = dict()
+        kwargs["needIntersect"] = False
     if trackExt == ".bed":
         data = readBedData(trackPath, chrom, start, end, **kwargs)
     else:     
@@ -61,6 +64,7 @@ def readBedData(bedPath, chrom, start, end, **kwargs):
 
     valCol = None
     sort = False
+    needIntersect = True
     if kwargs is not None and "valCol" in kwargs:
         valCol = int(kwargs["valCol"])
     valMap = None
@@ -74,6 +78,8 @@ def readBedData(bedPath, chrom, start, end, **kwargs):
         updateMap = kwargs["updateValMap"]
     if kwargs is not None and "sort" in kwargs:
         sort = kwargs["sort"] == True
+    if kwargs is not None and "needIntersect" in kwargs:
+        needIntersect = kwargs["needIntersect"]
 
     data = [defVal] * (end - start)
     logging.debug("readBedData(%s, update=%s)" % (bedPath, updateMap))
@@ -85,9 +91,12 @@ def readBedData(bedPath, chrom, start, end, **kwargs):
     interval = Interval(chrom, start, end)
 
     # todo: check how efficient this is
-    logging.debug("intersecting (%s,%d,%d) and %s" % (
-        chrom, start, end, bedPath))
-    intersections = bedTool.all_hits(interval)
+    if needIntersect is True:
+        logging.debug("intersecting (%s,%d,%d) and %s" % (
+            chrom, start, end, bedPath))
+        intersections = bedTool.all_hits(interval)
+    else:
+        intersections = bedTool
     logging.debug("loading data from intersections")
     basesRead = 0
     for overlap in intersections:
