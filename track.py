@@ -246,6 +246,7 @@ class IntegerTrackTable(TrackTable):
         
         #: (end-start) X (numTracks) integer data array
         self.data = np.empty((end-start, numTracks), dtype=dtype)
+        self.iinfo = np.iinfo(dtype)
 
     def __getitem__(self, index):
         return self.data[index]
@@ -256,6 +257,8 @@ class IntegerTrackTable(TrackTable):
         assert row < self.getNumTracks()
         assert len(rowArray) == len(self)
         for i in xrange(len(self)):
+            assert rowArray[i] <= self.iinfo.max and \
+                   rowArray[i] >= self.iinfo.min
             self.data[i][row] = rowArray[i]
 
     def getNumPyArray(self):

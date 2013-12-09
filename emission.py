@@ -89,8 +89,8 @@ class IndependentMultinomialEmissionModel(object):
         if self.zeroAsMissingData:
             offset = 1
         logging.debug("Creating emission matrix with %d entries" %
-                      self.numTracks * self.numStates *
-                      offset + max(self.numSymbolsPerTrack))
+                      (self.numTracks * self.numStates *
+                      offset + max(self.numSymbolsPerTrack)))
         self.logProbs = np.zeros((self.numTracks, self.numStates,
                                   offset + max(self.numSymbolsPerTrack)),
                                  dtype=np.float)
