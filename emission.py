@@ -90,7 +90,7 @@ class IndependentMultinomialEmissionModel(object):
             offset = 1
         logging.debug("Creating emission matrix with %d entries" %
                       (self.numTracks * self.numStates *
-                      offset + max(self.numSymbolsPerTrack)))
+                      (offset + max(self.numSymbolsPerTrack))))
         self.logProbs = np.zeros((self.numTracks, self.numStates,
                                   offset + max(self.numSymbolsPerTrack)),
                                  dtype=np.float)
@@ -119,6 +119,7 @@ class IndependentMultinomialEmissionModel(object):
                     assert (len(self.logProbs[i][j]) >=
                             self.numSymbolsPerTrack[i] + offset)
         self.validate()
+        logging.debug("Valid")
 
     def singleLogProb(self, state, singleObs):
         """ Compute the log probability of a single observation, obs given
@@ -202,9 +203,15 @@ class IndependentMultinomialEmissionModel(object):
 
     def validate(self):
         """ make sure everything sums to 1 """
+        numSymbols = reduce(lambda x,y : max(x,1) * max(y,1),
+                            self.numSymbolsPerTrack, 1)
+        if numSymbols >= 10000:
+            logging.warning("Unable two validate emission model because"
+                            " there are too many (%d) symbosl" % numSymbols)
+            return
+        
         allSymbols = [x for x in self.getSymbols()]
-        assert len(allSymbols) == reduce(lambda x,y : max(x,1) * max(y,1),
-                                          self.numSymbolsPerTrack, 1)
+        assert len(allSymbols) == numSymbols
         assert isinstance(self.logProbs, np.ndarray)
         assert len(self.logProbs.shape) == 3
         for state in xrange(self.numStates):
