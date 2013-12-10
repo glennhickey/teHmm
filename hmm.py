@@ -151,6 +151,7 @@ class MultitrackHmm(_BaseHMM):
               for i in xrange(self.n_components)] 
         s += "\nStart probs =\n%s\n" % str(sp)
         s += "\nTransitions =\n%s\n" % str(self.transmat_)
+        s += "\nlogTransitions = \n%s\n" % str(np.log(self.transmat_))
         em = self.emissionModel         
         s += "\nNumber of symbols per track=\n%s\n" % str(
             em.getNumSymbolsPerTrack())
