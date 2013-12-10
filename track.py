@@ -84,6 +84,10 @@ class Track(object):
             elem.attrib["distribution"] = str(self.dist)
         if self.valCol is not None:
             elem.attrib["valCol"] = str(self.valCol)
+        if self.logScale is not None:
+            elem.attrib["logScale"] = str(self.logScale)
+        elif self.scale is not None:
+            elem.attrib["scale"] = str(self.scale)
         return elem
 
     def getValueMap(self):
