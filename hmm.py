@@ -151,8 +151,10 @@ class MultitrackHmm(_BaseHMM):
               for i in xrange(self.n_components)] 
         s += "\nStart probs =\n%s\n" % str(sp)
         s += "\nTransitions =\n%s\n" % str(self.transmat_)
+        em = self.emissionModel         
+        s += "\nNumber of symbols per track=\n%s\n" % str(
+            em.getNumSymbolsPerTrack())
         s += "\nEmissions =\n"
-        em = self.emissionModel
         emProbs = em.getLogProbs()
         for state, stateName in enumerate(states):
             s += "State %s:\n" % stateName
