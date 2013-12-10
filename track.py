@@ -323,7 +323,7 @@ class CategoryMap(object):
         if self.scaleFac is not None:
             return int(self.scaleFac * float(x))
         elif self.logScaleFac is not None:
-            return int(np.log(float(x) + EPSILON) * logScaleFac)
+            return int(np.log(float(x) + EPSILON) * self.logScaleFac)
         else:
             return x
 
@@ -331,7 +331,7 @@ class CategoryMap(object):
         if self.scaleFac is not None:
             return float(x) / float(self.scaleFac)
         elif self.logScaleFac is not None:
-            return np.exp(float(x) / float(logScaleFac))
+            return np.exp(float(x) / float(self.logScaleFac))
         else:
             return x
 
