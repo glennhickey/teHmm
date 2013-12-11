@@ -13,7 +13,7 @@ def getTestDirPath(path = None):
     if path is not None:
         assert path[0] != '/'
         testPath = os.path.join(testPath, path)
-    return path
+    return testPath
 
 class TestBase(unittest.TestCase):
 

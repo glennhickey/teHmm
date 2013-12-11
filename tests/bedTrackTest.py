@@ -14,15 +14,15 @@ from teHmm.tests.common import TestBase
 
 def getTracksInfoPath(idx = 1):
     if idx == 1:
-        return getTestDirPath("tests/data/tracksInfo.xml")
+        return getTestDirPath("tracksInfo.xml")
     else:
-        return getTestDirPath("tests/data/tracksInfo%d.xml" % idx)
+        return getTestDirPath("tracksInfo%d.xml" % idx)
 
 def getTrackList(idx = 1):
     return TrackList(getTracksInfoPath(idx))
 
 def getStatesPath():
-    return getTestDirPath("tests/data/states.bed")
+    return getTestDirPath("states.bed")
 
 class TestCase(TestBase):
 

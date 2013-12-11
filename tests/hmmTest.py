@@ -16,6 +16,7 @@ from sklearn.hmm import MultinomialHMM
 
 from teHmm.tracksInfo import TracksInfo
 from teHmm.track import *
+from teHmm.trackIO import readBedIntervals
 from teHmm.hmm import MultitrackHmm
 from teHmm.emission import IndependentMultinomialEmissionModel
 
@@ -230,21 +231,28 @@ class TestCase(TestBase):
 
         
     def testSupervisedLearn(self):
-        bedIntervals = getBedStates()
+        intervals = readBedIntervals(getTestDirPath("truth.bed"), ncol=4)
+        truthIntervals = []
+        for i in intervals:
+            truthIntervals.append((i[0], i[1], i[2], int(i[3])))
+
+        allIntervals = [(truthIntervals[0][0],
+                        truthIntervals[0][1],
+                        truthIntervals[-1][2])]
         trackData = TrackData()
-        trackData.loadTrackData(getTracksInfoPath(), bedIntervals)
-        assert len(trackData.getTrackTableList()) == len(bedIntervals)
+        trackData.loadTrackData(getTracksInfoPath(3), allIntervals)
+        assert len(trackData.getTrackTableList()) == 1
 
         em = IndependentMultinomialEmissionModel(
-            2, trackData.getNumSymbolsPerTrack(),zeroAsMissingData=False)
+            4, trackData.getNumSymbolsPerTrack(),zeroAsMissingData=False)
         hmm = MultitrackHmm(em)
-        hmm.supervisedTrain(trackData, bedIntervals)
+        hmm.supervisedTrain(trackData, truthIntervals)
         hmm.validate()
 
         # crappy check for start probs.  need to test transition too!
         freq = [0.0] * em.getNumStates()
         total = 0.0
-        for interval in bedIntervals:
+        for interval in truthIntervals:
            state = interval[3]
            freq[state] += float(interval[2]) - float(interval[1])
            total += float(interval[2]) - float(interval[1])
@@ -257,12 +265,18 @@ class TestCase(TestBase):
 
         # transition probabilites
         # from eyeball:
-        # 0-0: 9 + 39 + 19 + 1= 68
-        # 1-1: 29 + 1 = 30
-        # 0-1: 1
-        # 1-0: 1
-        realTransProbs = np.array([[68. / 69., 1. / 69.],
-                                   [1. /21., 20. / 21.]])
+        #c	0	5	0   0->0 +4   0->1 +1    0-> +5
+        #c	5	10	1   1->1 +4   1->2 +1    1-> +5
+        #c	10	35	2   2->2 +24  2->3 +1    2-> +25
+        #c	35	40	3   3->3 +4   3->0 +1    3-> +5
+        #c	40	70	0   0->0 +29             0-> +19
+        realTransProbs = np.array([
+            [33. / 34., 1. / 34., 0., 0.],
+            [0., 4. / 5., 1. / 5., 0.],
+            [0., 0., 24. / 25., 1. / 25.],
+            [1. / 5., 0., 0., 4. / 5.]
+            ])
+            
         tprobs = hmm.getTransitionProbs()
         assert tprobs.shape == (em.getNumStates(), em.getNumStates())
         assert_array_almost_equal(tprobs, realTransProbs)
