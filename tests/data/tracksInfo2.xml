@@ -1,6 +1,6 @@
 <?xml version="1.0" ?>
 <teModelConfig>
   <track name="cb" path="tests/data/alyrata_chromBand.bed" distribution="binary"/>
-  <track name="kmer" path="tests/data/alyrata_kmer14.bed" distribution="multinomial" binSize="1" column="4"/>
-  <track name="te2" path="tests/data/alyrata_scaffold1_teii3.7.bed" distribution="multinomial" binSize="1" column="4"/>
+  <track name="kmer" path="tests/data/alyrata_kmer14.bed" distribution="multinomial" scale="0.1" valCol="3"/>
+  <track name="te2" path="tests/data/alyrata_scaffold1_teii3.7.bed" distribution="multinomial" valCol="4"/>
 </teModelConfig>

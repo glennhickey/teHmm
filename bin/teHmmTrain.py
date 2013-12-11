@@ -91,13 +91,15 @@ def main(argv=None):
         args.numStates = len(catMap)
         
     # create the independent emission model
-    logging.info("creating model")
+    logging.info("creating emission model")
     numSymbolsPerTrack = trackData.getNumSymbolsPerTrack()
+    logging.debug("numSymbolsPerTrack=%s" % numSymbolsPerTrack)
     emissionModel = IndependentMultinomialEmissionModel(args.numStates,
                                                         numSymbolsPerTrack)
 
     # create the model
     if not args.cfg:
+        logging.info("creating hmm model")
         model = MultitrackHmm(emissionModel, n_iter=args.iter,
                               state_name_map=catMap)
     else:
@@ -108,6 +110,7 @@ def main(argv=None):
         if args.pairStates is not None:
             pairStates = args.pairStates.split(",")
             nestStates = map(lambda x: catMap.getMap(x), pairStates)
+        logging.info("Creating cfg model")
         model = MultitrackCfg(emissionModel, pairEM, nestStates)
 
     # do the training

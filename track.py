@@ -13,6 +13,7 @@ import xml.etree.ElementTree as ET
 
 from .trackIO import readTrackData
 
+EPSILON = 10e-20
 INTEGER_ARRAY_TYPE = np.uint16
 
 ###########################################################################
@@ -32,8 +33,10 @@ class Track(object):
         self.path = None
         #: Distribution type (only multinomial for now)
         self.dist = "multinomial"
-        #: Number of bins for mapping numeric values to discrete states
-        self.binSize = 1
+        #: Scale numeric values (use fraction to bin)
+        self.scale = None
+        #: Like above (scale), but take log first
+        self.logScale = None
         #: Bed column to take value from (default 3==name)
         self.valCol = 3
 
@@ -48,12 +51,18 @@ class Track(object):
             self.valMap = CategoryMap(reserved=1)
         elif self.dist == "binary":
             self.valMap = BinaryMap()
-            self.binSize = None
             self.valCol = 0
         elif self.dist == "alignment":
             self.valMap = CategoryMap(reserved=1)
         assert self.dist == "multinomial" or self.dist == "binary" \
                or self.dist == "alignment"
+        if self.logScale is not None:
+            self.valMap.setLogScale(self.logScale)
+            if self.scale is not None:
+                sys.stderr("Warning, logScale overriding scale for track %s" %(
+                    self.name))
+        elif self.scale is not None:
+            self.valMap.setScale(self.scale)
 
     def _fromXMLElement(self, elem, number=-1):
         self.name = elem.attrib["name"]
@@ -62,10 +71,12 @@ class Track(object):
             self.dist = elem.attrib["distribution"]
             assert self.dist in ["binary", "multinomial", "sparse_multinomial",
                                  "alignment"]
-        if "binSize" in elem.attrib:
-            self.binSize = int(elem.attrib["binSize"])
         if "valCol" in elem.attrib:
             self.valCol = int(elem.attrib["valCol"])
+        if "scale" in elem.attrib:
+            self.scale = float(elem.attrib["scale"])
+        if "logScale" in elem.attrib:
+            self.logScale = float(elem.attrib["logScale"])
 
     def toXMLElement(self):
         elem = ET.Element("track")
@@ -75,10 +86,12 @@ class Track(object):
             elem.attrib["path"] = str(self.path)
         if self.dist is not None:
             elem.attrib["distribution"] = str(self.dist)
-        if self.binSize is not None:
-            elem.attrib["binSize"] = str(self.binSize)
         if self.valCol is not None:
             elem.attrib["valCol"] = str(self.valCol)
+        if self.logScale is not None:
+            elem.attrib["logScale"] = str(self.logScale)
+        elif self.scale is not None:
+            elem.attrib["scale"] = str(self.scale)
         return elem
 
     def getValueMap(self):
@@ -98,9 +111,6 @@ class Track(object):
 
     def getValCol(self):
         return self.valCol
-
-    def getBinSize(self):
-        return self.binSize
 
 
 ###########################################################################
@@ -261,6 +271,7 @@ class IntegerTrackTable(TrackTable):
         
         #: (end-start) X (numTracks) integer data array
         self.data = np.empty((end-start, numTracks), dtype=dtype)
+        self.iinfo = np.iinfo(dtype)
 
     def __getitem__(self, index):
         return self.data[index]
@@ -271,6 +282,8 @@ class IntegerTrackTable(TrackTable):
         assert row < self.getNumTracks()
         assert len(rowArray) == len(self)
         for i in xrange(len(self)):
+            assert rowArray[i] <= self.iinfo.max and \
+                   rowArray[i] >= self.iinfo.min
             self.data[i][row] = rowArray[i]
 
     def getNumPyArray(self):
@@ -284,27 +297,32 @@ class CategoryMap(object):
         self.catMap = dict()
         self.catMapBack = dict()
         self.reserved = reserved
+        self.scaleFac = None
+        self.logScaleFac = None
         
-    def update(self, val):
+    def update(self, inVal):
+        val = self.__scale(inVal)
         if val not in self.catMap:
             newVal = len(self.catMap) + self.reserved
-            assert newVal not in self.catMap
+            assert val not in self.catMap
             self.catMap[val] = newVal
             self.catMapBack[newVal] = val
         
-    def has(self, val):
+    def has(self, inVal):
+        val = self.__scale(inVal)
         return val in self.catMap
         
-    def getMap(self, val, update = False):
-        if val is not None and update is True and self.has(val) is False:
-            self.update(val)
-        if self.has(val) is True:
+    def getMap(self, inVal, update = False):
+        val = self.__scale(inVal)
+        if val is not None and update is True and val not in self.catMap:
+            self.update(inVal)
+        if val in self.catMap:
             return self.catMap[val]
         return self.getMissingVal()
 
     def getMapBack(self, val):
         if val in self.catMapBack:
-            return self.catMapBack[val]
+            return self.__scaleInv(self.catMapBack[val])
         else:
             return self.getMissingVal()
 
@@ -313,6 +331,31 @@ class CategoryMap(object):
 
     def __len__(self):
         return len(self.catMap) + max(0, self.reserved - 1)
+
+    def setScale(self, scale):
+        self.scaleFac = scale
+        self.logScaleFac = None
+        
+    def setLogScale(self, logScale):
+        self.logScaleFac = logScale
+        self.scaleFac = None
+
+    def __scale(self, x):
+        if self.scaleFac is not None:
+            return int(self.scaleFac * float(x))
+        elif self.logScaleFac is not None:
+            return int(np.log(float(x) + EPSILON) * self.logScaleFac)
+        else:
+            return x
+
+    def __scaleInv(self, x):
+        if self.scaleFac is not None:
+            return float(x) / float(self.scaleFac)
+        elif self.logScaleFac is not None:
+            return np.exp(float(x) / float(self.logScaleFac))
+        else:
+            return x
+
     
 ###########################################################################
     

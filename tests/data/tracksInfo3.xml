@@ -1,0 +1,5 @@
+<?xml version="1.0" ?>
+<teModelConfig>
+  <track name="ltr" path="tests/data/ltr.bed" distribution="binary"/>
+  <track name="inside" path="tests/data/inside.bed" distribution="multinomial"/>
+</teModelConfig>

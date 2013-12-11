@@ -20,7 +20,7 @@ def main(argv=None):
     parser = argparse.ArgumentParser(
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
         description="Cut names off at first | and or /")
-    parser.add_argument("inBed", help="bed with ltr results to process")
+    parser.add_argument("inBed", help="bed with chaux results to process")
     parser.add_argument("outBed", help="bed to write output to.")
 
     args = parser.parse_args()

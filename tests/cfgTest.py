@@ -14,6 +14,7 @@ from numpy.testing import assert_array_equal, assert_array_almost_equal
 
 from teHmm.tracksInfo import TracksInfo
 from teHmm.track import *
+from teHmm.trackIO import readBedIntervals
 from teHmm.hmm import MultitrackHmm
 from teHmm.cfg import MultitrackCfg
 from teHmm.emission import IndependentMultinomialEmissionModel, PairEmissionModel
@@ -123,19 +124,28 @@ class TestCase(TestBase):
         assert_array_equal(cfgStates, [2,0,0,2])
                                
     def testSupervisedLearn(self):
-        bedIntervals = getBedStates()
+        intervals = readBedIntervals(getTestDirPath("truth.bed"), ncol=4)
+        truthIntervals = []
+        for i in intervals:
+            truthIntervals.append((i[0], i[1], i[2], int(i[3])))
+
+        allIntervals = [(truthIntervals[0][0],
+                        truthIntervals[0][1],
+                        truthIntervals[-1][2])]
         trackData = TrackData()
-        trackData.loadTrackData(getTracksInfoPath(), bedIntervals)
-        assert len(trackData.getTrackTableList()) == len(bedIntervals)
+        trackData.loadTrackData(getTracksInfoPath(3), allIntervals)
+        assert len(trackData.getTrackTableList()) == 1
 
         em = IndependentMultinomialEmissionModel(
-            2, trackData.getNumSymbolsPerTrack(),zeroAsMissingData=False)
+            4, trackData.getNumSymbolsPerTrack())
         hmm = MultitrackHmm(em)
+        hmm.supervisedTrain(trackData, truthIntervals)
+        hmm.validate()
         pairModel = PairEmissionModel(em, [1.0] *
                                       em.getNumStates())
         cfg = MultitrackCfg(em, pairModel, nestStates = [1])
 
-        cfg.supervisedTrain(trackData, bedIntervals)
+        cfg.supervisedTrain(trackData, truthIntervals)
         cfg.validate()
 
         

@@ -88,10 +88,14 @@ class IndependentMultinomialEmissionModel(object):
         offset = 0
         if self.zeroAsMissingData:
             offset = 1
+        logging.debug("Creating emission matrix with %d entries" %
+                      (self.numTracks * self.numStates *
+                      (offset + max(self.numSymbolsPerTrack))))
         self.logProbs = np.zeros((self.numTracks, self.numStates,
                                   offset + max(self.numSymbolsPerTrack)),
                                  dtype=np.float)
 
+        logging.debug("Begin track by track emission matrix init")
         for i in xrange(self.numTracks):
             stateList = []
             logStateList = []
@@ -106,7 +110,8 @@ class IndependentMultinomialEmissionModel(object):
                     dist = np.append([1.], dist)
                 for k in xrange(len(dist)):
                     self.logProbs[i, j, k] = np.log(dist[k])
-            
+                    
+        logging.debug("Validating emission matrix")
         assert len(self.logProbs) == self.numTracks
         for i in xrange(self.numTracks):
             assert len(self.logProbs[i]) == self.numStates
@@ -197,9 +202,15 @@ class IndependentMultinomialEmissionModel(object):
 
     def validate(self):
         """ make sure everything sums to 1 """
+        numSymbols = reduce(lambda x,y : max(x,1) * max(y,1),
+                            self.numSymbolsPerTrack, 1)
+        if numSymbols >= 500000:
+            logging.warning("Unable two validate emission model because"
+                            " there are too many (%d) symbosl" % numSymbols)
+            return
+        
         allSymbols = [x for x in self.getSymbols()]
-        assert len(allSymbols) == reduce(lambda x,y : max(x,1) * max(y,1),
-                                          self.numSymbolsPerTrack, 1)
+        assert len(allSymbols) == numSymbols
         assert isinstance(self.logProbs, np.ndarray)
         assert len(self.logProbs.shape) == 3
         for state in xrange(self.numStates):

@@ -16,6 +16,7 @@ from sklearn.hmm import MultinomialHMM
 
 from teHmm.tracksInfo import TracksInfo
 from teHmm.track import *
+from teHmm.trackIO import readBedIntervals
 from teHmm.hmm import MultitrackHmm
 from teHmm.emission import IndependentMultinomialEmissionModel
 
@@ -230,21 +231,61 @@ class TestCase(TestBase):
 
         
     def testSupervisedLearn(self):
-        bedIntervals = getBedStates()
+        intervals = readBedIntervals(getTestDirPath("truth.bed"), ncol=4)
+        truthIntervals = []
+        for i in intervals:
+            truthIntervals.append((i[0], i[1], i[2], int(i[3])))
+
+        allIntervals = [(truthIntervals[0][0],
+                        truthIntervals[0][1],
+                        truthIntervals[-1][2])]
         trackData = TrackData()
-        trackData.loadTrackData(getTracksInfoPath(), bedIntervals)
-        assert len(trackData.getTrackTableList()) == len(bedIntervals)
+        trackData.loadTrackData(getTracksInfoPath(3), allIntervals)
+        assert len(trackData.getTrackTableList()) == 1
 
         em = IndependentMultinomialEmissionModel(
-            2, trackData.getNumSymbolsPerTrack(),zeroAsMissingData=False)
+            4, trackData.getNumSymbolsPerTrack())
         hmm = MultitrackHmm(em)
-        hmm.supervisedTrain(trackData, bedIntervals)
+        hmm.supervisedTrain(trackData, truthIntervals)
         hmm.validate()
 
+        # check emissions, they should basically be binary. 
+        trackList = hmm.getTrackList()
+        emp = np.exp(em.getLogProbs())
+        ltrTrack = trackList.getTrackByName("ltr")
+        track = ltrTrack.getNumber()
+        cmap = ltrTrack.getValueMap()
+        s0 = cmap.getMap(None)
+        s1 = cmap.getMap(0)
+        # we add 1 to all frequencies like emission trainer
+        assert_array_almost_equal(emp[track][0][s0], 36. / 37.) 
+        assert_array_almost_equal(emp[track][0][s1], 1 - 36. / 37.)
+        assert_array_almost_equal(emp[track][1][s0], 1 - 6. / 7.) 
+        assert_array_almost_equal(emp[track][1][s1], 6. / 7.)
+        assert_array_almost_equal(emp[track][2][s0], 26. / 27.) 
+        assert_array_almost_equal(emp[track][2][s1], 1. - 26. / 27.)
+        assert_array_almost_equal(emp[track][3][s0], 1. - 6. / 7.)
+        assert_array_almost_equal(emp[track][3][s1], 6. / 7.)
+
+        insideTrack = trackList.getTrackByName("inside")
+        track = insideTrack.getNumber()
+        cmap = insideTrack.getValueMap()
+        s0 = cmap.getMap(None)
+        s1 = cmap.getMap("Inside")
+        assert_array_almost_equal(emp[track][0][s0], 36. / 37.) 
+        assert_array_almost_equal(emp[track][0][s1], 1 - 36. / 37.)
+        assert_array_almost_equal(emp[track][1][s0], 6. / 7.)
+        assert_array_almost_equal(emp[track][1][s1], 1 - 6. / 7.)
+        assert_array_almost_equal(emp[track][2][s0], 1. - 26. / 27.)
+        assert_array_almost_equal(emp[track][2][s1], 26. / 27.) 
+        assert_array_almost_equal(emp[track][3][s0], 6. / 7.)
+        assert_array_almost_equal(emp[track][3][s1], 1. - 6. / 7.)
+
+        
         # crappy check for start probs.  need to test transition too!
         freq = [0.0] * em.getNumStates()
         total = 0.0
-        for interval in bedIntervals:
+        for interval in truthIntervals:
            state = interval[3]
            freq[state] += float(interval[2]) - float(interval[1])
            total += float(interval[2]) - float(interval[1])
@@ -254,8 +295,27 @@ class TestCase(TestBase):
         for state in xrange(em.getNumStates()):
             assert_array_almost_equal(freq[state] / total, sprobs[state])
 
-        # transition probabilites todo!
-        
+        # transition probabilites
+        # from eyeball:
+        #c	0	5	0   0->0 +4   0->1 +1    0-> +5
+        #c	5	10	1   1->1 +4   1->2 +1    1-> +5
+        #c	10	35	2   2->2 +24  2->3 +1    2-> +25
+        #c	35	40	3   3->3 +4   3->0 +1    3-> +5
+        #c	40	70	0   0->0 +29             0-> +19
+        realTransProbs = np.array([
+            [33. / 34., 1. / 34., 0., 0.],
+            [0., 4. / 5., 1. / 5., 0.],
+            [0., 0., 24. / 25., 1. / 25.],
+            [1. / 5., 0., 0., 4. / 5.]
+            ])
+            
+        tprobs = hmm.getTransitionProbs()
+        assert tprobs.shape == (em.getNumStates(), em.getNumStates())
+        assert_array_almost_equal(tprobs, realTransProbs)
+        prob, states = hmm.viterbi(trackData)[0]
+        for truthInt in truthIntervals:
+            for i in xrange(truthInt[1], truthInt[2]):
+                assert states[i] == truthInt[3]
 
 def main():
     sys.argv = sys.argv[:1]

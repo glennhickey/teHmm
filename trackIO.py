@@ -7,8 +7,11 @@
 
 import os
 import sys
+import string
+import random
 import logging
 from pybedtools import BedTool, Interval
+from .common import runShellCommand
 
 """ all track-data specific io code goes here.  Just BED implemented for now,
 will eventually add WIG and maybe eventually bigbed / bigwig """
@@ -26,12 +29,34 @@ def readTrackData(trackPath, chrom, start, end, **kwargs):
         return None
 
     trackExt = os.path.splitext(trackPath)[1]
+    tempPath = None
+    if trackExt == ".bw" or trackExt == ".bigwig" or trackExt == ".wg":
+        #just writing in current directory.  something more principaled might
+        #be safer / nicer eventually
+        # make a little id tag:
+        S = string.ascii_uppercase + string.digits
+        tag = ''.join(random.choice(S) for x in range(5))
+  
+        tempPath = os.path.splitext(os.path.basename(trackPath))[0] \
+                   + "_temp%s.bed" % tag
+        logging.info("Extracting wig to temp bed %s. Make sure to erase"
+                     " in event of crash" % os.path.abspath(tempPath)) 
+        runShellCommand("bigWigToBedGraph %s %s -chrom=%s -start=%d -end=%d" %
+                        (trackPath, tempPath, chrom, start, end))
+        trackExt = ".bed"
+        trackPath = tempPath
+        if (kwargs is None):
+            kwargs = dict()
+        kwargs["needIntersect"] = False
     if trackExt == ".bed":
-        return readBedData(trackPath, chrom, start, end, **kwargs)
-    else:
+        data = readBedData(trackPath, chrom, start, end, **kwargs)
+    else:     
         sys.stderr.write("Warning: non-BED file skipped %s\n" %
                          trackPath)
-    return None
+        
+    if tempPath is not None:
+        runShellCommand("rm -f %s" % tempPath)
+    return data
 
 ###########################################################################
 
@@ -39,6 +64,7 @@ def readBedData(bedPath, chrom, start, end, **kwargs):
 
     valCol = None
     sort = False
+    needIntersect = True
     if kwargs is not None and "valCol" in kwargs:
         valCol = int(kwargs["valCol"])
     valMap = None
@@ -52,6 +78,8 @@ def readBedData(bedPath, chrom, start, end, **kwargs):
         updateMap = kwargs["updateValMap"]
     if kwargs is not None and "sort" in kwargs:
         sort = kwargs["sort"] == True
+    if kwargs is not None and "needIntersect" in kwargs:
+        needIntersect = kwargs["needIntersect"]
 
     data = [defVal] * (end - start)
     logging.debug("readBedData(%s, update=%s)" % (bedPath, updateMap))
@@ -63,9 +91,12 @@ def readBedData(bedPath, chrom, start, end, **kwargs):
     interval = Interval(chrom, start, end)
 
     # todo: check how efficient this is
-    logging.debug("intersecting (%s,%d,%d) and %s" % (
-        chrom, start, end, bedPath))
-    intersections = bedTool.all_hits(interval)
+    if needIntersect is True:
+        logging.debug("intersecting (%s,%d,%d) and %s" % (
+            chrom, start, end, bedPath))
+        intersections = bedTool.all_hits(interval)
+    else:
+        intersections = bedTool
     logging.debug("loading data from intersections")
     basesRead = 0
     for overlap in intersections:
@@ -76,10 +107,13 @@ def readBedData(bedPath, chrom, start, end, **kwargs):
             if valCol == 0:
                 val = 1
             elif valCol == 4:
+                assert overlap.score is not None and overlap.score != ""
                 val = overlap.score
             else:
                 assert valCol == 3
+                assert overlap.name is not None and overlap.name != ""
         if valMap is not None:
+            ov  = val
             val = valMap.getMap(val, update=updateMap)
             
         for i in xrange(oEnd - oStart):
