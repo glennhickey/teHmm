@@ -163,10 +163,11 @@ class MultitrackHmm(_BaseHMM):
                 track = self.trackList.getTrackByNumber(trackNo)
                 s += "  Track %d %s:\n" % (track.getNumber(), track.getName())
                 numSymbolsPerTrack =  em.getNumSymbolsPerTrack()
-                for symbol in em.getTrackSymbols(trackNo):
+                for idx, symbol in enumerate(em.getTrackSymbols(trackNo)):
                     symbolName = track.getValueMap().getMapBack(symbol)
-                    s += "    %s) %s: %f\n" % (symbol, symbolName,
-                                               np.exp(emProbs[trackNo][state][symbol]))
+                    prob = np.exp(emProbs[trackNo][state][symbol])
+                    if idx <= 2 or prob > 0.01:
+                        s += "    %s) %s: %f\n" % (symbol, symbolName, prob)
         return s
 
     def getTrackList(self):
