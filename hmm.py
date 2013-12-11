@@ -18,12 +18,11 @@ from collections import Iterable
 from numpy.testing import assert_array_equal, assert_array_almost_equal
 
 from .emission import IndependentMultinomialEmissionModel
-from .track import TrackList, TrackTable, Track
+from .track import TrackList, TrackTable, Track, EPSILON
 
 from sklearn.hmm import _BaseHMM
 from sklearn.hmm import MultinomialHMM
 from sklearn.hmm import _hmmc
-from sklearn.hmm import normalize
 from sklearn.hmm import NEGINF
 from sklearn.utils import check_random_state, deprecated
 
@@ -83,8 +82,8 @@ class MultitrackHmm(_BaseHMM):
         # NOTE bedIntervals must be sorted!
         self.trackList = trackData.getTrackList()
         N = self.emissionModel.getNumStates()
-        transitionCount = np.zeros((N,N), np.float)
-        freqCount = np.zeros((N,), np.float)
+        transitionCount = EPSILON + np.zeros((N,N), np.float)
+        freqCount = EPSILON + np.zeros((N,), np.float)
         prevInterval = None
         logging.debug("beginning supervised transition stats")
         for interval in bedIntervals:
@@ -93,17 +92,18 @@ class MultitrackHmm(_BaseHMM):
             transitionCount[state,state] += interval[2] - interval[1] - 1
             freqCount[state] += interval[2] - interval[1]
             if prevInterval is not None and prevInterval[0] == interval[0]:
-                if interval[1] <= prevInterval[2]:
+                if interval[1] < prevInterval[2]:
                     raise RuntimeError("Overlapping or out of order training"
-                                       " intervals: (%s, %d, %d, %d) and "
-                                       " (%s, %d, %d, %d)" % prevInterval +
-                                       interval)
+                                       " intervals: %s and %s" % (
+                                           prevInterval, interval))
                 transitionCount[prevInterval[3], state] += 1
-        
-        self.transmat_ = normalize(np.maximum(
-            transitionCount, 10e-20), axis = 1)
-        self.startprob_ = normalize(np.maximum(freqCount, 10e-20))
-
+                
+            prevInterval = interval
+        for row in xrange(len(transitionCount)):
+            transitionCount[row] /= np.sum(transitionCount[row])
+        self.transmat_ = transitionCount
+        freqCount /= np.sum(freqCount)
+        self.startprob_ = freqCount
         self.emissionModel.supervisedTrain(trackData, bedIntervals)
         self.validate()
         
@@ -175,6 +175,9 @@ class MultitrackHmm(_BaseHMM):
     def getStartProbs(self):
         return self.startprob_
 
+    def getTransitionProbs(self):
+        return self.transmat_
+
     def validate(self):
         assert len(self.startprob_) == self.emissionModel.getNumStates()
         assert not isinstance(self.startprob_[0], Iterable)
@@ -183,7 +186,6 @@ class MultitrackHmm(_BaseHMM):
         assert_array_almost_equal(np.sum(self.startprob_), 1.)
         for i in xrange(self.emissionModel.getNumStates()):
             assert_array_almost_equal(np.sum(self.transmat_[i]), 1.)
-            assert_array_almost_equal(np.sum(self.transmat_.T[i]), 1.)
         self.emissionModel.validate()
         
     ###########################################################################

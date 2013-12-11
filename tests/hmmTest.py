@@ -135,7 +135,7 @@ class TestCase(TestBase):
         assert_array_equal(state_sequence, [1, 0, 0])
         
 
-    def stestPredict(self):
+    def testPredict(self):
         observations = [0, 1, 2]
         h = MultinomialHMM(self.n_components,
                            startprob=self.startprob,
@@ -171,7 +171,7 @@ class TestCase(TestBase):
             [0.86397706, 0.13602294],
         ])
 
-    def stestFit(self):
+    def testFit(self):
         h = MultinomialHMM(self.n_components,
                            startprob=self.startprob,
                            transmat=self.transmat)
@@ -229,7 +229,7 @@ class TestCase(TestBase):
             assert_array_equal(state_sequence, state_sequence3)
 
         
-    def stestSupervisedLearn(self):
+    def testSupervisedLearn(self):
         bedIntervals = getBedStates()
         trackData = TrackData()
         trackData.loadTrackData(getTracksInfoPath(), bedIntervals)
@@ -250,11 +250,23 @@ class TestCase(TestBase):
            total += float(interval[2]) - float(interval[1])
 
         sprobs = hmm.getStartProbs()
+        #print sprobs, freq, total, freq / total
         assert len(sprobs) == em.getNumStates()
         for state in xrange(em.getNumStates()):
             assert_array_almost_equal(freq[state] / total, sprobs[state])
 
-        # transition probabilites todo!
+        # transition probabilites
+        # from eyeball:
+        # 0-0: 9 + 39 + 19 + 1= 68
+        # 1-1: 29 + 1 = 30
+        # 0-1: 1
+        # 1-0: 1
+        realTransProbs = np.array([[68. / 69., 1. / 69.],
+                                   [1. /21., 20. / 21.]])
+        tprobs = hmm.getTransitionProbs()
+        assert tprobs.shape == (em.getNumStates(), em.getNumStates())
+        assert_array_almost_equal(tprobs, realTransProbs)
+        
         
 
 def main():
