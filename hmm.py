@@ -92,10 +92,12 @@ class MultitrackHmm(_BaseHMM):
             transitionCount[state,state] += interval[2] - interval[1] - 1
             freqCount[state] += interval[2] - interval[1]
             if prevInterval is not None and prevInterval[0] == interval[0]:
-                if interval[1] < prevInterval[2]:
-                    raise RuntimeError("Overlapping or out of order training"
-                                       " intervals: %s and %s" % (
-                                           prevInterval, interval))
+                if interval[1] != prevInterval[2]:
+                    raise RuntimeError(
+                        "Supervised train requires contiguous intervals but "
+                        "found: %s and %s. Note that addBedGaps.py and "
+                        "removeBedOverlaps.py are provided to make such files"%
+                        (prevInterval, interval))
                 transitionCount[prevInterval[3], state] += 1
                 
             prevInterval = interval
