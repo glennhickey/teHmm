@@ -244,11 +244,44 @@ class TestCase(TestBase):
         assert len(trackData.getTrackTableList()) == 1
 
         em = IndependentMultinomialEmissionModel(
-            4, trackData.getNumSymbolsPerTrack(),zeroAsMissingData=False)
+            4, trackData.getNumSymbolsPerTrack())
         hmm = MultitrackHmm(em)
         hmm.supervisedTrain(trackData, truthIntervals)
         hmm.validate()
 
+        # check emissions, they should basically be binary. 
+        trackList = hmm.getTrackList()
+        emp = np.exp(em.getLogProbs())
+        ltrTrack = trackList.getTrackByName("ltr")
+        track = ltrTrack.getNumber()
+        cmap = ltrTrack.getValueMap()
+        s0 = cmap.getMap(None)
+        s1 = cmap.getMap(0)
+        # we add 1 to all frequencies like emission trainer
+        assert_array_almost_equal(emp[track][0][s0], 36. / 37.) 
+        assert_array_almost_equal(emp[track][0][s1], 1 - 36. / 37.)
+        assert_array_almost_equal(emp[track][1][s0], 1 - 6. / 7.) 
+        assert_array_almost_equal(emp[track][1][s1], 6. / 7.)
+        assert_array_almost_equal(emp[track][2][s0], 26. / 27.) 
+        assert_array_almost_equal(emp[track][2][s1], 1. - 26. / 27.)
+        assert_array_almost_equal(emp[track][3][s0], 1. - 6. / 7.)
+        assert_array_almost_equal(emp[track][3][s1], 6. / 7.)
+
+        insideTrack = trackList.getTrackByName("inside")
+        track = insideTrack.getNumber()
+        cmap = insideTrack.getValueMap()
+        s0 = cmap.getMap(None)
+        s1 = cmap.getMap(0)
+        assert_array_almost_equal(emp[track][0][s0], 36. / 37.) 
+        assert_array_almost_equal(emp[track][0][s1], 1 - 36. / 37.)
+        assert_array_almost_equal(emp[track][1][s0], 6. / 7.)
+        assert_array_almost_equal(emp[track][1][s1], 1 - 6. / 7.)
+        assert_array_almost_equal(emp[track][2][s0], 1. - 26. / 27.)
+        assert_array_almost_equal(emp[track][2][s1], 26. / 27.) 
+        assert_array_almost_equal(emp[track][3][s0], 6. / 7.)
+        assert_array_almost_equal(emp[track][3][s1], 1. - 6. / 7.)
+
+        
         # crappy check for start probs.  need to test transition too!
         freq = [0.0] * em.getNumStates()
         total = 0.0
@@ -258,7 +291,6 @@ class TestCase(TestBase):
            total += float(interval[2]) - float(interval[1])
 
         sprobs = hmm.getStartProbs()
-        #print sprobs, freq, total, freq / total
         assert len(sprobs) == em.getNumStates()
         for state in xrange(em.getNumStates()):
             assert_array_almost_equal(freq[state] / total, sprobs[state])
@@ -280,8 +312,10 @@ class TestCase(TestBase):
         tprobs = hmm.getTransitionProbs()
         assert tprobs.shape == (em.getNumStates(), em.getNumStates())
         assert_array_almost_equal(tprobs, realTransProbs)
-        
-        
+        prob, states = hmm.viterbi(trackData)[0]
+        for truthInt in truthIntervals:
+            for i in xrange(truthInt[1], truthInt[2]):
+                assert states[i] == truthInt[3]
 
 def main():
     sys.argv = sys.argv[:1]
