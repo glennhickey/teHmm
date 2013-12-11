@@ -271,7 +271,7 @@ class TestCase(TestBase):
         track = insideTrack.getNumber()
         cmap = insideTrack.getValueMap()
         s0 = cmap.getMap(None)
-        s1 = cmap.getMap(0)
+        s1 = cmap.getMap("Inside")
         assert_array_almost_equal(emp[track][0][s0], 36. / 37.) 
         assert_array_almost_equal(emp[track][0][s1], 1 - 36. / 37.)
         assert_array_almost_equal(emp[track][1][s0], 6. / 7.)
