@@ -24,8 +24,12 @@ def main(argv=None):
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
         description="Train, evalaute, then compare hmm model on input")
 
-    parser.add_argument("tracksInfo", help="Path of Tracks Info file "
-                        "containing paths to genome annotation tracks")
+    parser.add_argument("trainingTracksInfo", help="Path of Tracks Info file "
+                        "containing paths to genome annotation tracks used "
+                        "for training")
+    parser.add_argument("evalTracksInfo", help="Path of Tracks Info file "
+                        "containing paths to genome annotation tracks used"
+                        " for evaluation")
     parser.add_argument("outputDir", help="directory to write output")
     parser.add_argument("inBeds", nargs="*", help="list of training beds")
     parser.add_argument("--verbose", help="Print out detailed logging messages",
@@ -55,11 +59,13 @@ def main(argv=None):
     if not os.path.exists(args.outputDir):
         os.makedirs(args.outputDir)
 
-    inputTrackList = TrackList(args.tracksInfo)
+    trainingTrackList = TrackList(args.trainingTracksInfo)
+    evalTrackList = TrackList(args.evalTracksInfo)
+    checkTrackListCompatible(trainingTrackList, evalTrackList)
 
-    sizeRange = (len(inputTrackList), len(inputTrackList) + 1)
+    sizeRange = (len(trainingTrackList), len(trainingTrackList) + 1)
     if args.allTrackCombinations is True:
-        sizeRange = (1, len(inputTrackList) + 1)
+        sizeRange = (1, len(trainingTrackList) + 1)
 
     if args.emStates is not None:
         trainFlags = "--numStates %d" % args.emStates
@@ -69,15 +75,21 @@ def main(argv=None):
     #todo: try to get timing for each command
     commands = []
 
-    for pn, pList in enumerate(subsetTrackList(inputTrackList, sizeRange)):
-        if len(pList) == len(inputTrackList):
+    for pn, pList in enumerate(subsetTrackList(trainingTrackList, sizeRange)):
+        if len(pList) == len(trainingTrackList):
             outDir = args.outputDir
         else:
             outDir = os.path.join(args.outputDir, "perm%d" % pn)
         if not os.path.exists(outDir):
             os.makedirs(outDir)
-        trackPath = os.path.join(outDir, "tracks.xml")
-        pList.saveXML(trackPath)
+        trainingTrackPath = os.path.join(outDir, "training_tracks.xml")
+        evalTrackPath = os.path.join(outDir, "eval_tracks.xml")
+        pList.saveXML(trainingTrackPath)
+        epList = TrackList()
+        for track in pList:
+            t = copy.deepcopy(evalTrackList.getTrackByName(track.getName()))
+            epList.addTrack(t)
+        epList.saveXML(evalTrackPath)
         
         for inBed in args.inBeds:
             
@@ -98,7 +110,7 @@ def main(argv=None):
             # train
             modPath = os.path.join(outDir,
                                    os.path.splitext(base)[0] + ".mod")
-            command = "teHmmTrain.py %s %s %s %s %s" % (trackPath,
+            command = "teHmmTrain.py %s %s %s %s %s" % (trainingTrackPath,
                                                         truthBed,
                                                         modPath,
                                                         verbose,
@@ -112,7 +124,7 @@ def main(argv=None):
             # evaluate
             evalBed = os.path.join(outDir,
                                    os.path.splitext(base)[0] + "_eval.bed")
-            command += " && teHmmEval.py %s %s %s --bed %s %s" % (trackPath,
+            command += " && teHmmEval.py %s %s %s --bed %s %s" % (evalTrackPath,
                                                                   modPath,
                                                                   testBed,
                                                                   evalBed,
@@ -159,7 +171,15 @@ def splitBed(inBed, outBed1, outBed2):
     inFile.close()
     outFile1.close()
     outFile2.close()
-    
+
+def checkTrackListCompatible(trainingTrackList, evalTrackList):
+    for track1, track2 in zip(trainingTrackList, evalTrackList):
+        assert track1.getName() == track2.getName()
+        assert track1.getNumber() == track2.getNumber()
+        assert track1.getScale() == track2.getScale()
+        assert track1.getLogScale() == track2.getLogScale()
+        assert track1.getDist() == track2.getDist()
+        
 if __name__ == "__main__":
     sys.exit(main())
 

@@ -108,7 +108,11 @@ class Track(object):
     def getValCol(self):
         return self.valCol
 
+    def getScale(self):
+        return self.scale
 
+    def getLogScale(self):
+        return self.logScale
 ###########################################################################
 """list of tracks (see above) that we can index by name or number as well as
 load from or save to a file. this strucuture needs to accompany a trained
