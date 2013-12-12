@@ -108,7 +108,10 @@ class MultitrackHmm(_BaseHMM):
             prevInterval = interval
         for row in xrange(len(transitionCount)):
             transitionCount[row] /= np.sum(transitionCount[row])
-        self.transmat_ = transitionCount
+        self.transmat_ = np.copy(transitionCount)
+        # scikit learn is too chicken to have 0-probs.  so we go back and
+        # hack them in if necessary
+        self._log_transmat = myLog(transitionCount)
         freqCount /= np.sum(freqCount)
         self.startprob_ = freqCount
         self.emissionModel.supervisedTrain(trackData, bedIntervals)
