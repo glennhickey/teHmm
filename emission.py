@@ -18,6 +18,7 @@ from numpy.testing import assert_array_equal, assert_array_almost_equal
 from operator import mul
 from ._emission import canFast, fastAllLogProbs, fastAccumulateStats, fastUpdateCounts
 from .track import TrackTable
+from .common import EPSILON, myLog
 from sklearn.hmm import _BaseHMM
 from sklearn.hmm import MultinomialHMM
 from sklearn.hmm import GaussianHMM
@@ -36,7 +37,7 @@ for each track because we make the simplifying assumption that the tracks are
 independent """
 class IndependentMultinomialEmissionModel(object):
     def __init__(self, numStates, numSymbolsPerTrack, params = None,
-                 zeroAsMissingData = True):
+                 zeroAsMissingData = True, fudge = 0.0):
         self.numStates = numStates
         self.numTracks = len(numSymbolsPerTrack)
         self.numSymbolsPerTrack = numSymbolsPerTrack
@@ -44,6 +45,10 @@ class IndependentMultinomialEmissionModel(object):
         self.logProbs = None
         self.zeroAsMissingData = zeroAsMissingData
         self.initParams(params)
+        # little constant that gets added to frequencies during training
+        # to prevent zero probabilities.  The bigger it is, the flatter
+        # the distribution...
+        self.fudge = fudge
 
     def getLogProbs(self):
         return self.logProbs
@@ -156,15 +161,16 @@ class IndependentMultinomialEmissionModel(object):
         symbol = (cdf > rand).argmax()
         return symbol
 
-    def initStats(self, val=0.0):
+    def initStats(self):
         """ Initialize an array to hold the accumulation statistics
         looks something like obsStats[TRAC][STATE][SYMBOL] = total probability
         of that STATE/SYMBOL pair across all observations """
         obsStats = []
         for track in xrange(self.numTracks):
-            obsStats.append(val + np.zeros((self.numStates,
-                                            self.numSymbolsPerTrack[track]+1),
-                                           dtype=np.float))
+            obsStats.append(self.fudge +
+                            np.zeros((self.numStates,
+                                      self.numSymbolsPerTrack[track]+1),
+                                     dtype=np.float))
         return obsStats
 
     def accumulateStats(self, obs, obsStats, posteriors):
@@ -194,10 +200,12 @@ class IndependentMultinomialEmissionModel(object):
                 for symbol in self.getTrackSymbols(track):
                     totalSymbol += obsStats[track][state, symbol]
                 for symbol in self.getTrackSymbols(track):
-                    denom = max(1e-20, totalSymbol)
-                    symbolProb = obsStats[track][state, symbol] / denom
-                    symbolProb = max(1e-20, symbolProb)
-                    self.logProbs[track][state][symbol] = np.log(symbolProb)
+                    denom = max(self.fudge, totalSymbol)
+                    if denom != 0.:
+                        symbolProb = obsStats[track][state, symbol] / denom
+                    else:
+                        symbolProb = 0.
+                    self.logProbs[track][state][symbol] = myLog(symbolProb)
         self.validate()
 
     def validate(self):
@@ -231,7 +239,7 @@ class IndependentMultinomialEmissionModel(object):
         numTables = len(trackTableList)
         assert numTables > 0
         assert len(bedIntervals) > 0
-        obsStats = self.initStats(1.)
+        obsStats = self.initStats()
         
         lastHit = 0
         for interval in bedIntervals:
