@@ -12,6 +12,7 @@ import numpy as np
 import xml.etree.ElementTree as ET
 
 from .trackIO import readTrackData
+from .common import EPSILON
 
 INTEGER_ARRAY_TYPE = np.uint16
 

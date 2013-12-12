@@ -40,7 +40,8 @@ class MultitrackHmm(_BaseHMM):
                  algorithm="viterbi", random_state=None,
                  n_iter=10, thresh=1e-2, params=string.ascii_letters,
                  init_params=string.ascii_letters,
-                 state_name_map=None):
+                 state_name_map=None,
+                 fudge=0.0):
         if emissionModel is not None:
             n_components = emissionModel.getNumStates()
         else:
@@ -66,6 +67,10 @@ class MultitrackHmm(_BaseHMM):
         self.trackList = None
         #: a map between state values and names (track.CategoryMap)
         self.stateNameMap = state_name_map
+        # little constant that gets added to frequencies during training
+        # to prevent zero probabilities.  The bigger it is, the flatter
+        # the distribution... (note that emission class has its own)
+        self.fudge = fudge
 
     def train(self, trackData):
         """ Use EM to estimate best parameters from scratch (unsupervised)"""
@@ -82,8 +87,8 @@ class MultitrackHmm(_BaseHMM):
         # NOTE bedIntervals must be sorted!
         self.trackList = trackData.getTrackList()
         N = self.emissionModel.getNumStates()
-        transitionCount = EPSILON + np.zeros((N,N), np.float)
-        freqCount = EPSILON + np.zeros((N,), np.float)
+        transitionCount = self.fudge + np.zeros((N,N), np.float)
+        freqCount = self.fudge + np.zeros((N,), np.float)
         prevInterval = None
         logging.debug("beginning supervised transition stats")
         for interval in bedIntervals:
@@ -153,7 +158,7 @@ class MultitrackHmm(_BaseHMM):
               for i in xrange(self.n_components)] 
         s += "\nStart probs =\n%s\n" % str(sp)
         s += "\nTransitions =\n%s\n" % str(self.transmat_)
-        s += "\nlogTransitions = \n%s\n" % str(np.log(self.transmat_))
+        s += "\nlogTransitions = \n%s\n" % str(myLog(self.transmat_))
         em = self.emissionModel         
         s += "\nNumber of symbols per track=\n%s\n" % str(
             em.getNumSymbolsPerTrack())
@@ -170,7 +175,7 @@ class MultitrackHmm(_BaseHMM):
                     prob = np.exp(emProbs[trackNo][state][symbol])
                     if idx <= 2 or prob > 0.01:
                         s += "    %s) %s: %f (log=%f)\n" % (symbol, symbolName,
-                                                            prob, np.log(prob))
+                                                            prob, myLog(prob))
         return s
 
     def getTrackList(self):
