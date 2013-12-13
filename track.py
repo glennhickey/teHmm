@@ -325,9 +325,9 @@ class CategoryMap(object):
 
     def __scale(self, x):
         if self.scaleFac is not None:
-            return int(self.scaleFac * float(x))
+            return str(int(self.scaleFac * float(x)))
         elif self.logScaleFac is not None:
-            return int(np.log(float(x) + EPSILON) * self.logScaleFac)
+            return str(int(np.log(float(x) + EPSILON) * self.logScaleFac))
         else:
             return x
 
