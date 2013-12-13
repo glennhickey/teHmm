@@ -170,7 +170,9 @@ class MultitrackHmm(_BaseHMM):
             s += "State %s:\n" % stateName
             for trackNo in xrange(em.getNumTracks()):
                 track = self.trackList.getTrackByNumber(trackNo)
-                s += "  Track %d %s:\n" % (track.getNumber(), track.getName())
+                s += "  Track %d %s (%s):\n" % (track.getNumber(),
+                                                track.getName(),
+                                                track.getDist())
                 numSymbolsPerTrack =  em.getNumSymbolsPerTrack()
                 for idx, symbol in enumerate(em.getTrackSymbols(trackNo)):
                     symbolName = track.getValueMap().getMapBack(symbol)
