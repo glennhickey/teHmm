@@ -12,8 +12,8 @@ import numpy as np
 import xml.etree.ElementTree as ET
 
 from .trackIO import readTrackData
+from .common import EPSILON
 
-EPSILON = 10e-20
 INTEGER_ARRAY_TYPE = np.uint16
 
 ###########################################################################
@@ -112,7 +112,11 @@ class Track(object):
     def getValCol(self):
         return self.valCol
 
+    def getScale(self):
+        return self.scale
 
+    def getLogScale(self):
+        return self.logScale
 ###########################################################################
 """list of tracks (see above) that we can index by name or number as well as
 load from or save to a file. this strucuture needs to accompany a trained
@@ -342,9 +346,9 @@ class CategoryMap(object):
 
     def __scale(self, x):
         if self.scaleFac is not None:
-            return int(self.scaleFac * float(x))
+            return str(int(self.scaleFac * float(x)))
         elif self.logScaleFac is not None:
-            return int(np.log(float(x) + EPSILON) * self.logScaleFac)
+            return str(int(np.log(float(x) + EPSILON) * self.logScaleFac))
         else:
             return x
 
@@ -463,13 +467,14 @@ class TrackData(object):
         for inputTrack in inputTrackList:
             trackName = inputTrack.getName()
             trackPath = inputTrack.getPath()
-            if self.trackList.getTrackByName(trackName) is None:
+            selfTrack = self.trackList.getTrackByName(trackName)
+            if selfTrack is None:
                 sys.stderr.write("Warning: track %s not learned\n" %
                                  trackName)
                 continue
             rawArray = readTrackData(trackPath, chrom, start, end,
                                      valCol=inputTrack.getValCol(),
-                                     valMap=inputTrack.getValueMap(),
+                                     valMap=selfTrack.getValueMap(),
                                      updateValMap=init)
             if rawArray is not None:
                 track = self.getTrackList().getTrackByName(trackName)

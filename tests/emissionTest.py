@@ -108,8 +108,11 @@ class TestCase(TestBase):
         trackData = TrackData()
         trackData.loadTrackData(getTracksInfoPath(), bedIntervals)
         assert len(trackData.getTrackTableList()) == len(bedIntervals)
+        # set the fudge to 1 since when the test was written this was
+        # hardcoded default
         em = IndependentMultinomialEmissionModel(
-            2, trackData.getNumSymbolsPerTrack())
+            2, trackData.getNumSymbolsPerTrack(),
+            fudge = 1.)
         em.supervisedTrain(trackData, bedIntervals)
 
         # count frequency of symbols for a given track

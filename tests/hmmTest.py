@@ -242,9 +242,11 @@ class TestCase(TestBase):
         trackData = TrackData()
         trackData.loadTrackData(getTracksInfoPath(3), allIntervals)
         assert len(trackData.getTrackTableList()) == 1
-
+        # set the fudge to 1 since when the test was written this was
+        # hardcoded default
         em = IndependentMultinomialEmissionModel(
-            4, trackData.getNumSymbolsPerTrack())
+            4, trackData.getNumSymbolsPerTrack(),
+			  fudge = 1.0)
         hmm = MultitrackHmm(em)
         hmm.supervisedTrain(trackData, truthIntervals)
         hmm.validate()

@@ -189,6 +189,35 @@ class TestCase(TestBase):
                     assert bedVal2 == bedValJ2
                 else:
                     assert bedVal2 != bedValJ2
+
+    def testScale2(self):
+        cmap = CategoryMap()
+        assert cmap.getMap(None) == 0
+
+        cmap.setScale(0.1)
+        assert cmap.getMap(10, update=True) == 1
+        assert cmap.getMapBack(1) == 10
+        assert cmap.getMap(15, update=True) == 1
+        assert cmap.getMapBack(1) == 10
+        assert cmap.getMap(35, update=True) == 2
+        assert cmap.getMap(25, update=True) == 3
+        assert cmap.getMapBack(3) == 20
+        assert cmap.getMap(0, update=True) == 4
+        assert cmap.getMapBack(4) == 0
+
+        cmap = CategoryMap()
+        cmap.setLogScale(2.)
+        assert cmap.getMap(0) == 0
+        assert cmap.getMap(1) == 0
+        assert cmap.getMap(0, update=True) == 1
+        assert cmap.getMap(0.001, update=True) == 2
+        assert cmap.getMap(0.0015, update=True) == 2
+        assert cmap.getMap(1100, update=True) == 3
+        assert cmap.getMap(1600, update=True) == 3
+        cmb = cmap.getMapBack(3)
+        assert int(np.log(cmb)) == int(np.log(1100))
+        assert int(np.log(cmb)) == int(np.log(1600))
+        
             
 def main():
     sys.argv = sys.argv[:1]

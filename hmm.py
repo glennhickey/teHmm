@@ -18,8 +18,8 @@ from collections import Iterable
 from numpy.testing import assert_array_equal, assert_array_almost_equal
 
 from .emission import IndependentMultinomialEmissionModel
-from .track import TrackList, TrackTable, Track, EPSILON
-
+from .track import TrackList, TrackTable, Track
+from .common import EPSILON, myLog
 from sklearn.hmm import _BaseHMM
 from sklearn.hmm import MultinomialHMM
 from sklearn.hmm import _hmmc
@@ -39,7 +39,8 @@ class MultitrackHmm(_BaseHMM):
                  algorithm="viterbi", random_state=None,
                  n_iter=10, thresh=1e-2, params=string.ascii_letters,
                  init_params=string.ascii_letters,
-                 state_name_map=None):
+                 state_name_map=None,
+                 fudge=0.0):
         if emissionModel is not None:
             n_components = emissionModel.getNumStates()
         else:
@@ -65,6 +66,10 @@ class MultitrackHmm(_BaseHMM):
         self.trackList = None
         #: a map between state values and names (track.CategoryMap)
         self.stateNameMap = state_name_map
+        # little constant that gets added to frequencies during training
+        # to prevent zero probabilities.  The bigger it is, the flatter
+        # the distribution... (note that emission class has its own)
+        self.fudge = fudge
 
     def train(self, trackData):
         """ Use EM to estimate best parameters from scratch (unsupervised)"""
@@ -81,8 +86,8 @@ class MultitrackHmm(_BaseHMM):
         # NOTE bedIntervals must be sorted!
         self.trackList = trackData.getTrackList()
         N = self.emissionModel.getNumStates()
-        transitionCount = EPSILON + np.zeros((N,N), np.float)
-        freqCount = EPSILON + np.zeros((N,), np.float)
+        transitionCount = self.fudge + np.zeros((N,N), np.float)
+        freqCount = self.fudge + np.zeros((N,), np.float)
         prevInterval = None
         logging.debug("beginning supervised transition stats")
         for interval in bedIntervals:
@@ -91,17 +96,20 @@ class MultitrackHmm(_BaseHMM):
             transitionCount[state,state] += interval[2] - interval[1] - 1
             freqCount[state] += interval[2] - interval[1]
             if prevInterval is not None and prevInterval[0] == interval[0]:
-                if interval[1] != prevInterval[2]:
+                if interval[1] < prevInterval[2]:
                     raise RuntimeError(
-                        "Supervised train requires contiguous intervals but "
-                        "found: %s and %s. Note that addBedGaps.py and "
-                        "removeBedOverlaps.py are provided to make such files"%
+                        "Overlapping or out of order training intervals"
+                        " detected: %s and %s."
                         (prevInterval, interval))
-                transitionCount[prevInterval[3], state] += 1                
+                elif interval[1] == prevInterval[2]:
+                    transitionCount[prevInterval[3], state] += 1
             prevInterval = interval
         for row in xrange(len(transitionCount)):
             transitionCount[row] /= np.sum(transitionCount[row])
-        self.transmat_ = transitionCount
+        self.transmat_ = np.copy(transitionCount)
+        # scikit learn is too chicken to have 0-probs.  so we go back and
+        # hack them in if necessary
+        self._log_transmat = myLog(transitionCount)
         freqCount /= np.sum(freqCount)
         self.startprob_ = freqCount
         self.emissionModel.supervisedTrain(trackData, bedIntervals)
@@ -138,7 +146,7 @@ class MultitrackHmm(_BaseHMM):
               for i in xrange(self.n_components)] 
         s += "\nStart probs =\n%s\n" % str(sp)
         s += "\nTransitions =\n%s\n" % str(self.transmat_)
-        s += "\nlogTransitions = \n%s\n" % str(np.log(self.transmat_))
+        s += "\nlogTransitions = \n%s\n" % str(myLog(self.transmat_))
         em = self.emissionModel         
         s += "\nNumber of symbols per track=\n%s\n" % str(
             em.getNumSymbolsPerTrack())
@@ -148,13 +156,16 @@ class MultitrackHmm(_BaseHMM):
             s += "State %s:\n" % stateName
             for trackNo in xrange(em.getNumTracks()):
                 track = self.trackList.getTrackByNumber(trackNo)
-                s += "  Track %d %s:\n" % (track.getNumber(), track.getName())
+                s += "  Track %d %s (%s):\n" % (track.getNumber(),
+                                                track.getName(),
+                                                track.getDist())
                 numSymbolsPerTrack =  em.getNumSymbolsPerTrack()
                 for idx, symbol in enumerate(em.getTrackSymbols(trackNo)):
                     symbolName = track.getValueMap().getMapBack(symbol)
                     prob = np.exp(emProbs[trackNo][state][symbol])
                     if idx <= 2 or prob > 0.01:
-                        s += "    %s) %s: %f\n" % (symbol, symbolName, prob)
+                        s += "    %s) %s: %f (log=%f)\n" % (symbol, symbolName,
+                                                            prob, myLog(prob))
         return s
 
     def getTrackList(self):

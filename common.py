@@ -9,6 +9,26 @@ import argparse
 import subprocess
 from multiprocessing import Pool
 import logging
+import collections
+import numpy as np
+
+LOGZERO = -1e200
+EPSILON = np.finfo(float).eps
+
+def __myLogFloat(x):
+    if x == 0.:
+        return LOGZERO
+    return np.log(x)
+
+""" Replace np.log to accept zero """
+myLog = np.vectorize(__myLogFloat)
+
+def myLogFloatNP(x):
+    """ i'm too dumb to make a general function so here's a version of
+    above to work on numpy arrays"""
+    assert isinstance(x, np.ndarray)
+    
+
 def runShellCommand(command):
     try:
         logging.debug("Running %s" % command)
