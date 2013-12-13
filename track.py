@@ -440,13 +440,14 @@ class TrackData(object):
         for inputTrack in inputTrackList:
             trackName = inputTrack.getName()
             trackPath = inputTrack.getPath()
-            if self.trackList.getTrackByName(trackName) is None:
+            selfTrack = self.trackList.getTrackByName(trackName)
+            if selfTrack is None:
                 sys.stderr.write("Warning: track %s not learned\n" %
                                  trackName)
                 continue
             rawArray = readTrackData(trackPath, chrom, start, end,
                                      valCol=inputTrack.getValCol(),
-                                     valMap=inputTrack.getValueMap(),
+                                     valMap=selfTrack.getValueMap(),
                                      updateValMap=init)
             if rawArray is not None:
                 track = self.getTrackList().getTrackByName(trackName)
