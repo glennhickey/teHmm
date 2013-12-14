@@ -70,7 +70,7 @@ def scrapeRow(inputTrackList, trackList, evalPath, compPath):
     
     #Column 1: Number of tracks
     header.append("NumTracks")
-    row.append(len(inputTrackList))
+    row.append(len(trackList))
 
     #Column 2->X: Track presence / absence
     for inTrack in inputTrackList:
