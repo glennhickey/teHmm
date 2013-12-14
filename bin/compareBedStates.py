@@ -44,7 +44,7 @@ def main(argv=None):
     totalRight, totalWrong, accMap = summarizeComparision(stats)
     print stats
     totalBoth = totalRight + totalWrong
-    accuracy = totalRight / totalBoth
+    accuracy = float(totalRight) / float(totalBoth)
     print "Accuaracy: %d / %d = %f" % (totalRight, totalBoth, accuracy)
     print "State-by-state (Precision, Recall):"
     print accMap
