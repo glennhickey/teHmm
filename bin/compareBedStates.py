@@ -44,10 +44,15 @@ def main(argv=None):
     totalRight, totalWrong, accMap = summarizeComparision(stats)
     print stats
     totalBoth = totalRight + totalWrong
-    print "Accuaracy: %d / %d = %f" % (totalRight, totalBoth,
-                                       float(totalRight)/float(totalBoth))
+    accuracy = totalRight / totalBoth
+    print "Accuaracy: %d / %d = %f" % (totalRight, totalBoth, accuracy)
     print "State-by-state (Precision, Recall):"
     print accMap
+
+    # print some row data to be picked up by scrapeBenchmarkRow.py
+    header, row = summaryRow(accuracy, stats, accMap)
+    print " ".join(header)
+    print " ".join(row)
 
 def compareIntervals(intervals1, intervals2, col):
     """ return dictionary that maps each state to (i1 but not i2, i2 but not i1,
@@ -100,7 +105,30 @@ def summarizeComparision(stats):
         accMap[state] = (tp / (np.finfo(float).eps + tp + fp),
                          tp / (np.finfo(float).eps + tp + fn))
     return (totalRight, totalWrong, accMap)
-        
+
+def summaryRow(accuracy, stats, accMap):
+    header = []
+    row = []
+    header.append("totAcc")
+    row.append(accuracy)
+    for state in sorted(accMap.keys()):
+        acc = accMap[state]
+        # precision
+        header.append("%s_Prec" % state)
+        row.append(acc[0])
+        # recall
+        header.append("%s_Rec" % state)
+        row.append(acc[1])
+        # fscore
+        header.append("%s_F1" % state) 
+        fscore = 0
+        if (acc[0] > 0 and acc[1] > 0):
+            fscore = 2 * ((acc[0] * acc[1]) / (acc[1] + acc[0]))
+        row.append(fscore)
+    row = map(str, row)
+    assert len(header) == len(row)
+    return header, row
     
+
 if __name__ == "__main__":
     sys.exit(main())
