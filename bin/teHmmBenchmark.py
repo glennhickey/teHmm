@@ -83,7 +83,7 @@ def main(argv=None):
 
     #todo: try to get timing for each command
     commands = []
-
+    rows = dict()
     for pn, pList in enumerate(subsetTrackList(trainingTrackList, sizeRange)):
         if len(pList) == len(trainingTrackList):
             outDir = args.outputDir
@@ -149,6 +149,10 @@ def main(argv=None):
             # make table row
             rowPath = os.path.join(outDir,
                                    os.path.splitext(base)[0] + "_row.txt")
+            if inBed in rows:
+                rows[inBed].append(rowPath)
+            else:
+                rows[inBed] = [rowPath]
             command += " && scrapeBenchmarkRow.py %s %s %s %s %s" % (
                 args.trainingTracksInfo,
                 trainingTrackPath,
@@ -156,9 +160,10 @@ def main(argv=None):
                 compPath,
                 rowPath)
 
-            commands.append(command
-                            )
+            commands.append(command)
+            
     runParallelShellCommands(commands, args.numProc)
+    writeTables(args.outputDir, rows)
 
 
 def subsetTrackList(trackList, sizeRange):
@@ -206,7 +211,22 @@ def checkTrackListCompatible(trainingTrackList, evalTrackList):
         assert track1.getLogScale() == track2.getLogScale()
         assert track1.getDist() == track2.getDist()
 
-    
+def writeTables(outDir, rows):
+    """ Write CSV table for each input bed that was scraped from up from the
+    output using scrapeBenchmarkRow.py """
+    for inBed, rowPaths in rows.items():
+        name = os.path.splitext(os.path.basename(inBed))[0]
+        tablePath = os.path.join(outDir, name + "_table.csv")
+        tableFile = open(tablePath, "w")
+        for i, rowPath in enumerate(rowPaths):
+            rowFile = open(rowPath, "r")        
+            rowLines = [line for line in rowFile]
+            rowFile.close()
+            if i == 0:
+                tableFile.write(rowLines[0])
+            tableFile.write(rowLines[1])
+        tableFile.close()
+        
 if __name__ == "__main__":
     sys.exit(main())
 
