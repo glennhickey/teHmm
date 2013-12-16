@@ -54,6 +54,7 @@ class MultitrackCfg(object):
         self.startProbs = None
         self.defAlignmentSymbol = 0
         self.PAIRFLAG = -2
+        self.trackList = None
 
         # all states that can emit a column
         self.M = self.emissionModel.getNumStates()
@@ -72,6 +73,19 @@ class MultitrackCfg(object):
         
         # start with a basic flat distribution
         self.initParams()
+
+    def getLogProbTables(self):
+        """ Direct access to the production probability tables.  The first
+        talble is for CNF type production X->YZ, and the second one is
+        specifically for nested pair emission productions X->xYx"""
+        return self.logProbs1, self.logProbs2
+
+    def getStartProbs(self):
+        """ Get the (non-log to be compatible with hmm) start probabilities"""
+        return np.exp(self.startProbs)
+
+    def getTrackList(self):
+        return self.trackList
 
     def createTables(self):
         """ all probabailities of the form X -> Y Z (note that we will only
@@ -199,7 +213,6 @@ class MultitrackCfg(object):
         for i in xrange(len(obs)):
             for j in self.hmmStates:
                 self.dp[i,i,j] = self.emLogProbs[i,j]
-
         baseMatch = alignmentTrack is not None
         # pair emissions where emitted columns are right beside eachother
         for i in xrange(len(obs)-1):
@@ -295,6 +308,7 @@ class MultitrackCfg(object):
         off the HMM training for now, using left-right adjacency as proxy
         for nesting events as well (not sure there's much way around this
         in fact..."""
+        self.trackList = trackData.getTrackList()
         self.initParams()        
 
         hmm = MultitrackHmm(self.emissionModel)
