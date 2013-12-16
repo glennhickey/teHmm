@@ -16,6 +16,15 @@ from teHmm.common import runParallelShellCommands
 from teHmm.track import TrackList
 from pybedtools import BedTool, Interval
 
+""" This script automates evaluating the hmm te model by doing training,
+parsing, comparing back to truth, and summerizing the resutls in a table all
+in one.  It can run the same logic on multiple input beds at once in parallel
+(by using, say, a wildcard argument for inBeds. It also optionally repeats the
+evaluation for subsets of the input tracks.
+
+Independent processes are run in parallel using Python's process pool with the
+maximum number of parallel processes limited by the --numProc argument
+"""
 def main(argv=None):
     if argv is None:
         argv = sys.argv
@@ -74,7 +83,7 @@ def main(argv=None):
 
     #todo: try to get timing for each command
     commands = []
-
+    rows = dict()
     for pn, pList in enumerate(subsetTrackList(trainingTrackList, sizeRange)):
         if len(pList) == len(trainingTrackList):
             outDir = args.outputDir
@@ -135,9 +144,26 @@ def main(argv=None):
             command += " && compareBedStates.py %s %s > %s" % (testBed,
                                                                evalBed,
                                                                compPath)
-            commands.append(command)
 
+
+            # make table row
+            rowPath = os.path.join(outDir,
+                                   os.path.splitext(base)[0] + "_row.txt")
+            if inBed in rows:
+                rows[inBed].append(rowPath)
+            else:
+                rows[inBed] = [rowPath]
+            command += " && scrapeBenchmarkRow.py %s %s %s %s %s" % (
+                args.trainingTracksInfo,
+                trainingTrackPath,
+                evalBed,
+                compPath,
+                rowPath)
+
+            commands.append(command)
+            
     runParallelShellCommands(commands, args.numProc)
+    writeTables(args.outputDir, rows)
 
 
 def subsetTrackList(trackList, sizeRange):
@@ -156,6 +182,8 @@ def subsetTrackList(trackList, sizeRange):
             yield permList
 
 def splitBed(inBed, outBed1, outBed2):
+    """ Used for cross validation option.  The first half in input bed gets
+    written to outBed1 and the second half to outBed2"""
     inFile = open(inBed, "r")
     numLines = len([x for x in inFile])
     inFile.close()
@@ -173,12 +201,31 @@ def splitBed(inBed, outBed1, outBed2):
     outFile2.close()
 
 def checkTrackListCompatible(trainingTrackList, evalTrackList):
+    """ Now that we allow a different trackList to be used for training and
+    eval, we need to check to make sure that everything's the same but the
+    paths"""
     for track1, track2 in zip(trainingTrackList, evalTrackList):
         assert track1.getName() == track2.getName()
         assert track1.getNumber() == track2.getNumber()
         assert track1.getScale() == track2.getScale()
         assert track1.getLogScale() == track2.getLogScale()
         assert track1.getDist() == track2.getDist()
+
+def writeTables(outDir, rows):
+    """ Write CSV table for each input bed that was scraped from up from the
+    output using scrapeBenchmarkRow.py """
+    for inBed, rowPaths in rows.items():
+        name = os.path.splitext(os.path.basename(inBed))[0]
+        tablePath = os.path.join(outDir, name + "_table.csv")
+        tableFile = open(tablePath, "w")
+        for i, rowPath in enumerate(rowPaths):
+            rowFile = open(rowPath, "r")        
+            rowLines = [line for line in rowFile]
+            rowFile.close()
+            if i == 0:
+                tableFile.write(rowLines[0])
+            tableFile.write(rowLines[1])
+        tableFile.close()
         
 if __name__ == "__main__":
     sys.exit(main())
