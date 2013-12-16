@@ -137,7 +137,7 @@ class MultitrackHmm(_BaseHMM):
             output.append((prob,states))
         return output
         
-    def toText(self):
+    def __str__(self):
         states = [x for x in xrange(self.n_components)]
         if self.stateNameMap is not None:
             states = map(self.stateNameMap.getMapBack, states)

@@ -111,7 +111,8 @@ def main(argv=None):
             pairStates = args.pairStates.split(",")
             nestStates = map(lambda x: catMap.getMap(x), pairStates)
         logging.info("Creating cfg model")
-        model = MultitrackCfg(emissionModel, pairEM, nestStates)
+        model = MultitrackCfg(emissionModel, pairEM, nestStates,
+                              state_name_map=catMap)
 
     # do the training
     if args.supervised is False:

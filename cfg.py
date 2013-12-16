@@ -44,7 +44,7 @@ we want to explicitly model pair emissions.
 """
 class MultitrackCfg(object):
     def __init__(self, emissionModel, pairEmissionModel,
-                 nestStates=[]):
+                 nestStates=[], state_name_map = None):
         """ For now we take in an emission model (that was used for the HMM)
         and a list singling out a few states as nested / pair emission states"""
         self.emissionModel = emissionModel
@@ -55,6 +55,7 @@ class MultitrackCfg(object):
         self.defAlignmentSymbol = 0
         self.PAIRFLAG = -2
         self.trackList = None
+        self.stateNameMap = state_name_map
 
         # all states that can emit a column
         self.M = self.emissionModel.getNumStates()
@@ -86,6 +87,19 @@ class MultitrackCfg(object):
 
     def getTrackList(self):
         return self.trackList
+
+    def viterbi(self, trackData):
+        """ Return the output of the Viterbi algorithm on the loaded
+        data: a tuple of (log likelihood of best path, and the path itself)
+        (one data point of each interval of track data)
+        """ 
+        output = []
+        for trackTable in trackData.getTrackTableList():
+            prob, states = self.decode(trackTable)
+            if self.stateNameMap is not None:
+                states = map(self.stateNameMap.getMapBack, states)
+            output.append((prob,states))
+        return output
 
     def createTables(self):
         """ all probabailities of the form X -> Y Z (note that we will only
@@ -344,4 +358,41 @@ class MultitrackCfg(object):
         # make sure the helper tables are up to date
         self.createHelperTables()
             
-            
+    def __str__(self):
+        """ Pretty print model.  Note -- too much code duplicated here and in
+        hmm (ie especially emission stuff..) TODO: merge up somehow"""
+        hmmStates = self.hmmStates
+        nestStates = self.nestStates
+        states = xrange(self.M)
+        if self.stateNameMap is not None:
+            states = map(self.stateNameMap.getMapBack, states)
+            hmmStates = map(self.stateNameMap.getMapBack, self.hmmStates)
+            nestStates = map(self.stateNameMap.getMapBack, self.nestStates)
+        s = "\nNumStates = %d:\nSingle:%s\nPair:%s\n" % (self.M, str(hmmStates),
+                                                         str(nestStates))
+        sp = [(states[i], self.startProbs[i])
+              for i in xrange(self.M)] 
+        s += "\nStart probs =\n%s\n" % str(sp)
+        s += "\nlogTable1 = \n%s\n" % str(self.logProbs1)
+        s += "\nlogTable2 = \n%s\n" % str(self.logProbs2)
+        em = self.emissionModel         
+        s += "\nNumber of symbols per track=\n%s\n" % str(
+            em.getNumSymbolsPerTrack())
+        s += "\nEmissions =\n"
+        emProbs = em.getLogProbs()
+        for state, stateName in enumerate(hmmStates):
+            s += "State %s:\n" % stateName
+            for trackNo in xrange(em.getNumTracks()):
+                track = self.trackList.getTrackByNumber(trackNo)
+                s += "  Track %d %s (%s):\n" % (track.getNumber(),
+                                                track.getName(),
+                                                track.getDist())
+                numSymbolsPerTrack =  em.getNumSymbolsPerTrack()
+                for idx, symbol in enumerate(em.getTrackSymbols(trackNo)):
+                    symbolName = track.getValueMap().getMapBack(symbol)
+                    prob = np.exp(emProbs[trackNo][state][symbol])
+                    if idx <= 2 or prob > 0.01:
+                        s += "    %s) %s: %f (log=%f)\n" % (symbol, symbolName,
+                                                            prob, myLog(prob))
+        return s
+

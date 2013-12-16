@@ -32,7 +32,7 @@ def main(argv=None):
     model = loadModel(args.inputModel)
 
     # crappy print method
-    print model.toText()
+    print model
 
     if args.nameMap is True:
         print "State Maps:"
