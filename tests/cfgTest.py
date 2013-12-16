@@ -123,7 +123,10 @@ class TestCase(TestBase):
                                         defAlignmentSymbol=0)
         assert_array_equal(cfgStates, [2,0,0,2])
                                
-    def testSupervisedLearn(self):
+    def testHmmSupervisedLearn(self):
+        """ Pretty much copied from the HMM unit test.  We try to recapitualte
+        all results with a CFG with no nest states, which should be same as
+        HMM"""
         intervals = readBedIntervals(getTestDirPath("truth.bed"), ncol=4)
         truthIntervals = []
         for i in intervals:
@@ -135,18 +138,107 @@ class TestCase(TestBase):
         trackData = TrackData()
         trackData.loadTrackData(getTracksInfoPath(3), allIntervals)
         assert len(trackData.getTrackTableList()) == 1
-
+        # set the fudge to 1 since when the test was written this was
+        # hardcoded default
         em = IndependentMultinomialEmissionModel(
-            4, trackData.getNumSymbolsPerTrack())
+            4, trackData.getNumSymbolsPerTrack(),
+			  fudge = 1.0)
         hmm = MultitrackHmm(em)
         hmm.supervisedTrain(trackData, truthIntervals)
         hmm.validate()
         pairModel = PairEmissionModel(em, [1.0] *
                                       em.getNumStates())
+        # Test validates with neststate just for fun
         cfg = MultitrackCfg(em, pairModel, nestStates = [1])
 
         cfg.supervisedTrain(trackData, truthIntervals)
         cfg.validate()
+
+        # Then reload as an hmm-equivalent
+        cfg = MultitrackCfg(em, pairModel, nestStates = [])
+
+        cfg.supervisedTrain(trackData, truthIntervals)
+        cfg.validate()
+
+        # check emissions, they should basically be binary. 
+        trackList = cfg.getTrackList()
+        emp = np.exp(em.getLogProbs())
+        ltrTrack = trackList.getTrackByName("ltr")
+        track = ltrTrack.getNumber()
+        cmap = ltrTrack.getValueMap()
+        s0 = cmap.getMap(None)
+        s1 = cmap.getMap(0)
+        # we add 1 to all frequencies like emission trainer
+        assert_array_almost_equal(emp[track][0][s0], 36. / 37.) 
+        assert_array_almost_equal(emp[track][0][s1], 1 - 36. / 37.)
+        assert_array_almost_equal(emp[track][1][s0], 1 - 6. / 7.) 
+        assert_array_almost_equal(emp[track][1][s1], 6. / 7.)
+        assert_array_almost_equal(emp[track][2][s0], 26. / 27.) 
+        assert_array_almost_equal(emp[track][2][s1], 1. - 26. / 27.)
+        assert_array_almost_equal(emp[track][3][s0], 1. - 6. / 7.)
+        assert_array_almost_equal(emp[track][3][s1], 6. / 7.)
+
+        insideTrack = trackList.getTrackByName("inside")
+        track = insideTrack.getNumber()
+        cmap = insideTrack.getValueMap()
+        s0 = cmap.getMap(None)
+        s1 = cmap.getMap("Inside")
+        assert_array_almost_equal(emp[track][0][s0], 36. / 37.) 
+        assert_array_almost_equal(emp[track][0][s1], 1 - 36. / 37.)
+        assert_array_almost_equal(emp[track][1][s0], 6. / 7.)
+        assert_array_almost_equal(emp[track][1][s1], 1 - 6. / 7.)
+        assert_array_almost_equal(emp[track][2][s0], 1. - 26. / 27.)
+        assert_array_almost_equal(emp[track][2][s1], 26. / 27.) 
+        assert_array_almost_equal(emp[track][3][s0], 6. / 7.)
+        assert_array_almost_equal(emp[track][3][s1], 1. - 6. / 7.)
+
+        # crappy check for start probs.  need to test transition too!
+        freq = [0.0] * em.getNumStates()
+        total = 0.0
+        for interval in truthIntervals:
+           state = interval[3]
+           freq[state] += float(interval[2]) - float(interval[1])
+           total += float(interval[2]) - float(interval[1])
+
+        sprobs = cfg.getStartProbs()
+        assert len(sprobs) == em.getNumStates()
+        for state in xrange(em.getNumStates()):
+            assert_array_almost_equal(freq[state] / total, sprobs[state])
+
+        # transition probabilites
+        # from eyeball:
+        #c	0	5	0   0->0 +4   0->1 +1    0-> +5
+        #c	5	10	1   1->1 +4   1->2 +1    1-> +5
+        #c	10	35	2   2->2 +24  2->3 +1    2-> +25
+        #c	35	40	3   3->3 +4   3->0 +1    3-> +5
+        #c	40	70	0   0->0 +29             0-> +19
+        realTransProbs = np.array([
+            [33. / 34., 1. / 34., 0., 0.],
+            [0., 4. / 5., 1. / 5., 0.],
+            [0., 0., 24. / 25., 1. / 25.],
+            [1. / 5., 0., 0., 4. / 5.]
+            ])
+            
+        tprobs = np.exp(cfg.getLogProbTables()[0])
+        assert tprobs.shape == (em.getNumStates(), em.getNumStates(),
+                                em.getNumStates())
+        for i in xrange(em.getNumStates()):
+            for j in xrange(em.getNumStates()):
+                fbTot = tprobs[i, i, j]
+                if i != j:
+                    fbTot += tprobs[i, j, i]
+                assert_array_almost_equal(fbTot, realTransProbs[i,j])
+        prob, states = cfg.decode(trackData.getTrackTableList()[0])
+        for truthInt in truthIntervals:
+            for i in xrange(truthInt[1], truthInt[2]):
+                # gah, just realized that ltr track is binary, which means
+                # ltr states can be either 1 or 3.  need to fix test properly
+                # but just relax comparison for now.
+                if truthInt[3] == 1 or truthInt[3] == 3:
+                    assert states[i] == 1 or states[i] == 3
+                else:
+                    assert states[i] == truthInt[3]
+
 
         
 
