@@ -16,8 +16,8 @@ from numpy.testing import assert_array_equal, assert_array_almost_equal
 
 from .emission import IndependentMultinomialEmissionModel
 from .track import TrackList, TrackTable, Track
-from .hmm import MultitrackHmm, EPSILON
-
+from .hmm import MultitrackHmm
+from .common import EPSILON, LOGZERO, myLog
 from sklearn.hmm import normalize
 from sklearn.hmm import NEGINF
 from sklearn.utils import check_random_state, deprecated
@@ -130,7 +130,7 @@ class MultitrackCfg(object):
         self.createTables()
 
         # flat start probs over all states
-        oneOfAny = np.log(1. / self.M)
+        oneOfAny = myLog(1. / self.M)
         self.startProbs = oneOfAny + np.zeros((self.M,), dtype=np.float)
 
         # hmm states flat of X - > X Y (where Y is any state)
@@ -141,7 +141,7 @@ class MultitrackCfg(object):
         # cfg states X -> a Y a (prob Y nested in X).  X is a nested state
         # but Y is any state
         # (-1 below to correct counting for state == nextState case)
-        oneOfCfgRHS = np.log(1. / (3.0 * self.M - 1.0))
+        oneOfCfgRHS = myLog(1. / (3.0 * self.M - 1.0))
         for state in self.nestStates:
             for nextState in self.emittingStates:
                 self.logProbs1[state, state, nextState] = oneOfCfgRHS
@@ -301,7 +301,7 @@ class MultitrackCfg(object):
         hmm.supervisedTrain(trackData, bedIntervals)
 
         assert (self.startProbs.shape == hmm.getStartProbs().shape)
-        self.startProbs = np.log(hmm.getStartProbs())
+        self.startProbs = myLog(hmm.getStartProbs())
 
         # map hmm transitions to X -> X Y productions
         # for each hmm transition, P(X->Y) we let
@@ -311,9 +311,9 @@ class MultitrackCfg(object):
             for rState in self.emittingStates:
                 hp = hmmProbs[lState, rState]
                 if lState != rState:
-                    hp /= 2.                
-                self.logProbs1[lState, lState, rState] = np.log(hp)
-                self.logProbs1[lState, rState, lState] = np.log(hp)
+                    hp /= 2.
+                self.logProbs1[lState, lState, rState] = myLog(hp)
+                self.logProbs1[lState, rState, lState] = myLog(hp)
 
         # like above but we also split across the table2
         for lState in self.nestStates:
@@ -323,10 +323,11 @@ class MultitrackCfg(object):
                     hp /= 3.
                 else:
                     hp /= 2.
-                self.logProbs1[lState, lState, rState] = np.log(hp)
-                self.logProbs1[lState, rState, lState] = np.log(hp)
-                self.logProbs2[lState, rState] = np.log(hp)
+                self.logProbs1[lState, lState, rState] = myLog(hp)
+                self.logProbs1[lState, rState, lState] = myLog(hp)
+                self.logProbs2[lState, rState] = myLog(hp)
 
-        
+        # make sure the helper tables are up to date
+        self.createHelperTables()
             
             
