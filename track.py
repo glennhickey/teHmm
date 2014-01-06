@@ -14,7 +14,7 @@ import xml.etree.ElementTree as ET
 from .trackIO import readTrackData
 from .common import EPSILON
 
-INTEGER_ARRAY_TYPE = np.uint16
+INTEGER_ARRAY_TYPE = np.uint8
 
 ###########################################################################
 
@@ -403,13 +403,16 @@ class BinaryMap(CategoryMap):
 """ Data Array formed by a series of tracks over the same coordinates of the
 same genomes.  Multiple intervals are supported. """
 class TrackData(object):
-    def __init__(self):
+    def __init__(self, dtype=INTEGER_ARRAY_TYPE):
         #: list of tracks (of type TrackList)
         self.trackList = None
         #: list of track tables (of type TrackTable)
         self.trackTableList = None
         #: separate list for alignment track because it's so specual
         self.alignmentTrackTableList = None
+        #: datatype for array values in observation matrix
+        # (lower the better since memory adds up quickly)
+        self.dtype = dtype
 
     def getNumTracks(self):
         return len(self.trackList)
@@ -457,13 +460,8 @@ class TrackData(object):
                                          interval[1], interval[2], initTracks)
 
     def __loadTrackDataInterval(self, inputTrackList, chrom, start, end, init):
-        dtype = np.uint8
-        for track in self.trackList:
-            if track.getDist() != "binary":
-                dtype = INTEGER_ARRAY_TYPE
-
         trackTable = IntegerTrackTable(self.getNumTracks(), chrom, start, end,
-                                       dtype=dtype)
+                                       dtype=self.dtype)
         for inputTrack in inputTrackList:
             trackName = inputTrack.getName()
             trackPath = inputTrack.getPath()

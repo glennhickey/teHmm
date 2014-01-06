@@ -76,7 +76,7 @@ class TestCase(TestBase):
                     assert mappedTable[col][track] == track + 3
 
     def testTrackData(self):
-        trackData = TrackData()
+        trackData = TrackData(np.uint16)
         trackData.loadTrackData(getTracksInfoPath(),
                                 [("scaffold_1", 0, 200004),
                                 ("scaffold_1", 2000040, 3000060)])
@@ -138,7 +138,7 @@ class TestCase(TestBase):
             assert tableList[1][i][cbTrack.number] == 1
 
     def testAlignmentTrack(self):
-        trackData = TrackData()
+        trackData = TrackData(dtype=np.uint16)
         trackData.loadTrackData(getTracksInfoPath(1),
                                 [("scaffold_1", 0, 200004),
                                 ("scaffold_Q", 2000040, 3000060)])
