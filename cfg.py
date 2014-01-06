@@ -18,6 +18,7 @@ from .emission import IndependentMultinomialEmissionModel
 from .track import TrackList, TrackTable, Track
 from .hmm import MultitrackHmm
 from .common import EPSILON, LOGZERO, myLog
+from ._cfg import fastCykTable
 from sklearn.hmm import normalize
 from sklearn.hmm import NEGINF
 from sklearn.utils import check_random_state, deprecated
@@ -127,7 +128,7 @@ class MultitrackCfg(object):
             maxRow = max(len(stateList), maxRow)
             self.helperDim1[state] = len(stateList)
             self.helper1.append(stateList)
-        npHelper1 = -1 + np.zeros((self.M, maxRow, 2), dtype=np.float)
+        npHelper1 = -1 + np.zeros((self.M, maxRow, 2), dtype=np.int32)
         for state in xrange(len(self.helper1)):
             for i, entry in enumerate(self.helper1[state]):
                 assert len(entry) == 2
@@ -145,7 +146,7 @@ class MultitrackCfg(object):
             maxRow = max(len(stateList), maxRow)
             self.helperDim2[state] = len(stateList)
             self.helper2.append(stateList)
-        npHelper2 = -1 + np.zeros((self.M, maxRow), dtype=np.float)
+        npHelper2 = -1 + np.zeros((self.M, maxRow), dtype=np.int32)
         for state in xrange(len(self.helper2)):
             for i, entry in enumerate(self.helper2[state]):
                 npHelper2[state, i] = entry
@@ -242,40 +243,10 @@ class MultitrackCfg(object):
         """ Do the CYK dynamic programming algorithm (like viterbi) to
         compute the maximum likelihood CFG derivation of the observations."""
         self.__initDPTable(obs, alignmentTrack)
-        baseMatch = alignmentTrack is not None
-        for size in xrange(2, len(obs) + 1):
-            for i in xrange(len(obs) + 1 - size):
-                j = i + size - 1
-                match = baseMatch and\
-                        alignmentTrack[i,0] != self.defAlignmentSymbol and\
-                        alignmentTrack[i,0] == alignmentTrack[j,0]
-                for lState in self.emittingStates:
-                    for q in xrange(self.helperDim1[lState]):
-                        r1State = self.helper1[lState, q, 0]
-                        r2State = self.helper1[lState, q, 1]
-                        for k in xrange(i, i + size - 1):
-                            lp = self.logProbs1[lState, r1State, r2State] + \
-                                     self.dp[i, k, r1State] +\
-                                     self.dp[k+1, j, r2State]
-                            if lp > self.dp[i, j, lState]:
-                                self.dp[i, j, lState] = lp
-                                self.tb[i, j, lState] = [k, r1State, r2State]
-                    if size > 2:
-                        for q in xrange(self.helperDim2[lState]):
-                            rState = self.helper2[lState, q]
-                            lp = self.logProbs2[lState, rState] +\
-                                 self.dp[i+1, j-1, rState] +\
-                                 self.pairEmissionModel.pairLogProb(\
-                                lState, \
-                                self.emLogProbs[i, lState], \
-                                self.emLogProbs[j, lState], \
-                                match)
-                            assert lp <= 0
-                            if lp > self.dp[i, j, lState]:
-                                self.dp[i, j, lState] = lp
-                                self.tb[i, j, lState] = [self.PAIRFLAG,
-                                                         rState, rState]
-
+        if isinstance(obs, TrackTable):
+            obs = obs.getNumPyArray()
+        assert obs.dtype == np.uint8
+        fastCykTable(self, obs, alignmentTrack)
         score = max([self.startProbs[i] + self.dp[0, len(obs)-1, i]  \
                      for i in self.emittingStates])
         return score

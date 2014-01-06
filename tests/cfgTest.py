@@ -57,7 +57,7 @@ class TestCase(TestBase):
                                       emissionModel.getNumStates())
         cfg = MultitrackCfg(emissionModel, pairModel)
 
-        obs = np.array([[0],[0],[1],[2]], dtype=np.int16)
+        obs = np.array([[0],[0],[1],[2]], dtype=np.uint8)
         hmmProb, hmmStates = hmm.decode(obs)
         cfgProb, cfgStates = cfg.decode(obs)
         assert_array_almost_equal(hmmProb, cfgProb)
@@ -77,7 +77,7 @@ class TestCase(TestBase):
                                       emissionModel.getNumStates())
         cfg = MultitrackCfg(emissionModel, pairModel)
 
-        obs = np.array([[0],[0],[1],[0]], dtype=np.int16)
+        obs = np.array([[0],[0],[1],[0]], dtype=np.uint8)
         hmmProb, hmmStates = hmm.decode(obs)
         cfgProb, cfgStates = cfg.decode(obs)
         assert_array_almost_equal(hmmProb, cfgProb)
@@ -102,22 +102,22 @@ class TestCase(TestBase):
         cfg = MultitrackCfg(emissionModel, pairModel, nestStates = [1])
 
 
-        obs = np.array([[0],[0],[1],[0]], dtype=np.int16)
+        obs = np.array([[0],[0],[1],[0]], dtype=np.uint8)
         cfgProb, cfgStates = cfg.decode(obs)
         # 1 is a pair only state.  no way it should be here
         assert 1 not in cfgStates
         assert_array_equal(cfgStates, [0,0,2,0])
 
-        obs = np.array([[1],[0],[0],[1]], dtype=np.int16)
+        obs = np.array([[1],[0],[0],[1]], dtype=np.uint8)
         cfgProb, cfgStates = cfg.decode(obs)
         assert_array_equal(cfgStates, [2,0,0,2])
 
-        alignment = np.array([[1],[0],[0],[1]], dtype=np.int16)
+        alignment = np.array([[1],[0],[0],[1]], dtype=np.uint8)
         cfgProb, cfgStates = cfg.decode(obs, alignmentTrack = alignment,
                                         defAlignmentSymbol=0)
         assert_array_equal(cfgStates, [1,0,0,1])
 
-        alignment = np.array([[1],[0],[0],[2]], dtype=np.int16)
+        alignment = np.array([[1],[0],[0],[2]], dtype=np.uint8)
         cfgProb, cfgStates = cfg.decode(obs, alignmentTrack = alignment,
                                         defAlignmentSymbol=0)
         assert_array_equal(cfgStates, [2,0,0,2])
