@@ -413,6 +413,8 @@ class TrackData(object):
         #: datatype for array values in observation matrix
         # (lower the better since memory adds up quickly)
         self.dtype = dtype
+        #: special datatype for alignment arrays
+        self.adtype = np.uint16
 
     def getNumTracks(self):
         return len(self.trackList)
@@ -482,7 +484,7 @@ class TrackData(object):
 
         if self.trackList.getAlignmentTrack() is not None:
             alignmentTrackTable = IntegerTrackTable(1, chrom, start, end,
-                                                    dtype = INTEGER_ARRAY_TYPE)
+                                                    dtype = self.adtype)
             trackName = inputTrack.getName()
             trackPath = inputTrack.getPath()
             rowArray = readTrackData(trackPath, chrom, start, end,

@@ -95,8 +95,13 @@ class MultitrackCfg(object):
         (one data point of each interval of track data)
         """ 
         output = []
-        for trackTable in trackData.getTrackTableList():
-            prob, states = self.decode(trackTable)
+        alignmentTrackTableList = trackData.getAlignmentTrackTableList()
+        alignmentTable = None
+        for i, trackTable in enumerate(trackData.getTrackTableList()):
+            if alignmentTrackTableList is not None:
+               alignmentTable = alignmentTrackTableList[i]
+            prob, states = self.decode(trackTable,
+                                       trackTable.getAlignmentTrack())
             if self.stateNameMap is not None:
                 states = map(self.stateNameMap.getMapBack, states)
             output.append((prob,states))
@@ -246,6 +251,11 @@ class MultitrackCfg(object):
         if isinstance(obs, TrackTable):
             obs = obs.getNumPyArray()
         assert obs.dtype == np.uint8
+        if alignmentTrack is None:
+            alignmentTrack = np.ndarray((0,1), dtype = np.uint16)
+        if isinstance(alignmentTrack, TrackTable):
+            alignmentTrack = alignmentTrack.getNumPyArray()
+        assert alignmentTrack.dtype == np.uint16
         fastCykTable(self, obs, alignmentTrack)
         score = max([self.startProbs[i] + self.dp[0, len(obs)-1, i]  \
                      for i in self.emittingStates])
