@@ -100,7 +100,9 @@ class MultitrackCfg(object):
         for i, trackTable in enumerate(trackData.getTrackTableList()):
             if len(alignmentTrackTableList) > 0:
                alignmentTable = alignmentTrackTableList[i]
-            prob, states = self.decode(trackTable, alignmentTable, numThreads)
+            prob, states = self.decode(trackTable,
+                                       alignmentTrack=alignmentTable,
+                                       numThreads=numThreads)
             if self.stateNameMap is not None:
                 states = map(self.stateNameMap.getMapBack, states)
             output.append((prob,states))
@@ -295,8 +297,10 @@ class MultitrackCfg(object):
         """ return tuple of log prob and most likely state sequence.  same
         as in the hmm. """
         self.defAlignmentSymbol = defAlignmentSymbol
+        if numThreads > 1:
+            logging.info("%d threads activated for CYK" % numThreads)
         return self.__cyk(obs, alignmentTrack,
-                          numThreads), self.__traceBack(obs)
+                          numThreads=numThreads), self.__traceBack(obs)
 
     def supervisedTrain(self, trackData, bedIntervals):
         """ Production porbabilites determined by frequencies two states
