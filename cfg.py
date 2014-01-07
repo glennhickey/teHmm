@@ -100,8 +100,7 @@ class MultitrackCfg(object):
         for i, trackTable in enumerate(trackData.getTrackTableList()):
             if len(alignmentTrackTableList) > 0:
                alignmentTable = alignmentTrackTableList[i]
-            prob, states = self.decode(trackTable,
-                                       trackTable.getAlignmentTrack())
+            prob, states = self.decode(trackTable, alignmentTable)
             if self.stateNameMap is not None:
                 states = map(self.stateNameMap.getMapBack, states)
             output.append((prob,states))
