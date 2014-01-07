@@ -98,7 +98,7 @@ class MultitrackCfg(object):
         alignmentTrackTableList = trackData.getAlignmentTrackTableList()
         alignmentTable = None
         for i, trackTable in enumerate(trackData.getTrackTableList()):
-            if alignmentTrackTableList is not None:
+            if len(alignmentTrackTableList) > 0:
                alignmentTable = alignmentTrackTableList[i]
             prob, states = self.decode(trackTable,
                                        trackTable.getAlignmentTrack())
