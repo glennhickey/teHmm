@@ -21,7 +21,7 @@ def fastCykTable(cfg, np.ndarray[atype_t, ndim=2] obs,
     cdef itype_t M = cfg.M
     cdef itype_t baseMatch = len(alignmentTrack) > 0
     assert len(alignmentTrack) > 0 or baseMatch == 0
-    cdef np.ndarray[itype_t, ndim=1] emittingStates = cfg.emittingStates
+    cdef np.ndarray[np.int_t, ndim=1] emittingStates = cfg.emittingStates
     cdef np.ndarray[itype_t, ndim=1] helperDim1 = cfg.helperDim1
     cdef np.ndarray[itype_t, ndim=1] helperDim2 = cfg.helperDim2
     cdef np.ndarray[np.int32_t, ndim=3] helper1 = cfg.helper1
@@ -47,7 +47,7 @@ def fastCykTable(cfg, np.ndarray[atype_t, ndim=2] obs,
     cdef itype_t defAlignmentSymbol = cfg.defAlignmentSymbol
     cdef np.ndarray[np.float_t, ndim=2] logPriors = \
          cfg.pairEmissionModel.logPriors
-    with nogil, parallel(num_threads=None):
+    with nogil, parallel(num_threads=2):
         for size in xrange(2, nObs + 1):
             for i in prange(nObs + 1 - size):
                 j = i + size - 1
