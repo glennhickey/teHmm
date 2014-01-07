@@ -124,11 +124,13 @@ class MultitrackHmm(_BaseHMM):
             totalLogProb.append(self.score(trackTable))
         return logProbList
 
-    def viterbi(self, trackData):
+    def viterbi(self, trackData, numThreads = 1):
         """ Return the output of the Viterbi algorithm on the loaded
         data: a tuple of (log likelihood of best path, and the path itself)
         (one data point of each interval of track data)
-        """ 
+        """
+        # Thread interface provided but not implemented:
+        assert numThreads = 1
         output = []
         for trackTable in trackData.getTrackTableList():
             prob, states = self.decode(trackTable)

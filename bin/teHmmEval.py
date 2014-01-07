@@ -35,6 +35,9 @@ def main(argv=None):
                         default=None)
     parser.add_argument("--verbose", help="Print out detailed logging messages",
                         action = "store_true", default = False)
+    parser.add_argument("--numThreads", help="Number of threads to use (only"
+                        " applies to CFG parser for the moment)",
+                        type=int, default=1)
     
     args = parser.parse_args()
     if args.verbose is True:
@@ -64,13 +67,17 @@ def main(argv=None):
                             model.getTrackList())
 
     # do the viterbi algorithm
-    logging.info("running viterbi algorithm")
+    if isinstance(model, MultitrackHmm):
+        logging.info("running viterbi algorithm")
+    elif isinstance(model, MultitrackCfg):
+        logging.info("running CYK algorithm")        
 
     if args.bed is not None:
         vitOutFile = open(args.bed, "w")
     totalScore = 0
     tableIndex = 0
-    for vitLogProb, vitStates in model.viterbi(trackData):
+    for vitLogProb, vitStates in model.viterbi(trackData,
+                                               numThreads=numThreads):
         totalScore += vitLogProb
         if args.bed is not None:
             vitOutFile.write("#Viterbi Score: %f\n" % (vitLogProb))

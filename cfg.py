@@ -89,7 +89,7 @@ class MultitrackCfg(object):
     def getTrackList(self):
         return self.trackList
 
-    def viterbi(self, trackData):
+    def viterbi(self, trackData, numThreads = 1):
         """ Return the output of the Viterbi algorithm on the loaded
         data: a tuple of (log likelihood of best path, and the path itself)
         (one data point of each interval of track data)
@@ -100,7 +100,7 @@ class MultitrackCfg(object):
         for i, trackTable in enumerate(trackData.getTrackTableList()):
             if len(alignmentTrackTableList) > 0:
                alignmentTable = alignmentTrackTableList[i]
-            prob, states = self.decode(trackTable, alignmentTable)
+            prob, states = self.decode(trackTable, alignmentTable, numThreads)
             if self.stateNameMap is not None:
                 states = map(self.stateNameMap.getMapBack, states)
             output.append((prob,states))
@@ -290,11 +290,13 @@ class MultitrackCfg(object):
         assert self.assigned <= len(obs)
         return trace
             
-    def decode(self, obs, alignmentTrack = None, defAlignmentSymbol=0):
+    def decode(self, obs, alignmentTrack = None, defAlignmentSymbol=0,
+               numThreads=1):
         """ return tuple of log prob and most likely state sequence.  same
         as in the hmm. """
         self.defAlignmentSymbol = defAlignmentSymbol
-        return self.__cyk(obs, alignmentTrack), self.__traceBack(obs)
+        return self.__cyk(obs, alignmentTrack,
+                          numThreads), self.__traceBack(obs)
 
     def supervisedTrain(self, trackData, bedIntervals):
         """ Production porbabilites determined by frequencies two states

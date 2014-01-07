@@ -14,7 +14,8 @@ cdef dtype_t _NINF = -np.inf
         
 @cython.boundscheck(False)
 def fastCykTable(cfg, np.ndarray[atype_t, ndim=2] obs,
-                 np.ndarray[np.uint16_t, ndim=2] alignmentTrack):
+                 np.ndarray[np.uint16_t, ndim=2] alignmentTrack,
+                 np.int_t numThreads):
     """ Do the CYK dynamic programming algorithm (like viterbi) to
     compute the maximum likelihood CFG derivation of the observations."""
     cdef itype_t nObs = len(obs)
@@ -47,7 +48,7 @@ def fastCykTable(cfg, np.ndarray[atype_t, ndim=2] obs,
     cdef itype_t defAlignmentSymbol = cfg.defAlignmentSymbol
     cdef np.ndarray[np.float_t, ndim=2] logPriors = \
          cfg.pairEmissionModel.logPriors
-    with nogil, parallel(num_threads=2):
+    with nogil, parallel(num_threads=numThreads):
         for size in xrange(2, nObs + 1):
             for i in prange(nObs + 1 - size):
                 j = i + size - 1
