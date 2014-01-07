@@ -268,8 +268,10 @@ class MultitrackCfg(object):
         trace = -1 + np.zeros(len(self.dp))
         top = np.argmax([self.startProbs[i] + self.dp[0, len(obs)-1, i]\
                              for i in xrange(self.M)])
-        self.assigned = 0
-        def tbRecursive(i, j, state, trace):
+        tbRecurseStack = [(0, len(self.tb) - 1, top, trace)]
+        while len(tbRecurseStack) > 0:
+            i, j, state, trace = tbRecurseStack.pop()
+            self.assigned = 0
             assert i >= 0
             assert j >= i
             size = j - i + 1
@@ -284,11 +286,11 @@ class MultitrackCfg(object):
                     trace[j] = state
                     assert r1State == r2State
                     if size > 2:
-                        tbRecursive(i+1, j-1, r1State, trace)
+                        tbRecurseStack.append((i+1, j-1, r1State, trace))
                 else:
-                    tbRecursive(i, k, r1State, trace)
-                    tbRecursive(k+1, j, r2State, trace)
-        tbRecursive(0, len(self.tb) - 1, top, trace)
+                    tbRecurseStack.append((i, k, r1State, trace))
+                    tbRecurseStack.append((k+1, j, r2State, trace))
+
         assert self.assigned <= len(obs)
         return trace
             
