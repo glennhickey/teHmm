@@ -78,7 +78,7 @@ def main(argv=None):
     totalScore = 0
     tableIndex = 0
     for vitLogProb, vitStates in model.viterbi(trackData,
-                                               numThreads=numThreads):
+                                               numThreads=args.numThreads):
         totalScore += vitLogProb
         if args.bed is not None:
             vitOutFile.write("#Viterbi Score: %f\n" % (vitLogProb))
