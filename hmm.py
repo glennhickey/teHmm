@@ -130,7 +130,7 @@ class MultitrackHmm(_BaseHMM):
         (one data point of each interval of track data)
         """
         # Thread interface provided but not implemented:
-        assert numThreads = 1
+        assert numThreads == 1
         output = []
         for trackTable in trackData.getTrackTableList():
             prob, states = self.decode(trackTable)

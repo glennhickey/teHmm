@@ -243,7 +243,7 @@ class MultitrackCfg(object):
                     j, self.emLogProbs[i,j], self.emLogProbs[i+1,j], match)
                 self.tb[i, i+1, j] = [self.PAIRFLAG, 0, 0]
 
-    def __cyk(self, obs, alignmentTrack = None):
+    def __cyk(self, obs, alignmentTrack = None, numThreads=1):
         """ Do the CYK dynamic programming algorithm (like viterbi) to
         compute the maximum likelihood CFG derivation of the observations."""
         self.__initDPTable(obs, alignmentTrack)
@@ -255,7 +255,7 @@ class MultitrackCfg(object):
         if isinstance(alignmentTrack, TrackTable):
             alignmentTrack = alignmentTrack.getNumPyArray()
         assert alignmentTrack.dtype == np.uint16
-        fastCykTable(self, obs, alignmentTrack)
+        fastCykTable(self, obs, alignmentTrack, numThreads)
         score = max([self.startProbs[i] + self.dp[0, len(obs)-1, i]  \
                      for i in self.emittingStates])
         return score
