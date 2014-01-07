@@ -12,6 +12,7 @@ import numpy as np
 
 from teHmm.track import TrackData
 from teHmm.hmm import MultitrackHmm
+from teHmm.cfg import MultitrackCfg
 from teHmm.trackIO import getMergedBedIntervals
 from teHmm.modelIO import loadModel
 
