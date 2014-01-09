@@ -131,7 +131,7 @@ class IndependentMultinomialEmissionModel(object):
         logProb = 0.    
         for track, obsSymbol in enumerate(singleObs):
             # independence assumption means we can just add the tracks
-            logProb += self.logProbs[track][state][obsSymbol]
+            logProb += self.logProbs[track][state][int(obsSymbol)]
         return logProb
 
     def allLogProbs(self, obs):
@@ -188,7 +188,7 @@ class IndependentMultinomialEmissionModel(object):
                 for track in xrange(self.numTracks):
                     for state in xrange(self.numStates):
                         obsVal = obs[i,track]
-                        obsStats[track][state, obsVal] += posteriors[i, state]
+                        obsStats[track][state, int(obsVal)] += posteriors[i, state]
         logging.debug("%s Done emission.accumulateStast for %d obs" % (
             time.strftime("%H:%M:%S"), len(obs)))
         return obsStats
