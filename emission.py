@@ -307,5 +307,5 @@ class PairEmissionModel(object):
        Note that this function should eventually be in _cfg.pyx or something"""
        assert match == 0 or match == 1
        assert state < len(self.logPriors)
-       return logProb1 + logProb2 + self.logPriors[state, match]
+       return logProb1 + logProb2 + self.logPriors[state, int(match)]
    
