@@ -14,7 +14,6 @@ from numpy.testing import assert_array_equal, assert_array_almost_equal
 
 from sklearn.hmm import MultinomialHMM
 
-from teHmm.tracksInfo import TracksInfo
 from teHmm.track import *
 from teHmm.trackIO import readBedIntervals
 from teHmm.hmm import MultitrackHmm
