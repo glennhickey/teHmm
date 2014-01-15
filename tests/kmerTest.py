@@ -11,6 +11,8 @@ import sys
 import os
 import math
 from numpy.testing import assert_array_equal, assert_array_almost_equal
+import random
+import string
 
 from teHmm.kmer import KmerTable
 
@@ -53,6 +55,20 @@ class TestCase(TestBase):
         assert len(em) == 2
         assert [9,13,3,7] in em
         assert [10,13,0,3] in em
+
+    def testRandom(self):
+        S = ["a", "c", "g", "t"]
+        for repeat in xrange(5):
+            sa = ''.join(random.choice(S) for x in xrange(50))
+            sb = ''.join(random.choice(S) for x in xrange(50))
+            kt = KmerTable()
+            kt.loadString(sa)
+            em = kt.exactMatches(sb)
+            # doesnt check for any missed matches but will at least test
+            # robustness of given matches
+            for match in em:
+                assert sb[match[0]:match[1]] == sa[match[2]:match[3]]
+        
 
 def main():
     sys.argv = sys.argv[:1]

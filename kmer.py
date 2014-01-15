@@ -78,12 +78,17 @@ class KmerTable:
         activeMatches.   any matches that 
         have no hope of being merged in the future (during the left-right scan)
         get added to closedMatches"""
+
         assert len(matches) > 0
         if len(activeMatches) == 0:
             return matches
         
         outList = []
 
+        # do all against all comparison of new candidates with active list,
+        # merging with the active list when possible.  Note sorted order 
+        # should be used to speed up but list sizes are so small right now
+        # we don't bother.  
         for i in xrange(len(matches)):
             found = False
             for j in xrange(len(activeMatches)):
@@ -97,9 +102,17 @@ class KmerTable:
                     break
             if not found:
                 outList.append(matches[i])
-
-        # todo: use closedMatches
-        return activeMatches + outList
+        
+        # filter out matches from the output that have no hope of being merged
+        # in the future.  
+        outList = activeMatches + outList
+        cleanList = []
+        for match in outList:
+            if match[0] > matches[0][3]:
+                closedMatches.append(match)
+            else:
+                cleanList.append(match)
+        return cleanList
 
     def getMerge(self, leftMatch, rightMatch):
         """ return the merge of two pairwise alignments, by extending the left one
