@@ -10,6 +10,7 @@ import sys
 import string
 import random
 import logging
+import array
 from pybedtools import BedTool, Interval
 from .common import runShellCommand
 
@@ -182,3 +183,37 @@ def getMergedBedIntervals(bedPath, ncol=3):
 
     return outIntervals
 
+###########################################################################
+
+def writeBedIntervals(intervals, outPath):
+    """ write bed intervals to disk """
+    outFile = open(outPath, "w")
+    for interval in intervals:
+        outFile.write(Interval(interval[0], interval[1], interval[2], 
+                               interval[3]))    
+
+###########################################################################
+
+# Copied from bioio.py from sonLib (https://github.com/benedictpaten/sonLib):
+# Copyright (C) 2006-2012 by Benedict Paten (benedictpaten@gmail.com)
+# Released under the MIT license, see LICENSE.txt
+def fastaRead(fileHandle):
+    """iteratively a sequence for each '>' it encounters, ignores '#' lines
+    """
+    line = fileHandle.readline()
+    while line != '':
+        if line[0] == '>':
+            name = line[1:-1]
+            line = fileHandle.readline()
+            seq = array.array('c')
+            while line != '' and line[0] != '>':
+                if line[0] != '#':
+                    seq.extend([ i for i in line[:-1] if i != '\t' and i != ' ' ])
+                line = fileHandle.readline()
+            for i in seq:
+                #For safety and sanity I only allows roman alphabet characters in fasta sequences. 
+                if not ((i >= 'A' and i <= 'Z') or (i >= 'a' and i <= 'z') or i == '-'):
+                    raise RuntimeError("Invalid FASTA character, ASCII code = \'%d\', found in input sequence %s" % (ord(i), name))
+            yield name, seq.tostring()
+        else:
+            line = fileHandle.readline()
