@@ -50,11 +50,21 @@ class TestCase(TestBase):
         kt = KmerTable()
         kt.loadString(s)
         em = kt.exactMatches("monkees")
-        assert em == [[0, 6, 18, 24]]
+        assert em == [[0, 7, 18, 25]]
         em = kt.exactMatches("something hey")
         assert len(em) == 2
         assert [9,13,3,7] in em
         assert [10,13,0,3] in em
+
+    def testMatch2(self):
+        kt = KmerTable(kmerLen=3)
+        kt.loadString("CCAGAT")
+        em = kt.exactMatches("ATGTTCACTCTTATCCAGAT")
+        assert em == [[14, 20, 0, 6]]
+        kt.loadString("ATGTTCACTCTTATCCAGAT")
+        em = kt.exactMatches("CCAGAT")
+        assert em == [[0, 6, 14, 20]]
+
 
     def testRandom(self):
         S = ["a", "c", "g", "t"]
@@ -68,6 +78,12 @@ class TestCase(TestBase):
             # robustness of given matches
             for match in em:
                 assert sb[match[0]:match[1]] == sa[match[2]:match[3]]
+
+            # try again without "optimization"
+            kts = KmerTable()
+            kts.useClosed = False
+            kts.loadString(sa)
+            assert kts.exactMatches(sb) == em
         
 
 def main():

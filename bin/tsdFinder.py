@@ -49,7 +49,7 @@ def main(argv=None):
     parser.add_argument("--leftName", help="Name of left TSDs in output Bed",
                         default="L_TSD")
     parser.add_argument("--rightName", help="Name of right TSDs in output Bed",
-                        default="L_TSD")
+                        default="R_TSD")
     parser.add_argument("--id", help="Assign left/right pairs of TSDs a unique"
                         " matching ID", action="store_true", default=False)
     parser.add_argument("--verbose", help="Print out detailed logging messages",
@@ -84,17 +84,17 @@ def buildSeqTable(bedIntervals):
     bedIntervals.  This only works if bedIntervals are sorted (and should 
     raise an assertion error if that's not the case. 
     """
+    logging.debug("building index of %d bed intervals" % len(bedIntervals))
     bedSeqTable = dict()
     prevName = None
-    prevIdx = None
+    prevIdx = 0
     for i, interval in enumerate(bedIntervals):
         seqName = interval[0]
         if seqName != prevName:
             assert seqName not in bedSeqTable
             if prevName is not None:
                 bedSeqTable[seqName] = (prevIdx, i)
-
-            prevIdx = i
+                prevIdx = i
     seqName = bedIntervals[-1][0]
     assert seqName not in bedSeqTable
     bedSeqTable[seqName] = (prevIdx, len(bedIntervals)) 
@@ -112,11 +112,14 @@ def findTsds(args, mergedIntervals):
     faFile = open(args.fastaSequence, "r")
     for seqName, sequence in fastaRead(faFile):
         if seqName in seqTable:
+            logging.debug("Scanning FASTA sequence %s" % seqName)
             bedRange = seqTable[seqName]
             for bedIdx in xrange(bedRange[0], bedRange[1]):
                 bedInterval = mergedIntervals[bedIdx]
-                intervalTsds = searchInterval(args, sequence, bedInterval)
-                outTsds.append(intervalTsds)
+                outTsds += intervalTsds(args, sequence, bedInterval)
+        else:
+            logging.debug("Skipping FASTA sequence %s because no intervals "
+                          "found" % seqName)
 
     return outTsds
 
@@ -132,7 +135,7 @@ def intervalTsds(args, sequence, bedInterval):
     if r1 - l1 < args.min or r2 - l2 < args.min:
         return []
 
-    kt = KmerTable(kmerLen = args.minLen)
+    kt = KmerTable(kmerLen = args.min)
     leftFlank = sequence[l1:r1]
     rightFlank = sequence[l2:r2]
     assert l2 > r1
@@ -143,7 +146,7 @@ def intervalTsds(args, sequence, bedInterval):
     # if we don't want every match, find the match with the lowest minimum
     # distance to the interval. will probably need to look into better 
     # heuristics for this
-    if args.all is False:
+    if args.all is False and len(matches) > 1:
         dmin = len(sequence)
         bestMatch = None
         for match in matches:
@@ -163,16 +166,19 @@ def matchesToBedInts(args, bedInterval, matches):
 
     bedIntervals = []
     for match in matches:
+        assert len(match) == 4
         name = args.leftName
         if args.id is True:
-            name += string(args.nextId)
-        left = (bedInterval[0], matches[0], matches[1], name)
+            name += "_" + str(args.nextId)
+        offset = bedInterval[1] - args.left
+        left = (bedInterval[0], offset + match[0], offset + match[1], name)
         bedIntervals.append(left)
 
         name = args.rightName
         if args.id is True:
-            name += string(args.nextId)
-        right = (bedInterval[0], matches[2], matches[3], name)
+            name += "_" + str(args.nextId)
+        offset = bedInterval[2]
+        right = (bedInterval[0], offset + match[2], offset + match[3], name)
         bedIntervals.append(right)
 
         args.nextId += 1

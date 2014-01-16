@@ -25,6 +25,8 @@ class KmerTable:
             self.hashFn = hashFn
         self.table = dict()
         self.kmerLen = kmerLen
+        # for debugging
+        self.useClosed = True
 
     def addKmer(self, kmer, position):
         """ insert position into the kmer table."""
@@ -48,7 +50,7 @@ class KmerTable:
     def loadString(self, targetText):
         """ create a kmer hash from given string """
         self.table = dict()
-        for i in xrange(max(0, len(targetText) - self.kmerLen)):
+        for i in xrange(max(0, len(targetText) - self.kmerLen) + 1):
             self.addKmer(targetText[i:i+self.kmerLen], i)
 
     def exactMatches(self, queryText, minMatchLen = 3, maxMatchLen = 10):
@@ -66,10 +68,14 @@ class KmerTable:
                 matchPositions = self.table[key]
                 matchPairs = [[i, i+self.kmerLen, j, j+ self.kmerLen] 
                               for j in matchPositions]
+                #print "M", matchPairs
                 activeMatches = self.resolveOverlaps(matchPairs, 
                                                      activeMatches, 
                                                      closedMatches,
                                                      maxMatchLen)
+                #print "A", activeMatches
+                #print "C", closedMatches
+                #print "777"
         return closedMatches + activeMatches
 
     def resolveOverlaps(self, matches, activeMatches, closedMatches, 
@@ -108,7 +114,7 @@ class KmerTable:
         outList = activeMatches + outList
         cleanList = []
         for match in outList:
-            if match[0] > matches[0][3]:
+            if self.useClosed is True and match[0] > matches[0][1]:
                 closedMatches.append(match)
             else:
                 cleanList.append(match)
