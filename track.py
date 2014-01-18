@@ -424,6 +424,7 @@ class TrackData(object):
         self.trackIdx = dict()
 
         self.trackTableList = []
+        logging.debug("Loading track data for %d intervals" % len(intervals))
         for interval in intervals:
             assert len(interval) >= 3 and interval[2] > interval[1]
             self.__loadTrackDataInterval(inputTrackList, interval[0],
