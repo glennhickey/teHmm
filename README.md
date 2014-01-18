@@ -76,9 +76,15 @@ Suppose we have a file, `ltrfinder.bed`, that was produced by LTR_FINDER that we
 
      removeBedOverlaps.py ltrfinder.bed > ltrfinder_no.bed
 
-2) Make sure that regions between LTR-TEs get a state:
+2) LTRFINDER bed names look something like "LTR|left|LTR_TE|5".  Because of the unique identifiers, each interval will be associated with its own state if we don't further filter the model.  So we filter the IDs out:
 
-     addBedGaps.py all.bed ltrfinder_no.bed > ltrfinder_all.bed
+    cleanLtrFinderID.py ltrfinder_no.bed ltrfinder_clean.bed
+
+Note that this script (see the comments in the script file for more details) will also produce a series of other outputs with, for example, symmetric termini, TSDs removed, etc. These bed files are suitable for training. 
+
+3) Make sure that regions between LTR-TEs get a state:
+
+     addBedGaps.py all.bed ltrfinder_clean.bed > ltrfinder_all.bed
 
 Note that here all.bed is a BED file **(with the same number of columns as ltrfinder_no.bed)** containing a single interval for each chromosome or scaffold in the file.  This file is only used to know the size of the genome and only the coordinates are used.  An example for Alyrata is
 
@@ -92,15 +98,11 @@ Note that here all.bed is a BED file **(with the same number of columns as ltrfi
      scaffold_8	0	22951293	0		  0		 +
      scaffold_9	0	1906741	0		  0		 +
 
-3) LTRFINDER bed names look something like "LTR|left|LTR_TE|5".  Because of the unique identifiers, each interval will be associated with its own state if we don't further filter the model.  So we filter the IDs out:
-
-    cleanLtrFinderID.py ltrfinder_all.bed ltrfinder_clean.bed
-
-Note that this script (see the comments in the script file for more details) will also produce a series of other outputs with, for example, symmetric termini, TSDs removed, etc. These bed files are suitable for training. 
+This step must also be applied to any other output from step 2) (ex ltr_finder_clean_sym.bed etc.) if these files are to be used for training.
 
 To train the HMM, run:
 
-     teHmmTrain.py tracks.xml ltrfinder_clean.bed ltrfinder.hmm
+     teHmmTrain.py tracks.xml ltrfinder_all.bed ltrfinder.hmm
 
 To view the model parameters, run:
 
