@@ -9,7 +9,7 @@ import argparse
 import logging
 
 from teHmm.trackIO import getMergedBedIntervals, fastaRead, writeBedIntervals
-from kmer import KmerTable
+from teHmm.kmer import KmerTable
 
 """
 Find candidate target site duplications (TSD's).  These are short *exact* matches
