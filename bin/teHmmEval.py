@@ -9,10 +9,14 @@ import os
 import argparse
 import logging
 import numpy as np
+import math
+import copy
 
 from teHmm.track import TrackData
 from teHmm.hmm import MultitrackHmm
+from teHmm.cfg import MultitrackCfg
 from teHmm.trackIO import getMergedBedIntervals
+from teHmm.modelIO import loadModel
 
 def main(argv=None):
     if argv is None:
@@ -34,17 +38,26 @@ def main(argv=None):
                         default=None)
     parser.add_argument("--verbose", help="Print out detailed logging messages",
                         action = "store_true", default = False)
+    parser.add_argument("--numThreads", help="Number of threads to use (only"
+                        " applies to CFG parser for the moment)",
+                        type=int, default=1)
+    parser.add_argument("--slice", help="Make sure that regions are sliced"
+                        " to a maximum length of the given value.  Most "
+                        "useful when model is a CFG to keep memory down. "
+                        "When 0, no slicing is done",
+                        type=int, default=0)
     
     args = parser.parse_args()
     if args.verbose is True:
         logging.basicConfig(level=logging.DEBUG)
     else:
-        logging.basicConfig(level=logging.INFO)        
+        logging.basicConfig(level=logging.INFO)
+    if args.slice <= 0:
+        args.slice = sys.maxint
         
     # load model created with teHmmTrain.py
     logging.info("loading model %s" % args.inputModel)
-    hmm = MultitrackHmm()
-    hmm.load(args.inputModel)
+    model = loadModel(args.inputModel)
 
     # read intervals from the bed file
     logging.info("loading target intervals from %s" % args.bedRegions)
@@ -53,6 +66,8 @@ def main(argv=None):
         raise RuntimeError("Could not read any intervals from %s" %
                            args.bedRegions)
 
+    # slice if desired
+    choppedIntervals = [x for x in slicedIntervals(mergedIntervals, args.slice)]
 
     # load the input
     # read the tracks, while intersecting them with the given interval
@@ -60,17 +75,21 @@ def main(argv=None):
     # note we pass in the trackList that was saved as part of the model
     # because we do not want to generate a new one.
     logging.info("loading tracks %s" % args.tracksInfo)
-    trackData.loadTrackData(args.tracksInfo, mergedIntervals, 
-                            hmm.getTrackList())
+    trackData.loadTrackData(args.tracksInfo, choppedIntervals, 
+                            model.getTrackList())
 
     # do the viterbi algorithm
-    logging.info("running viterbi algorithm")
+    if isinstance(model, MultitrackHmm):
+        logging.info("running viterbi algorithm")
+    elif isinstance(model, MultitrackCfg):
+        logging.info("running CYK algorithm")        
 
     if args.bed is not None:
         vitOutFile = open(args.bed, "w")
     totalScore = 0
     tableIndex = 0
-    for vitLogProb, vitStates in hmm.viterbi(trackData):
+    for vitLogProb, vitStates in model.viterbi(trackData,
+                                               numThreads=args.numThreads):
         totalScore += vitLogProb
         if args.bed is not None:
             vitOutFile.write("#Viterbi Score: %f\n" % (vitLogProb))
@@ -102,6 +121,23 @@ def statesToBed(chrom, start, end, states, bedFile):
         else:
             prevInterval = (prevInterval[0], prevInterval[1],
                             prevInterval[2] + 1, prevInterval[3])
+
+def slicedIntervals(bedIntervals, chunkSize):
+    """slice bed intervals by a given length.  used as a quick way to get
+    cfg working via cutting up the input beds (after they get merged)."""
+    for interval in bedIntervals:
+        iLen = interval[2] - interval[1]
+        if iLen <= chunkSize:
+            yield interval
+        else:
+            nCuts = int(math.ceil(float(iLen) / float(chunkSize)))
+            for sliceNo in xrange(nCuts):
+                sInt = list(copy.deepcopy(interval))
+                sInt[1] = sliceNo * chunkSize
+                if sliceNo < nCuts - 1:
+                    sInt[2] = sInt[1] + chunkSize
+                assert sInt[2] > sInt[1]
+                yield tuple(sInt)
          
 if __name__ == "__main__":
     sys.exit(main())

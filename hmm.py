@@ -24,9 +24,8 @@ from sklearn.hmm import _BaseHMM
 from sklearn.hmm import MultinomialHMM
 from sklearn.hmm import _hmmc
 from sklearn.hmm import NEGINF
-from sklearn.utils import check_random_state, deprecated
+from sklearn.utils import check_random_state, deprecated 
 
-    
 
 """
 This class is based on the MultinomialHMM from sckikit-learn, but we make
@@ -125,11 +124,13 @@ class MultitrackHmm(_BaseHMM):
             totalLogProb.append(self.score(trackTable))
         return logProbList
 
-    def viterbi(self, trackData):
+    def viterbi(self, trackData, numThreads = 1):
         """ Return the output of the Viterbi algorithm on the loaded
         data: a tuple of (log likelihood of best path, and the path itself)
         (one data point of each interval of track data)
-        """ 
+        """
+        # Thread interface provided but not implemented:
+        assert numThreads == 1
         output = []
         for trackTable in trackData.getTrackTableList():
             prob, states = self.decode(trackTable)
@@ -137,21 +138,8 @@ class MultitrackHmm(_BaseHMM):
                 states = map(self.stateNameMap.getMapBack, states)
             output.append((prob,states))
         return output
-
-    def load(self, path):
-        f = open(path, "rb")
-        tmp_dict = pickle.load(f)
-        f.close()
-        self.__dict__.update(tmp_dict)
-        self.validate()
-
-    def save(self, path):
-        self.validate()
-        f = open(path, "wb")
-        pickle.dump(self.__dict__, f, 2)
-        f.close()
         
-    def toText(self):
+    def __str__(self):
         states = [x for x in xrange(self.n_components)]
         if self.stateNameMap is not None:
             states = map(self.stateNameMap.getMapBack, states)

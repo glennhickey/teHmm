@@ -76,7 +76,7 @@ class TestCase(TestBase):
                     assert mappedTable[col][track] == track + 3
 
     def testTrackData(self):
-        trackData = TrackData()
+        trackData = TrackData(np.uint16)
         trackData.loadTrackData(getTracksInfoPath(),
                                 [("scaffold_1", 0, 200004),
                                 ("scaffold_1", 2000040, 3000060)])
@@ -136,6 +136,29 @@ class TestCase(TestBase):
 
         for i in xrange(len(tableList[1])):
             assert tableList[1][i][cbTrack.number] == 1
+
+    def testAlignmentTrack(self):
+        trackData = TrackData(dtype=np.uint16)
+        trackData.loadTrackData(getTracksInfoPath(1),
+                                [("scaffold_1", 0, 200004),
+                                ("scaffold_Q", 2000040, 3000060)])
+        assert trackData.getNumTracks() == 3
+        trackList = trackData.getTrackList()
+        alignmentTrack = trackList.getAlignmentTrack() is not None
+        assert alignmentTrack is not None
+
+        trackTableList = trackData.getTrackTableList()
+        assert trackTableList[0].getNumTracks() == 3
+        alignmentTableList = trackData.getAlignmentTrackTableList()
+        assert alignmentTableList[0].getNumTracks() == 1
+
+        trackData2 = TrackData()
+        trackData2.loadTrackData(getTracksInfoPath(2),
+                                 [("scaffold_1", 0, 200004),
+                                  ("scaffold_Q", 2000040, 3000060)])
+        trackList2 = trackData2.getTrackList()
+        alignmentTrack2 = trackList2.getAlignmentTrack()
+        assert alignmentTrack2 is None
 
     def testScale(self):
         trackData1 = TrackData()

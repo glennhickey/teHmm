@@ -13,7 +13,10 @@ from teHmm.track import TrackData
 from teHmm.trackIO import readBedIntervals, getMergedBedIntervals
 from teHmm.hmm import MultitrackHmm
 from teHmm.emission import IndependentMultinomialEmissionModel
+from teHmm.emission import PairEmissionModel
 from teHmm.track import CategoryMap
+from teHmm.cfg import MultitrackCfg
+from teHmm.modelIO import saveModel
 
 def main(argv=None):
     if argv is None:
@@ -41,9 +44,25 @@ def main(argv=None):
                         action = "store_true", default = False)
     parser.add_argument("--verbose", help="Print out detailed logging messages",
                         action = "store_true", default = False)
-
-    
+    parser.add_argument("--cfg", help="Use Context Free Grammar insead of "
+                        "HMM.  Only works with --supervised for now",
+                        action = "store_true", default = False)
+    parser.add_argument("--saPrior", help="Confidence in self alignment "
+                        "track for CFG.  Probability of pair emission "
+                        "is multiplied by this number if the bases are aligned"
+                        " and its complement if bases are not aligned. Must"
+                        " be between [0,1].", default=0.95, type=float)
+    parser.add_argument("--pairStates", help="Comma-separated list of states"
+                        " (from trainingBed) that are treated as pair-emitors"
+                        " for the CFG", default=None)
+     
     args = parser.parse_args()
+    if args.cfg is True:
+        assert args.supervised is True
+        assert args.saPrior >= 0. and args.saPrior <= 1.
+    if args.pairStates is not None:
+        assert args.cfg is True
+        
     if args.verbose is True:
         logging.basicConfig(level=logging.DEBUG)
     else:
@@ -78,21 +97,34 @@ def main(argv=None):
     emissionModel = IndependentMultinomialEmissionModel(args.numStates,
                                                         numSymbolsPerTrack)
 
-    # create the hmm
-    logging.info("creating hmm model")
-    hmm = MultitrackHmm(emissionModel, n_iter=args.iter, state_name_map=catMap)
+    # create the model
+    if not args.cfg:
+        logging.info("creating hmm model")
+        model = MultitrackHmm(emissionModel, n_iter=args.iter,
+                              state_name_map=catMap)
+    else:
+        pairEM = PairEmissionModel(emissionModel, [args.saPrior] *
+                                   emissionModel.getNumStates())
+        assert args.supervised is True
+        nestStates = []
+        if args.pairStates is not None:
+            pairStates = args.pairStates.split(",")
+            nestStates = map(lambda x: catMap.getMap(x), pairStates)
+        logging.info("Creating cfg model")
+        model = MultitrackCfg(emissionModel, pairEM, nestStates,
+                              state_name_map=catMap)
 
     # do the training
     if args.supervised is False:
         logging.info("training via EM")
-        hmm.train(trackData)
+        model.train(trackData)
     else:
         logging.info("training from input bed states")
-        hmm.supervisedTrain(trackData, truthIntervals)
+        model.supervisedTrain(trackData, truthIntervals, )
 
     # write the model to a pickle
     logging.info("saving trained model to %s" % args.outputModel)
-    hmm.save(args.outputModel)
+    saveModel(args.outputModel, model)
 
 
 def mapStateNames(bedIntervals):
