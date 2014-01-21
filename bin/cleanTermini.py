@@ -21,6 +21,7 @@ becomes
 scaffold_1	141	225	L_Term	43	+
 scaffold_1	225	4479	R_Term	43	+
 
+Optionally split into up to for files depending on strand and side
 """
 
 def main(argv=None):
@@ -29,48 +30,88 @@ def main(argv=None):
 
     parser = argparse.ArgumentParser(
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
-        description="Change ID to L_term or R_term since the HMM can only use the "
-        "two states.")
+        description="Filter bed of lastz termini for use with HMM.  By default "
+        "unique id in name column is changed to L_Term or R_Term")
     parser.add_argument("inBed", help="bed with ltr results to process")
     parser.add_argument("outBed", help="bed to write forward strand output to.")
-    parser.add_argument("--rev", help="bed to write reverse strand output to.",
-                        default=None)
+    parser.add_argument("--splitStrand", help="write forwards strand to <outBed>_f and"
+                        " reverse strand to <outBed>_b", action="store_true",
+                        default=False)
+    parser.add_argument("--splitSide", help="write left termini to <outBed>_l and"
+                        " right side to <outBed>_r", action="store_true",
+                        default=False)
+    parser.add_argument("--leaveName", help="dont change the name column",
+                        action="store_true", default=False)
     
     args = parser.parse_args()
     assert os.path.exists(args.inBed)
-    outFile = open(args.outBed, "w")
-    outFile2 = None
-    if args.rev is not None:
-        outFile2 = open(args.rev, "w")
+
+    # create the 4 file handles for the output. depending on
+    # args some of them can actually be same. 
+    name, ext = os.path.splitext(args.outBed)
+    f, b, l, r = "","","",""
+    if args.splitSide is True:
+        l, r = "_l", "_r"
+    if args.splitStrand is True:
+        f, b = "_f", "_b"
+    lfPath = "%s%s%s%s" % (name, l, f, ext)
+    rfPath = "%s%s%s%s" % (name, r, f, ext)
+    lbPath = "%s%s%s%s" % (name, l, b, ext)
+    rbPath = "%s%s%s%s" % (name, r, b, ext)
+    files = dict()
+    def getFile(path):
+        if path not in files:
+            assert path != args.inBed
+            file = open(path, "w")
+            files[path] = file            
+        return files[path]
+    lfFile = getFile(lfPath)
+    rfFile = getFile(rfPath)
+    lbFile = getFile(lbPath)
+    rbFile = getFile(rbPath)
 
     prevInterval = None
     for interval in BedTool(args.inBed):
         
         origInterval = copy.deepcopy(interval)
-
         # Right termini
         if prevInterval is not None:
             if interval.name != prevInterval.name:
                 raise RuntimeError("Consecutive intervals dont have same id"
                                    "\n%s%s" % (prevInterval, interval))
 
-            interval.name = "R_Term"
+            if args.leaveName is False:
+                interval.name = "R_Term"
             prevInterval = None
+            left = False
             
         # Left termini
         else:
-            interval.name = "L_Term"
+            if args.leaveName is False:
+                interval.name = "L_Term"
             prevInterval = origInterval
-        
-        if origInterval.name[-1] == "+":
-            outFile.write(str(interval))
-        elif args.rev is not None:
-            assert origInterval.name[-1] == "-"
-            outFile2.write(str(interval))
-                    
-    outFile.close()
-    if outFile2 is not None:
-        outFile2.close()
+            left = True
+
+        forward = origInterval.name[-1] == "+"
+
+        file = None
+        if left:
+            if forward:
+                file = lfFile
+            else:
+                file = lbFile
+        else:
+            if forward:
+                file = rfFile
+            else:
+                file = rbFile
+        file.write(str(interval))
+
+    cset = set()
+    for file in [lfFile, rfFile, lbFile, rbFile]:
+        if file not in cset:
+            file.close()
+            cset.add(file)
         
 if __name__ == "__main__":
     sys.exit(main())
