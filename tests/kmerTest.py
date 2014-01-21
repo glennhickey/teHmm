@@ -1,9 +1,6 @@
 #!/usr/bin/env python
 
-#Copyright (C) 2013 by Glenn Hickey
-#
-# Contains some fragments of code from sklearn/tests/test_hmm.py
-# (2010 - 2013, scikit-learn developers (BSD License))
+#Copyright (C) 2014 by Glenn Hickey
 #
 #Released under the MIT license, see LICENSE.txt
 import unittest
