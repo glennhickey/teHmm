@@ -60,8 +60,8 @@ def main(argv=None):
             fillInterval.end = max(prevInterval.start, interval.start)
             outFile.write(str(prevInterval))
             if fillInterval.start >= fillInterval.end:
-                print "No fill written for overlapping intervals\n%s%s" % (
-                    prevInterval, interval)
+                sys.stderr.write("No fill written for overlapping intervals\n%s%s" % (
+                    prevInterval, interval))
             else:
                 outFile.write(str(fillInterval))
             outFile.write(str(interval))
