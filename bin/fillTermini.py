@@ -56,10 +56,14 @@ def main(argv=None):
 
             # make the new interval, dont bother giving a new name for now
             fillInterval = copy.deepcopy(prevInterval)
-            fillInterval.start = prevInterval.end
-            fillInterval.end = interval.start
+            fillInterval.start = min(prevInterval.end, interval.end)
+            fillInterval.end = max(prevInterval.start, interval.start)
             outFile.write(str(prevInterval))
-            outFile.write(str(fillInterval))
+            if fillInterval.start >= fillInterval.end:
+                print "No fill written for overlapping intervals\n%s%s" % (
+                    prevInterval, interval)
+            else:
+                outFile.write(str(fillInterval))
             outFile.write(str(interval))
             prevInterval = None
             
