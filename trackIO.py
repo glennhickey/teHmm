@@ -164,7 +164,7 @@ def readBedIntervals(bedPath, ncol = 3,
 
 ###########################################################################
 
-def getMergedBedIntervals(bedPath, ncol=3):
+def getMergedBedIntervals(bedPath, ncol=3, sort = False):
     """ Merge all contiguous and overlapping intervals""" 
 
     if not os.path.isfile(bedPath):
@@ -172,6 +172,9 @@ def getMergedBedIntervals(bedPath, ncol=3):
     logging.debug("mergeBedIntervals(%s)" % bedPath)
     outIntervals = []
     bedTool = BedTool(bedPath)
+    if sort is True:
+        bedTool = bedTool.sort()
+        logging.debug("sortBed(%s)" % bedPath)
     for feat in bedTool.merge():
         outInterval = (feat.chrom, feat.start, feat.end)
         if ncol >= 4:

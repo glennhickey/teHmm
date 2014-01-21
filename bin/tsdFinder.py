@@ -68,7 +68,7 @@ def main(argv=None):
 
     # read intervals from the bed file
     logging.info("loading target intervals from %s" % args.inBed)
-    mergedIntervals = getMergedBedIntervals(args.inBed, ncol=4)
+    mergedIntervals = getMergedBedIntervals(args.inBed, ncol=4, sort=True)
     if mergedIntervals is None or len(mergedIntervals) < 1:
         raise RuntimeError("Could not read any intervals from %s" %
                            args.inBed)
