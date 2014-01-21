@@ -93,11 +93,13 @@ def buildSeqTable(bedIntervals):
         if seqName != prevName:
             assert seqName not in bedSeqTable
             if prevName is not None:
-                bedSeqTable[seqName] = (prevIdx, i)
+                bedSeqTable[prevName] = (prevIdx, i)
                 prevIdx = i
+        prevName = seqName
     seqName = bedIntervals[-1][0]
     assert seqName not in bedSeqTable
-    bedSeqTable[seqName] = (prevIdx, len(bedIntervals)) 
+    bedSeqTable[seqName] = (prevIdx, len(bedIntervals))
+    logging.debug("index has %d unique sequences" % len(bedSeqTable))
     return bedSeqTable
         
     
@@ -108,7 +110,6 @@ def findTsds(args, mergedIntervals):
     # index for quick lookups in bed file (to be used while scanning fasta file)
     seqTable = buildSeqTable(mergedIntervals)
     outTsds = []
-
     faFile = open(args.fastaSequence, "r")
     for seqName, sequence in fastaRead(faFile):
         if seqName in seqTable:
