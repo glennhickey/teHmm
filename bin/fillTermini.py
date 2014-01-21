@@ -50,7 +50,7 @@ def main(argv=None):
         # Right termini
         if prevInterval is not None:
             if interval.name != prevInterval.name and (
-                    interval.name != "R_term" or prevInterval.name != "L_term"):
+                    interval.name != "R_Term" or prevInterval.name != "L_Term"):
                 raise RuntimeError("Consecutive intervals dont have same id"
                                    "\n%s%s" % (prevInterval, interval))
 
