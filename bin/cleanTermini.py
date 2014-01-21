@@ -59,7 +59,7 @@ def main(argv=None):
             
         # Left termini
         else:
-            interval.name = "L_term"
+            interval.name = "L_Term"
             prevInterval = origInterval
         
         if origInterval.name[-1] == "+":
