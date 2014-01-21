@@ -192,8 +192,13 @@ def writeBedIntervals(intervals, outPath):
     """ write bed intervals to disk """
     outFile = open(outPath, "w")
     for interval in intervals:
-        bi = Interval(interval[0], interval[1], interval[2], 
-                      interval[3])
+        name, score = None, None
+        if len(interval) > 3:
+            name = str(interval[3])
+        if len(interval) > 4:
+            score = str(interval[4])
+        bi = Interval(interval[0], interval[1], interval[2], name=name,
+                      score=score)
         outFile.write(str(bi))    
 
 ###########################################################################

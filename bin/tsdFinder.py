@@ -28,7 +28,7 @@ def main(argv=None):
     parser = argparse.ArgumentParser(
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
         description="Find candidate TSDs (exact forward matches) flanking given"
-        "BED intervals")
+        "BED intervals.  Score is distance between TSD and bed interval.")
     parser.add_argument("fastaSequence", help="DNA sequence in FASTA format")
     parser.add_argument("inBed", help="BED file with TEs whose flanking regions "
                         "we wish to search")
@@ -172,14 +172,16 @@ def matchesToBedInts(args, bedInterval, matches):
         if args.id is True:
             name += "_" + str(args.nextId)
         offset = bedInterval[1] - args.left
-        left = (bedInterval[0], offset + match[0], offset + match[1], name)
+        left = (bedInterval[0], offset + match[0], offset + match[1], name,
+                bedInterval[1] - offset - match[1])
         bedIntervals.append(left)
 
         name = args.rightName
         if args.id is True:
             name += "_" + str(args.nextId)
         offset = bedInterval[2]
-        right = (bedInterval[0], offset + match[2], offset + match[3], name)
+        right = (bedInterval[0], offset + match[2], offset + match[3], name,
+                 offset + match[2] - bedInterval[2])
         bedIntervals.append(right)
 
         args.nextId += 1
