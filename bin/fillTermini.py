@@ -33,7 +33,7 @@ def main(argv=None):
     parser = argparse.ArgumentParser(
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
         description="Add interval between pairs of candidate termini.  Input "
-    "bed must have pairs of termini (left first) in contiguous rows.")
+    "bed must have pairs of termini (left first) in contiguous rows")
     parser.add_argument("inBed", help="bed with ltr results to process")
     parser.add_argument("outBed", help="bed to write output to.")
     
