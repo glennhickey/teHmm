@@ -17,7 +17,7 @@ def canFast(obs):
                                          obs.dtype == np.uint8))
         
 @cython.boundscheck(False)
-def fastAllLogProbs(obs, logProbs, outProbs):
+def fastAllLogProbs(obs, logProbs, outProbs, normalize):
     if isinstance(obs, TrackTable):
         obs = obs.getNumPyArray()
     assert isinstance(obs, np.ndarray)
@@ -34,11 +34,14 @@ def fastAllLogProbs(obs, logProbs, outProbs):
     cdef itype_t nStates = logProbs.shape[1]
 
     if obs.dtype == np.int32:
-        _fastAllLogProbs32(nObs, nTracks, nStates, obs, logProbs, outProbs)
+        _fastAllLogProbs32(nObs, nTracks, nStates, obs, logProbs, outProbs,
+                           normalize)
     elif obs.dtype == np.uint16:
-        _fastAllLogProbsU16(nObs, nTracks, nStates, obs, logProbs, outProbs)
+        _fastAllLogProbsU16(nObs, nTracks, nStates, obs, logProbs, outProbs,
+                            normalize)
     elif obs.dtype == np.uint8:
-        _fastAllLogProbsU8(nObs, nTracks, nStates, obs, logProbs, outProbs)
+        _fastAllLogProbsU8(nObs, nTracks, nStates, obs, logProbs, outProbs,
+                           normalize)
     else:
         print obs.dtype
         assert False
@@ -47,21 +50,23 @@ def fastAllLogProbs(obs, logProbs, outProbs):
 def _fastAllLogProbsU8(itype_t nObs, itype_t nTracks, itype_t nStates,
                       np.ndarray[np.uint8_t, ndim=2] obs,
                       np.ndarray[dtype_t, ndim=3] logProbs,
-                      np.ndarray[dtype_t, ndim=2] outProbs):
+                      np.ndarray[dtype_t, ndim=2] outProbs,
+                      dtype_t normalize):
     for i in xrange(nObs):
        for j in xrange(nStates):
-           outProbs[i,j] = 0.0
+           outProbs[i,j] = normalize
            for k in xrange(nTracks):
                outProbs[i, j] += logProbs[k, j, obs[i, k]]
        
 @cython.boundscheck(False)
 def _fastAllLogProbsU16(itype_t nObs, itype_t nTracks, itype_t nStates,
-                      np.ndarray[np.uint16_t, ndim=2] obs,
-                      np.ndarray[dtype_t, ndim=3] logProbs,
-                      np.ndarray[dtype_t, ndim=2] outProbs):
+                        np.ndarray[np.uint16_t, ndim=2] obs,
+                        np.ndarray[dtype_t, ndim=3] logProbs,
+                        np.ndarray[dtype_t, ndim=2] outProbs,
+                        dtype_t normalize):
     for i in xrange(nObs):
        for j in xrange(nStates):
-           outProbs[i,j] = 0.0
+           outProbs[i,j] = normalize
            for k in xrange(nTracks):
                outProbs[i, j] += logProbs[k, j, obs[i, k]]
 
@@ -69,10 +74,11 @@ def _fastAllLogProbsU16(itype_t nObs, itype_t nTracks, itype_t nStates,
 def _fastAllLogProbs32(itype_t nObs, itype_t nTracks, itype_t nStates,
                       np.ndarray[np.int32_t, ndim=2] obs,
                       np.ndarray[dtype_t, ndim=3] logProbs,
-                      np.ndarray[dtype_t, ndim=2] outProbs):
+                      np.ndarray[dtype_t, ndim=2] outProbs,
+                      dtype_t normalize):
     for i in xrange(nObs):
        for j in xrange(nStates):
-           outProbs[i,j] = 0.0
+           outProbs[i,j] = normalize
            for k in xrange(nTracks):
                outProbs[i, j] += logProbs[k, j, obs[i, k]]
 

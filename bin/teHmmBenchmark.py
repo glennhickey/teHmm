@@ -56,6 +56,12 @@ def main(argv=None):
     parser.add_argument("--cross", help="Do 50/50 cross validation by training"
                         " on first half input and validating on second",
                         action="store_true", default=False)
+    parser.add_argument("--emFac", help="Normalization factor for weighting"
+                        " emission probabilities because when there are "
+                        "many tracks, the transition probabilities can get "
+                        "totally lost. 0 = no normalization. 1 ="
+                        " divide by number of tracks.  k = divide by number "
+                        "of tracks / k", type=int, default=0)
     
     args = parser.parse_args()
     if args.verbose is True:
@@ -80,6 +86,7 @@ def main(argv=None):
         trainFlags = "--numStates %d" % args.emStates
     else:
         trainFlags = "--supervised"
+    trainFlags += " --emFac %d" % args.emFac
 
     #todo: try to get timing for each command
     commands = []

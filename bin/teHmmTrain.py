@@ -55,6 +55,12 @@ def main(argv=None):
     parser.add_argument("--pairStates", help="Comma-separated list of states"
                         " (from trainingBed) that are treated as pair-emitors"
                         " for the CFG", default=None)
+    parser.add_argument("--emFac", help="Normalization factor for weighting"
+                        " emission probabilities because when there are "
+                        "many tracks, the transition probabilities can get "
+                        "totally lost. 0 = no normalization. 1 ="
+                        " divide by number of tracks.  k = divide by number "
+                        "of tracks / k", type=int, default=0)
      
     args = parser.parse_args()
     if args.cfg is True:
@@ -95,7 +101,8 @@ def main(argv=None):
     numSymbolsPerTrack = trackData.getNumSymbolsPerTrack()
     logging.debug("numSymbolsPerTrack=%s" % numSymbolsPerTrack)
     emissionModel = IndependentMultinomialEmissionModel(args.numStates,
-                                                        numSymbolsPerTrack)
+                                                        numSymbolsPerTrack,
+                                                        normalize=args.emFac)
 
     # create the model
     if not args.cfg:
