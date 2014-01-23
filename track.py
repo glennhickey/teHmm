@@ -274,7 +274,7 @@ class IntegerTrackTable(TrackTable):
         super(IntegerTrackTable, self).__init__(numTracks, chrom, start, end)
         
         #: (end-start) X (numTracks) integer data array
-        self.data = np.empty((end-start, numTracks), dtype=dtype)
+        self.data = np.zeros((end-start, numTracks), dtype=dtype)
         self.iinfo = np.iinfo(dtype)
 
     def __getitem__(self, index):
