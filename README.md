@@ -60,6 +60,10 @@ The TE model is created by training on given track data using the `teHmmTrain.py
 * **EM (default)** Model is trained directly from the track data.
 * **supervised** (`--supervised` option) Model is trained on given states in a bed file. 
 
+### EM Training
+
+The TE can be trained from unnanotated (ie true states not known) data using expectation maximization (EM).   The minum information required is the number of states in the model, specifiable with the `--numStates` option.   Transition probabilities and state names can be optionally supplied in a Graphviz-like notation via the `--transProbs` option, where each line of the file corresponds to a transition probability.  These probabilities are either used as the initial parameters in training (default) or are fixed in the output model (`--fixTrans`).
+
 ### Constructing a Gold Standard for Supervised Training
 
 The Gold Standard BED file for supervised training must satisfy the following constraints:

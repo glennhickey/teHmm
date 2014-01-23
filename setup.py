@@ -8,9 +8,11 @@ setup(
   ext_modules = cythonize([Extension("_emission", ["_emission.pyx"],
                                      include_dirs=[numpy.get_include()]),
                            Extension("_cfg", ["_cfg.pyx"],
-                                     include_dirs=[numpy.get_include()],
-                                     extra_compile_args=['-fopenmp'],
-                                     extra_link_args=['-fopenmp'])])
+                                     include_dirs=[numpy.get_include()]
+                                     #,
+                                     #extra_compile_args=['-fopenmp'],
+                                     #extra_link_args=['-fopenmp']
+                                     )])
 )
 
 #Cython.Build import cythonize
