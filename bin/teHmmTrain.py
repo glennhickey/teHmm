@@ -8,6 +8,8 @@ import sys
 import os
 import argparse
 import logging
+import random
+import numpy as np
 
 from teHmm.track import TrackData
 from teHmm.trackIO import readBedIntervals, getMergedBedIntervals
@@ -40,7 +42,7 @@ def main(argv=None):
                         " model.  Transition parameters will be estimated"
                         " directly from this information rather than EM."
                         " NOTE: The number of states will be determined "
-                        "from the bed.  States must be labled 0,1,2 etc.",
+                        "from the bed.",
                         action = "store_true", default = False)
     parser.add_argument("--verbose", help="Print out detailed logging messages",
                         action = "store_true", default = False)
@@ -61,6 +63,14 @@ def main(argv=None):
                         "totally lost. 0 = no normalization. 1 ="
                         " divide by number of tracks.  k = divide by number "
                         "of tracks / k", type=int, default=0)
+    parser.add_argument("--transProbs", help="Path of text file where each "
+                        "line has three entries: FromState ToState Probability"
+                        ".  This file (all other transitions get probability 0"
+                        " is used to specifiy the initial transition model).",
+                        default = None)
+    parser.add_argument("--fixTrans", help="Do not learn transition parameters",
+                        action="store_true", default=False)  
+        
      
     args = parser.parse_args()
     if args.cfg is True:
@@ -68,6 +78,10 @@ def main(argv=None):
         assert args.saPrior >= 0. and args.saPrior <= 1.
     if args.pairStates is not None:
         assert args.cfg is True
+    if args.transProbs is not None or args.fixTrans is True:
+        if args.supervised is True or args.cfg is True:
+            raise RuntimeError("--transProbs and --fixTrans are not currently"
+                               " compatible with --supervised or --cfg.")
         
     if args.verbose is True:
         logging.basicConfig(level=logging.DEBUG)
@@ -95,20 +109,29 @@ def main(argv=None):
         truthIntervals = readBedIntervals(args.trainingBed, ncol=4)
         catMap = mapStateNames(truthIntervals)
         args.numStates = len(catMap)
-        
+
+    userTrans = None
+    if args.transProbs is not None:
+        userTrans, catMap = parseMatrixFile(args.transProbs)
+        # state number is overrided by the transProbs file
+        args.numStates = len(catMap)
+
     # create the independent emission model
     logging.info("creating emission model")
     numSymbolsPerTrack = trackData.getNumSymbolsPerTrack()
     logging.debug("numSymbolsPerTrack=%s" % numSymbolsPerTrack)
-    emissionModel = IndependentMultinomialEmissionModel(args.numStates,
-                                                        numSymbolsPerTrack,
-                                                        normalize=args.emFac)
+    emissionModel = IndependentMultinomialEmissionModel(
+        args.numStates,
+        numSymbolsPerTrack,
+        normalizeFac=args.emFac,
+        randomize=not args.supervised)
 
     # create the model
     if not args.cfg:
         logging.info("creating hmm model")
         model = MultitrackHmm(emissionModel, n_iter=args.iter,
-                              state_name_map=catMap)
+                              state_name_map=catMap, transmat=userTrans,
+                              fixTrans = args.fixTrans)
     else:
         pairEM = PairEmissionModel(emissionModel, [args.saPrior] *
                                    emissionModel.getNumStates())
@@ -145,6 +168,41 @@ def mapStateNames(bedIntervals):
         bedIntervals[idx] = (interval[0], interval[1], interval[2],
                              catMap.getMap(interval[3], update=True))
     return catMap
+
+def parseMatrixFile(path):
+    """Load up the transition model as specifed in a text file:
+    from to prob, into a matrix.  Retruns the matrix along with a naming
+    map as a tuple (matrix, nameMap)"""
+    logging.debug("Parsing transition probabilities from %s" % path)
+    assert os.path.isfile(path)
+    f = open(path, "r")
+    catMap = CategoryMap(reserved=0)
+    for line in f:
+        if line.lstrip()[0] is not "#":
+            toks = line.split()
+            assert len(toks) == 3
+            float(toks[2])
+            catMap.getMap(toks[0], update=True)
+            catMap.getMap(toks[1], update=True)
+    numStates = len(catMap)
+    f.seek(0)
+    transMat = np.zeros((numStates, numStates), dtype=np.float)
+    for line in f:
+        if line.lstrip()[0] is not "#":
+            toks = line.split()
+            transMat[catMap.getMap(toks[0]), catMap.getMap(toks[1])] = toks[2]
+    f.close()
+
+    # may as well make sure the matrix is normalized
+    for row in xrange(numStates):
+        tot = 0.0
+        for col in xrange(numStates):
+            tot += transMat[row, col]
+        assert tot != 0.0
+        for col in xrange(numStates):
+            transMat[row, col] /= tot
+
+    return (transMat, catMap)
     
 if __name__ == "__main__":
     sys.exit(main())

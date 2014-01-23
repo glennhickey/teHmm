@@ -13,6 +13,7 @@ import sys
 import numpy as np
 import pickle
 import string
+import copy
 import logging
 from collections import Iterable
 from numpy.testing import assert_array_equal, assert_array_almost_equal
@@ -40,7 +41,8 @@ class MultitrackHmm(_BaseHMM):
                  n_iter=10, thresh=1e-2, params=string.ascii_letters,
                  init_params=string.ascii_letters,
                  state_name_map=None,
-                 fudge=0.0):
+                 fudge=0.0,
+                 fixTrans=False):
         if emissionModel is not None:
             n_components = emissionModel.getNumStates()
         else:
@@ -59,7 +61,8 @@ class MultitrackHmm(_BaseHMM):
                           thresh=thresh,
                           params=params,
                           init_params=init_params)
-        
+        # remember init_params
+        self.init_params = init_params
         #: emission model is specified as parameter here
         self.emissionModel = emissionModel
         #: a TrackList object specifying information about the tracks
@@ -70,6 +73,10 @@ class MultitrackHmm(_BaseHMM):
         # to prevent zero probabilities.  The bigger it is, the flatter
         # the distribution... (note that emission class has its own)
         self.fudge = fudge
+        # freeze input transmat
+        self.fixTrans = fixTrans
+        # remember where the transmat came from
+        self.userTrans = copy.deepcopy(transmat)
 
     def train(self, trackData):
         """ Use EM to estimate best parameters from scratch (unsupervised)"""
@@ -200,12 +207,17 @@ class MultitrackHmm(_BaseHMM):
         return self.emissionModel.sample(state)
 
     def _init(self, obs, params='ste'):
+        if self.fixTrans is True:
+            params = 'se'
         super(MultitrackHmm, self)._init(obs, params=params)
         self.random_state = check_random_state(self.random_state)
-        # note that we diverge here from MultinomialHMM which only
-        # inits the emission model if 'e' is specified in params and then
-        # it does a full random (instead of flat)
-        self.emissionModel.initParams()
+        randomize = 'e' in params
+        self.emissionModel.initParams(randomize=randomize)
+
+        # if a transmat was specified, make sure it wasn't modified by
+        # any monkey business in the base class
+        if self.userTrans is not None:
+            self.transmat_ = copy.deepcopy(self.userTrans)
 
     def _initialize_sufficient_statistics(self):
         stats = super(MultitrackHmm, self)._initialize_sufficient_statistics()
@@ -230,6 +242,12 @@ class MultitrackHmm(_BaseHMM):
         if 'e' in params:
             self.emissionModel.maximize(stats['obs'])
         logging.debug("ending MultitrackHMM M-step")
+
+        # if a fixTrans was specified, make sure it wasn't modified by
+        # any monkey business in the base class
+        if self.fixTrans is True:
+            self.transmat_ = copy.deepcopy(self.userTrans)
+
 
     def fit(self, obs, **kwargs):
         return _BaseHMM.fit(self, obs, **kwargs)

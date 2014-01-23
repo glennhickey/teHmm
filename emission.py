@@ -37,7 +37,8 @@ for each track because we make the simplifying assumption that the tracks are
 independent """
 class IndependentMultinomialEmissionModel(object):
     def __init__(self, numStates, numSymbolsPerTrack, params = None,
-                 zeroAsMissingData = True, fudge = 0.0, normalizeFac = 0.0):
+                 zeroAsMissingData = True, fudge = 0.0, normalizeFac = 0.0,
+                 randomize=False):
         self.numStates = numStates
         self.numTracks = len(numSymbolsPerTrack)
         self.numSymbolsPerTrack = numSymbolsPerTrack
@@ -59,7 +60,7 @@ class IndependentMultinomialEmissionModel(object):
         self.normalizeFac = 1.
         if normalizeFac > 0:
             self.normalizeFac = float(normalizeFac) / float(self.numTracks)
-        self.initParams(params)
+        self.initParams(params=params, randomize=randomize)
 
     def getLogProbs(self):
         return self.logProbs
@@ -96,7 +97,7 @@ class IndependentMultinomialEmissionModel(object):
             for val in itertools.product(*valArrays):
                 yield val
     
-    def initParams(self, params = None):
+    def initParams(self, params = None, randomize=False):
         """ initalize emission parameters such that all values are
         equally probable for each category.  if params is specifed, then
         assume it is the emission probability matrix and set our log probs
@@ -117,8 +118,12 @@ class IndependentMultinomialEmissionModel(object):
             logStateList = []
             for j in xrange(self.numStates):
                 if params is None:
-                    dist = normalize(1. + np.zeros(
+                    if randomize is False:
+                        dist = normalize(1. + np.zeros(
                         self.numSymbolsPerTrack[i], dtype=np.float))
+                    else:
+                        dist = normalize(np.random.random_sample(
+                            self.numSymbolsPerTrack[i]))
                 else:
                     dist = np.array(params[i][j], dtype=np.float)
                 # tack a 1 at the front of dist.  it'll be our uknown value
