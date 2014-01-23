@@ -54,9 +54,10 @@ def _fastAllLogProbsU8(itype_t nObs, itype_t nTracks, itype_t nStates,
                       dtype_t normalize):
     for i in xrange(nObs):
        for j in xrange(nStates):
-           outProbs[i,j] = normalize
+           outProbs[i,j] = 0.0
            for k in xrange(nTracks):
                outProbs[i, j] += logProbs[k, j, obs[i, k]]
+           outProbs[i, j] *= normalize
        
 @cython.boundscheck(False)
 def _fastAllLogProbsU16(itype_t nObs, itype_t nTracks, itype_t nStates,
@@ -66,9 +67,10 @@ def _fastAllLogProbsU16(itype_t nObs, itype_t nTracks, itype_t nStates,
                         dtype_t normalize):
     for i in xrange(nObs):
        for j in xrange(nStates):
-           outProbs[i,j] = normalize
+           outProbs[i,j] = 0.0
            for k in xrange(nTracks):
                outProbs[i, j] += logProbs[k, j, obs[i, k]]
+           outProbs[i, j] *= normalize
 
 @cython.boundscheck(False)
 def _fastAllLogProbs32(itype_t nObs, itype_t nTracks, itype_t nStates,
@@ -78,9 +80,10 @@ def _fastAllLogProbs32(itype_t nObs, itype_t nTracks, itype_t nStates,
                       dtype_t normalize):
     for i in xrange(nObs):
        for j in xrange(nStates):
-           outProbs[i,j] = normalize
+           outProbs[i,j] = 0.0
            for k in xrange(nTracks):
                outProbs[i, j] += logProbs[k, j, obs[i, k]]
+           outProbs[i, j] *= normalize
 
 @cython.boundscheck(False)
 def fastAccumulateStats(obs, obsStats, posteriors):

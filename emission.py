@@ -37,7 +37,7 @@ for each track because we make the simplifying assumption that the tracks are
 independent """
 class IndependentMultinomialEmissionModel(object):
     def __init__(self, numStates, numSymbolsPerTrack, params = None,
-                 zeroAsMissingData = True, fudge = 0.0, normalize = 0.0):
+                 zeroAsMissingData = True, fudge = 0.0, normalizeFac = 0.0):
         self.numStates = numStates
         self.numTracks = len(numSymbolsPerTrack)
         self.numSymbolsPerTrack = numSymbolsPerTrack
@@ -55,10 +55,10 @@ class IndependentMultinomialEmissionModel(object):
         #    weighted no matter how many tracks there are
         # k: emission probability is divided by (number of tracks / k):
         # (transform into constant to add when doing logprobs)
-        # (ie logprob --> logprob + self.normalize)
-        self.normalize = 0
-        if normalize > 0:
-            self.normalize = np.log(float(normalize) / (self.numTracks))
+        # (ie logprob --> logprob + self.normalizeFac)
+        self.normalizeFac = 1.
+        if normalizeFac > 0:
+            self.normalizeFac = float(normalizeFac) / float(self.numTracks)
         self.initParams(params)
 
     def getLogProbs(self):
@@ -139,7 +139,7 @@ class IndependentMultinomialEmissionModel(object):
     def singleLogProb(self, state, singleObs):
         """ Compute the log probability of a single observation, obs given
         a state."""
-        logProb = self.normalize    
+        logProb = self.normalizeFac    
         for track, obsSymbol in enumerate(singleObs):
             # independence assumption means we can just add the tracks
             logProb += self.logProbs[track][state][int(obsSymbol)]
@@ -155,7 +155,7 @@ class IndependentMultinomialEmissionModel(object):
         obsLogProbs = np.zeros((obs.shape[0], self.numStates), dtype=np.float)
         if canFast(obs):
             logging.debug("Cython log prob enabled")
-            fastAllLogProbs(obs, self.logProbs, obsLogProbs, self.normalize)
+            fastAllLogProbs(obs, self.logProbs, obsLogProbs, self.normalizeFac)
         else:
             for i in xrange(len(obs)):
                 for state in xrange(self.numStates):
