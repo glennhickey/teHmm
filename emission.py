@@ -139,11 +139,11 @@ class IndependentMultinomialEmissionModel(object):
     def singleLogProb(self, state, singleObs):
         """ Compute the log probability of a single observation, obs given
         a state."""
-        logProb = self.normalizeFac    
+        logProb = 0.0
         for track, obsSymbol in enumerate(singleObs):
             # independence assumption means we can just add the tracks
             logProb += self.logProbs[track][state][int(obsSymbol)]
-        return logProb
+        return logProb * self.normalizeFac
 
     def allLogProbs(self, obs):
         """ obs is an array of observation vectors.  return an array of log
