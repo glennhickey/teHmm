@@ -9,9 +9,9 @@ setup(
                                      include_dirs=[numpy.get_include()]),
                            Extension("_cfg", ["_cfg.pyx"],
                                      include_dirs=[numpy.get_include()]
-                                     #,
-                                     #extra_compile_args=['-fopenmp'],
-                                     #extra_link_args=['-fopenmp']
+                                     ,
+                                     extra_compile_args=['-fopenmp'],
+                                     extra_link_args=['-fopenmp']
                                      )])
 )
 
