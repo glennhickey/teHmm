@@ -286,9 +286,16 @@ class IntegerTrackTable(TrackTable):
         assert row < self.getNumTracks()
         assert len(rowArray) == len(self)
         for i in xrange(len(self)):
-            assert rowArray[i] <= self.iinfo.max and \
-                   rowArray[i] >= self.iinfo.min
-            self.data[i][row] = rowArray[i]
+            if rowArray[i] > self.iinfo.max:
+                sys.stderr("WARNING Clamping input value %d of track# %d from "
+                           "%d to %d" % (i, row, rowArray[i], self.iinfo.max))
+                self.data[i][row] = self.iinfo.max
+            elif rowArray[i] < self.iinfo.min:
+                sys.stderr("WARNING Clamping input value %d of track# %d from "
+                           "%d to %d" % (i, row, rowArray[i], self.iinfo.min))
+                self.data[i][row] = self.iinfo.min
+            else:
+                self.data[i][row] = rowArray[i]
 
     def getNumPyArray(self):
         return self.data
