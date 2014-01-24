@@ -88,6 +88,14 @@ def main(argv=None):
         trainFlags = "--supervised"
     trainFlags += " --emFac %d" % args.emFac
 
+    # write out command line for posteriorty's sake
+    if not os.path.exists(args.outputDir):
+        os.makedirs(args.outputDir)
+    cmdPath = os.path.join(args.outputDir, "teHmmBenchmark_cmd.txt")
+    cmdFile = open(cmdPath, "w")
+    cmdFile.write(" ".join(argv) + "\n")
+    cmdFile.close()
+                           
     #todo: try to get timing for each command
     commands = []
     rows = dict()
@@ -166,6 +174,13 @@ def main(argv=None):
                 evalBed,
                 compPath,
                 rowPath)
+
+            # remember command
+            inCmdPath = os.path.join(outDir,
+                                    os.path.splitext(base)[0] + "_cmd.txt")
+            inCmdFile = open(inCmdPath, "w")
+            inCmdFile.write(command + "\n")
+            inCmdFile.close()
 
             commands.append(command)
             
