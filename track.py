@@ -287,12 +287,14 @@ class IntegerTrackTable(TrackTable):
         assert len(rowArray) == len(self)
         for i in xrange(len(self)):
             if rowArray[i] > self.iinfo.max:
-                sys.stderr("WARNING Clamping input value %d of track# %d from "
-                           "%d to %d" % (i, row, rowArray[i], self.iinfo.max))
+                sys.stderr.write("WARNING Clamping input value %d of track# %d"
+                                 " from %d to %d\n" % (i, row, rowArray[i],
+                                                       self.iinfo.max))
                 self.data[i][row] = self.iinfo.max
             elif rowArray[i] < self.iinfo.min:
-                sys.stderr("WARNING Clamping input value %d of track# %d from "
-                           "%d to %d" % (i, row, rowArray[i], self.iinfo.min))
+                sys.stderr.write("WARNING Clamping input value %d of track# %d"
+                                 " from %d to %d\n" % (i, row, rowArray[i],
+                                                       self.iinfo.min))
                 self.data[i][row] = self.iinfo.min
             else:
                 self.data[i][row] = rowArray[i]
