@@ -48,7 +48,6 @@ def main(argv=None):
             numVals += 1
             valDict[val] = 1
             total += val
-            totalSq += val * val
         except:
             continue
 
