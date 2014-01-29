@@ -7,8 +7,9 @@ import sys
 import os
 import argparse
 import copy
+import math
 from pybedtools import BedTool, Interval
-
+from teHmm.common import EPSILON
 """
 Get some basic statistics about *NUMERIC* values in a particular column of a
 text file (ex BED or WIG).  Non-numeric values are ignored. Information is
@@ -26,10 +27,27 @@ def main(argv=None):
     parser.add_argument("inFile", help="input text file")
     parser.add_argument("column", help="column (starting at 1) to process",
                         type=int)
+    parser.add_argument("--scale", help="compute stats after applying given"
+                        " (linear) scale factor (and rounding to int)",
+                        type=float, default=None)
+    parser.add_argument("--logScale", help="compute stats after applying given"
+                        " scale factor to logarithm of each value (and "
+                        "rounding to int)", type=float,
+                        default=None)
     
     args = parser.parse_args()
     assert os.path.exists(args.inFile)
     assert args.column > 0
+    assert args.scale is None or args.logScale is None
+    if args.scale is not None:
+        def tform(v):
+            return int(float(v) * args.scale)
+    elif args.logScale is not None:
+        def tform(v):
+            return int(math.log(float(v) + EPSILON) * args.logScale)
+    else:
+        def tform(v):
+            return float(v)
 
     f = open(args.inFile, "r")
     col = args.column - 1
@@ -39,10 +57,11 @@ def main(argv=None):
     numVals = 0
     numLines = 0
     total = 0.0
+            
     for line in f:
         numLines += 1
         try:
-            val = float(line.split()[col])
+            val = tform(line.split()[col])
             minVal = min(val, minVal)
             maxVal = max(val, maxVal)
             numVals += 1
