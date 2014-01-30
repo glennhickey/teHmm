@@ -328,8 +328,9 @@ def applyUserEmissions(hmm, userEmPath):
                 if symbolName == "0" or symbolName == "None":
                     symbolName = None
             elif not symbolMap.has(symbolName):
-                raise RuntimeError("Track %s Symbol %s not found in data" %
-                                   (trackName, symbolName))
+                sys.stderr.write("Warning: Track %s Symbol %s not found in"
+                                 "data (setting as null value)\n" %
+                                 (trackName, symbolName))
             symbol = symbolMap.getMap(symbolName)
             assert symbol in emission.getTrackSymbols(track)
             logProbs[track, state, symbol] = myLog(prob)
