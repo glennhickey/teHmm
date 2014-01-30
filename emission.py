@@ -232,11 +232,10 @@ class IndependentMultinomialEmissionModel(object):
             logging.warning("Unable two validate emission model because"
                             " there are too many (%d) symbosl" % numSymbols)
             return
-        if self.normalizeFac != 0:
+        if self.normalizeFac != 1.0:
             # sum-to-one doesn't work for normalizeFac.  Should eventually
             # just incorporate into check below, however.
             return
-        
         allSymbols = [x for x in self.getSymbols()]
         assert len(allSymbols) == numSymbols
         assert isinstance(self.logProbs, np.ndarray)

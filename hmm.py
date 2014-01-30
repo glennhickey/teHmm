@@ -189,6 +189,9 @@ class MultitrackHmm(_BaseHMM):
     def getStateNameMap(self):
         return self.stateNameMap
 
+    def getEmissionModel(self):
+        return self.emissionModel
+
     def validate(self):
         assert len(self.startprob_) == self.emissionModel.getNumStates()
         assert not isinstance(self.startprob_[0], Iterable)

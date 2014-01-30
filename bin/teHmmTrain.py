@@ -16,7 +16,7 @@ from teHmm.trackIO import readBedIntervals, getMergedBedIntervals
 from teHmm.hmm import MultitrackHmm
 from teHmm.emission import IndependentMultinomialEmissionModel
 from teHmm.emission import PairEmissionModel
-from teHmm.track import CategoryMap
+from teHmm.track import CategoryMap, BinaryMap
 from teHmm.cfg import MultitrackCfg
 from teHmm.modelIO import saveModel
 from teHmm.common import myLog
@@ -64,18 +64,30 @@ def main(argv=None):
                         "totally lost. 0 = no normalization. 1 ="
                         " divide by number of tracks.  k = divide by number "
                         "of tracks / k", type=int, default=0)
-    parser.add_argument("--transProbs", help="Path of text file where each "
+    parser.add_argument("--initTransProbs", help="Path of text file where each "
                         "line has three entries: FromState ToState Probability"
-                        ".  This file (all other transitions get probability 0"
-                        " is used to specifiy the initial transition model)."
-                        "  If the --supervised option is used, these "
-                        " transition probabilities will override any learned "
-                        " probabilities." ,
+                        ".  This file (all other transitions get probability 0)"
+                        " is used to specifiy the initial transition model.",
                         default = None)
     parser.add_argument("--fixTrans", help="Do not learn transition parameters"
-                        " (best used with --transProbs)",
-                        action="store_true", default=False)  
-        
+                        " (best used with --iniTransProbs)",
+                        action="store_true", default=False)
+    parser.add_argument("--forceTransProbs",
+                        help="Path of text file where each "
+                        "line has three entries: FromState ToState Probability" 
+                        ". These transition probabilities will override any "
+                        " learned probabilities after training (unspecified "
+                        "will not be set to 0 in this case. the learned values"
+                        " will be kept, but normalized as needed" ,
+                        default=None)
+    parser.add_argument("--forceEmProbs", help="Path of text file where each "
+                        "line has four entries: State Track Symbol Probability"
+                        ". These "
+                        "emission probabilities will override any learned"
+                        " probabilities after training (unspecified "
+                        "will not be set to 0 in this case. the learned values"
+                        " will be kept, but normalized as needed." ,
+                        default = None)
      
     args = parser.parse_args()
     if args.cfg is True:
@@ -83,12 +95,16 @@ def main(argv=None):
         assert args.saPrior >= 0. and args.saPrior <= 1.
     if args.pairStates is not None:
         assert args.cfg is True
-    if args.transProbs is not None or args.fixTrans is True:
+    if args.initTransProbs is not None or args.fixTrans is True:
         if args.cfg is True:
             raise RuntimeError("--transProbs and --fixTrans are not currently"
                                " compatible with --cfg.")
     if args.fixTrans is True and args.supervised is True:
         raise RuntimeError("--fixTrans option not compatible with --supervised")
+    if (args.forceTransProbs is not None or args.forceEmProbs is not None) \
+      and args.cfg is True:
+        raise RuntimeError("--forceTransProbs and --forceEmProbs are not "
+                           "currently compatible with --cfg")
         
     if args.verbose is True:
         logging.basicConfig(level=logging.DEBUG)
@@ -109,8 +125,8 @@ def main(argv=None):
 
     catMap = None
     userTrans = None
-    if args.supervised is False and args.transProbs is not None:
-        userTrans, catMap = parseMatrixFile(args.transProbs)
+    if args.supervised is False and args.initTransProbs is not None:
+        userTrans, catMap = parseMatrixFile(args.initTransProbs)
         # state number is overrided by the transProbs file
         args.numStates = len(catMap)
 
@@ -157,9 +173,13 @@ def main(argv=None):
         model.train(trackData)
     else:
         logging.info("training from input bed states")
-        model.supervisedTrain(trackData, truthIntervals, )
-        if args.transProbs is not None:
-            applyUserTrans(model, args.transProbs)
+        model.supervisedTrain(trackData, truthIntervals)
+
+    # hack user-specified values back in as desired before saving
+    if args.forceTransProbs is not None:
+        applyUserTrans(model, args.forceTransProbs)
+    if args.forceEmProbs is not None:
+        applyUserEmissions(model, args.forceEmProbs)
 
     # write the model to a pickle
     logging.info("saving trained model to %s" % args.outputModel)
@@ -223,7 +243,7 @@ def applyUserTrans(hmm, userTransPath):
     N = len(catMap)
     mask = np.zeros((N, N), dtype=np.int8)
     for line in f:
-        if line.lstrip()[0] is not "#":
+        if len(line.lstrip()) > 0 and line.lstrip()[0] is not "#":
             toks = line.split()
             assert len(toks) == 3
             prob = float(toks[2])
@@ -271,7 +291,87 @@ def applyUserTrans(hmm, userTransPath):
     
     f.close()
     
+
+def applyUserEmissions(hmm, userEmPath):
+    """ modify a HMM that was constructed using supervisedTrain() so that
+    it contains the emission probabilities specified in the userEmPath File."""
+    logging.debug("Applying user emissions to supervised trained HMM")
+    f = open(userEmPath, "r")
+    stateMap = hmm.getStateNameMap()
+    trackList = hmm.trackList
+    emission = hmm.getEmissionModel()
+    logProbs = emission.getLogProbs()
+    mask = np.zeros(logProbs.shape, dtype=np.int8)
+
+    # scan file and set values in logProbs matrix
+    for line in f:
+        if len(line.lstrip()) > 0 and line.lstrip()[0] is not "#":
+            toks = line.split()
+            assert len(toks) == 4
+            stateName = toks[0]
+            trackName = toks[1]
+            symbolName = toks[2]
+            prob = float(toks[3])
+            if not stateMap.has(stateName):
+                raise RuntimeError("State %s not found in supervised data" %
+                                   stateName)
+            state = stateMap.getMap(stateName)
+            track = trackList.getTrackByName(trackName)
+            if track is None:
+                raise RuntimeError("Track %s not found in supervised data" %
+                                   trackName)
+            symbolMap = track.getValueMap()
+            track = track.getNumber()
+            if isinstance(symbolMap, BinaryMap):
+                # hack in conversion for binary data, where map expects either
+                # None or non-None
+                if symbolName == "0" or symbolName == "None":
+                    symbolName = None
+            elif not symbolMap.has(symbolName):
+                raise RuntimeError("Track %s Symbol %s not found in data" %
+                                   (trackName, symbolName))
+            symbol = symbolMap.getMap(symbolName)
+            assert symbol in emission.getTrackSymbols(track)
+            logProbs[track, state, symbol] = myLog(prob)
+            mask[track, state, symbol] = 1
+
+    # easier to work outside log space
+    probs = np.exp(logProbs)
     
+    # normalize all other probabilities (ie that are unmaksed) so that they
+    # add up.
+    for track in xrange(emission.getNumTracks()):
+        for state in xrange(emission.getNumStates()):
+            # total probability of learned states
+            curTotal = 0.0
+            # total probability of learned states after normalization
+            tgtTotal = 1.0            
+            for symbol in emission.getTrackSymbols(track):
+                if mask[track, state, symbol] == 1:
+                    tgtTotal -= probs[track, state, symbol]
+                else:
+                    curTotal += probs[track, state, symbol]
+                if tgtTotal < 0.:
+                    raise RuntimeError("User defined probability from state %s"
+                                       " for track %s exceeds 1" %
+                                       (stateMap.getMapBack(state),
+                                        symbolMap.getMapBack(symbol)))
+
+            # same correction as applyUserTransmissions()....
+            for symbol in emission.getTrackSymbols(track):
+                if mask[track, state, symbol] == 0:
+                    if tgtTotal == 0.:
+                        probs[track, state, symbol] = 0.
+                    else:
+                        probs[track, state, symbol] *= (tgtTotal / curTotal)
+
+    # Make sure we set our new log probs back into object
+    emission.logProbs = myLog(probs)
+    
+    emission.validate()
+    
+    f.close()
+
 if __name__ == "__main__":
     sys.exit(main())
 
