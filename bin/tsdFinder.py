@@ -117,7 +117,9 @@ def findTsds(args, mergedIntervals):
             bedRange = seqTable[seqName]
             for bedIdx in xrange(bedRange[0], bedRange[1]):
                 bedInterval = mergedIntervals[bedIdx]
-                outTsds += intervalTsds(args, sequence, bedInterval)
+                # we make sequence lower case below because we dont care
+                # about soft masking
+                outTsds += intervalTsds(args, sequence.lower(), bedInterval)
         else:
             logging.debug("Skipping FASTA sequence %s because no intervals "
                           "found" % seqName)
