@@ -82,7 +82,7 @@ def main(argv=None):
     dTotal = 0.0
     for line in f:
         try:
-            val = float(line.split()[col])
+            val = tform(line.split()[col])
             dTotal += (val - meanVal) * (val - meanVal)
         except:
             continue
