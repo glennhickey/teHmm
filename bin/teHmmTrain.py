@@ -19,6 +19,7 @@ from teHmm.emission import PairEmissionModel
 from teHmm.track import CategoryMap
 from teHmm.cfg import MultitrackCfg
 from teHmm.modelIO import saveModel
+from teHmm.common import myLog
 
 def main(argv=None):
     if argv is None:
@@ -66,9 +67,13 @@ def main(argv=None):
     parser.add_argument("--transProbs", help="Path of text file where each "
                         "line has three entries: FromState ToState Probability"
                         ".  This file (all other transitions get probability 0"
-                        " is used to specifiy the initial transition model).",
+                        " is used to specifiy the initial transition model)."
+                        "  If the --supervised option is used, these "
+                        " transition probabilities will override any learned "
+                        " probabilities." ,
                         default = None)
-    parser.add_argument("--fixTrans", help="Do not learn transition parameters",
+    parser.add_argument("--fixTrans", help="Do not learn transition parameters"
+                        " (best used with --transProbs)",
                         action="store_true", default=False)  
         
      
@@ -79,9 +84,11 @@ def main(argv=None):
     if args.pairStates is not None:
         assert args.cfg is True
     if args.transProbs is not None or args.fixTrans is True:
-        if args.supervised is True or args.cfg is True:
+        if args.cfg is True:
             raise RuntimeError("--transProbs and --fixTrans are not currently"
-                               " compatible with --supervised or --cfg.")
+                               " compatible with --cfg.")
+    if args.fixTrans is True and args.supervised is True:
+        raise RuntimeError("--fixTrans option not compatible with --supervised")
         
     if args.verbose is True:
         logging.basicConfig(level=logging.DEBUG)
@@ -101,6 +108,12 @@ def main(argv=None):
     trackData.loadTrackData(args.tracksInfo, mergedIntervals)
 
     catMap = None
+    userTrans = None
+    if args.supervised is False and args.transProbs is not None:
+        userTrans, catMap = parseMatrixFile(args.transProbs)
+        # state number is overrided by the transProbs file
+        args.numStates = len(catMap)
+
     truthIntervals = None
     # state number is overrided by the input bed file in supervised mode
     if args.supervised is True:
@@ -108,12 +121,6 @@ def main(argv=None):
         # we reload because we don't want to be merging them here
         truthIntervals = readBedIntervals(args.trainingBed, ncol=4)
         catMap = mapStateNames(truthIntervals)
-        args.numStates = len(catMap)
-
-    userTrans = None
-    if args.transProbs is not None:
-        userTrans, catMap = parseMatrixFile(args.transProbs)
-        # state number is overrided by the transProbs file
         args.numStates = len(catMap)
 
     # create the independent emission model
@@ -151,6 +158,8 @@ def main(argv=None):
     else:
         logging.info("training from input bed states")
         model.supervisedTrain(trackData, truthIntervals, )
+        if args.transProbs is not None:
+            applyUserTrans(model, args.transProbs)
 
     # write the model to a pickle
     logging.info("saving trained model to %s" % args.outputModel)
@@ -203,6 +212,65 @@ def parseMatrixFile(path):
             transMat[row, col] /= tot
 
     return (transMat, catMap)
+
+def applyUserTrans(hmm, userTransPath):
+    """ modify a HMM that was constructed using supervisedTrain() so that
+    it contains the transition probabilities specified in the userTrans File"""
+    logging.debug("Applying user transitions to supervised trained HMM")
+    f = open(userTransPath, "r")
+    catMap = hmm.getStateNameMap()
+    transMat = hmm.getTransitionProbs()
+    N = len(catMap)
+    mask = np.zeros((N, N), dtype=np.int8)
+    for line in f:
+        if line.lstrip()[0] is not "#":
+            toks = line.split()
+            assert len(toks) == 3
+            prob = float(toks[2])
+            fromState = toks[0]
+            toState = toks[1]
+            if not catMap.has(fromState) or not catMap.has(toState):
+                raise RuntimeError("Cannot apply transition %s->%s to model"
+                                   " since at least one of the states was not "
+                                   "found in the supervised data." % (fromState,
+                                                                      toState))
+            fid = catMap.getMap(fromState)
+            tid = catMap.getMap(toState)
+            # remember that this is a user transition
+            mask[fid, tid] = 1
+            # set the trnasition probability in the matrix
+            transMat[fid, tid] = prob
+
+    # normalize all other probabilities (ie that are unmaksed) so that they
+    # add up.
+    for fid in xrange(N):
+        # total probability of learned states
+        curTotal = 0.0
+        # total probability of learned states after normalization
+        tgtTotal = 1.0
+        for tid in xrange(N):
+            if mask[fid, tid] == 1:
+                tgtTotal -= transMat[fid, tid]
+            else:
+                curTotal += transMat[fid, tid]
+        if tgtTotal < 0.:
+            raise RuntimeError("User defined probability from state %s exceeds"
+                               " 1" % catMap.getMapBack(fid))
+        for tid in xrange(N):
+            if mask[fid, tid] == 0:
+                if tgtTotal == 0.:
+                    transMat[fid, tid] = 0.
+                else:
+                    transMat[fid, tid] *= (tgtTotal / curTotal)
+
+    # make sure 0-transitions get recorded
+    # TODO: proper interface rather than direct member access
+    hmm._log_transmat = myLog(transMat)
+
+    hmm.validate()
+    
+    f.close()
+    
     
 if __name__ == "__main__":
     sys.exit(main())

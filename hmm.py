@@ -186,6 +186,9 @@ class MultitrackHmm(_BaseHMM):
     def getTransitionProbs(self):
         return self.transmat_
 
+    def getStateNameMap(self):
+        return self.stateNameMap
+
     def validate(self):
         assert len(self.startprob_) == self.emissionModel.getNumStates()
         assert not isinstance(self.startprob_[0], Iterable)
