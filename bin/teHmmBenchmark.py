@@ -62,6 +62,14 @@ def main(argv=None):
                         "totally lost. 0 = no normalization. 1 ="
                         " divide by number of tracks.  k = divide by number "
                         "of tracks / k", type=int, default=0)
+    parser.add_argument("--forceEmProbs", help="Path of text file where each "
+                        "line has four entries: State Track Symbol Probability"
+                        ". These "
+                        "emission probabilities will override any learned"
+                        " probabilities after training (unspecified "
+                        "will not be set to 0 in this case. the learned values"
+                        " will be kept, but normalized as needed." ,
+                        default = None)
     
     args = parser.parse_args()
     if args.verbose is True:
@@ -87,6 +95,8 @@ def main(argv=None):
     else:
         trainFlags = "--supervised"
     trainFlags += " --emFac %d" % args.emFac
+    if args.forceEmProbs is not None:
+        trainFlags += " --forceEmProbs %s" % args.forceEmProbs
 
     # write out command line for posteriorty's sake
     if not os.path.exists(args.outputDir):
