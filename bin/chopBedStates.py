@@ -131,6 +131,7 @@ def cutInterval(interval, cutParams, args):
     assert interval.start < interval.end
     leftIntervals.append(interval)
 
+    rightIntervals.reverse()
     return leftIntervals + rightIntervals
             
             
