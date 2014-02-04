@@ -51,8 +51,10 @@ def readTrackData(trackPath, chrom, start, end, **kwargs):
         kwargs["needIntersect"] = False
     if trackExt == ".bed":
         data = readBedData(trackPath, chrom, start, end, **kwargs)
-    else:     
-        sys.stderr.write("Warning: non-BED file skipped %s\n" %
+    elif len(trackExt) >= 3 and trackExt[:3].lower() == ".fa":
+        data = readFastaData(trackPath, chrom, start, end, **kwargs)
+    else:
+        sys.stderr.write("Warning: non-BED, non-FASTA file skipped %s\n" %
                          trackPath)
         
     if tempPath is not None:
@@ -200,6 +202,48 @@ def writeBedIntervals(intervals, outPath):
         bi = Interval(interval[0], interval[1], interval[2], name=name,
                       score=score)
         outFile.write(str(bi))    
+
+###########################################################################
+
+def readFastaData(faPath, chrom, start, end, **kwargs):
+
+    valMap = None
+    if kwargs is not None and "valMap" in kwargs:
+        valMap = kwargs["valMap"]
+    defVal = None
+    if valMap is not None:
+        defVal = valMap.getMissingVal()
+    updateMap = False
+    if kwargs is not None and "updateValMap" in kwargs:
+        updateMap = kwargs["updateValMap"]
+    caseSensitive = False
+    if kwargs is not None and "caseSensitive" in kwargs:
+        caseSensitive = kwargs["caseSensitive"]        
+
+    data = [defVal] * (end - start)
+    logging.debug("readFastaData(%s, update=%s)" % (faPath, updateMap))
+
+    faFile = open(faPath, "r")
+    basesRead = 0
+    for seqName, seqString in fastaRead(faFile):
+        if seqName == chrom:
+            for i in xrange(start, end):
+                if i >= len(seqString):
+                    break
+                val = seqString[i]
+                if caseSensitive is False:
+                    val = val.upper()
+                if valMap is not None:
+                    val = valMap.getMap(val, update=updateMap)
+                data[basesRead] = val
+                basesRead += 1
+            break
+    faFile.close()
+
+    logging.debug("done readFastaData(%s). %d bases read" % (faPath,
+                                                             basesRead))
+    return data
+
 
 ###########################################################################
 

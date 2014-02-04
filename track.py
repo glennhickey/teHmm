@@ -39,6 +39,8 @@ class Track(object):
         self.logScale = None
         #: Bed column to take value from (default 3==name)
         self.valCol = 3
+        #: For fasta only
+        self.caseSensitive = False
 
         if xmlElement is not None:
             self._fromXMLElement(xmlElement)
@@ -77,7 +79,9 @@ class Track(object):
             self.scale = float(elem.attrib["scale"])
         if "logScale" in elem.attrib:
             self.logScale = float(elem.attrib["logScale"])
-
+        if "caseSensitive" in elem.attrib:
+            self.caseSensitive = bool(elem.attrib["caseSensitive"])
+            
     def toXMLElement(self):
         elem = ET.Element("track")
         if self.name is not None:
@@ -92,6 +96,8 @@ class Track(object):
             elem.attrib["logScale"] = str(self.logScale)
         elif self.scale is not None:
             elem.attrib["scale"] = str(self.scale)
+        if self.caseSensitive is not None:
+            elem.attrib["caseSensitive"] = str(self.caseSensitive)
         return elem
 
     def getValueMap(self):
@@ -117,6 +123,9 @@ class Track(object):
 
     def getLogScale(self):
         return self.logScale
+
+    def getCaseSensitive(self):
+        return self.caseSensitive
 ###########################################################################
 """list of tracks (see above) that we can index by name or number as well as
 load from or save to a file. this strucuture needs to accompany a trained
@@ -485,7 +494,9 @@ class TrackData(object):
             rawArray = readTrackData(trackPath, chrom, start, end,
                                      valCol=inputTrack.getValCol(),
                                      valMap=selfTrack.getValueMap(),
-                                     updateValMap=init)
+                                     updateValMap=init,
+                                     caseSensitive=
+                                     inputTrack.getCaseSensitive())
             if rawArray is not None:
                 track = self.getTrackList().getTrackByName(trackName)
                 trackTable.writeRow(track.getNumber(), rawArray)

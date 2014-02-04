@@ -1,0 +1,6 @@
+<?xml version="1.0" ?>
+<teModelConfig>
+  <track name="seqBinary" path="tests/data/seq.fa" distribution="binary"/>
+  <track name="seqMulti" path="tests/data/seq.fa" distribution="multinomial"/>
+  <track name="seqMultiCS" path="tests/data/seq.fa" distribution="multinomial" caseSensitive="True"/>
+</teModelConfig>

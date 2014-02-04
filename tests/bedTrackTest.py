@@ -218,7 +218,77 @@ class TestCase(TestBase):
         assert int(np.log(cmb)) == int(np.log(1100))
         assert int(np.log(cmb)) == int(np.log(1600))
         
-            
+    def testFastaTrack(self):
+        trackData = TrackData()
+        trackData.loadTrackData(getTracksInfoPath(4),
+                                [("scaffold_1", 1, 19),
+                                 ("scaffold_2", 0, 10)]),
+        assert trackData.getNumTracks() == 3
+        trackList = trackData.getTrackList()
+        assert len(trackList) == 3
+        assert trackList.getTrackByName("seqBinary").name == "seqBinary"
+        assert trackList.getTrackByName("seqBinary").getDist() == "binary"
+        assert trackList.getTrackByName("seqMulti").name == "seqMulti"
+        assert trackList.getTrackByName("seqMulti").getDist() == "multinomial"
+        assert trackList.getTrackByName("seqMulti").getCaseSensitive() == False
+        assert trackList.getTrackByName("seqMultiCS").getCaseSensitive() == True
+        assert trackList.getTrackByName("blin") == None
+
+        tableList = trackData.getTrackTableList()
+        assert len(tableList) == 2
+        assert tableList[0].getNumTracks() == 3
+        assert tableList[1].getNumTracks() == 3
+        assert len(tableList[0]) == 18
+        assert len(tableList[1]) == 10
+
+        binTrack = trackList.getTrackByName("seqBinary")
+        assert binTrack.getDist() == "binary"
+        track = trackList.getTrackByName("seqMulti")
+        assert track.getDist() == "multinomial"
+        trackCS = trackList.getTrackByName("seqMultiCS")
+        assert trackCS.getDist() == "multinomial"
+
+        trueString = "AAATTTGGGCCCGGGccc"[1:19]
+        for i in xrange(len(trueString)):
+            bval = tableList[0][i][binTrack.number]
+            val = tableList[0][i][track.number]
+            valCS = tableList[0][i][trackCS.number]
+
+            bval = binTrack.getValueMap().getMapBack(bval)
+            val = track.getValueMap().getMapBack(val)
+            valCS = trackCS.getValueMap().getMapBack(valCS)
+
+            assert bval == 2
+            assert val == trueString[i].upper()
+            assert valCS == trueString[i]
+
+        trueString = "TTTT"
+        for i in xrange(len(trueString)):
+            bval = tableList[1][i][binTrack.number]
+            val = tableList[1][i][track.number]
+            valCS = tableList[1][i][trackCS.number]
+
+            bval = binTrack.getValueMap().getMapBack(bval)
+            val = track.getValueMap().getMapBack(val)
+            valCS = trackCS.getValueMap().getMapBack(valCS)
+
+            assert bval == 2
+            assert val == trueString[i].upper()
+            assert valCS == trueString[i]
+
+        for i in xrange(len(trueString), 10):
+            bval = tableList[1][i][binTrack.number]
+            val = tableList[1][i][track.number]
+            valCS = tableList[1][i][trackCS.number]
+
+            bval = binTrack.getValueMap().getMapBack(bval)
+            val = track.getValueMap().getMapBack(val)
+            valCS = trackCS.getValueMap().getMapBack(valCS)
+
+            assert bval == binTrack.getValueMap().getMissingVal()
+            assert val == track.getValueMap().getMissingVal()
+            assert valCS == trackCS.getValueMap().getMissingVal()
+        
 def main():
     sys.argv = sys.argv[:1]
     unittest.main()
