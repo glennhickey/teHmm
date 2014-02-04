@@ -70,6 +70,12 @@ def main(argv=None):
                         "will not be set to 0 in this case. the learned values"
                         " will be kept, but normalized as needed." ,
                         default = None)
+    parser.add_argument("--mod", help="Path to trained model.  This will "
+                        "bypass the training phase that would normally be done"
+                        " and just skip to the evaluation.  Note that the user"
+                        " must make sure that the trained model has the "
+                        "states required to process the input data",
+                        default = None)
     
     args = parser.parse_args()
     if args.verbose is True:
@@ -142,13 +148,17 @@ def main(argv=None):
                                         
             
             # train
-            modPath = os.path.join(outDir,
-                                   os.path.splitext(base)[0] + ".mod")
-            command = "teHmmTrain.py %s %s %s %s %s" % (trainingTrackPath,
-                                                        truthBed,
-                                                        modPath,
-                                                        verbose,
-                                                        trainFlags)
+            if args.mod is not None:
+                modPath = args.mod
+                command = "ls %s" % modPath
+            else:
+                modPath = os.path.join(outDir,
+                                       os.path.splitext(base)[0] + ".mod")
+                command = "teHmmTrain.py %s %s %s %s %s" % (trainingTrackPath,
+                                                            truthBed,
+                                                            modPath,
+                                                            verbose,
+                                                            trainFlags)
 
             # view
             viewPath = os.path.join(outDir,
