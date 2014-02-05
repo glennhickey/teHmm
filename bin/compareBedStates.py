@@ -32,6 +32,13 @@ def main(argv=None):
     parser.add_argument("--col", help="Column of bed files to use for state"
                         " (currently only support 4(name) or 5(score))",
                         default = 4, type = int)
+    parser.add_argument("--thresh", help="Threshold to consider interval from"
+                        " bed1 covered by bed2.  NOTE: this analysis does not"
+                        " presently care how many individual intervals cover "
+                        "a given interval.  IE 10 bed lines of length 1 in bed1"
+                        " that overlap a single line of length 10 in bed2 will"
+                        "still be considered a perfect match.",
+                        type=float, default=0.8)
 
     args = parser.parse_args()
 
@@ -39,7 +46,8 @@ def main(argv=None):
 
     intervals1 = readBedIntervals(args.bed1, ncol = args.col)
     intervals2 = readBedIntervals(args.bed2, ncol = args.col)
-    stats = compareIntervals(intervals1, intervals2, args.col - 1)
+    stats, intStats = compareIntervals(intervals1, intervals2, args.col - 1,
+                                       args.thresh)
 
     totalRight, totalWrong, accMap = summarizeComparision(stats)
     print stats
@@ -49,23 +57,41 @@ def main(argv=None):
     print "State-by-state (Precision, Recall):"
     print accMap
 
+    totalIntRight, totalIntWrong, intAccMap = summarizeComparision(intStats)
+    print "\nInterval-level stats (threshold=%f)" % args.thresh
+    print intStats
+    totalIntBoth = totalIntRight + totalIntWrong
+    intAccuracy = float(totalIntRight) / float(totalIntBoth)
+    print "Accuaracy: %d / %d = %f" % (totalIntRight, totalIntBoth, intAccuracy)
+    print "State-by-state (Precision, Recall):"
+    print intAccMap
+    print ""
+
     # print some row data to be picked up by scrapeBenchmarkRow.py
     header, row = summaryRow(accuracy, stats, accMap)
     print " ".join(header)
     print " ".join(row)
 
-def compareIntervals(intervals1, intervals2, col):
+def compareIntervals(intervals1, intervals2, col, threshold):
     """ return dictionary that maps each state to (i1 but not i2, i2 but not i1,
-    both)"""
+    both) for base level stats, and also a similar dictionary for interval
+    stats. """
 
     assert intervals1[0][0] == intervals2[0][0]
     assert intervals1[0][1] == intervals2[0][1]
     assert intervals1[-1][2] == intervals2[-1][2]
- 
+
+    # base level dictionary
     stats = dict()
+    # interval level dictionary
+    intStats = dict()
+    runningTally1 = [0, 0] #right / wrong
+    runningTally2 = [0, 0] #right / wrong
     # yuck:
     p2 = 0
+    i1 = [None] * (col + 1)
     for p1 in xrange(len(intervals1)):
+        updateIntStats(i1[col], runningTally1, intStats, 1, threshold)
         i1 = intervals1[p1]
         assert len(i1) > col
         for pos in xrange(i1[2] - i1[1]):
@@ -74,6 +100,7 @@ def compareIntervals(intervals1, intervals2, col):
             chrom = i1[0]
             coord = i1[1] + pos
             if i2[0] != chrom or not (coord >= i2[1] and coord < i2[2]):
+                updateIntStats(i2[col], runningTally2, intStats, 2, threshold)
                 p2 += 1
                 i2back = i2
                 i2 = intervals2[p2]
@@ -86,12 +113,38 @@ def compareIntervals(intervals1, intervals2, col):
                 stats[state2] = [0, 0, 0]
             if state1 == state2:
                 stats[state1][2] += 1
+                runningTally1[0] += 1
+                runningTally2[0] += 1
             else:
                 stats[state1][0] += 1
                 stats[state2][1] += 1
+                runningTally1[1] += 1
+                runningTally2[1] += 1
 
-    return stats
+    return stats, intStats
 
+def updateIntStats(state, tally, intStats, idx, threshold):
+    """ update interval-level stats using the threshold.  this function
+    is called when changing an interval in either file (passing the appropraite
+    tally).  The stats collected are the same as the base level stats:
+    trio of form (i1 but not i2, i2 but not i1, both) but instead of bases
+    we count entire intevarval (using threshold)"""
+    assert len(tally) == 2
+    if tally != [0, 0]:
+        if state not in intStats:
+            intStats[state] = [0, 0, 0]
+        frac = float(tally[0]) / float(tally[0] + tally[1])
+        if frac >= threshold:
+            intStats[state][2] += 1
+        elif idx == 1:
+            intStats[state][0] += 1
+        else:
+            assert idx == 2
+            intStats[state][1] += 1
+
+    tally[0] = 0
+    tally[1] = 0
+    
 def summarizeComparision(stats):
     totalRight = 0
     totalWrong = 0
