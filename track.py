@@ -80,7 +80,11 @@ class Track(object):
         if "logScale" in elem.attrib:
             self.logScale = float(elem.attrib["logScale"])
         if "caseSensitive" in elem.attrib:
-            self.caseSensitive = bool(elem.attrib["caseSensitive"])
+            cs = elem.attrib["caseSensitive"].lower()
+            if cs == "1" or cs == "true":
+                self.caseSensitive = True
+            else:
+                self.caseSensitive = False
             
     def toXMLElement(self):
         elem = ET.Element("track")
