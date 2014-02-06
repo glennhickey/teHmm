@@ -22,7 +22,6 @@ def main(argv=None):
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
         description="Cut names off at first | and or /")
     parser.add_argument("inBed", help="bed with chaux results to process")
-    parser.add_argument("outBed", help="bed to write output to.")
     parser.add_argument("--keepSlash", help="dont strip anything after slash "
                         "ex: DNA/HELITRONY1C -> DNA", action="store_true",
                         default=False)
@@ -41,7 +40,6 @@ def main(argv=None):
 
     args = parser.parse_args()
     assert os.path.exists(args.inBed)
-    outFile = open(args.outBed, "w")
 
     for interval in BedTool(args.inBed).sort():
         prefix = findPrefix(interval.name, args.mapPrefix)
@@ -60,9 +58,8 @@ def main(argv=None):
                 if m is not None:
                     interval.name = interval.name[:m.start()]
         
-        outFile.write(str(interval))
+        sys.stdout.write(str(interval))
 
-    outFile.close()
 
 # should be a prefix tree...
 def findPrefix(name, plist):
