@@ -22,7 +22,7 @@ def main(argv=None):
     parser = argparse.ArgumentParser(
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
         description="Assign BED intervals an RGB colour based on their name."
-        " A 7-colour palette is used, so if there are more than 7 states the"
+        " A 8-colour palette is used, so if there are more than 8 states the"
         " colours will not be unique...  Make sure itemRgb=On in the track"
         " header before loading in Browser (addTrackHeader.py can do this)")
     parser.add_argument("inBed", help="Input bed file")
