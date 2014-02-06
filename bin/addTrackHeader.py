@@ -33,6 +33,11 @@ def main(argv=None):
     parser.add_argument("description", help="Track description")
     parser.add_argument("--useScore", help="Use score", action="store_true",
                         default=False)
+    parser.add_argument("--rgb", help="Enable rgb colours.  These must be "
+                        "present in the bed file data (can be added using"
+                        "addBedColours.py", action="store_true",
+                        default=False)
+
 
     args = parser.parse_args()
 
@@ -45,11 +50,15 @@ def main(argv=None):
     score = 0
     if args.useScore is True:
         score = 1
-    
+
+    rgb=""
+    if args.rgb is True:
+        rgb="\titemRgb=\"On\""
+        
     # put the header in the file
     tempFile = open(tempPath, "w")
-    tempFile.write("track\tname=\"%s\"\tdescription=\"%s\"\tuseScore=%d\n" % (
-        args.name, args.description, score))
+    tempFile.write("track\tname=\"%s\"\tdescription=\"%s\"\tuseScore=%d%s\n" % (
+        args.name, args.description, score, rgb))
 
     # copy the bed file to the temp file, skipping track header if found
     bedFile = open(args.inputBed, "r")
