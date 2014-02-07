@@ -56,7 +56,7 @@ def main(argv=None):
         l = len(toks)
         assert l >= 4
         if l == 4:
-            toks.append(".") # score
+            toks.append("0") # score
         if l <= 5:
             toks.append(".") # strand
         if l <= 6:
