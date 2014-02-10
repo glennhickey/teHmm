@@ -76,6 +76,10 @@ def main(argv=None):
                         " must make sure that the trained model has the "
                         "states required to process the input data",
                         default = None)
+    parser.add_argument("--iter", help="Number of EM iterations.  Needs to be"
+                        " used in conjunction with --emStates to specify EM"
+                        " training",
+                        type = int, default=None)
     
     args = parser.parse_args()
     if args.verbose is True:
@@ -103,6 +107,10 @@ def main(argv=None):
     trainFlags += " --emFac %d" % args.emFac
     if args.forceEmProbs is not None:
         trainFlags += " --forceEmProbs %s" % args.forceEmProbs
+    if args.iter is not None:
+        assert args.emStates is not None
+        trainFlags += " --iter %d" % args.iter
+    
 
     # write out command line for posteriorty's sake
     if not os.path.exists(args.outputDir):
