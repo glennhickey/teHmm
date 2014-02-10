@@ -77,6 +77,8 @@ class MultitrackHmm(_BaseHMM):
         self.fixTrans = fixTrans
         # remember where the transmat came from
         self.userTrans = copy.deepcopy(transmat)
+        # keep track of number of EM iterations performed
+        self.current_iteration = None
 
     def train(self, trackData):
         """ Use EM to estimate best parameters from scratch (unsupervised)"""
@@ -233,7 +235,8 @@ class MultitrackHmm(_BaseHMM):
     def _accumulate_sufficient_statistics(self, stats, obs, framelogprob,
                                           posteriors, fwdlattice, bwdlattice,
                                           params):
-        logging.debug("beginning MultitrackHMM E-step")
+        logging.debug("%d: beginning MultitrackHMM E-step" %
+                      self.current_iteration)
         super(MultitrackHmm, self)._accumulate_sufficient_statistics(
             stats, obs, framelogprob, posteriors, fwdlattice, bwdlattice,
             params)
@@ -243,17 +246,21 @@ class MultitrackHmm(_BaseHMM):
         logging.debug("ending MultitrackHMM E-step")
 
     def _do_mstep(self, stats, params):
-        logging.debug("beginning MultitrackHMM M-step")
+        logging.debug("%d: beginning MultitrackHMM M-step" %
+                      self.current_iteration)
         super(MultitrackHmm, self)._do_mstep(stats, params)
         if 'e' in params:
             self.emissionModel.maximize(stats['obs'])
-        logging.debug("ending MultitrackHMM M-step")
+        logging.debug("%d: ending MultitrackHMM M-step" %
+                      self.current_iteration)
 
         # if a fixTrans was specified, make sure it wasn't modified by
         # any monkey business in the base class
         if self.fixTrans is True:
             self.transmat_ = copy.deepcopy(self.userTrans)
+        self.current_iteration += 1
 
 
     def fit(self, obs, **kwargs):
+        self.current_iteration = 1
         return _BaseHMM.fit(self, obs, **kwargs)
