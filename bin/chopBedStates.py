@@ -31,6 +31,8 @@ LTR|left_r3   19   20
 Note that the output slices for any given input line will be sorted.  If the
 input lines are overlapping or out of order than the output will be too.
 
+--reverse option can be used to undo transformation
+
 """
 
 def main(argv=None):
@@ -40,7 +42,7 @@ def main(argv=None):
     parser = argparse.ArgumentParser(
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
         description="Chop off ends of target bed intervals and give "
-        "pieces new names.")
+        "pieces new names.  --reverse to transform back to original file")
     parser.add_argument("inBed", help="Input bed file")
     parser.add_argument("paramsFile", help="Text file containing some chop"
                         " parameters. In particular, each line must have"
@@ -52,18 +54,30 @@ def main(argv=None):
                         default="_l")
     parser.add_argument("--rightSuffix", help="suffix for new right slice "
                         "names", default="_r")
-                        
+    parser.add_argument("--reverse", help="apply mapping in reverse: ie rename"
+                        " chopped states back to their original names and"
+                        " merge them back together.",
+                        action="store_true", default=False)
     
     args = parser.parse_args()
     assert os.path.exists(args.inBed)
     outFile = open(args.outBed, "w")
 
     cutParams = parseCutFile(args.paramsFile)
-    
+    # need to keep extra buffer for "recover" since we will be doing some
+    # merging
+    prevIntervals = []
     for interval in BedTool(args.inBed):
-        newIntervals = cutInterval(interval, cutParams, args)
+        if args.reverse is False:
+            newIntervals = cutInterval(interval, cutParams, args)
+        else:
+            newIntervals = recoverInterval(interval, cutParams, prevIntervals,
+                                           args)
         for newInterval in newIntervals:
             outFile.write(str(newInterval))
+    if len(prevIntervals) > 0:
+        assert len(prevIntervals) == 1
+        outFile.write(str(prevIntervals[0]))    
 
     outFile.close()
 
@@ -134,6 +148,34 @@ def cutInterval(interval, cutParams, args):
     rightIntervals.reverse()
     return leftIntervals + rightIntervals
             
+def recoverInterval(interval, cutParams, prevIntervals, args):
+    # map name if applicable
+    origName = interval.name
+    leftIdx = origName.rfind(args.leftSuffix)
+    rightIdx = origName.rfind(args.rightSuffix)
+    idx = max(leftIdx, rightIdx)
+    if idx > 0:
+        origName = origName[:idx]
+    if origName in cutParams:
+        interval.name = origName
+    
+    # merge into previous and dont return anything
+    if (len(prevIntervals) > 0 and origName == prevIntervals[0].name and
+        interval.start == prevIntervals[0].end and
+        interval.chrom == prevIntervals[0].chrom):
+        prevIntervals[0].end = interval.end
+        return []
+    # write return the prevInterval and remember this interval
+    elif len(prevIntervals) > 0:
+        tempInterval = prevIntervals[0]
+        prevIntervals[0] = interval
+        return [tempInterval]
+    # no prevInterval, so we set it and write nothing (should only happen
+    # on first iteration)
+    else:
+        prevIntervals.append(interval)
+        return []
+        
             
 if __name__ == "__main__":
     sys.exit(main())
