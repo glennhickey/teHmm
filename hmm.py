@@ -174,9 +174,12 @@ class MultitrackHmm(_BaseHMM):
                 for idx, symbol in enumerate(em.getTrackSymbols(trackNo)):
                     symbolName = track.getValueMap().getMapBack(symbol)
                     prob = np.exp(emProbs[trackNo][state][symbol])
-                    if idx <= 2 or prob > 0.01:
-                        s += "    %s) %s: %f (log=%f)\n" % (symbol, symbolName,
-                                                            prob, myLog(prob))
+                    if idx <= 2 or prob > 0.005:
+                        logval = str(myLog(prob))
+                        if prob == 0.0:
+                            logval = "-inf"
+                        s += "    %s) %s: %f (log=%s)\n" % (symbol, symbolName,
+                                                            prob, logval)
         return s
 
     def getTrackList(self):
