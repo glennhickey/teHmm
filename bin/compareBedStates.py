@@ -61,7 +61,10 @@ def main(argv=None):
     print "\nInterval-level stats (threshold=%f)" % args.thresh
     print intStats
     totalIntBoth = totalIntRight + totalIntWrong
-    intAccuracy = float(totalIntRight) / float(totalIntBoth)
+    if totalIntBoth > 0:
+        intAccuracy = float(totalIntRight) / float(totalIntBoth)
+    else:
+        intAccuracy = 0
     print "Accuaracy: %d / %d = %f" % (totalIntRight, totalIntBoth, intAccuracy)
     print "State-by-state (Precision, Recall):"
     print intAccMap
