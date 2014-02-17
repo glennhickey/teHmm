@@ -100,7 +100,7 @@ def main(argv=None):
 
     print "Viterbi (log) score: %f" % totalScore
     if isinstance(model, MultitrackHmm) and model.current_iteration is not None:
-        print "Number of EM iterations: %d" % model._current_iteration
+        print "Number of EM iterations: %d" % model.current_iteration
     if args.bed is not None:
         vitOutFile.close()
 
