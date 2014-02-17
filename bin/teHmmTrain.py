@@ -19,7 +19,7 @@ from teHmm.emission import PairEmissionModel
 from teHmm.track import CategoryMap, BinaryMap
 from teHmm.cfg import MultitrackCfg
 from teHmm.modelIO import saveModel
-from teHmm.common import myLog
+from teHmm.common import myLog, EPSILON
 
 def main(argv=None):
     if argv is None:
@@ -273,9 +273,9 @@ def applyUserTrans(hmm, userTransPath):
                 tgtTotal -= transMat[fid, tid]
             else:
                 curTotal += transMat[fid, tid]
-        if tgtTotal < 0.:
-            raise RuntimeError("User defined probability from state %s exceeds"
-                               " 1" % catMap.getMapBack(fid))
+        if tgtTotal < -EPSILON:
+            raise RuntimeError("User defined probability %f from state %s "
+                               "exceeds 1" % (tgtTotal, catMap.getMapBack(fid)))
         for tid in xrange(N):
             if mask[fid, tid] == 0:
                 if tgtTotal == 0.:

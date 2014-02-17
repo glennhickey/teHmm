@@ -75,8 +75,6 @@ class MultitrackHmm(_BaseHMM):
         self.fudge = fudge
         # freeze input transmat
         self.fixTrans = fixTrans
-        # remember where the transmat came from
-        self.userTrans = copy.deepcopy(transmat)
         # keep track of number of EM iterations performed
         self.current_iteration = None
 
@@ -218,17 +216,13 @@ class MultitrackHmm(_BaseHMM):
         return self.emissionModel.sample(state)
 
     def _init(self, obs, params='ste'):
+        self.params = params
         if self.fixTrans is True:
-            params = 'se'
+            self.params = 'se'
         super(MultitrackHmm, self)._init(obs, params=params)
         self.random_state = check_random_state(self.random_state)
-        randomize = 'e' in params
+        randomize = 'e' in self.params
         self.emissionModel.initParams(randomize=randomize)
-
-        # if a transmat was specified, make sure it wasn't modified by
-        # any monkey business in the base class
-        if self.userTrans is not None:
-            self.transmat_ = copy.deepcopy(self.userTrans)
 
     def _initialize_sufficient_statistics(self):
         stats = super(MultitrackHmm, self)._initialize_sufficient_statistics()
@@ -246,6 +240,7 @@ class MultitrackHmm(_BaseHMM):
         if 'e' in params:
             logging.debug("beginning Emissions E-substep")
             self.emissionModel.accumulateStats(obs, stats['obs'], posteriors)
+
         logging.debug("ending MultitrackHMM E-step")
 
     def _do_mstep(self, stats, params):
@@ -256,14 +251,31 @@ class MultitrackHmm(_BaseHMM):
             self.emissionModel.maximize(stats['obs'])
         logging.debug("%d: ending MultitrackHMM M-step" %
                       self.current_iteration)
-
-        # if a fixTrans was specified, make sure it wasn't modified by
-        # any monkey business in the base class
-        if self.fixTrans is True:
-            self.transmat_ = copy.deepcopy(self.userTrans)
         self.current_iteration += 1
-
 
     def fit(self, obs, **kwargs):
         self.current_iteration = 1
         return _BaseHMM.fit(self, obs, **kwargs)
+
+    # Getting annoyed with epsilons being added by scikit learn
+    # so redo tranmat property to allow zeros (should probably do
+    # for start probs as well at some point)
+    def _get_transmat(self):
+        """Matrix of transition probabilities."""
+        return np.exp(self._log_transmat)
+
+    def _set_transmat(self, transmat):
+        if transmat is None:
+            transmat = np.tile(1.0 / self.n_components,
+                               (self.n_components, self.n_components))
+
+        if (np.asarray(transmat).shape
+                != (self.n_components, self.n_components)):
+            raise ValueError('transmat must have shape '
+                             '(n_components, n_components)')
+        if not np.all(np.allclose(np.sum(transmat, axis=1), 1.0)):
+            raise ValueError('Rows of transmat must sum to 1.0')
+
+        self._log_transmat = myLog(np.asarray(transmat).copy())
+
+    transmat_ = property(_get_transmat, _set_transmat)

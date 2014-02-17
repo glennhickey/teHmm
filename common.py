@@ -16,7 +16,7 @@ LOGZERO = -1e200
 EPSILON = np.finfo(float).eps
 
 def __myLogFloat(x):
-    if x == 0.:
+    if np.abs(x) < EPSILON:
         return LOGZERO
     return np.log(x)
 
