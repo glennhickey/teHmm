@@ -25,9 +25,7 @@ def readTrackData(trackPath, chrom, start, end, **kwargs):
     type of file is detected from the extension"""
     data = None
     if not os.path.isfile(trackPath):
-        sys.stderr.write("Warning: track file not found %s\n" %
-                         trackPath)
-        return None
+        raise RuntimeError("Track file not found %s\n" % trackPath)
 
     trackExt = os.path.splitext(trackPath)[1]
     tempPath = None
