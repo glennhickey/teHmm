@@ -241,7 +241,7 @@ def applyUserTrans(userTransPath, transMap = None, catMap = None):
         catMap = CategoryMap(reserved=0)
         f = open(userTransPath, "r")
         for line in f:
-            if line.lstrip()[0] is not "#":
+            if len(line.lstrip()) > 0 and line.lstrip()[0] is not "#":
                 toks = line.split()
                 assert len(toks) == 3
                 float(toks[2])
