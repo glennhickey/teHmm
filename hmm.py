@@ -217,17 +217,14 @@ class MultitrackHmm(_BaseHMM):
 
     def _generate_sample_from_state(self, state, random_state=None):
         return self.emissionModel.sample(state)
-
+        
     def _init(self, obs, params='ste'):
-        self.params = params
         if self.fixTrans is True:
             self.params = self.params.replace("t", "")
         if self.fixEmission is True:
             self.params = self.params.replace("e", "")
         super(MultitrackHmm, self)._init(obs, params=params)
         self.random_state = check_random_state(self.random_state)
-        randomize = 'e' in params
-        self.emissionModel.initParams(randomize=randomize)
 
     def _initialize_sufficient_statistics(self):
         stats = super(MultitrackHmm, self)._initialize_sufficient_statistics()
