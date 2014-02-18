@@ -70,7 +70,15 @@ def main(argv=None):
                         " is used to specifiy the initial transition model.",
                         default = None)
     parser.add_argument("--fixTrans", help="Do not learn transition parameters"
-                        " (best used with --iniTransProbs)",
+                        " (best used with --initTransProbs)",
+                        action="store_true", default=False)
+    parser.add_argument("--initEmProbs", help="Path of text file where each "
+                        "line has four entries: State Track Symbol Probability"
+                        ".  This file (all other emissions get probability 0)"
+                        " is used to specifiy the initial emission model.",
+                        default = None)
+    parser.add_argument("--fixEm", help="Do not learn emission parameters"
+                        " (best used with --initEmProbs)",
                         action="store_true", default=False)
     parser.add_argument("--forceTransProbs",
                         help="Path of text file where each "
@@ -95,12 +103,15 @@ def main(argv=None):
         assert args.saPrior >= 0. and args.saPrior <= 1.
     if args.pairStates is not None:
         assert args.cfg is True
-    if args.initTransProbs is not None or args.fixTrans is True:
+    if args.initTransProbs is not None or args.fixTrans is True or\
+      args.initEmProbs is not None or args.fixEmission is not None:
         if args.cfg is True:
-            raise RuntimeError("--transProbs and --fixTrans are not currently"
-                               " compatible with --cfg.")
+            raise RuntimeError("--transProbs, --fixTrans, --emProbs, --fixEm "
+                               "are not currently compatible with --cfg.")
     if args.fixTrans is True and args.supervised is True:
         raise RuntimeError("--fixTrans option not compatible with --supervised")
+    if args.fixEm is True and args.supervised is True:
+        raise RuntimeError("--fixEm option not compatible with --supervised")
     if (args.forceTransProbs is not None or args.forceEmProbs is not None) \
       and args.cfg is True:
         raise RuntimeError("--forceTransProbs and --forceEmProbs are not "
@@ -126,7 +137,8 @@ def main(argv=None):
     catMap = None
     userTrans = None
     if args.supervised is False and args.initTransProbs is not None:
-        userTrans, catMap = parseMatrixFile(args.initTransProbs)
+        logging.debug("initializing transition model with user data")
+        userTrans, catMap = applyUserTrans(args.initTransProbs)
         # state number is overrided by the transProbs file
         args.numStates = len(catMap)
 
@@ -143,18 +155,27 @@ def main(argv=None):
     logging.info("creating emission model")
     numSymbolsPerTrack = trackData.getNumSymbolsPerTrack()
     logging.debug("numSymbolsPerTrack=%s" % numSymbolsPerTrack)
+    # only randomize model if 1) using Baum-Welch and 2) have not init values
+    randomize = args.supervised is False and args.initEmProbs is None
     emissionModel = IndependentMultinomialEmissionModel(
         args.numStates,
         numSymbolsPerTrack,
         normalizeFac=args.emFac,
-        randomize=not args.supervised)
+        randomize=randomize)
+
+    # initialize the user specified emission probabilities now if necessary
+    if args.initEmProbs is not None:
+        logging.debug("initializing emission model with user data")
+        applyUserEmissions(args.initEmProbs, emissionModel, catMap,
+                           trackData.getTrackList())
 
     # create the model
     if not args.cfg:
         logging.info("creating hmm model")
         model = MultitrackHmm(emissionModel, n_iter=args.iter,
                               state_name_map=catMap, transmat=userTrans,
-                              fixTrans = args.fixTrans)
+                              fixTrans = args.fixTrans,
+                              fixEmission = args.fixEm)
     else:
         pairEM = PairEmissionModel(emissionModel, [args.saPrior] *
                                    emissionModel.getNumStates())
@@ -177,15 +198,20 @@ def main(argv=None):
 
     # hack user-specified values back in as desired before saving
     if args.forceTransProbs is not None:
-        applyUserTrans(model, args.forceTransProbs)
+        applyUserTrans(model.transmat_, args.forceTransProbs, 
+                       model.stateNameMap)
     if args.forceEmProbs is not None:
-        applyUserEmissions(model, args.forceEmProbs)
+        stateMap = model.getStateNameMap()
+        trackList = model.trackList
+        emission = model.getEmissionModel()
+        applyUserEmissions(args.forceEmProbs, emission, stateMap, trackList)
 
     # write the model to a pickle
     logging.info("saving trained model to %s" % args.outputModel)
     saveModel(args.outputModel, model)
 
-
+###########################################################################
+    
 def mapStateNames(bedIntervals):
     """ sanitize the states (column 4) of each bed interval, mapping to unique
     integer in place.  return the map"""
@@ -198,50 +224,39 @@ def mapStateNames(bedIntervals):
                              catMap.getMap(interval[3], update=True))
     return catMap
 
-def parseMatrixFile(path):
-    """Load up the transition model as specifed in a text file:
-    from to prob, into a matrix.  Retruns the matrix along with a naming
-    map as a tuple (matrix, nameMap)"""
-    logging.debug("Parsing transition probabilities from %s" % path)
-    assert os.path.isfile(path)
-    f = open(path, "r")
-    catMap = CategoryMap(reserved=0)
-    for line in f:
-        if line.lstrip()[0] is not "#":
-            toks = line.split()
-            assert len(toks) == 3
-            float(toks[2])
-            catMap.getMap(toks[0], update=True)
-            catMap.getMap(toks[1], update=True)
-    numStates = len(catMap)
-    f.seek(0)
-    transMat = np.zeros((numStates, numStates), dtype=np.float)
-    for line in f:
-        if line.lstrip()[0] is not "#":
-            toks = line.split()
-            transMat[catMap.getMap(toks[0]), catMap.getMap(toks[1])] = toks[2]
-    f.close()
+###########################################################################
 
-    # may as well make sure the matrix is normalized
-    for row in xrange(numStates):
-        tot = 0.0
-        for col in xrange(numStates):
-            tot += transMat[row, col]
-        assert tot != 0.0
-        for col in xrange(numStates):
-            transMat[row, col] /= tot
-
-    return (transMat, catMap)
-
-def applyUserTrans(hmm, userTransPath):
-    """ modify a HMM that was constructed using supervisedTrain() so that
-    it contains the transition probabilities specified in the userTrans File"""
+def applyUserTrans(userTransPath, transMap = None, catMap = None):
+    """ Modify the transtion probability matrix so that it contains the
+    probabilities specified by the given text file.  If a stateNameMap (catMap)
+    is provided, it is used (and missing values trigger errors).  If the map
+    is None, then one is created.  If the transmap is None, one is created
+    as well (with default values being flat distribution.
+    The modified transMat and catMap are returned as a tuple, can can be
+    applied to the hmm."""
     logging.debug("Applying user transitions to supervised trained HMM")
-    f = open(userTransPath, "r")
-    catMap = hmm.getStateNameMap()
-    transMat = hmm.getTransitionProbs()
+    
+    # first pass just to count the states
+    if catMap is None:
+        catMap = CategoryMap(reserved=0)
+        f = open(userTransPath, "r")
+        for line in f:
+            if line.lstrip()[0] is not "#":
+                toks = line.split()
+                assert len(toks) == 3
+                float(toks[2])
+                catMap.getMap(toks[0], update=True)
+                catMap.getMap(toks[1], update=True)
+        f.close()
+
     N = len(catMap)
     mask = np.zeros((N, N), dtype=np.int8)
+
+    # init the transmap if ncessary
+    transMat = 1. / float(N) + np.zeros((N, N), dtype=np.float)
+
+    # 2nd pass to read the probabilities into the transmap
+    f = open(userTransPath, "r")    
     for line in f:
         if len(line.lstrip()) > 0 and line.lstrip()[0] is not "#":
             toks = line.split()
@@ -283,23 +298,17 @@ def applyUserTrans(hmm, userTransPath):
                 else:
                     transMat[fid, tid] *= (tgtTotal / curTotal)
 
-    # make sure 0-transitions get recorded
-    # TODO: proper interface rather than direct member access
-    hmm._log_transmat = myLog(transMat)
-
-    hmm.validate()
-    
     f.close()
-    
 
-def applyUserEmissions(hmm, userEmPath):
+    return (transMat, catMap)
+    
+###########################################################################
+    
+def applyUserEmissions(userEmPath, emission, stateMap, trackList):
     """ modify a HMM that was constructed using supervisedTrain() so that
     it contains the emission probabilities specified in the userEmPath File."""
     logging.debug("Applying user emissions to supervised trained HMM")
     f = open(userEmPath, "r")
-    stateMap = hmm.getStateNameMap()
-    trackList = hmm.trackList
-    emission = hmm.getEmissionModel()
     logProbs = emission.getLogProbs()
     mask = np.zeros(logProbs.shape, dtype=np.int8)
 

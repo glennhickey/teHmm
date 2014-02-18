@@ -112,7 +112,8 @@ class IndependentMultinomialEmissionModel(object):
                                   offset + max(self.numSymbolsPerTrack)),
                                  dtype=np.float)
 
-        logging.debug("Begin track by track emission matrix init")
+        logging.debug("Begin track by track emission matrix init (random=%s)" %
+                      randomize)
         for i in xrange(self.numTracks):
             stateList = []
             logStateList = []

@@ -42,12 +42,13 @@ class MultitrackHmm(_BaseHMM):
                  init_params=string.ascii_letters,
                  state_name_map=None,
                  fudge=0.0,
-                 fixTrans=False):
+                 fixTrans=False,
+                 fixEmission=False):
         if emissionModel is not None:
             n_components = emissionModel.getNumStates()
         else:
             n_components = 1
-        
+
         """Create a hidden Markov model that supports multiple tracks.
         emissionModel must have already been created"""
         _BaseHMM.__init__(self, n_components=n_components,
@@ -75,6 +76,8 @@ class MultitrackHmm(_BaseHMM):
         self.fudge = fudge
         # freeze input transmat
         self.fixTrans = fixTrans
+        # freeze input EmissionModel
+        self.fixEmission = fixEmission
         # keep track of number of EM iterations performed
         self.current_iteration = None
 
@@ -218,10 +221,12 @@ class MultitrackHmm(_BaseHMM):
     def _init(self, obs, params='ste'):
         self.params = params
         if self.fixTrans is True:
-            self.params = 'se'
+            self.params = self.params.replace("t", "")
+        if self.fixEmission is True:
+            self.params = self.params.replace("e", "")
         super(MultitrackHmm, self)._init(obs, params=params)
         self.random_state = check_random_state(self.random_state)
-        randomize = 'e' in self.params
+        randomize = 'e' in params
         self.emissionModel.initParams(randomize=randomize)
 
     def _initialize_sufficient_statistics(self):
