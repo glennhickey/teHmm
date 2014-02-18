@@ -12,7 +12,7 @@ import logging
 import collections
 import numpy as np
 
-LOGZERO = -1e200
+LOGZERO = -1e100
 EPSILON = np.finfo(float).eps
 
 def __myLogFloat(x):
