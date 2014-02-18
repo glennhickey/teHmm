@@ -230,8 +230,8 @@ class IndependentMultinomialEmissionModel(object):
         numSymbols = reduce(lambda x,y : max(x,1) * max(y,1),
                             self.numSymbolsPerTrack, 1)
         if numSymbols >= 500000:
-            logging.warning("Unable two validate emission model because"
-                            " there are too many (%d) symbosl" % numSymbols)
+            logging.warning("Unable to validate emission model because"
+                            " there are too many (%d) symbols" % numSymbols)
             return
         if self.normalizeFac != 1.0:
             # sum-to-one doesn't work for normalizeFac.  Should eventually
