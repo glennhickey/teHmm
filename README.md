@@ -35,7 +35,7 @@ Genome annotation tracks are specified in files in [BED](http://genome.ucsc.edu/
 
      removeBedOverlaps.py rawBed.bed > cleanBed.bed
 
-Chromosome (or contig names) must be consistent within all the track files.  Tracks are grouped together along with some metadata in a Track List XML file, which is required for the TE Model. An example Track List is the following:
+Chromosome (or contig) names must be consistent within all the track files.  Tracks are grouped together along with some metadata in a Track List XML file, which is required for the TE Model. An example Track List is the following:
 
      <teModelConfig>
      <track name="15mer" path="15mer-threshold50.bed" distribution="binary"/>
@@ -74,13 +74,13 @@ The model can be trained from unnanotated (ie true states not known) data using 
 
 This is an example of how to use the options described above to specify a HMM that has the following components:
 
-* ** Outside **  Single state representing genomic regions not containing  any TEs
-* ** LTR Element **  LTR TE that's represented by 3 states:  LeftLTR->InsideLTR->RightLTR
-* ** LINE Element **  LINE TE that's represented by 4 states:  PolyALine<->InsideLine<->PolyTLine
-* ** Other1 **  Single state free to train other signals
-* ** Other2 **  Single state free to train other signals
+* **Outside**  Single state representing genomic regions not containing  any TEs
+* **LTR Element**  LTR TE that's represented by 3 states:  LeftLTR->InsideLTR->RightLTR
+* **LINE Element**  LINE TE that's represented by 3 states:  PolyALine<->InsideLine<->PolyTLine
+* **Other1**  Single state free to train other signals
+* **Other2**  Single state free to train other signals
 
-In total, there are 10 states in this example.   We begin by specifying the "edges" of the HMM.  This is done by making sure that only valid transitions are initialized to non-zero probabilities.  Transitions that are initialized to 0 can never change via Baum-Welch training.   For our model, we want to insure that  TE states must return to the Outside state before beginning a new element.   This is accomplished by with the following transition matrix, specified with the `--initTransProbs` option:
+In total, there are 9 states in this example.   We begin by specifying the "edges" of the HMM.  This is done by making sure that only valid transitions are initialized to non-zero probabilities.  Transitions that are initialized to 0 can never change via Baum-Welch training.   For our model, we want to insure that  TE states must return to the Outside state before beginning a new element.   This is accomplished by with the following transition matrix, specified with the `--initTransProbs` option:
 
     Outside  LeftLTR  0.1
 	Outside  PolyALine  0.1
