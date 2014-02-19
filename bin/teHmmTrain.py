@@ -327,7 +327,7 @@ def applyUserEmissions(userEmPath, emission, stateMap, trackList):
             state = stateMap.getMap(stateName)
             track = trackList.getTrackByName(trackName)
             if track is None:
-                raise RuntimeError("Track %s not found in supervised data" %
+                raise RuntimeError("Track %s (in user emissions) not found" %
                                    trackName)
             symbolMap = track.getValueMap()
             track = track.getNumber()

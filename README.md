@@ -116,7 +116,7 @@ Because the outgoing probabilities of each state above sum to 1, all other trans
 
 	LeftLTR  ltrFinder  LTR|left|LTR_TE  0.9
 	RightLTR  ltrFinder  LTR|right|LTR_TE  0.9
- 	RightLTR  ltrFinder  inside|-|LTR_TE  0.9
+ 	InsideLTR  ltrFinder  inside|-|LTR_TE  0.9
 	
  	PolyALine  fastaSequence  A  0.99
 	PolyALine  chaux  non-LTR/ATLINE  0.9
