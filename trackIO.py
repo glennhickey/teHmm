@@ -95,7 +95,14 @@ def readBedData(bedPath, chrom, start, end, **kwargs):
     if needIntersect is True:
         logging.debug("intersecting (%s,%d,%d) and %s" % (
             chrom, start, end, bedPath))
-        intersections = bedTool.all_hits(interval)
+        # Below, we try switching from all_hits to intersect()
+        # all_hits seems to leak a ton of memory for big files, so
+        # we hope intersect (which creates a temp file) will be better
+        #intersections = bedTool.all_hits(interval)
+        tempTool = BedTool(str(interval), from_string = True)
+        intersections = bedTool.intersect(tempTool)
+        tempTool.delete_temporary_history(ask=False)
+
     else:
         intersections = bedTool
     logging.debug("loading data from intersections")
@@ -122,6 +129,7 @@ def readBedData(bedPath, chrom, start, end, **kwargs):
         basesRead += oEnd - oStart
 
     logging.debug("done readBedData(%s). %d bases read" % (bedPath, basesRead))
+
     return data
 
 ###########################################################################
@@ -148,7 +156,13 @@ def readBedIntervals(bedPath, ncol = 3,
         interval = Interval(chrom, start, end)
         logging.debug("intersecting (%s,%d,%d) and %s" % (chrom, start, end,
                                                           bedPath))
-        bedIntervals = bedTool.all_hits(interval)
+        # Below, we try switching from all_hits to intersect()
+        # all_hits seems to leak a ton of memory for big files, so
+        # we hope intersect (which creates a temp file) will be better
+        #bedIntervals = bedTool.all_hits(interval)
+        tempTool = BedTool(str(interval), from_string = True)
+        bedIntervals = bedTool.intersect(tempTool)
+        tempTool.delete_temporary_history(ask=False)
 
     logging.debug("appending bed intervals")
     for feat in bedIntervals:
