@@ -19,7 +19,7 @@ from teHmm.emission import PairEmissionModel
 from teHmm.track import CategoryMap, BinaryMap
 from teHmm.cfg import MultitrackCfg
 from teHmm.modelIO import saveModel
-from teHmm.common import myLog, EPSILON
+from teHmm.common import myLog, EPSILON, initBedTool, cleanBedTool
 
 def main(argv=None):
     if argv is None:
@@ -120,7 +120,8 @@ def main(argv=None):
     if args.verbose is True:
         logging.basicConfig(level=logging.DEBUG)
     else:
-        logging.basicConfig(level=logging.INFO)        
+        logging.basicConfig(level=logging.INFO)
+    tempBedToolPath = initBedTool()
 
     # read training intervals from the bed file
     logging.info("loading training intervals from %s" % args.trainingBed)
@@ -209,6 +210,8 @@ def main(argv=None):
     # write the model to a pickle
     logging.info("saving trained model to %s" % args.outputModel)
     saveModel(args.outputModel, model)
+
+    cleanBedTool(tempBedToolPath)
 
 ###########################################################################
     

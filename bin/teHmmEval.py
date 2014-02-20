@@ -17,6 +17,8 @@ from teHmm.hmm import MultitrackHmm
 from teHmm.cfg import MultitrackCfg
 from teHmm.trackIO import getMergedBedIntervals
 from teHmm.modelIO import loadModel
+from teHmm.common import myLog, EPSILON, initBedTool, cleanBedTool
+
 
 def main(argv=None):
     if argv is None:
@@ -52,6 +54,7 @@ def main(argv=None):
         logging.basicConfig(level=logging.DEBUG)
     else:
         logging.basicConfig(level=logging.INFO)
+    tempBedToolPath = initBedTool()
     if args.slice <= 0:
         args.slice = sys.maxint
         
@@ -103,6 +106,8 @@ def main(argv=None):
         print "Number of EM iterations: %d" % model.current_iteration
     if args.bed is not None:
         vitOutFile.close()
+
+    cleanBedTool(tempBedToolPath)
 
 def statesToBed(chrom, start, end, states, bedFile):
     """write a sequence of states out in bed format where intervals are

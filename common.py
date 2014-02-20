@@ -11,6 +11,9 @@ from multiprocessing import Pool
 import logging
 import collections
 import numpy as np
+import string
+import random
+import pybedtools
 
 LOGZERO = -1e100
 EPSILON = np.finfo(float).eps
@@ -52,3 +55,22 @@ def runParallelShellCommands(cmdList, numProc):
             raise RuntimeError("Keyboard interrupt")
         if not result.successful():
             raise "One or more of commands %s failed" % str(cmdList)
+
+def initBedTool(tempPrefix=""):
+    # keep temporary files in current directory, to make it a little harder to
+    # lose track of them and clog up the system....
+    S = string.ascii_uppercase + string.digits
+    tag = ''.join(random.choice(S) for x in range(5))
+    tempPath = os.path.join(os.getcwd(), "%sTempBedTool_%s" % (tempPrefix, tag))
+    logging.info("Temporary directory for BedTools (you may need to manually"
+                 " erase in event of crash): %s" % tempPath)
+    return tempPath
+
+def cleanBedTool(tempPath):
+    # do best to erase temporary bedtool files if necessary
+    # (tempPath argument must have been created with initBedTool())
+    assert "TempBedTool_" in tempPath
+    pybedtools.cleanup(remove_all=True)
+    runShellCommand("rm -rf %s" % tempPath)
+
+        

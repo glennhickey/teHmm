@@ -8,6 +8,8 @@ import sys
 import os
 import tempfile
 
+from teHmm.common import myLog, EPSILON, initBedTool, cleanBedTool
+
 def getTestDirPath(path = None):
     testPath = os.path.abspath('./tests/data')
     if path is not None:
@@ -20,12 +22,14 @@ class TestBase(unittest.TestCase):
     def setUp(self):
         self.tempFiles = []
         super(TestBase, self).setUp()
-    
+        self.bedTemp = initBedTool("test")
+        
     def tearDown(self):
         for tempFile in self.tempFiles:
             if os.path.isfile(tempFile):
                 os.remove(tempFile)
         super(TestBase, self).tearDown()
+        cleanBedTool(self.bedTemp)
         
     def getTempFile(self):
         if not os.path.exists('./tests/temp'):
