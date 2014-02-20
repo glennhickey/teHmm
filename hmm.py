@@ -15,6 +15,7 @@ import pickle
 import string
 import copy
 import logging
+import time
 from collections import Iterable
 from numpy.testing import assert_array_equal, assert_array_almost_equal
 
@@ -143,7 +144,11 @@ class MultitrackHmm(_BaseHMM):
         assert numThreads == 1
         output = []
         for trackTable in trackData.getTrackTableList():
+            logging.debug("%s Beginning hmm viterbi decode" % (
+                time.strftime("%H:%M:%S")))
             prob, states = self.decode(trackTable)
+            logging.debug("%s Done hmm viterbi decode" % (
+                time.strftime("%H:%M:%S")))
             if self.stateNameMap is not None:
                 states = map(self.stateNameMap.getMapBack, states)
             output.append((prob,states))
