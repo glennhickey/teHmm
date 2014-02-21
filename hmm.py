@@ -329,7 +329,6 @@ class MultitrackHmm(BaseHMM):
         fwdlattice = np.zeros((n_observations, n_components))
         _hmm._forward(n_observations, n_components, self._log_startprob,
                        self._log_transmat, framelogprob, fwdlattice)
-        fwdlattice[fwdlattice <= ZEROLOGPROB] = NEGINF
         return logsumexp(fwdlattice[-1]), fwdlattice
 
     def _do_backward_pass(self, framelogprob):
@@ -339,8 +338,5 @@ class MultitrackHmm(BaseHMM):
         bwdlattice = np.zeros((n_observations, n_components))
         _hmm._backward(n_observations, n_components, self._log_startprob,
                         self._log_transmat, framelogprob, bwdlattice)
-
-        bwdlattice[bwdlattice <= ZEROLOGPROB] = NEGINF
-
         return bwdlattice
 
