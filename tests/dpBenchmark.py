@@ -16,6 +16,7 @@ from teHmm.hmm import MultitrackHmm
 from teHmm.common import myLog, EPSILON, initBedTool, cleanBedTool
 from teHmm.basehmm import BaseHMM
 from teHmm.hmm import MultitrackHmm
+from teHmm.emission import IndependentMultinomialEmissionModel
 
 """ This is a script to benchmark the HMM dynamic programming functions
 (forward, backward and viterbi).  It seems the original scikit implementations
@@ -47,9 +48,10 @@ def main(argv=None):
     assert alg == "viterbi" or alg == "forward" or alg == "backward"
 
     # orginal, scikit hmm
-    basehmm = BaseHMM()
+    basehmm = BaseHMM(n_components=args.S)
     # new, hopefully faster hmm
-    mthmm = MultitrackHmm()
+    mthmm = MultitrackHmm(emissionModel=IndependentMultinomialEmissionModel(
+        args.S, [2]))
     frame = makeFrame(args.S, args.N)
     baseret = None
     mtret = None
