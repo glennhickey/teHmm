@@ -51,7 +51,8 @@ from numpy.testing import assert_array_equal, assert_array_almost_equal
 from .emission import IndependentMultinomialEmissionModel
 from .track import TrackList, TrackTable, Track
 from .common import EPSILON, myLog
-from .basehmm import BaseHMM, check_random_state
+from .basehmm import BaseHMM, check_random_state, NEGINF, ZEROLOGPROB, logsumexp
+from . import _hmm
 
 """
 This class is based on the MultinomialHMM from sckikit-learn, but we make
@@ -310,3 +311,36 @@ class MultitrackHmm(BaseHMM):
         self._log_transmat = myLog(np.asarray(transmat).copy())
 
     transmat_ = property(_get_transmat, _set_transmat)
+
+    
+    def _do_viterbi_pass(self, framelogprob):
+        """ Viterbi dynamic programming.  Overrides the original version
+        which is still in basehmm.py, to use the faster Cython code """
+        n_observations, n_components = framelogprob.shape
+        state_sequence, logprob = _hmm._viterbi(
+            n_observations, n_components, self._log_startprob,
+            self._log_transmat, framelogprob)
+        return logprob, state_sequence
+
+    def _do_forward_pass(self, framelogprob):
+        """ Forward dynamic programming.  Overrides the original version
+        which is still in basehmm.py, to use the faster Cython code """
+        n_observations, n_components = framelogprob.shape
+        fwdlattice = np.zeros((n_observations, n_components))
+        _hmm._forward(n_observations, n_components, self._log_startprob,
+                       self._log_transmat, framelogprob, fwdlattice)
+        fwdlattice[fwdlattice <= ZEROLOGPROB] = NEGINF
+        return logsumexp(fwdlattice[-1]), fwdlattice
+
+    def _do_backward_pass(self, framelogprob):
+        """ Backward dynamic programming.  Overrides the original version
+        which is still in basehmm.py, to use the faster Cython code """
+        n_observations, n_components = framelogprob.shape
+        bwdlattice = np.zeros((n_observations, n_components))
+        _hmm._backward(n_observations, n_components, self._log_startprob,
+                        self._log_transmat, framelogprob, bwdlattice)
+
+        bwdlattice[bwdlattice <= ZEROLOGPROB] = NEGINF
+
+        return bwdlattice
+

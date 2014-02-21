@@ -1,12 +1,10 @@
+#Released under the MIT license, see LICENSE.txt
+#Copyright (C) 2014 by Glenn Hickey
 
 """
-We keep the original Scikit-Learn cython routines here mostly for consistency 
-checking and unit tests.  The HMM uses the sped-up versions in _hmm.pyx, but
-it's handy to have the original versions here to check the output's the same. 
-As it stands, MultinomialHMM, used only in unit tests, uses the methods below
-while MultitrackHMM, used for everything else, uses the fast versions in 
-_hmm.pyx whenever possible.  tests/hmmTests.py compares the output of 
-the two versions to make sure they remain the same. 
+Reimplement the Cython HMM dynamic programming routines from Scikit-learn
+(which are preserved in _basehmm.pyx) to be faster, mostly by unrolling the
+vector numpy operations which don't seem to generate optimal C code.  
 
 -- Glenn Hickey, 2014
 

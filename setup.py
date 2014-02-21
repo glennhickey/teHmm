@@ -8,6 +8,8 @@ setup(
   ext_modules = cythonize([
         Extension("_basehmm", ["_basehmm.pyx"],
                 include_dirs=[numpy.get_include()]),
+        Extension("_hmm", ["_hmm.pyx"],
+                include_dirs=[numpy.get_include()]),
         Extension("_emission", ["_emission.pyx"],
                 include_dirs=[numpy.get_include()]),
         Extension("_cfg", ["_cfg.pyx"],
