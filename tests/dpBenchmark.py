@@ -14,7 +14,8 @@ import time
 
 from teHmm.hmm import MultitrackHmm
 from teHmm.common import myLog, EPSILON, initBedTool, cleanBedTool
-from teHmm.basehmm import BaseHMM 
+from teHmm.basehmm import BaseHMM
+from teHmm.hmm import MultitrackHmm
 
 """ This is a script to benchmark the HMM dynamic programming functions
 (forward, backward and viterbi).  It seems the original scikit implementations
@@ -36,20 +37,44 @@ def main(argv=None):
                         type=int, default=10)
     parser.add_argument("--alg", help="Algorithm. Valid options are"
                         " {viterbi, forward, backward}.", default="viterbi")
+    parser.add_argument("--new", help="Only run new hmm", action="store_true",
+                        default=False)
+    parser.add_argument("--old", help="Only run old hmm", action="store_true",
+                        default=False)
     
     args = parser.parse_args()
     alg = args.alg.lower()
-    assert alg == "viterbi" or alg == "forward" or alg == "backward"    
+    assert alg == "viterbi" or alg == "forward" or alg == "backward"
 
-    hmm = BaseHMM(n_components=args.S)
+    # orginal, scikit hmm
+    basehmm = BaseHMM()
+    # new, hopefully faster hmm
+    mthmm = MultitrackHmm()
     frame = makeFrame(args.S, args.N)
+    baseret = None
+    mtret = None
 
-    startTime = time.time()
-    runTest(hmm, frame, alg)
-    deltaTime = time.time() - startTime
-    
-    print "Elapsed time for %d x %d %s: %s" % (args.N, args.S, args.alg, 
-                                             str(deltaTime))
+    if args.new == args.old or args.old:
+        startTime = time.time()
+        baseret = runTest(basehmm, frame, alg)
+        deltaTime = time.time() - startTime
+        print "Elapsed time for OLD %d x %d %s: %s" % (args.N, args.S, args.alg,
+                                                       str(deltaTime))    
+    if args.new == args.old or args.new:
+        startTime = time.time()
+        newret = runTest(mthmm, frame, alg)
+        deltaTime = time.time() - startTime
+        print "Elapsed time for NEW %d x %d %s: %s" % (args.N, args.S, args.alg,
+                                                       str(deltaTime))
+    if baseret is not None and mtret is not None:
+        # note comparison doesnt mean much since data is so boring so 
+        # hopefully hmmTest will be more meaningful.  that said, this will still
+        # detect many catastrophic bugs. 
+        if alg == "viterbi":
+            assert_array_almost_eqal(baseret[0], mtret[0])
+            assert_array_eqal(baseret[1], mtret[1])
+        else:
+            assert_array_almost_equal(baseret, mtret)
 
     
 def makeFrame(numStates, numObs, prob=0.5):
@@ -59,11 +84,11 @@ def makeFrame(numStates, numObs, prob=0.5):
 def runTest(hmm, frame, alg):
     """ call the basehmms low level dp algorithm """
     if alg == "viterbi":
-        hmm._do_viterbi_pass(frame)
+        return hmm._do_viterbi_pass(frame)
     elif alg == "forward":
-        hmm._do_forward_pass(frame)
+        return hmm._do_forward_pass(frame)
     elif alg == "backward":
-        hmm._do_backward_pass(frame)
+        return hmm._do_backward_pass(frame)
     else:
         assert False
 
