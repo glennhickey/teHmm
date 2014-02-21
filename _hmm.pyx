@@ -45,6 +45,7 @@ from libc.math cimport exp, log
 import numpy as np
 cimport numpy as np
 cimport cython
+from libc.stdlib cimport malloc, free
 
 np.import_array()
 
@@ -64,11 +65,16 @@ cdef dtype_t _max(dtype_t[:] values):
     return vmax
 
 @cython.boundscheck(False)
-cpdef dtype_t _logsum(dtype_t[:] X):
-    cdef dtype_t vmax = _max(X)
+cdef inline dtype_t _logsum(double* X,
+                      int n_components):
     cdef dtype_t power_sum = 0
+    cdef dtype_t vmax = X[0]
+    
+    for i in xrange(1, n_components):
+        if X[i] > vmax:
+            vmax = X[i]
 
-    for i in range(X.shape[0]):
+    for i in xrange(n_components):
         power_sum += exp(X[i]-vmax)
 
     return log(power_sum) + vmax
@@ -83,18 +89,26 @@ def _forward(int n_observations, int n_components,
 
     cdef int t, i, j
     cdef double logprob
-    cdef np.ndarray[dtype_t, ndim = 1] work_buffer
-    work_buffer = np.zeros(n_components)
+    cdef dtype_t vmax = 0
+    cdef dtype_t power_sum = 0
+    # seems major bottleneck in performance is passing numpy arrays to 
+    # other functions inside loops (like work_buffer to _logsum below)
+    # so we try using a C array directly. 
+    cdef double* work_buffer = <double *> \
+      malloc(n_components * cython.sizeof(double))
 
-    for i in range(n_components):
+    for i in xrange(n_components):
         fwdlattice[0, i] = log_startprob[i] + framelogprob[0, i]
 
-    for t in range(1, n_observations):
-        for j in range(n_components):
-            for i in range(n_components):
+    for t in xrange(1, n_observations):
+        for j in xrange(n_components):
+            for i in xrange(n_components):
                 work_buffer[i] = fwdlattice[t - 1, i] + log_transmat[i, j]
-            fwdlattice[t, j] = _logsum(work_buffer) + framelogprob[t, j]
+            fwdlattice[t, j] = _logsum(work_buffer, n_components) + \
+              framelogprob[t, j]
 
+    free(work_buffer)
+            
 
 @cython.boundscheck(False)
 def _backward(int n_observations, int n_components,
@@ -105,18 +119,23 @@ def _backward(int n_observations, int n_components,
 
     cdef int t, i, j
     cdef double logprob
-    cdef np.ndarray[dtype_t, ndim = 1] work_buffer
-    work_buffer = np.zeros(n_components)
+    # seems major bottleneck in performance is passing numpy arrays to 
+    # other functions inside loops (like work_buffer to _logsum below)
+    # so we try using a C array directly. 
+    cdef double* work_buffer = <double *> \
+      malloc(n_components * cython.sizeof(double))
 
-    for i in range(n_components):
+    for i in xrange(n_components):
         bwdlattice[n_observations - 1, i] = 0.0
 
-    for t in range(n_observations - 2, -1, -1):
-        for i in range(n_components):
-            for j in range(n_components):
+    for t in xrange(n_observations - 2, -1, -1):
+        for i in xrange(n_components):
+            for j in xrange(n_components):
                 work_buffer[j] = log_transmat[i, j] + framelogprob[t + 1, j] \
                     + bwdlattice[t + 1, j]
-            bwdlattice[t, i] = _logsum(work_buffer)
+                bwdlattice[t, i] = _logsum(work_buffer, n_components)
+
+    free(work_buffer)
 
 
 @cython.boundscheck(False)
@@ -178,7 +197,7 @@ def _viterbi(int n_observations, int n_components,
     state_sequence[n_observations - 1] = max_pos
     logprob = viterbi_lattice[n_observations - 1, max_pos]
 
-    for t in range(n_observations - 1, 0, -1):
+    for t in xrange(n_observations - 1, 0, -1):
         state_sequence[t - 1] = trace_back[t, state_sequence[t]]
 
     return state_sequence, logprob
