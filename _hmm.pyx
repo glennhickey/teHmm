@@ -57,7 +57,7 @@ np.import_array()
 ctypedef np.float64_t dtype_t
 
 cdef dtype_t _NINF = -np.inf
-
+cdef dtype_t ZEROLOGPROB = -1e200
 
 @cython.boundscheck(False)
 def _forward(int n_observations, int n_components,
@@ -87,6 +87,8 @@ def _forward(int n_observations, int n_components,
             for i in xrange(n_components):
                 power_sum += exp(work_buffer[i] - vmax)                
             fwdlattice[t, j] = log(power_sum) + vmax + framelogprob[t, j]
+            if fwdlattice[t, i] <= ZEROLOGPROB:
+                fwdlattice[t, i] = _NINF
     free(work_buffer)
 
 @cython.boundscheck(False)
@@ -118,6 +120,8 @@ def _backward(int n_observations, int n_components,
             for j in xrange(n_components):
                 power_sum += exp(work_buffer[j] - vmax)
             bwdlattice[t, i] = log(power_sum) + vmax
+            if bwdlattice[t, i] <= ZEROLOGPROB:
+                bwdlattice[t, i] = _NINF
 
     free(work_buffer)
 

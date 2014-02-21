@@ -600,7 +600,6 @@ class BaseHMM(object):
         fwdlattice = np.zeros((n_observations, n_components))
         _basehmm._forward(n_observations, n_components, self._log_startprob,
                        self._log_transmat, framelogprob, fwdlattice)
-        fwdlattice[fwdlattice <= ZEROLOGPROB] = NEGINF
         return logsumexp(fwdlattice[-1]), fwdlattice
 
     def _do_backward_pass(self, framelogprob):
@@ -608,9 +607,6 @@ class BaseHMM(object):
         bwdlattice = np.zeros((n_observations, n_components))
         _basehmm._backward(n_observations, n_components, self._log_startprob,
                         self._log_transmat, framelogprob, bwdlattice)
-
-        bwdlattice[bwdlattice <= ZEROLOGPROB] = NEGINF
-
         return bwdlattice
 
     def _compute_log_likelihood(self, obs):
