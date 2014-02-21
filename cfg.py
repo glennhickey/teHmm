@@ -19,9 +19,8 @@ from .track import TrackList, TrackTable, Track
 from .hmm import MultitrackHmm
 from .common import EPSILON, LOGZERO, myLog
 from ._cfg import fastCykTable
-from sklearn.hmm import normalize
-from sklearn.hmm import NEGINF
-from sklearn.utils import check_random_state, deprecated
+from .basehmm import normalize
+from .basehmm import NEGINF
 
 """ Generalize MultitrackHmm (hmm.py) to a Stochastic Context Free Grammer
 (CFG) while preserving more or less the same interface (and using the same

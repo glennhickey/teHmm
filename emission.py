@@ -3,7 +3,6 @@
 #Copyright (C) 2013 by Glenn Hickey
 #
 #Released under the MIT license, see LICENSE.txt
-#!/usr/bin/env python
 
 import os
 import sys
@@ -19,16 +18,7 @@ from operator import mul
 from ._emission import canFast, fastAllLogProbs, fastAccumulateStats, fastUpdateCounts
 from .track import TrackTable
 from .common import EPSILON, myLog
-from sklearn.hmm import _BaseHMM
-from sklearn.hmm import MultinomialHMM
-from sklearn.hmm import GaussianHMM
-from sklearn.utils import check_random_state, deprecated
-from sklearn.utils.extmath import logsumexp
-from sklearn.base import BaseEstimator
-from sklearn.hmm import cluster
-from sklearn.hmm import _hmmc
-from sklearn.hmm import normalize
-from sklearn.hmm import NEGINF
+from .basehmm import normalize, NEGINF
 
 """ Generlization of the sckit-learn multinomial to k dimensions.  Ie that the
 observations are k-dimensional vectors -- one element for each track.

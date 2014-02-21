@@ -1,12 +1,41 @@
 #!/usr/bin/env python
-
-#Copyright (C) 2013 by Glenn Hickey
-#
-# Class derived from _BaseHMM and MultinomialHMM from sklearn/tests/hmm.py
-# (2010 - 2013, scikit-learn developers (BSD License))
-#
 #Released under the MIT license, see LICENSE.txt
-#!/usr/bin/env python
+#Copyright (C) 2013 by Glenn Hickey
+
+"""
+ Class derived from _BaseHMM and MultinomialHMM from sklearn/tests/hmm.py
+ See below:
+
+Copyright (c) 2007-2014 the scikit-learn developers.
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+
+  a. Redistributions of source code must retain the above copyright notice,
+     this list of conditions and the following disclaimer.
+  b. Redistributions in binary form must reproduce the above copyright
+     notice, this list of conditions and the following disclaimer in the
+     documentation and/or other materials provided with the distribution.
+  c. Neither the name of the Scikit-learn Developers  nor the names of
+     its contributors may be used to endorse or promote products
+     derived from this software without specific prior written
+     permission.
+
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ARE DISCLAIMED. IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS BE LIABLE FOR
+ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
+DAMAGE.
+"""
+
 
 import os
 import sys
@@ -22,19 +51,14 @@ from numpy.testing import assert_array_equal, assert_array_almost_equal
 from .emission import IndependentMultinomialEmissionModel
 from .track import TrackList, TrackTable, Track
 from .common import EPSILON, myLog
-from sklearn.hmm import _BaseHMM
-from sklearn.hmm import MultinomialHMM
-from sklearn.hmm import _hmmc
-from sklearn.hmm import NEGINF
-from sklearn.utils import check_random_state, deprecated 
-
+from .basehmm import BaseHMM, check_random_state
 
 """
 This class is based on the MultinomialHMM from sckikit-learn, but we make
 the emission model a parameter. The custom emission model we support at this
 point is a multi-*dimensional* multinomial. 
 """
-class MultitrackHmm(_BaseHMM):
+class MultitrackHmm(BaseHMM):
     def __init__(self, emissionModel=None,
                  startprob=None,
                  transmat=None, startprob_prior=None, transmat_prior=None,
@@ -52,7 +76,7 @@ class MultitrackHmm(_BaseHMM):
 
         """Create a hidden Markov model that supports multiple tracks.
         emissionModel must have already been created"""
-        _BaseHMM.__init__(self, n_components=n_components,
+        BaseHMM.__init__(self, n_components=n_components,
                           startprob=startprob,
                           transmat=transmat,
                           startprob_prior=startprob_prior,
@@ -262,7 +286,7 @@ class MultitrackHmm(_BaseHMM):
 
     def fit(self, obs, **kwargs):
         self.current_iteration = 1
-        return _BaseHMM.fit(self, obs, **kwargs)
+        return BaseHMM.fit(self, obs, **kwargs)
 
     # Getting annoyed with epsilons being added by scikit learn
     # so redo tranmat property to allow zeros (should probably do
