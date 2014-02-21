@@ -60,6 +60,47 @@ cdef dtype_t _NINF = -np.inf
 cdef dtype_t ZEROLOGPROB = -1e200
 
 @cython.boundscheck(False)
+def _matrix_log_sum(np.ndarray[dtype_t, ndim=3] matrixArray,
+                    np.ndarray[dtype_t, ndim=2] outMatrix):
+    #This is a de-vectorized verion of logsumexp (from scikit learn, original
+    #is included in ./basehmm.py), specialized for input of N x S x S dimensions.
+    #The thing is that the input matrix here can obviously be quite huge and
+    #the original implementation made dozens of copies of it, rendering it
+    #unusable for large data.  In particular, the call from accumulated_suf_stat
+    #was killing it.
+    cdef int N = matrixArray.shape[0]
+    cdef int S = matrixArray.shape[1]
+    assert matrixArray.shape[2] == S
+    assert outMatrix.shape[0] == S
+    assert matrixArray.shape[1] == S
+    cdef int i, j, k
+    cdef np.ndarray[dtype_t, ndim = 2] maxMatrix
+    maxMatrix = _NINF + np.zeros((N, S))
+    
+    # find max
+    for i in xrange(0, N):
+        for j in xrange(0, S):
+            for k in xrange(0, S):
+                if matrixArray[i, j, k] > maxMatrix[j, k]:
+                    maxMatrix[j, k] = matrixArray[i, j, k]
+
+    # sum exp(x - max)
+    for j in xrange(0, S):
+        for k in xrange(0, S):
+            outMatrix[j, k] = 0                    
+
+    for i in xrange(0, N):
+        for j in xrange(0, S):
+            for k in xrange(0, S):
+                outMatrix[j, k] += exp(matrixArray[i, j, k] - maxMatrix[j, k])
+
+    # return log(sum(x-max)) + max
+    for j in xrange(0, S):
+        for k in xrange(0, S):
+            outMatrix[j, k] = log(outMatrix[j, k]) + maxMatrix[j, k]
+        
+
+@cython.boundscheck(False)
 def _forward(int n_observations, int n_components,
         np.ndarray[dtype_t, ndim=1] log_startprob,
         np.ndarray[dtype_t, ndim=2] log_transmat,

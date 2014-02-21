@@ -279,7 +279,10 @@ class MultitrackHmm(BaseHMM):
                 _hmm._compute_lneta(n_observations, n_components, fwdlattice,
                                      self._log_transmat, bwdlattice,
                                      framelogprob, lnP, lneta)
-                stats["trans"] += np.exp(logsumexp(lneta, 0))
+                logsum_lneta = np.zeros((n_components, n_components))
+                _hmm._matrix_log_sum(lneta, logsum_lneta)
+                stats["trans"] += np.exp(logsum_lneta)
+
         if 'e' in params:
             logging.debug("beginning Emissions E-substep")
             self.emissionModel.accumulateStats(obs, stats['obs'], posteriors)
