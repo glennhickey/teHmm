@@ -3,8 +3,13 @@
 
 """
 Reimplement the Cython HMM dynamic programming routines from Scikit-learn
-(which are preserved in _basehmm.pyx) to be faster, mostly by unrolling the
-vector numpy operations which don't seem to generate optimal C code.  
+(which are preserved in _basehmm.pyx) to be faster.  The changes made have
+a 10x - 100x speed increase on my development machine (Mavericks Macbook air).
+They are centered around absolutely avoiding function calls in the inner loops,
+including any numpy vector operations.  Traceback pointers were added to Viterbi
+to further speed up the algorithm (albeit at the cost of O(N) memory).
+
+Improvements can be measured using tests/dpBenchmark.py
 
 -- Glenn Hickey, 2014
 
@@ -53,32 +58,6 @@ ctypedef np.float64_t dtype_t
 
 cdef dtype_t _NINF = -np.inf
 
-@cython.boundscheck(False)
-cdef dtype_t _max(dtype_t[:] values):
-    # find maximum value (builtin 'max' is unrolled for speed)
-    cdef dtype_t value
-    cdef dtype_t vmax = _NINF
-    for i in range(values.shape[0]):
-        value = values[i]
-        if value > vmax:
-            vmax = value
-    return vmax
-
-@cython.boundscheck(False)
-cdef inline dtype_t _logsum(double* X,
-                      int n_components):
-    cdef dtype_t power_sum = 0
-    cdef dtype_t vmax = X[0]
-    
-    for i in xrange(1, n_components):
-        if X[i] > vmax:
-            vmax = X[i]
-
-    for i in xrange(n_components):
-        power_sum += exp(X[i]-vmax)
-
-    return log(power_sum) + vmax
-
 
 @cython.boundscheck(False)
 def _forward(int n_observations, int n_components,
@@ -90,10 +69,7 @@ def _forward(int n_observations, int n_components,
     cdef int t, i, j
     cdef double logprob
     cdef dtype_t vmax = 0
-    cdef dtype_t power_sum = 0
-    # seems major bottleneck in performance is passing numpy arrays to 
-    # other functions inside loops (like work_buffer to _logsum below)
-    # so we try using a C array directly. 
+    cdef dtype_t power_sum = 0.0
     cdef double* work_buffer = <double *> \
       malloc(n_components * cython.sizeof(double))
 
@@ -102,13 +78,16 @@ def _forward(int n_observations, int n_components,
 
     for t in xrange(1, n_observations):
         for j in xrange(n_components):
+            vmax = _NINF
             for i in xrange(n_components):
                 work_buffer[i] = fwdlattice[t - 1, i] + log_transmat[i, j]
-            fwdlattice[t, j] = _logsum(work_buffer, n_components) + \
-              framelogprob[t, j]
-
+                if work_buffer[i] > vmax:
+                    vmax = work_buffer[i]
+            power_sum = 0.0
+            for i in xrange(n_components):
+                power_sum += exp(work_buffer[i] - vmax)                
+            fwdlattice[t, j] = log(power_sum) + vmax + framelogprob[t, j]
     free(work_buffer)
-            
 
 @cython.boundscheck(False)
 def _backward(int n_observations, int n_components,
@@ -119,9 +98,8 @@ def _backward(int n_observations, int n_components,
 
     cdef int t, i, j
     cdef double logprob
-    # seems major bottleneck in performance is passing numpy arrays to 
-    # other functions inside loops (like work_buffer to _logsum below)
-    # so we try using a C array directly. 
+    cdef dtype_t vmax = 0
+    cdef dtype_t power_sum = 0.0
     cdef double* work_buffer = <double *> \
       malloc(n_components * cython.sizeof(double))
 
@@ -130,10 +108,16 @@ def _backward(int n_observations, int n_components,
 
     for t in xrange(n_observations - 2, -1, -1):
         for i in xrange(n_components):
+            vmax = _NINF
             for j in xrange(n_components):
                 work_buffer[j] = log_transmat[i, j] + framelogprob[t + 1, j] \
                     + bwdlattice[t + 1, j]
-                bwdlattice[t, i] = _logsum(work_buffer, n_components)
+                if work_buffer[j] > vmax:
+                    vmax = work_buffer[j]
+            power_sum = 0.0
+            for j in xrange(n_components):
+                power_sum += exp(work_buffer[j] - vmax)
+            bwdlattice[t, i] = log(power_sum) + vmax
 
     free(work_buffer)
 
