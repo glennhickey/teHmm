@@ -343,6 +343,8 @@ class MultitrackHmm(BaseHMM):
         """ Forward dynamic programming.  Overrides the original version
         which is still in basehmm.py, to use the faster Cython code """
         n_observations, n_components = framelogprob.shape
+        logging.debug("%s: beginning Forward pass on %d x %d matrix" % (
+            time.strftime("%H:%M:%S"), n_observations, n_components))
         fwdlattice = np.zeros((n_observations, n_components))
         _hmm._forward(n_observations, n_components, self._log_startprob,
                        self._log_transmat, framelogprob, fwdlattice)
@@ -352,6 +354,8 @@ class MultitrackHmm(BaseHMM):
         """ Backward dynamic programming.  Overrides the original version
         which is still in basehmm.py, to use the faster Cython code """
         n_observations, n_components = framelogprob.shape
+        logging.debug("%s: beginning Backward pass on %d x %d matrix" % (
+            time.strftime("%H:%M:%S"), n_observations, n_components))
         bwdlattice = np.zeros((n_observations, n_components))
         _hmm._backward(n_observations, n_components, self._log_startprob,
                         self._log_transmat, framelogprob, bwdlattice)
