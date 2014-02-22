@@ -270,11 +270,12 @@ class MultitrackHmm(BaseHMM):
         if 's' in params:
             stats['start'] += posteriors[0]
         if 't' in params:
+            logging.debug("%s: beginning Transition E-substep" %
+                                          time.strftime("%H:%M:%S"))
             n_observations, n_components = framelogprob.shape
             # when the sample is of length 1, it contains no transitions
             # so there is no reason to update our trans. matrix estimate
             if n_observations > 1:
-                lneta = np.zeros((n_observations - 1, n_components, n_components))
                 logsum_lneta = np.zeros((n_components, n_components))
 
                 lnP = logsumexp(fwdlattice[-1])
@@ -285,7 +286,8 @@ class MultitrackHmm(BaseHMM):
                 stats["trans"] += np.exp(logsum_lneta)
 
         if 'e' in params:
-            logging.debug("beginning Emissions E-substep")
+            logging.debug("%s: beginning Emissions E-substep" %
+                          time.strftime("%H:%M:%S"))
             self.emissionModel.accumulateStats(obs, stats['obs'], posteriors)
 
         logging.debug("ending MultitrackHMM E-step")
