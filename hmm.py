@@ -275,12 +275,13 @@ class MultitrackHmm(BaseHMM):
             # so there is no reason to update our trans. matrix estimate
             if n_observations > 1:
                 lneta = np.zeros((n_observations - 1, n_components, n_components))
-                lnP = logsumexp(fwdlattice[-1])
-                _hmm._compute_lneta(n_observations, n_components, fwdlattice,
-                                     self._log_transmat, bwdlattice,
-                                     framelogprob, lnP, lneta)
                 logsum_lneta = np.zeros((n_components, n_components))
-                _hmm._matrix_log_sum(lneta, logsum_lneta)
+
+                lnP = logsumexp(fwdlattice[-1])
+                _hmm._log_sum_lneta(n_observations, n_components, fwdlattice,
+                                     self._log_transmat, bwdlattice,
+                                     framelogprob, lnP, logsum_lneta)
+
                 stats["trans"] += np.exp(logsum_lneta)
 
         if 'e' in params:

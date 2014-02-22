@@ -60,46 +60,45 @@ cdef dtype_t _NINF = -np.inf
 cdef dtype_t ZEROLOGPROB = -1e200
 
 @cython.boundscheck(False)
-def _matrix_log_sum(np.ndarray[dtype_t, ndim=3] matrixArray,
-                    np.ndarray[dtype_t, ndim=2] outMatrix):
-    #This is a de-vectorized verion of logsumexp (from scikit learn, original
-    #is included in ./basehmm.py), specialized for input of N x S x S dimensions.
-    #The thing is that the input matrix here can obviously be quite huge and
-    #the original implementation made dozens of copies of it, rendering it
-    #unusable for large data.  In particular, the call from accumulated_suf_stat
-    #was killing it.
-    cdef int N = matrixArray.shape[0]
-    cdef int S = matrixArray.shape[1]
-    assert matrixArray.shape[2] == S
-    assert outMatrix.shape[0] == S
-    assert matrixArray.shape[1] == S
-    cdef int i, j, k
+def _log_sum_lneta(int n_observations, int n_components,
+        np.ndarray[dtype_t, ndim=2] fwdlattice,
+        np.ndarray[dtype_t, ndim=2] log_transmat,
+        np.ndarray[dtype_t, ndim=2] bwdlattice,
+        np.ndarray[dtype_t, ndim=2] framelogprob,
+        double logprob,
+        np.ndarray[dtype_t, ndim=2] logsum_lneta):
+	# This is a combined version of _compute_lneta (original preserved in
+	# _basehmm.pyx) and logsumexp (original preserved in basehmm.py).  We 
+	# rewrite to use two passes to avoid the giant memory overhead (
+	# original required O(obs * states * states)).  
+    cdef int i, j, t
     cdef np.ndarray[dtype_t, ndim = 2] maxMatrix
-    maxMatrix = _NINF + np.zeros((N, S))
+    cdef double x
+    maxMatrix = _NINF + np.zeros((n_components, n_components))
     
     # find max
-    for i in xrange(0, N):
-        for j in xrange(0, S):
-            for k in xrange(0, S):
-                if matrixArray[i, j, k] > maxMatrix[j, k]:
-                    maxMatrix[j, k] = matrixArray[i, j, k]
+    for t in range(n_observations - 1):
+        for i in range(n_components):
+            for j in range(n_components):
+                x = fwdlattice[t, i] + log_transmat[i, j] \
+                  + framelogprob[t + 1, j] + bwdlattice[t + 1, j] - logprob
+                if x > maxMatrix[i, j]:
+                    maxMatrix[i, j] = x
 
     # sum exp(x - max)
-    for j in xrange(0, S):
-        for k in xrange(0, S):
-            outMatrix[j, k] = 0                    
-
-    for i in xrange(0, N):
-        for j in xrange(0, S):
-            for k in xrange(0, S):
-                outMatrix[j, k] += exp(matrixArray[i, j, k] - maxMatrix[j, k])
+    for t in xrange(0, n_observations - 1):
+        for i in xrange(0, n_components):
+            for j in xrange(0, n_components):
+                x = fwdlattice[t, i] + log_transmat[i, j] \
+                    + framelogprob[t + 1, j] + bwdlattice[t + 1, j] - logprob
+                logsum_lneta[i, j] += exp(x - maxMatrix[i, j])
 
     # return log(sum(x-max)) + max
-    for j in xrange(0, S):
-        for k in xrange(0, S):
-            outMatrix[j, k] = log(outMatrix[j, k]) + maxMatrix[j, k]
-        
+    for i in xrange(0, n_components):
+        for j in xrange(0, n_components):
+            logsum_lneta[i, j] = log(logsum_lneta[i, j]) + maxMatrix[i, j]
 
+            
 @cython.boundscheck(False)
 def _forward(int n_observations, int n_components,
         np.ndarray[dtype_t, ndim=1] log_startprob,
@@ -165,23 +164,6 @@ def _backward(int n_observations, int n_components,
                 bwdlattice[t, i] = _NINF
 
     free(work_buffer)
-
-
-@cython.boundscheck(False)
-def _compute_lneta(int n_observations, int n_components,
-        np.ndarray[dtype_t, ndim=2] fwdlattice,
-        np.ndarray[dtype_t, ndim=2] log_transmat,
-        np.ndarray[dtype_t, ndim=2] bwdlattice,
-        np.ndarray[dtype_t, ndim=2] framelogprob,
-        double logprob,
-        np.ndarray[dtype_t, ndim=3] lneta):
-
-    cdef int i, j, t
-    for t in range(n_observations - 1):
-        for i in range(n_components):
-            for j in range(n_components):
-                lneta[t, i, j] = fwdlattice[t, i] + log_transmat[i, j] \
-                    + framelogprob[t + 1, j] + bwdlattice[t + 1, j] - logprob
 
 
 @cython.boundscheck(False)
