@@ -92,7 +92,7 @@ def cleanBedTool(tempPath):
 #
 #Released under the MIT license, see LICENSE.txt
 
-loggingFormatter = logging.Formatter('%(asctime)s %(levelname)s %(lineno)s %(message)s')
+loggingFormatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s')
 
 def __setDefaultLogger():
     l = logging.getLogger()
@@ -100,6 +100,7 @@ def __setDefaultLogger():
         if handler.stream == sys.stderr:
             return l
     handler = logging.StreamHandler(sys.stderr)
+    handler.setFormatter(loggingFormatter)
     l.addHandler(handler) 
     l.setLevel(logging.CRITICAL)
     return l
@@ -131,6 +132,7 @@ def addLoggingFileHandler(fileName, rotatingLogging=False):
         handler = logging.handlers.RotatingFileHandler(fileName, maxBytes=1000000, backupCount=1)
     else:
         handler = logging.FileHandler(fileName)
+    handler.setFormatter(loggingFormatter)
     logger.addHandler(handler)
     return handler
     
@@ -196,6 +198,6 @@ def setLoggingFromOptions(options):
     logger.info("Logging set at level: %s" % logLevelString)  
     
     if options.logFile is not None:
-        addLoggingFileHandler(options.logFile, options.logRotating)
+        addLoggingFileHandler(options.logFile, options.rotatingLogging)
     
     logger.info("Logging to file: %s" % options.logFile)  
