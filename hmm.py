@@ -50,7 +50,7 @@ from numpy.testing import assert_array_equal, assert_array_almost_equal
 
 from .emission import IndependentMultinomialEmissionModel
 from .track import TrackList, TrackTable, Track
-from .common import EPSILON, myLog
+from .common import EPSILON, myLog, logger
 from .basehmm import BaseHMM, check_random_state, NEGINF, ZEROLOGPROB, logsumexp
 from . import _hmm
 
@@ -125,7 +125,7 @@ class MultitrackHmm(BaseHMM):
         transitionCount = self.fudge + np.zeros((N,N), np.float)
         freqCount = self.fudge + np.zeros((N,), np.float)
         prevInterval = None
-        logging.debug("beginning supervised transition stats")
+        logger.debug("beginning supervised transition stats")
         for interval in bedIntervals:
             state = int(interval[3])
             assert state < N
@@ -169,11 +169,9 @@ class MultitrackHmm(BaseHMM):
         assert numThreads == 1
         output = []
         for trackTable in trackData.getTrackTableList():
-            logging.debug("%s Beginning hmm viterbi decode" % (
-                time.strftime("%H:%M:%S")))
+            logger.debug("Beginning hmm viterbi decode")
             prob, states = self.decode(trackTable)
-            logging.debug("%s Done hmm viterbi decode" % (
-                time.strftime("%H:%M:%S")))
+            logger.debug("Done hmm viterbi decode")
             if self.stateNameMap is not None:
                 states = map(self.stateNameMap.getMapBack, states)
             output.append((prob,states))
@@ -264,14 +262,13 @@ class MultitrackHmm(BaseHMM):
     def _accumulate_sufficient_statistics(self, stats, obs, framelogprob,
                                           posteriors, fwdlattice, bwdlattice,
                                           params):
-        logging.debug("%d: beginning MultitrackHMM E-step" %
+        logger.debug("%d: beginning MultitrackHMM E-step" %
                       self.current_iteration)
         stats['nobs'] += 1
         if 's' in params:
             stats['start'] += posteriors[0]
         if 't' in params:
-            logging.debug("%s: beginning Transition E-substep" %
-                                          time.strftime("%H:%M:%S"))
+            logger.debug("beginning Transition E-substep")
             n_observations, n_components = framelogprob.shape
             # when the sample is of length 1, it contains no transitions
             # so there is no reason to update our trans. matrix estimate
@@ -286,19 +283,18 @@ class MultitrackHmm(BaseHMM):
                 stats["trans"] += np.exp(logsum_lneta)
 
         if 'e' in params:
-            logging.debug("%s: beginning Emissions E-substep" %
-                          time.strftime("%H:%M:%S"))
+            logger.debug("beginning Emissions E-substep")
             self.emissionModel.accumulateStats(obs, stats['obs'], posteriors)
 
-        logging.debug("ending MultitrackHMM E-step")
+        logger.debug("ending MultitrackHMM E-step")
 
     def _do_mstep(self, stats, params):
-        logging.debug("%d: beginning MultitrackHMM M-step" %
+        logger.debug("%d: beginning MultitrackHMM M-step" %
                       self.current_iteration)
         super(MultitrackHmm, self)._do_mstep(stats, params)
         if 'e' in params:
             self.emissionModel.maximize(stats['obs'])
-        logging.debug("%d: ending MultitrackHMM M-step" %
+        logger.debug("%d: ending MultitrackHMM M-step" %
                       self.current_iteration)
         self.current_iteration += 1
 
@@ -343,8 +339,8 @@ class MultitrackHmm(BaseHMM):
         """ Forward dynamic programming.  Overrides the original version
         which is still in basehmm.py, to use the faster Cython code """
         n_observations, n_components = framelogprob.shape
-        logging.debug("%s: beginning Forward pass on %d x %d matrix" % (
-            time.strftime("%H:%M:%S"), n_observations, n_components))
+        logger.debug("beginning Forward pass on %d x %d matrix" % (
+            n_observations, n_components))
         fwdlattice = np.zeros((n_observations, n_components))
         _hmm._forward(n_observations, n_components, self._log_startprob,
                        self._log_transmat, framelogprob, fwdlattice)
@@ -354,8 +350,8 @@ class MultitrackHmm(BaseHMM):
         """ Backward dynamic programming.  Overrides the original version
         which is still in basehmm.py, to use the faster Cython code """
         n_observations, n_components = framelogprob.shape
-        logging.debug("%s: beginning Backward pass on %d x %d matrix" % (
-            time.strftime("%H:%M:%S"), n_observations, n_components))
+        logger.debug("beginning Backward pass on %d x %d matrix" % (
+            n_observations, n_components))
         bwdlattice = np.zeros((n_observations, n_components))
         _hmm._backward(n_observations, n_components, self._log_startprob,
                         self._log_transmat, framelogprob, bwdlattice)

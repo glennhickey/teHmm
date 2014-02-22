@@ -17,7 +17,7 @@ from numpy.testing import assert_array_equal, assert_array_almost_equal
 from operator import mul
 from ._emission import canFast, fastAllLogProbs, fastAccumulateStats, fastUpdateCounts
 from .track import TrackTable
-from .common import EPSILON, myLog
+from .common import EPSILON, myLog, logger
 from .basehmm import normalize, NEGINF
 
 """ Generlization of the sckit-learn multinomial to k dimensions.  Ie that the
@@ -95,14 +95,14 @@ class IndependentMultinomialEmissionModel(object):
         offset = 0
         if self.zeroAsMissingData:
             offset = 1
-        logging.debug("Creating emission matrix with %d entries" %
+        logger.debug("Creating emission matrix with %d entries" %
                       (self.numTracks * self.numStates *
                       (offset + max(self.numSymbolsPerTrack))))
         self.logProbs = np.zeros((self.numTracks, self.numStates,
                                   offset + max(self.numSymbolsPerTrack)),
                                  dtype=np.float)
 
-        logging.debug("Begin track by track emission matrix init (random=%s)" %
+        logger.debug("Begin track by track emission matrix init (random=%s)" %
                       randomize)
         for i in xrange(self.numTracks):
             stateList = []
@@ -123,7 +123,7 @@ class IndependentMultinomialEmissionModel(object):
                 for k in xrange(len(dist)):
                     self.logProbs[i, j, k] = np.log(dist[k])
                     
-        logging.debug("Validating emission matrix")
+        logger.debug("Validating emission matrix")
         assert len(self.logProbs) == self.numTracks
         for i in xrange(self.numTracks):
             assert len(self.logProbs[i]) == self.numStates
@@ -145,18 +145,17 @@ class IndependentMultinomialEmissionModel(object):
         """ obs is an array of observation vectors.  return an array of log
         probabilities.  this output array contains the probabilitiy for
         each state for each observation"""
-        logging.debug("%s Computing multinomial log prob for %d %d-track "
-                      "observations" % (time.strftime("%H:%M:%S"),
-                                        obs.shape[0], self.getNumTracks()))
+        logger.debug("Computing multinomial log prob for %d %d-track "
+                      "observations" % (obs.shape[0], self.getNumTracks()))
         obsLogProbs = np.zeros((obs.shape[0], self.numStates), dtype=np.float)
         if canFast(obs):
-            logging.debug("Cython log prob enabled")
+            logger.debug("Cython log prob enabled")
             fastAllLogProbs(obs, self.logProbs, obsLogProbs, self.normalizeFac)
         else:
             for i in xrange(len(obs)):
                 for state in xrange(self.numStates):
                     obsLogProbs[i, state] = self.singleLogProb(state, obs[i])
-        logging.debug("%s Done computing log prob" % time.strftime("%H:%M:%S"))
+        logger.debug("Done computing log prob")
         return obsLogProbs
     
     def sample(self, state):
@@ -185,10 +184,9 @@ class IndependentMultinomialEmissionModel(object):
         that position, to the emission table.  Note that tracks are also
         treated completely independently here"""
         assert obs.shape[1] == self.numTracks
-        logging.debug("%s Begin emission.accumulateStast for %d obs" % (
-            time.strftime("%H:%M:%S"), len(obs)))
+        logger.debug("Begin emission.accumulateStast for %d obs" % len(obs))
         if canFast(obs):
-            logging.debug("Cython emission.accumulateStats enabled")
+            logger.debug("Cython emission.accumulateStats enabled")
             fastAccumulateStats(obs, obsStats, posteriors)
         else:
             for i in xrange(len(obs)):
@@ -196,8 +194,7 @@ class IndependentMultinomialEmissionModel(object):
                     for state in xrange(self.numStates):
                         obsVal = obs[i,track]
                         obsStats[track][state, int(obsVal)] += posteriors[i, state]
-        logging.debug("%s Done emission.accumulateStast for %d obs" % (
-            time.strftime("%H:%M:%S"), len(obs)))
+        logger.debug("Done emission.accumulateStast for %d obs" % len(obs))
         return obsStats
         
     def maximize(self, obsStats):
@@ -220,7 +217,7 @@ class IndependentMultinomialEmissionModel(object):
         numSymbols = reduce(lambda x,y : max(x,1) * max(y,1),
                             self.numSymbolsPerTrack, 1)
         if numSymbols >= 500000:
-            logging.warning("Unable to validate emission model because"
+            logger.warning("Unable to validate emission model because"
                             " there are too many (%d) symbols" % numSymbols)
             return
         if self.normalizeFac != 1.0:
@@ -243,8 +240,7 @@ class IndependentMultinomialEmissionModel(object):
         """ count the various emissions for each state.  Note that the
         iteration in this function assumes that both trackData and
         bedIntervals are sorted."""
-        logging.debug("%s beginning supervised emission stats" % (
-             time.strftime("%H:%M:%S")))
+        logger.debug("%beginning supervised emission stats")
         trackTableList = trackData.getTrackTableList()
         numTables = len(trackTableList)
         assert numTables > 0
@@ -266,12 +262,10 @@ class IndependentMultinomialEmissionModel(object):
                         self.__updateCounts(overlap, table, obsStats)
                 elif hit is True:
                     break
-        logging.debug("%s beginning supervised emission max" % (
-            time.strftime("%H:%M:%S")))
+        logger.debug("beginning supervised emission max")
         self.maximize(obsStats)
-        logging.debug("%s done supervised emission" % (
-                          time.strftime("%H:%M:%S")))
-
+        logger.debug("done supervised emission")
+        
         self.validate()
 
     def __updateCounts(self, bedInterval, trackTable, obsStats):

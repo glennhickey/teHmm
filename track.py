@@ -12,7 +12,7 @@ import numpy as np
 import xml.etree.ElementTree as ET
 
 from .trackIO import readTrackData
-from .common import EPSILON
+from .common import EPSILON, logger
 
 INTEGER_ARRAY_TYPE = np.uint8
 
@@ -477,7 +477,7 @@ class TrackData(object):
         self.trackIdx = dict()
 
         self.trackTableList = []
-        logging.debug("Loading track data for %d intervals" % len(intervals))
+        logger.debug("Loading track data for %d intervals" % len(intervals))
         self.alignmentTrackTableList = []
         for interval in intervals:
             assert len(interval) >= 3 and interval[2] > interval[1]

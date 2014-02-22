@@ -15,6 +15,7 @@ from teHmm.common import runShellCommand
 from teHmm.common import runParallelShellCommands
 from teHmm.track import TrackList
 from pybedtools import BedTool, Interval
+from teHmm.common import addLoggingOptions, setLoggingFromOptions, logger
 
 """ This script automates evaluating the hmm te model by doing training,
 parsing, comparing back to truth, and summerizing the resutls in a table all
@@ -41,8 +42,6 @@ def main(argv=None):
                         " for evaluation")
     parser.add_argument("outputDir", help="directory to write output")
     parser.add_argument("inBeds", nargs="*", help="list of training beds")
-    parser.add_argument("--verbose", help="Print out detailed logging messages",
-                        action = "store_true", default = False)
     parser.add_argument("--numProc", help="Max number of processors to use",
                         type=int, default=1)
     parser.add_argument("--allTrackCombinations", help="Rerun with all"
@@ -80,14 +79,12 @@ def main(argv=None):
                         " used in conjunction with --emStates to specify EM"
                         " training",
                         type = int, default=None)
-    
+    addLoggingOptions(parser)
     args = parser.parse_args()
-    if args.verbose is True:
-        logging.basicConfig(level=logging.DEBUG)
-        verbose = " --verbose"
-    else:
-        logging.basicConfig(level=logging.INFO)
-        verbose = ""
+    setLoggingFromOptions(args)
+    logOps = "--logLevel %s" % args.logLevel
+    if args.logFile is not None:
+        logOps += " --logFile %s" % args.logFile
 
     if not os.path.exists(args.outputDir):
         os.makedirs(args.outputDir)
@@ -165,7 +162,7 @@ def main(argv=None):
                 command = "teHmmTrain.py %s %s %s %s %s" % (trainingTrackPath,
                                                             truthBed,
                                                             modPath,
-                                                            verbose,
+                                                            logOps,
                                                             trainFlags)
 
             # view
@@ -180,7 +177,7 @@ def main(argv=None):
                                                                   modPath,
                                                                   testBed,
                                                                   evalBed,
-                                                                  verbose)
+                                                                  logOps)
             # compare
             compPath = os.path.join(outDir,
                                     os.path.splitext(base)[0] + "_comp.txt")

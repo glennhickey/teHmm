@@ -10,6 +10,7 @@ import logging
 
 from teHmm.trackIO import getMergedBedIntervals, fastaRead, writeBedIntervals
 from teHmm.kmer import KmerTable
+from teHmm.common import addLoggingOptions, setLoggingFromOptions, logger
 
 """
 Find candidate target site duplications (TSD's).  These are short *exact* matches
@@ -52,14 +53,9 @@ def main(argv=None):
                         default="R_TSD")
     parser.add_argument("--id", help="Assign left/right pairs of TSDs a unique"
                         " matching ID", action="store_true", default=False)
-    parser.add_argument("--verbose", help="Print out detailed logging messages",
-                        action = "store_true", default = False)
-
+    addLoggingOptions(parser)
     args = parser.parse_args()
-    if args.verbose is True:
-        logging.basicConfig(level=logging.DEBUG)
-    else:
-        logging.basicConfig(level=logging.INFO)
+    setLoggingFromOptions(args)
 
     assert os.path.exists(args.inBed)
     assert os.path.exists(args.fastaSequence)
@@ -67,7 +63,7 @@ def main(argv=None):
     args.nextId = 0
 
     # read intervals from the bed file
-    logging.info("loading target intervals from %s" % args.inBed)
+    logger.info("loading target intervals from %s" % args.inBed)
     mergedIntervals = getMergedBedIntervals(args.inBed, ncol=4, sort=True)
     if mergedIntervals is None or len(mergedIntervals) < 1:
         raise RuntimeError("Could not read any intervals from %s" %
@@ -84,7 +80,7 @@ def buildSeqTable(bedIntervals):
     bedIntervals.  This only works if bedIntervals are sorted (and should 
     raise an assertion error if that's not the case. 
     """
-    logging.debug("building index of %d bed intervals" % len(bedIntervals))
+    logger.debug("building index of %d bed intervals" % len(bedIntervals))
     bedSeqTable = dict()
     prevName = None
     prevIdx = 0
@@ -99,7 +95,7 @@ def buildSeqTable(bedIntervals):
     seqName = bedIntervals[-1][0]
     assert seqName not in bedSeqTable
     bedSeqTable[seqName] = (prevIdx, len(bedIntervals))
-    logging.debug("index has %d unique sequences" % len(bedSeqTable))
+    logger.debug("index has %d unique sequences" % len(bedSeqTable))
     return bedSeqTable
         
     
@@ -113,7 +109,7 @@ def findTsds(args, mergedIntervals):
     faFile = open(args.fastaSequence, "r")
     for seqName, sequence in fastaRead(faFile):
         if seqName in seqTable:
-            logging.debug("Scanning FASTA sequence %s" % seqName)
+            logger.debug("Scanning FASTA sequence %s" % seqName)
             bedRange = seqTable[seqName]
             for bedIdx in xrange(bedRange[0], bedRange[1]):
                 bedInterval = mergedIntervals[bedIdx]
@@ -121,7 +117,7 @@ def findTsds(args, mergedIntervals):
                 # about soft masking
                 outTsds += intervalTsds(args, sequence.lower(), bedInterval)
         else:
-            logging.debug("Skipping FASTA sequence %s because no intervals "
+            logger.debug("Skipping FASTA sequence %s because no intervals "
                           "found" % seqName)
 
     return outTsds

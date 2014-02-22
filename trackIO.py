@@ -12,7 +12,7 @@ import random
 import logging
 import array
 from pybedtools import BedTool, Interval
-from .common import runShellCommand
+from .common import runShellCommand, logger
 
 """ all track-data specific io code goes here.  Just BED implemented for now,
 will eventually add WIG and maybe eventually bigbed / bigwig """
@@ -38,7 +38,7 @@ def readTrackData(trackPath, chrom, start, end, **kwargs):
   
         tempPath = os.path.splitext(os.path.basename(trackPath))[0] \
                    + "_temp%s.bed" % tag
-        logging.info("Extracting wig to temp bed %s. Make sure to erase"
+        logger.info("Extracting wig to temp bed %s. Make sure to erase"
                      " in event of crash" % os.path.abspath(tempPath)) 
         runShellCommand("bigWigToBedGraph %s %s -chrom=%s -start=%d -end=%d" %
                         (trackPath, tempPath, chrom, start, end))
@@ -83,17 +83,17 @@ def readBedData(bedPath, chrom, start, end, **kwargs):
         needIntersect = kwargs["needIntersect"]
 
     data = [defVal] * (end - start)
-    logging.debug("readBedData(%s, update=%s)" % (bedPath, updateMap))
+    logger.debug("readBedData(%s, update=%s)" % (bedPath, updateMap))
     bedTool = BedTool(bedPath)
     if sort is True:
-        logging.debug("sortBed(%s)" % bedPath)
+        logger.debug("sortBed(%s)" % bedPath)
         bedTool = bedTool.sort()
         
     interval = Interval(chrom, start, end)
 
     # todo: check how efficient this is
     if needIntersect is True:
-        logging.debug("intersecting (%s,%d,%d) and %s" % (
+        logger.debug("intersecting (%s,%d,%d) and %s" % (
             chrom, start, end, bedPath))
         # Below, we try switching from all_hits to intersect()
         # all_hits seems to leak a ton of memory for big files, so
@@ -105,7 +105,7 @@ def readBedData(bedPath, chrom, start, end, **kwargs):
 
     else:
         intersections = bedTool
-    logging.debug("loading data from intersections")
+    logger.debug("loading data from intersections")
     basesRead = 0
     for overlap in intersections:
         oStart = max(start, overlap.start)
@@ -128,7 +128,7 @@ def readBedData(bedPath, chrom, start, end, **kwargs):
             data[i + oStart - start] = val
         basesRead += oEnd - oStart
 
-    logging.debug("done readBedData(%s). %d bases read" % (bedPath, basesRead))
+    logger.debug("done readBedData(%s). %d bases read" % (bedPath, basesRead))
 
     return data
 
@@ -144,17 +144,17 @@ def readBedIntervals(bedPath, ncol = 3,
         raise RuntimeError("Bed interval file %s not found" % bedPath)
     assert ncol == 3 or ncol == 4
     outIntervals = []
-    logging.debug("readBedIntervals(%s)" % bedPath)
+    logger.debug("readBedIntervals(%s)" % bedPath)
     bedTool = BedTool(bedPath)
     if sort is True:
         bedTool = bedTool.sort()
-        logging.debug("sortBed(%s)" % bedPath)
+        logger.debug("sortBed(%s)" % bedPath)
     if chrom is None:
         bedIntervals = bedTool
     else:
         assert start is not None and end is not None
         interval = Interval(chrom, start, end)
-        logging.debug("intersecting (%s,%d,%d) and %s" % (chrom, start, end,
+        logger.debug("intersecting (%s,%d,%d) and %s" % (chrom, start, end,
                                                           bedPath))
         # Below, we try switching from all_hits to intersect()
         # all_hits seems to leak a ton of memory for big files, so
@@ -164,7 +164,7 @@ def readBedIntervals(bedPath, ncol = 3,
         bedIntervals = bedTool.intersect(tempTool)
         tempTool.delete_temporary_history(ask=False)
 
-    logging.debug("appending bed intervals")
+    logger.debug("appending bed intervals")
     for feat in bedIntervals:
         outInterval = (feat.chrom, feat.start, feat.end)
         if ncol >= 4:
@@ -172,7 +172,7 @@ def readBedIntervals(bedPath, ncol = 3,
         if ncol >= 5:
             outInterval += (feat.score,)
         outIntervals.append(outInterval)
-    logging.debug("finished readBedIntervals(%s)" % bedPath)
+    logger.debug("finished readBedIntervals(%s)" % bedPath)
         
     return outIntervals
 
@@ -183,12 +183,12 @@ def getMergedBedIntervals(bedPath, ncol=3, sort = False):
 
     if not os.path.isfile(bedPath):
         raise RuntimeError("Bed interval file %s not found" % bedPath)
-    logging.debug("mergeBedIntervals(%s)" % bedPath)
+    logger.debug("mergeBedIntervals(%s)" % bedPath)
     outIntervals = []
     bedTool = BedTool(bedPath)
     if sort is True:
         bedTool = bedTool.sort()
-        logging.debug("sortBed(%s)" % bedPath)
+        logger.debug("sortBed(%s)" % bedPath)
     for feat in bedTool.merge():
         outInterval = (feat.chrom, feat.start, feat.end)
         if ncol >= 4:
@@ -196,7 +196,7 @@ def getMergedBedIntervals(bedPath, ncol=3, sort = False):
         if ncol >= 5:
             outInterval += (feat.score,)
         outIntervals.append(outInterval)
-    logging.debug("finished mergeBedIntervals(%s)" % bedPath)
+    logger.debug("finished mergeBedIntervals(%s)" % bedPath)
 
     return outIntervals
 
@@ -233,7 +233,7 @@ def readFastaData(faPath, chrom, start, end, **kwargs):
         caseSensitive = kwargs["caseSensitive"]        
 
     data = [defVal] * (end - start)
-    logging.debug("readFastaData(%s, update=%s)" % (faPath, updateMap))
+    logger.debug("readFastaData(%s, update=%s)" % (faPath, updateMap))
 
     faFile = open(faPath, "r")
     basesRead = 0
@@ -252,7 +252,7 @@ def readFastaData(faPath, chrom, start, end, **kwargs):
             break
     faFile.close()
 
-    logging.debug("done readFastaData(%s). %d bases read" % (faPath,
+    logger.debug("done readFastaData(%s). %d bases read" % (faPath,
                                                              basesRead))
     return data
 

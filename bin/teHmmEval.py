@@ -18,6 +18,7 @@ from teHmm.cfg import MultitrackCfg
 from teHmm.trackIO import getMergedBedIntervals
 from teHmm.modelIO import loadModel
 from teHmm.common import myLog, EPSILON, initBedTool, cleanBedTool
+from teHmm.common import addLoggingOptions, setLoggingFromOptions, logger
 
 
 def main(argv=None):
@@ -38,8 +39,6 @@ def main(argv=None):
     parser.add_argument("--bed", help="path of file to write viterbi "
                         "output to (most likely sequence of hidden states)",
                         default=None)
-    parser.add_argument("--verbose", help="Print out detailed logging messages",
-                        action = "store_true", default = False)
     parser.add_argument("--numThreads", help="Number of threads to use (only"
                         " applies to CFG parser for the moment)",
                         type=int, default=1)
@@ -48,22 +47,19 @@ def main(argv=None):
                         "useful when model is a CFG to keep memory down. "
                         "When 0, no slicing is done",
                         type=int, default=0)
-    
+    addLoggingOptions(parser)
     args = parser.parse_args()
-    if args.verbose is True:
-        logging.basicConfig(level=logging.DEBUG)
-    else:
-        logging.basicConfig(level=logging.INFO)
+    setLoggingFromOptions(args)
     tempBedToolPath = initBedTool()
     if args.slice <= 0:
         args.slice = sys.maxint
         
     # load model created with teHmmTrain.py
-    logging.info("loading model %s" % args.inputModel)
+    logger.info("loading model %s" % args.inputModel)
     model = loadModel(args.inputModel)
 
     # read intervals from the bed file
-    logging.info("loading target intervals from %s" % args.bedRegions)
+    logger.info("loading target intervals from %s" % args.bedRegions)
     mergedIntervals = getMergedBedIntervals(args.bedRegions, ncol=4)
     if mergedIntervals is None or len(mergedIntervals) < 1:
         raise RuntimeError("Could not read any intervals from %s" %
@@ -77,15 +73,15 @@ def main(argv=None):
     trackData = TrackData()
     # note we pass in the trackList that was saved as part of the model
     # because we do not want to generate a new one.
-    logging.info("loading tracks %s" % args.tracksInfo)
+    logger.info("loading tracks %s" % args.tracksInfo)
     trackData.loadTrackData(args.tracksInfo, choppedIntervals, 
                             model.getTrackList())
 
     # do the viterbi algorithm
     if isinstance(model, MultitrackHmm):
-        logging.info("running viterbi algorithm")
+        logger.info("running viterbi algorithm")
     elif isinstance(model, MultitrackCfg):
-        logging.info("running CYK algorithm")        
+        logger.info("running CYK algorithm")        
 
     if args.bed is not None:
         vitOutFile = open(args.bed, "w")
