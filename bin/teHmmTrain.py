@@ -104,7 +104,7 @@ def main(argv=None):
     if args.pairStates is not None:
         assert args.cfg is True
     if args.initTransProbs is not None or args.fixTrans is True or\
-      args.initEmProbs is not None or args.fixEmission is not None:
+      args.initEmProbs is not None or args.fixEm is not None:
         if args.cfg is True:
             raise RuntimeError("--transProbs, --fixTrans, --emProbs, --fixEm "
                                "are not currently compatible with --cfg.")
