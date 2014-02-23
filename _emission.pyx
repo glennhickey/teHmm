@@ -114,36 +114,39 @@ def fastAccumulateStats(obs, obsStats, posteriors):
 
 @cython.boundscheck(False)
 def _fastAccumulateStatsU8(itype_t nObs, itype_t nTracks, itype_t nStates,
-                           np.ndarray[np.uint8_t, ndim=2] obs, obsStats,
-                           posteriors):
+                           np.ndarray[np.uint8_t, ndim=2] obs, 
+                           np.ndarray[dtype_t, ndim=3] obsStats,
+                           np.ndarray[dtype_t, ndim=2] posteriors):
     cdef itype_t i, track, state    
     for i in xrange(nObs):
         for track in xrange(nTracks):
+            obsVal = obs[i,track]
             for state in xrange(nStates):
-                obsVal = obs[i,track]
-                obsStats[track][state, obsVal] += posteriors[i, state]
+                obsStats[track, state, obsVal] += posteriors[i, state]
 
 @cython.boundscheck(False)
 def _fastAccumulateStatsU16(itype_t nObs, itype_t nTracks, itype_t nStates,
-                           np.ndarray[np.uint16_t, ndim=2] obs, obsStats,
-                           posteriors):
+                           np.ndarray[np.uint16_t, ndim=2] obs, 
+                           np.ndarray[dtype_t, ndim=3] obsStats,
+                           np.ndarray[dtype_t, ndim=2] posteriors):
     cdef itype_t i, track, state        
     for i in xrange(nObs):
         for track in xrange(nTracks):
+            obsVal = obs[i,track]
             for state in xrange(nStates):
-                obsVal = obs[i,track]
-                obsStats[track][state, obsVal] += posteriors[i, state]
+                obsStats[track, state, obsVal] += posteriors[i, state]
 
 @cython.boundscheck(False)
 def _fastAccumulateStats32(itype_t nObs, itype_t nTracks, itype_t nStates,
-                            np.ndarray[np.int32_t, ndim=2] obs, obsStats,
-                            posteriors):
+                            np.ndarray[np.int32_t, ndim=2] obs, 
+                            np.ndarray[dtype_t, ndim=3] obsStats,
+                            np.ndarray[dtype_t, ndim=2] posteriors):
     cdef itype_t i, track, state        
     for i in xrange(nObs):
         for track in xrange(nTracks):
+            obsVal = obs[i,track]
             for state in xrange(nStates):
-                obsVal = obs[i,track]
-                obsStats[track][state, obsVal] += posteriors[i, state]
+                obsStats[track, state, obsVal] += posteriors[i, state]
 
 @cython.boundscheck(False)
 def fastUpdateCounts(bedInterval, trackTable, obsStats):
@@ -179,36 +182,36 @@ def _fastUpdateCounts32(itype_t nObs, itype_t nTracks, itype_t nStates,
                         itype_t start, itype_t end, itype_t symbol,
                         itype_t tableStart, 
                         np.ndarray[np.int32_t, ndim=2] obs,
-                        obsStats):
+                        np.ndarray[dtype_t, ndim=3] obsStats):
     cdef itype_t pos, tablePos, track
     for pos in xrange(start, end):
         # convert to position within track table
         tablePos = pos - tableStart
         for track in xrange(nTracks):
-            obsStats[track][symbol, obs[tablePos, track]] += 1.
+            obsStats[track, symbol, obs[tablePos, track]] += 1.
 
 @cython.boundscheck(False)
 def _fastUpdateCountsU16(itype_t nObs, itype_t nTracks, itype_t nStates,
                         itype_t start, itype_t end, itype_t symbol,
                         itype_t tableStart, 
                         np.ndarray[np.uint16_t, ndim=2] obs,
-                        obsStats):
+                        np.ndarray[dtype_t, ndim=3] obsStats):
     cdef itype_t pos, tablePos, track
     for pos in xrange(start, end):
         # convert to position within track table
         tablePos = pos - tableStart
         for track in xrange(nTracks):
-            obsStats[track][symbol, obs[tablePos, track]] += 1.
+            obsStats[track, symbol, obs[tablePos, track]] += 1.
 
 @cython.boundscheck(False)
 def _fastUpdateCountsU8(itype_t nObs, itype_t nTracks, itype_t nStates,
                         itype_t start, itype_t end, itype_t symbol,
                         itype_t tableStart, 
                         np.ndarray[np.uint8_t, ndim=2] obs,
-                        obsStats):
+                        np.ndarray[dtype_t, ndim=3] obsStats):  
     cdef itype_t pos, tablePos, track
     for pos in xrange(start, end):
         # convert to position within track table
         tablePos = pos - tableStart
         for track in xrange(nTracks):
-            obsStats[track][symbol, obs[tablePos, track]] += 1.
+            obsStats[track, symbol, obs[tablePos, track]] += 1.

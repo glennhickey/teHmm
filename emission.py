@@ -171,12 +171,13 @@ class IndependentMultinomialEmissionModel(object):
         """ Initialize an array to hold the accumulation statistics
         looks something like obsStats[TRAC][STATE][SYMBOL] = total probability
         of that STATE/SYMBOL pair across all observations """
-        obsStats = []
+        obsStats = np.zeros((self.numTracks, self.numStates,
+                             np.max(self.numSymbolsPerTrack) + 1), 
+                             dtype=np.float)
         for track in xrange(self.numTracks):
-            obsStats.append(self.fudge +
-                            np.zeros((self.numStates,
-                                      self.numSymbolsPerTrack[track]+1),
-                                     dtype=np.float))
+            for state in xrange(self.numStates):
+                for symbol in xrange(self.numSymbolsPerTrack[track] + 1):
+                    obsStats[track, state, symbol] += self.fudge
         return obsStats
 
     def accumulateStats(self, obs, obsStats, posteriors):
@@ -191,9 +192,9 @@ class IndependentMultinomialEmissionModel(object):
         else:
             for i in xrange(len(obs)):
                 for track in xrange(self.numTracks):
+                    obsVal = obs[i,track]                    
                     for state in xrange(self.numStates):
-                        obsVal = obs[i,track]
-                        obsStats[track][state, int(obsVal)] += posteriors[i, state]
+                        obsStats[track, state, int(obsVal)] += posteriors[i, state]
         logger.debug("Done emission.accumulateStast for %d obs" % len(obs))
         return obsStats
         
@@ -202,11 +203,11 @@ class IndependentMultinomialEmissionModel(object):
             for state in xrange(self.numStates):
                 totalSymbol = 0.0
                 for symbol in self.getTrackSymbols(track):
-                    totalSymbol += obsStats[track][state, symbol]
+                    totalSymbol += obsStats[track, state, symbol]
                 for symbol in self.getTrackSymbols(track):
                     denom = max(self.fudge, totalSymbol)
                     if denom != 0.:
-                        symbolProb = obsStats[track][state, symbol] / denom
+                        symbolProb = obsStats[track, state, symbol] / denom
                     else:
                         symbolProb = 0.
                     self.logProbs[track][state][symbol] = myLog(symbolProb)
@@ -277,7 +278,7 @@ class IndependentMultinomialEmissionModel(object):
             emissions = trackTable[tablePos]
             state = bedInterval[3]
             for track in xrange(self.getNumTracks()):
-                obsStats[track][state, emissions[track]] += 1.
+                obsStats[track, state, emissions[track]] += 1.
 
 """ Simple pair emission model that supports emitting 1 or two states
 simultaneousy.  Based on a normal emission but makes a simple distribution
