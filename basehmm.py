@@ -59,6 +59,7 @@ import numpy as np
 import numbers
 
 from . import _basehmm
+from .common import logger
 
 ZEROLOGPROB = -1e200
 EPS = np.finfo(float).eps
@@ -508,8 +509,12 @@ class BaseHMM(object):
                 framelogprob = self._compute_log_likelihood(seq)
                 lpr, fwdlattice = self._do_forward_pass(framelogprob)
                 bwdlattice = self._do_backward_pass(framelogprob)
+                logger.debug("Computing posteriors from forward/backward"
+                             " tables. (last unoptimized part that needs"
+                             " redoing for both time and memory)")
                 gamma = fwdlattice + bwdlattice
                 posteriors = np.exp(gamma.T - logsumexp(gamma, axis=1)).T
+                logger.debug("Done posteriors")
                 curr_logprob += lpr
                 self._accumulate_sufficient_statistics(
                     stats, seq, framelogprob, posteriors, fwdlattice,
