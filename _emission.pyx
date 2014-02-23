@@ -117,7 +117,7 @@ def _fastAccumulateStatsU8(itype_t nObs, itype_t nTracks, itype_t nStates,
                            np.ndarray[np.uint8_t, ndim=2] obs, 
                            np.ndarray[dtype_t, ndim=3] obsStats,
                            np.ndarray[dtype_t, ndim=2] posteriors):
-    cdef itype_t i, track, state    
+    cdef itype_t i, track, state, obsVal    
     for i in xrange(nObs):
         for track in xrange(nTracks):
             obsVal = obs[i,track]
@@ -129,7 +129,7 @@ def _fastAccumulateStatsU16(itype_t nObs, itype_t nTracks, itype_t nStates,
                            np.ndarray[np.uint16_t, ndim=2] obs, 
                            np.ndarray[dtype_t, ndim=3] obsStats,
                            np.ndarray[dtype_t, ndim=2] posteriors):
-    cdef itype_t i, track, state        
+    cdef itype_t i, track, state, obsVal
     for i in xrange(nObs):
         for track in xrange(nTracks):
             obsVal = obs[i,track]
@@ -141,7 +141,7 @@ def _fastAccumulateStats32(itype_t nObs, itype_t nTracks, itype_t nStates,
                             np.ndarray[np.int32_t, ndim=2] obs, 
                             np.ndarray[dtype_t, ndim=3] obsStats,
                             np.ndarray[dtype_t, ndim=2] posteriors):
-    cdef itype_t i, track, state        
+    cdef itype_t i, track, state, obsVal
     for i in xrange(nObs):
         for track in xrange(nTracks):
             obsVal = obs[i,track]
