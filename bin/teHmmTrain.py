@@ -66,7 +66,9 @@ def main(argv=None):
     parser.add_argument("--initTransProbs", help="Path of text file where each "
                         "line has three entries: FromState ToState Probability"
                         ".  This file (all other transitions get probability 0)"
-                        " is used to specifiy the initial transition model.",
+                        " is used to specifiy the initial transition model."
+                        " The names and number of states will be initialized "
+                        "according to this file (overriding --numStates)",
                         default = None)
     parser.add_argument("--fixTrans", help="Do not learn transition parameters"
                         " (best used with --initTransProbs)",
@@ -74,7 +76,9 @@ def main(argv=None):
     parser.add_argument("--initEmProbs", help="Path of text file where each "
                         "line has four entries: State Track Symbol Probability"
                         ".  This file (all other emissions get probability 0)"
-                        " is used to specifiy the initial emission model.",
+                        " is used to specifiy the initial emission model. All "
+                        "states specified in this file must appear in the file"
+                        " specified with --initTransProbs (but not vice versa).",
                         default = None)
     parser.add_argument("--fixEm", help="Do not learn emission parameters"
                         " (best used with --initEmProbs)",
@@ -94,7 +98,17 @@ def main(argv=None):
                         " probabilities after training (unspecified "
                         "will not be set to 0 in this case. the learned values"
                         " will be kept, but normalized as needed." ,
-                        default = None)
+                        default = None) 
+    parser.add_argument("--flatEm", help="Use a flat emission distribution as "
+                        "a baseline.  If not specified, the initial emission "
+                        "distribution will be randomized by default.  Emission"
+                        " probabilities specified with --initEmpProbs or "
+                        "--forceEmProbs will never be affected by randomizaiton"
+                        ".  The randomization is important for Baum Welch "
+                        "training, since if two states dont have at least one"
+                        " different emission or transition probability to begin"
+                        " with, they will never learn to be different.",
+                        action="store_true", default=False)
     addLoggingOptions(parser)
     args = parser.parse_args()
     if args.cfg is True:
@@ -115,6 +129,13 @@ def main(argv=None):
       and args.cfg is True:
         raise RuntimeError("--forceTransProbs and --forceEmProbs are not "
                            "currently compatible with --cfg")
+    if args.flatEm is True and args.supervised is False and\
+      args.initEmProbs is None and args.initTransProbs is None:
+      raise RuntimeError("--flatEm must be used with --initEmProbs and or"
+                         " --initTransProbs")
+    if args.initEmProbs is not None and args.initTransProbs is None:
+        raise RuntimeError("--initEmProbs can only be used in conjunction with"
+                           " --initTransProbs")
 
     setLoggingFromOptions(args)
     tempBedToolPath = initBedTool()
@@ -152,8 +173,8 @@ def main(argv=None):
     logger.info("creating emission model")
     numSymbolsPerTrack = trackData.getNumSymbolsPerTrack()
     logger.debug("numSymbolsPerTrack=%s" % numSymbolsPerTrack)
-    # only randomize model if 1) using Baum-Welch and 2) have not init values
-    randomize = args.supervised is False and args.initEmProbs is None
+    # only randomize model if using Baum-Welch 
+    randomize = args.supervised is False and args.flatEm is False
     emissionModel = IndependentMultinomialEmissionModel(
         args.numStates,
         numSymbolsPerTrack,
@@ -163,6 +184,7 @@ def main(argv=None):
     # initialize the user specified emission probabilities now if necessary
     if args.initEmProbs is not None:
         logger.debug("initializing emission model with user data")
+        assert catMap is not None
         applyUserEmissions(args.initEmProbs, emissionModel, catMap,
                            trackData.getTrackList())
 
