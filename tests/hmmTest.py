@@ -12,7 +12,7 @@ import os
 import math
 from numpy.testing import assert_array_equal, assert_array_almost_equal
 
-from sklearn.hmm import MultinomialHMM
+from teHmm.basehmm import MultinomialHMM
 
 from teHmm.track import *
 from teHmm.trackIO import readBedIntervals

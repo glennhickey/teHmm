@@ -20,6 +20,7 @@ from teHmm.track import CategoryMap, BinaryMap
 from teHmm.cfg import MultitrackCfg
 from teHmm.modelIO import saveModel
 from teHmm.common import myLog, EPSILON, initBedTool, cleanBedTool
+from teHmm.common import addLoggingOptions, setLoggingFromOptions, logger
 
 def main(argv=None):
     if argv is None:
@@ -45,8 +46,6 @@ def main(argv=None):
                         " NOTE: The number of states will be determined "
                         "from the bed.",
                         action = "store_true", default = False)
-    parser.add_argument("--verbose", help="Print out detailed logging messages",
-                        action = "store_true", default = False)
     parser.add_argument("--cfg", help="Use Context Free Grammar insead of "
                         "HMM.  Only works with --supervised for now",
                         action = "store_true", default = False)
@@ -67,7 +66,9 @@ def main(argv=None):
     parser.add_argument("--initTransProbs", help="Path of text file where each "
                         "line has three entries: FromState ToState Probability"
                         ".  This file (all other transitions get probability 0)"
-                        " is used to specifiy the initial transition model.",
+                        " is used to specifiy the initial transition model."
+                        " The names and number of states will be initialized "
+                        "according to this file (overriding --numStates)",
                         default = None)
     parser.add_argument("--fixTrans", help="Do not learn transition parameters"
                         " (best used with --initTransProbs)",
@@ -75,7 +76,9 @@ def main(argv=None):
     parser.add_argument("--initEmProbs", help="Path of text file where each "
                         "line has four entries: State Track Symbol Probability"
                         ".  This file (all other emissions get probability 0)"
-                        " is used to specifiy the initial emission model.",
+                        " is used to specifiy the initial emission model. All "
+                        "states specified in this file must appear in the file"
+                        " specified with --initTransProbs (but not vice versa).",
                         default = None)
     parser.add_argument("--fixEm", help="Do not learn emission parameters"
                         " (best used with --initEmProbs)",
@@ -95,8 +98,18 @@ def main(argv=None):
                         " probabilities after training (unspecified "
                         "will not be set to 0 in this case. the learned values"
                         " will be kept, but normalized as needed." ,
-                        default = None)
-     
+                        default = None) 
+    parser.add_argument("--flatEm", help="Use a flat emission distribution as "
+                        "a baseline.  If not specified, the initial emission "
+                        "distribution will be randomized by default.  Emission"
+                        " probabilities specified with --initEmpProbs or "
+                        "--forceEmProbs will never be affected by randomizaiton"
+                        ".  The randomization is important for Baum Welch "
+                        "training, since if two states dont have at least one"
+                        " different emission or transition probability to begin"
+                        " with, they will never learn to be different.",
+                        action="store_true", default=False)
+    addLoggingOptions(parser)
     args = parser.parse_args()
     if args.cfg is True:
         assert args.supervised is True
@@ -116,29 +129,33 @@ def main(argv=None):
       and args.cfg is True:
         raise RuntimeError("--forceTransProbs and --forceEmProbs are not "
                            "currently compatible with --cfg")
-        
-    if args.verbose is True:
-        logging.basicConfig(level=logging.DEBUG)
-    else:
-        logging.basicConfig(level=logging.INFO)
+    if args.flatEm is True and args.supervised is False and\
+      args.initEmProbs is None and args.initTransProbs is None:
+      raise RuntimeError("--flatEm must be used with --initEmProbs and or"
+                         " --initTransProbs")
+    if args.initEmProbs is not None and args.initTransProbs is None:
+        raise RuntimeError("--initEmProbs can only be used in conjunction with"
+                           " --initTransProbs")
+
+    setLoggingFromOptions(args)
     tempBedToolPath = initBedTool()
 
     # read training intervals from the bed file
-    logging.info("loading training intervals from %s" % args.trainingBed)
+    logger.info("loading training intervals from %s" % args.trainingBed)
     mergedIntervals = getMergedBedIntervals(args.trainingBed, ncol=4)
     if mergedIntervals is None or len(mergedIntervals) < 1:
         raise RuntimeError("Could not read any intervals from %s" %
                            args.trainingBed)
 
     # read the tracks, while intersecting them with the training intervals
-    logging.info("loading tracks %s" % args.tracksInfo)
+    logger.info("loading tracks %s" % args.tracksInfo)
     trackData = TrackData()
     trackData.loadTrackData(args.tracksInfo, mergedIntervals)
 
     catMap = None
     userTrans = None
     if args.supervised is False and args.initTransProbs is not None:
-        logging.debug("initializing transition model with user data")
+        logger.debug("initializing transition model with user data")
         userTrans, catMap = applyUserTrans(args.initTransProbs)
         # state number is overrided by the transProbs file
         args.numStates = len(catMap)
@@ -146,18 +163,18 @@ def main(argv=None):
     truthIntervals = None
     # state number is overrided by the input bed file in supervised mode
     if args.supervised is True:
-        logging.info("processing supervised state names")
+        logger.info("processing supervised state names")
         # we reload because we don't want to be merging them here
         truthIntervals = readBedIntervals(args.trainingBed, ncol=4)
         catMap = mapStateNames(truthIntervals)
         args.numStates = len(catMap)
 
     # create the independent emission model
-    logging.info("creating emission model")
+    logger.info("creating emission model")
     numSymbolsPerTrack = trackData.getNumSymbolsPerTrack()
-    logging.debug("numSymbolsPerTrack=%s" % numSymbolsPerTrack)
-    # only randomize model if 1) using Baum-Welch and 2) have not init values
-    randomize = args.supervised is False and args.initEmProbs is None
+    logger.debug("numSymbolsPerTrack=%s" % numSymbolsPerTrack)
+    # only randomize model if using Baum-Welch 
+    randomize = args.supervised is False and args.flatEm is False
     emissionModel = IndependentMultinomialEmissionModel(
         args.numStates,
         numSymbolsPerTrack,
@@ -166,13 +183,14 @@ def main(argv=None):
 
     # initialize the user specified emission probabilities now if necessary
     if args.initEmProbs is not None:
-        logging.debug("initializing emission model with user data")
+        logger.debug("initializing emission model with user data")
+        assert catMap is not None
         applyUserEmissions(args.initEmProbs, emissionModel, catMap,
                            trackData.getTrackList())
 
     # create the model
     if not args.cfg:
-        logging.info("creating hmm model")
+        logger.info("creating hmm model")
         model = MultitrackHmm(emissionModel, n_iter=args.iter,
                               state_name_map=catMap, transmat=userTrans,
                               fixTrans = args.fixTrans,
@@ -185,16 +203,16 @@ def main(argv=None):
         if args.pairStates is not None:
             pairStates = args.pairStates.split(",")
             nestStates = map(lambda x: catMap.getMap(x), pairStates)
-        logging.info("Creating cfg model")
+        logger.info("Creating cfg model")
         model = MultitrackCfg(emissionModel, pairEM, nestStates,
                               state_name_map=catMap)
 
     # do the training
     if args.supervised is False:
-        logging.info("training via EM")
+        logger.info("training via EM")
         model.train(trackData)
     else:
-        logging.info("training from input bed states")
+        logger.info("training from input bed states")
         model.supervisedTrain(trackData, truthIntervals)
 
     # hack user-specified values back in as desired before saving
@@ -208,7 +226,7 @@ def main(argv=None):
         applyUserEmissions(args.forceEmProbs, emission, stateMap, trackList)
 
     # write the model to a pickle
-    logging.info("saving trained model to %s" % args.outputModel)
+    logger.info("saving trained model to %s" % args.outputModel)
     saveModel(args.outputModel, model)
 
     cleanBedTool(tempBedToolPath)
@@ -237,7 +255,7 @@ def applyUserTrans(userTransPath, transMap = None, catMap = None):
     as well (with default values being flat distribution.
     The modified transMat and catMap are returned as a tuple, can can be
     applied to the hmm."""
-    logging.debug("Applying user transitions to supervised trained HMM")
+    logger.debug("Applying user transitions to supervised trained HMM")
     
     # first pass just to count the states
     if catMap is None:
@@ -310,7 +328,7 @@ def applyUserTrans(userTransPath, transMap = None, catMap = None):
 def applyUserEmissions(userEmPath, emission, stateMap, trackList):
     """ modify a HMM that was constructed using supervisedTrain() so that
     it contains the emission probabilities specified in the userEmPath File."""
-    logging.debug("Applying user emissions to supervised trained HMM")
+    logger.debug("Applying user emissions to supervised trained HMM")
     f = open(userEmPath, "r")
     logProbs = emission.getLogProbs()
     mask = np.zeros(logProbs.shape, dtype=np.int8)

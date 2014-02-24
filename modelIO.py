@@ -2,11 +2,7 @@
 
 #Copyright (C) 2013 by Glenn Hickey
 #
-# Class derived from _BaseHMM and MultinomialHMM from sklearn/tests/hmm.py
-# (2010 - 2013, scikit-learn developers (BSD License))
-#
 #Released under the MIT license, see LICENSE.txt
-#!/usr/bin/env python
 
 import os
 import sys

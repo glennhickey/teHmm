@@ -89,7 +89,7 @@ class TestCase(TestBase):
         em = self.createSimpleModel2()
         obsStats = em.initStats()
         assert len(obsStats) == 2
-        assert obsStats[0].shape == (2, 2+1)
+        assert obsStats[0].shape == (2, 3+1)
         assert obsStats[1].shape == (2, 3+1)
 
     def testAccumultestats(self):

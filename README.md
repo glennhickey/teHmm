@@ -13,7 +13,6 @@ The following software needs to be installed first.  They can usually be install
 * [numpy](http://www.scipy.org/install.html)
 * [bedtools](https://code.google.com/p/bedtools/downloads/list)
 * [pybedtools](http://pythonhosted.org/pybedtools/main.html)
-* [scikit-learn](http://scikit-learn.org/stable/install.html#install-official-release)
 * [bigWigtoBedGraph for BigWig support](http://hgdownload.cse.ucsc.edu/admin/exe/)
 
 teHmm can then be downloaded and installed as follows:
