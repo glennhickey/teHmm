@@ -344,7 +344,9 @@ class MultitrackHmm(BaseHMM):
         fwdlattice = np.zeros((n_observations, n_components))
         _hmm._forward(n_observations, n_components, self._log_startprob,
                        self._log_transmat, framelogprob, fwdlattice)
-        return logsumexp(fwdlattice[-1]), fwdlattice
+        lp = logsumexp(fwdlattice[-1])
+        logger.debug("Forward log prob %f" % lp)
+        return lp, fwdlattice
 
     def _do_backward_pass(self, framelogprob):
         """ Backward dynamic programming.  Overrides the original version
@@ -355,5 +357,8 @@ class MultitrackHmm(BaseHMM):
         bwdlattice = np.zeros((n_observations, n_components))
         _hmm._backward(n_observations, n_components, self._log_startprob,
                         self._log_transmat, framelogprob, bwdlattice)
+        lp = logsumexp(bwdlattice[0])
+        logger.debug("Backward log prob + start %f" % (lp +
+                     logsumexp(self._log_startprob)))
         return bwdlattice
 
