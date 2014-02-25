@@ -162,11 +162,11 @@ def writeEmissions(bedIntervals, nameMap, outNameMap, args):
     efile = open(args.outEmProbs, "w")
 
     for state, i in nameMap.catMap.items():
-        efile.write("%s\t%s\t%s\t%f\n" % (state, state, args.trackName,
+        efile.write("%s\t%s\t%s\t%f\n" % (state, args.trackName, state,
                                           args.em))
     for state, i in outNameMap.catMap.items():
-        efile.write("%s\t%s\t%s\t%s\n" % (state, state, args.trackName,
-                                          "__NoNE__"))
+        efile.write("%s\t%s\t%s\t%f\n" % (state, args.trackName, "__NoNE__",
+                                          args.em))
     
     efile.close()
 
