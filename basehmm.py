@@ -520,10 +520,15 @@ class BaseHMM(object):
                     stats, seq, framelogprob, posteriors, fwdlattice,
                     bwdlattice, self.params)
             logprob.append(curr_logprob)
+            logger.info("BW Iteration %d: LogProb %f" % (i, curr_logprob))
 
             # Check for convergence.
             if i > 0 and abs(logprob[-1] - logprob[-2]) < self.thresh:
+                logger.debug("Coverged.  Logprobhistory: %s" % str(logprob))
                 break
+            if i == self.n_iter - 1:
+                logger.debug("Finished without converging."
+                             "  Logprobhistory: %s" % str(logprob))
 
             # Maximization step
             self._do_mstep(stats, self.params)

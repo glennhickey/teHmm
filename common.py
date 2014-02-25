@@ -60,6 +60,12 @@ def runParallelShellCommands(cmdList, numProc):
         if not result.successful():
             raise "One or more of commands %s failed" % str(cmdList)
 
+def getLocalTempPath(prefix="", extension="", tagLen=5):
+    S = string.ascii_uppercase + string.digits
+    tag = ''.join(random.choice(S) for x in range(tagLen))
+    tempPath = os.path.join(os.getcwd(), "%s%s%s" % (prefix, tag, extension))
+    return tempPath
+        
 def initBedTool(tempPrefix=""):
     # keep temporary files in current directory, to make it a little harder to
     # lose track of them and clog up the system....
