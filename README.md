@@ -140,6 +140,10 @@ Because the outgoing probabilities of each state above sum to 1, all other trans
 
 This is essentially saying that we start training under the assumption that the ltrFinder and chaux tracks have 90% sensitivity and 99.9% specificity.  It is important to note that the Baum-Welch algorithm is still free to change any of these probabilities in any direction.  
 
+### Automatic Generation of Initial Distributions
+
+Constructing intitial transition and emission distributions by hand, as in the example above, is tedious and error-prone and, from my experience, not likely to result in a model that it inutitively meaningful after training.   An alternative is to use one or more *initial annotation tracks as guides*.   To this end, the `createStartingModel.py` script is provided.   It takes as input a track (chaux, for example), and can automatically generate some simple initial distributions (`createStartingModel.py --help` for more info).
+
 ### Constructing a Gold Standard for Supervised Training
 
 The Gold Standard BED file for supervised training must satisfy the following constraints:
