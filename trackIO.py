@@ -11,6 +11,7 @@ import string
 import random
 import logging
 import array
+import numpy as np
 from pybedtools import BedTool, Interval
 from .common import runShellCommand, logger
 
@@ -81,8 +82,25 @@ def readBedData(bedPath, chrom, start, end, **kwargs):
         sort = kwargs["sort"] == True
     if kwargs is not None and "needIntersect" in kwargs:
         needIntersect = kwargs["needIntersect"]
+    outputBuf = None
+    def clamp(x):
+        return x
+    if kwargs is not None and "outputBuf" in kwargs:
+        outputBuf = kwargs["outputBuf"]
+        maxVal = np.iinfo(outputBuf.dtype).max
+        minVal = np.iinfo(outputBuf.dtype).min
+        def clamp(x):
+            if x < minVal or x > maxVal:
+                y = min(max(x, minVal), maxVal)
+                logger.warning("Clamping track data value %s to %s" % x, y)
+                return y
+            return x
 
-    data = [defVal] * (end - start)
+    if outputBuf is None:
+        data = [defVal] * (end - start)
+    else:
+        data = outputBuf
+
     logger.debug("readBedData(%s, update=%s)" % (bedPath, updateMap))
     bedTool = BedTool(bedPath)
     if sort is True:
@@ -230,9 +248,15 @@ def readFastaData(faPath, chrom, start, end, **kwargs):
         updateMap = kwargs["updateValMap"]
     caseSensitive = False
     if kwargs is not None and "caseSensitive" in kwargs:
-        caseSensitive = kwargs["caseSensitive"]        
+        caseSensitive = kwargs["caseSensitive"]
+    outputBuf = None
+    if kwargs is not None and "outputBuf" in kwargs:
+        outputBuf = kwargs["outputBuf"]
 
-    data = [defVal] * (end - start)
+    if outputBuf is None:
+        data = [defVal] * (end - start)
+    else:
+        data = outputBuf
     logger.debug("readFastaData(%s, update=%s)" % (faPath, updateMap))
 
     faFile = open(faPath, "r")

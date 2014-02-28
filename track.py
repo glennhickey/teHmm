@@ -283,6 +283,11 @@ class TrackTable(object):
 
 """Track Table where every value is an integer"""
 class IntegerTrackTable(TrackTable):
+    """ Note: we consider each row as an array corresponding to a single track
+    for the purposes of this interface (ie writeRow, getRow etc).  Internally,
+    the rows are stored in array columns, because we want quicker access to
+    data columns for the HMM interface.  Ie, value for each track at a given base
+    """
     def __init__(self, numTracks, chrom, start, end, dtype=INTEGER_ARRAY_TYPE):
         super(IntegerTrackTable, self).__init__(numTracks, chrom, start, end)
         
@@ -314,6 +319,15 @@ class IntegerTrackTable(TrackTable):
 
     def getNumPyArray(self):
         return self.data
+
+    def getRow(self, row):
+        assert row < self.data.shape[1]
+        rowArray = self.data[:,row]
+        assert rowArray is not None
+        return rowArray
+
+    def initRow(self, row, val):
+        self.data[:,row] = val
             
 ###########################################################################
             
@@ -495,15 +509,17 @@ class TrackData(object):
                 sys.stderr.write("Warning: track %s not learned\n" %
                                  trackName)
                 continue
-            rawArray = readTrackData(trackPath, chrom, start, end,
-                                     valCol=inputTrack.getValCol(),
-                                     valMap=selfTrack.getValueMap(),
-                                     updateValMap=init,
-                                     caseSensitive=
-                                     inputTrack.getCaseSensitive())
-            if rawArray is not None:
-                track = self.getTrackList().getTrackByName(trackName)
-                trackTable.writeRow(track.getNumber(), rawArray)
+            track = self.getTrackList().getTrackByName(trackName)
+            trackNo = track.getNumber()
+            trackTable.initRow(track.getNumber(),
+                               selfTrack.getValueMap().getMissingVal())
+
+            readTrackData(trackPath, chrom, start, end,
+                          valCol=inputTrack.getValCol(),
+                          valMap=selfTrack.getValueMap(),
+                          updateValMap=init,
+                          caseSensitive=inputTrack.getCaseSensitive(),
+                          outputBuf=trackTable.getRow(trackNo))
 
         self.trackTableList.append(trackTable)
 
