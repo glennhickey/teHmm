@@ -95,14 +95,14 @@ def runCleaning(args, tempTracksInfo):
     """ run scripts for cleaning chaux, ltr_finder, and termini"""
     trackList = TrackList(args.tracksInfo)
 
-    # run cleanChaux.py --keepSlash
+    # run cleanChaux.py
     chauxTrack = trackList.getTrackByName(args.chaux)
     if chauxTrack is not None:
         inFile = chauxTrack.getPath()
         outFile = cleanPath(args, chauxTrack)
         tempBed = getLocalTempPath("chaux_temp", ".bed")
         runShellCommand("removeBedOverlaps.py %s > %s" % (inFile, tempBed))
-        runShellCommand("cleanChaux.py %s --keepSlash > %s" % (tempBed, outFile))
+        runShellCommand("cleanChaux.py %s > %s" % (tempBed, outFile))
         runShellCommand("rm -f %s" % tempBed)
         chauxTrack.setPath(outFile)
     else:
