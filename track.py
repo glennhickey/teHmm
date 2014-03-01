@@ -101,7 +101,8 @@ class Track(object):
             elem.attrib["logScale"] = str(self.logScale)
         elif self.scale is not None:
             elem.attrib["scale"] = str(self.scale)
-        if self.caseSensitive is not None:
+        if self.caseSensitive is not None and\
+          self.caseSensitive is not False:
             elem.attrib["caseSensitive"] = str(self.caseSensitive)
         return elem
 
