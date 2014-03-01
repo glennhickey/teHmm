@@ -1,12 +1,22 @@
 teHmm
 =====
+Copyright (C) 2013 - 2014 by Glenn Hickey (glenn.hickey@gmail.com)
+Released under the MIT license, see LICENSE.txt
 
-Prototype code for identification of transposable elements in annotated DNA sequence using a HMM.  
+Prototype code for identification of transposable elements in annotated DNA sequence using a HMM.  The model slightly generalizes a classical HMM by allowing emission of *k*-dimensional vectors, where each value drawn from an *independent* multinomial distribution.   Maximum likelihood estimates of parameters can be learned directly from a gold standard, or using the Baum Welch algorithm.   A Stochastic Context Free Grammar is also provided, but is still in an early stage. 
+
+Code Contributors
+-----
+* Glenn Hickey (McGill)
+
+Acknowledgements
+-----
+This project is being developed in [Professor Mathieu Blanchette's](http://www.mcb.mcgill.ca/~blanchem/) lab under his supervision.   We also thank Douglas Hoen and Professor Thomas Bureau for their valuable input and discussions, as well as providing much of the input data for the A.Lyrata genome.
 
 Installation
 -----
 
-The following software needs to be installed first.  They can usually be installed via your linux distribution's package manager, from source, MacPorts, or easy_install. (Make sure PATH and PYTHONPATH are updated accordingly)
+The following software needs to be installed first.  They can usually be installed via your Linux distribution's package manager, from source, MacPorts, or easy_install. (Make sure PATH and PYTHONPATH are updated accordingly)
 * [git](http://git-scm.com/downloads)
 * [python 2.7](http://www.python.org/getit/)
 * [cython](http://docs.cython.org/src/quickstart/install.html)
@@ -20,6 +30,8 @@ teHmm can then be downloaded and installed as follows:
      git clone git@github.com:glennhickey/teHmm.git
      cd teHmm
      ./setup.sh
+
+It some cases, a firewall or other network issue can prevent cloning via ssh.   The address above can be changed to https://github.com/glennhickey/teHmm.git to access GitHub via HTTPS instead.  
 
 It's also a good idea to add teHmm to your PATH and PYTHON path.  If you cloned it in /home/tools, then you would run the following:
 

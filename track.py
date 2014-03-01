@@ -392,7 +392,7 @@ class CategoryMap(object):
         
     def setLogScale(self, logScale):
         self.logScaleBase = logScale
-        self.logScaleDiv = np.log(logScaleBase)
+        self.logScaleDiv = np.log(self.logScaleBase)
         self.scaleFac = None
 
     def __scale(self, x):
@@ -406,7 +406,7 @@ class CategoryMap(object):
     def __scaleInv(self, x):
         if self.scaleFac is not None:
             return float(x) / float(self.scaleFac)
-        elif self.logScaleFac is not None and float(x) != 0.0:
+        elif self.logScaleBase is not None and float(x) != 0.0:
             return np.power(self.logScaleBase, float(x))
         else:
             return x
