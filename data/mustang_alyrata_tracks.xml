@@ -10,8 +10,8 @@
 <track name="ortho_depth"   path="/gbdb/alyrata/wib/All_Al_depth.bw"/>
 <track name="mrna"          path="/gbdb/alyrata/wib/splicemap.bw"/>
 <track name="srna"          path="/gbdb/alyrata/wib/AlsmallCS.wg"/>
-<track name="trf"           path="/data/douglas.hoen/sharebrowser/tracks/alyrata/permanent/misc/trf_8_scaffolds.bed"/>
-<track name="polyA"         path="/data/douglas.hoen/sharebrowser/tracks/alyrata/permanent/misc/polyA.bb"/>
-<track name="hollister"     path="/data/douglas.hoen/sharebrowser/tracks/alyrata/bed/te_hollister_2011.bed"/>
+<track name="trf"           path="/data/douglas.hoen/sharebrowser/tracks/alyrata/permanent/misc/trf_8_scaffolds.bed" distribution="binary"/>
+<track name="polyA"         path="/data/douglas.hoen/sharebrowser/tracks/alyrata/permanent/misc/polyA.bb" distribution="binary"/>
+<track name="hollister"     path="/data/douglas.hoen/sharebrowser/tracks/alyrata/bed/te_hollister_2011.bed" distribution="binary"/>
 <track name="tsd"           path="/data/glenn.hickey/genomes/alyrata/tracks/termini/all_scaffolds.termini_search_clean_f_tsd.bed"/>
 </currentTracks>
