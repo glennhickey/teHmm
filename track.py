@@ -121,6 +121,9 @@ class Track(object):
     def getPath(self):
         return self.path
 
+    def setPath(self, path):
+        self.path = path
+
     def getValCol(self):
         return self.valCol
 

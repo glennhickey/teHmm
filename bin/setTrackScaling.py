@@ -72,6 +72,7 @@ def main(argv=None):
               track.getName(), str(e)))
 
     trackList.saveXML(args.outputTracks)
+    cleanBedTool(tempBedToolPath)
 
 def setTrackScale(track, numBins):
     """ Modify the track XML element in place with the heuristically
