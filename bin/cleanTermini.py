@@ -31,7 +31,8 @@ def main(argv=None):
     parser = argparse.ArgumentParser(
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
         description="Filter bed of lastz termini for use with HMM.  By default "
-        "unique id in name column is changed to L_Term or R_Term")
+        "unique id in name column is changed to L_Term or R_Term."
+        " INPUT FILE MUST BE SORTED")
     parser.add_argument("inBed", help="bed with ltr results to process")
     parser.add_argument("outBed", help="bed to write forward strand output to.")
     parser.add_argument("--splitStrand", help="write forwards strand to <outBed>_f and"
@@ -70,26 +71,31 @@ def main(argv=None):
     lbFile = getFile(lbPath)
     rbFile = getFile(rbPath)
 
+    seen = set()
     prevInterval = None
     for interval in BedTool(args.inBed):
         
         origInterval = copy.deepcopy(interval)
-        # Right termini
-        if prevInterval is not None:
-            if interval.name != prevInterval.name:
-                raise RuntimeError("Consecutive intervals dont have same id"
-                                   "\n%s%s" % (prevInterval, interval))
 
+        if prevInterval is not None:
+            if (prevInterval.chrom == interval.chrom and
+                prevInterval.end > interval.start):
+                raise RuntimeError("Consecutive intervals out of order"
+                                   "\n%s%s" % (prevInterval, interval))
+        prevInterval = interval
+
+        # Right termini
+        if interval.name in seen:
+            seen.remove(interval.name)
             if args.leaveName is False:
                 interval.name = "R_Term"
-            prevInterval = None
             left = False
             
         # Left termini
         else:
+            seen.add(interval.name)
             if args.leaveName is False:
                 interval.name = "L_Term"
-            prevInterval = origInterval
             left = True
 
         forward = origInterval.name[-1] == "+"

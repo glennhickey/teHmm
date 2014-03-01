@@ -36,7 +36,8 @@ def main(argv=None):
         description="Generate HMM-usable tracklist from raw tracklist. EX "
         "used to transform mustang_alyrata_tracks.xml -> "
         "mustang_alyrata_clean.xml.  Runs cleanChaux.py cleanLtrFinder.py and "
-        " cleanTermini.py and setTrackScaling.py")
+        " cleanTermini.py and setTrackScaling.py (also runs "
+        " removeBedOverlaps.py before each of the clean scripts)")
     
     parser.add_argument("tracksInfo", help="Path of Tracks Info file "
                         "containing paths to genome annotation tracks")
@@ -97,9 +98,12 @@ def runCleaning(args, tempTracksInfo):
     # run cleanChaux.py --keepSlash
     chauxTrack = trackList.getTrackByName(args.chaux)
     if chauxTrack is not None:
+        inFile = chauxTrack.getPath()
         outFile = cleanPath(args, chauxTrack)
-        runShellCommand("cleanChaux.py %s --keepSlash > %s" % (
-            chauxTrack.getPath(), outFile))
+        tempBed = getLocalTempPath("chaux", ".bed")
+        runShellCommand("removeBedOverlaps.py %s > %s" % (inFile, tempBed))
+        runShellCommand("cleanChaux.py %s --keepSlash > %s" % (tempBed, outFile))
+        runShellCommand("rm -f %s" % tempBed)
         chauxTrack.setPath(outFile)
     else:
         logger.warning("Could not find chaux track")
@@ -114,7 +118,10 @@ def runCleaning(args, tempTracksInfo):
             tempBed = getLocalTempPath("termini", ".bed")
             runShellCommand("bigBedToBed %s %s" % (inFile, tempBed))
             inFile = tempBed
-        runShellCommand("cleanTermini.py %s %s" % (inFile, outFile))
+        tempBed2 = getLocalTempPath("termini2", ".bed")
+        runShellCommand("removeBedOverlaps.py %s > %s" % (inFile, tempBed2))
+        runShellCommand("cleanTermini.py %s %s" % (tempBed2, outFile))
+        runShellCommand("rm -f %s" % tempBed2)
         if tempBed is not None:
             runShellCommand("rm -f %s" % tempBed)
         terminiTrack.setPath(outFile)
@@ -124,9 +131,12 @@ def runCleaning(args, tempTracksInfo):
     # run cleanLtrFinder.py
     ltrfinderTrack = trackList.getTrackByName(args.ltrfinder)
     if ltrfinderTrack is not None:
+        inFile = ltrfinderTrack.getPath()
         outFile = cleanPath(args, ltrfinderTrack)
-        runShellCommand("cleanLtrFinderID.py %s %s" % (ltrfinderTrack.getPath(),
-                                                       outFile))
+        tempBed = getLocalTempPath("ltrfinder", ".bed")
+        runShellCommand("removeBedOverlaps.py %s > %s" % (inFile, tempBed))
+        runShellCommand("cleanLtrFinderID.py %s %s" % (tempBed, outFile))
+        runShellCommand("rm -f %s" % tempBed)
         ltrfinderTrack.setPath(outFile)
     else:
         logger.warning("Could not find ltrfinder track")
