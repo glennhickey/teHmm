@@ -48,7 +48,7 @@ The track list file contains a single *teModelConfig* element which in turn cont
   * *sparse_multinomial* same as above except regions outside of intervals are considered unobserved.
 * *valCol* 0-based (so name=3) column of bed file to read state from for multinomial distribution
 * *scale* Scale values by spefied factor and round them to an integer (useful for binning numeric states)
-* *logScale* As above, but first apply log transform.
+* *logScale* .  Scale values by taking logarithm with the given value as base then rounding to integer. Zeros are not scaled. 
 
 Training
 -----

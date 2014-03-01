@@ -10,6 +10,7 @@ import sys
 import logging
 import numpy as np
 import xml.etree.ElementTree as ET
+import xml.dom.minidom
 
 from .trackIO import readTrackData
 from .common import EPSILON, logger
@@ -35,7 +36,7 @@ class Track(object):
         self.dist = "multinomial"
         #: Scale numeric values (use fraction to bin)
         self.scale = None
-        #: Like above (scale), but take log first
+        #: Use specified value as logarithm base for scaling
         self.logScale = None
         #: Bed column to take value from (default 3==name)
         self.valCol = 3
@@ -125,8 +126,16 @@ class Track(object):
     def getScale(self):
         return self.scale
 
+    def setScale(self, scale):
+        self.scale = scale
+        self.logScale = None
+
     def getLogScale(self):
         return self.logScale
+
+    def setLogScale(self, logScale):
+        self.logScale = logScale
+        self.scale = None
 
     def getCaseSensitive(self):
         return self.caseSensitive
@@ -204,8 +213,12 @@ class TrackList(object):
            root.append(track.toXMLElement())
        if self.alignmentTrack is not None:
            root.append(self.alignmentTrack.toXMLElement())
-       ET.ElementTree(root).write(path)
-
+       x = xml.dom.minidom.parseString(ET.tostring(root))
+       pretty_xml_as_string = x.toprettyxml()
+       f = open(path, "w")
+       f.write(pretty_xml_as_string)
+       f.close()
+       
    def __check(self):
        for i,track in enumerate(self.trackList):
            assert track.number == i
@@ -338,7 +351,8 @@ class CategoryMap(object):
         self.catMapBack = dict()
         self.reserved = reserved
         self.scaleFac = None
-        self.logScaleFac = None
+        self.logScaleBase = None
+        self.logScaleDiv = None
         
     def update(self, inVal):
         val = self.__scale(inVal)
@@ -374,25 +388,26 @@ class CategoryMap(object):
 
     def setScale(self, scale):
         self.scaleFac = scale
-        self.logScaleFac = None
+        self.logScaleBase = None
         
     def setLogScale(self, logScale):
-        self.logScaleFac = logScale
+        self.logScaleBase = logScale
+        self.logScaleDiv = np.log(logScaleBase)
         self.scaleFac = None
 
     def __scale(self, x):
         if self.scaleFac is not None:
             return str(int(self.scaleFac * float(x)))
-        elif self.logScaleFac is not None:
-            return str(int(np.log(float(x) + EPSILON) * self.logScaleFac))
+        elif self.logScaleBase is not None and float(x) != 0.0:
+            return str(int(np.log(float(x)) / self.logScaleDiv))
         else:
             return x
 
     def __scaleInv(self, x):
         if self.scaleFac is not None:
             return float(x) / float(self.scaleFac)
-        elif self.logScaleFac is not None:
-            return np.exp(float(x) / float(self.logScaleFac))
+        elif self.logScaleFac is not None and float(x) != 0.0:
+            return np.power(self.logScaleBase, float(x))
         else:
             return x
 
