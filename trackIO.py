@@ -161,6 +161,9 @@ def readBedData(bedPath, chrom, start, end, **kwargs):
             # no query range, just keep dumping into array.
             # note pretty different logic in this mode where we only store
             # one base per interval
+            if len(data) <= basesRead:
+                data = np.resize(data, (int(
+                    runShellCommand("wc -l %s" % bedPath).split()[0])))
             data[basesRead] = val
             basesRead += 1
 

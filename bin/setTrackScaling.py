@@ -96,8 +96,9 @@ def readTrackIntoFloatArray(track):
     as an array of floats"""
     numLines = int(runShellCommand("wc -l %s" % track.getPath()).split()[0])
     assert numLines > 0
+    logger.debug("Allocating track array of size %d" % numLines)
     data = np.finfo(np.float).max + np.zeros((numLines), dtype=np.float)
-    readTrackData(track.getPath(), outputBuf=data, valCol=track.getValCol())
+    data = readTrackData(track.getPath(), outputBuf=data, valCol=track.getValCol())
     lastIdx = len(data) - 1
     for i in xrange(1, len(data)):
         if data[-i] != np.finfo(np.float).max:
@@ -125,6 +126,12 @@ def computeScale(data, numBins):
     range = maxVal - minVal
     logger.debug("Min=%f Max=%f" % (minVal, maxVal))
 
+    #NOTE: the -2.0 when computing the linear binSize and logBase
+    # are very conservative measures to insure that we dont under
+    # bin on each side due to rounding.  Can result in bins that
+    # are too large when binsize, say, divides evently into the
+    # range.  Should be optimized down the road when have more time.
+
     # try linear scale
     binSize = float(range) / float(numBins - 2.0)
     minBin = np.floor(minVal / binSize) * binSize
@@ -137,12 +144,20 @@ def computeScale(data, numBins):
     logger.debug("Linear scale=%f has variance=%f" % (linearScale, linearVar))
     
     # try log scale
-    if maxVal == 0.0:
-        # dont support logscaling negative numbers for now
-        logVar = sys.maxinit
-    else:
-        if minVal == 0:
-            minVal = 1.0
+    logVar = sys.maxint
+
+    # for the purposes of scaling (see track.CategoryMap.__scale()), we
+    # assume log(0) == 0.  Therefore there is effectively always a 0-bin
+    # for logScaling, and we essentially ignore 0-values below. 
+    if minVal == 0:
+        # second smallest value
+        newMin = sys.maxint
+        for i in xrange(len(data)):
+            if data[i] > minVal and data[i] < newMin:
+                newMin = data[i]
+        minVal = newMin
+    # dont support negative numbers in log mode for now
+    if maxVal != 0.0 and minVal != sys.maxint:
         ratio = float(maxVal) / float(minVal)
         logBase = np.power(ratio, 1. / float(numBins - 2.00))
         minBin = np.power(logBase, np.floor(np.log(minVal) / np.log(logBase)))
