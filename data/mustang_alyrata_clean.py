@@ -78,7 +78,7 @@ def main(argv=None):
     runCleaning(args, tempTracksInfo)
     assert os.path.isfile(tempTracksInfo)
     
-    #runScaling(args, tempTracksInfo)
+    runScaling(args, tempTracksInfo)
 
     runShellCommand("rm -f %s" % tempTracksInfo)
 
