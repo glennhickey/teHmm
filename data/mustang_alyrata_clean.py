@@ -66,7 +66,7 @@ def main(argv=None):
     tempBedToolPath = initBedTool()
 
     try:
-        os.path.makedirs(args.cleanTrackPath)
+        os.makedirs(args.cleanTrackPath)
     except:
         pass
     if not os.path.isdir(args.cleanTrackPath):
