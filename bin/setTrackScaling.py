@@ -65,7 +65,11 @@ def main(argv=None):
           (track.getDist() == "multinomial" or
            track.getDist() == "sparse_multinomial") and\
           not isFasta:
+          try:
             setTrackScale(track, args.numBins)
+          except ValueError as e:
+            logger.warning("Skipping (non-numeric?) track %s due to: %s" % (
+              track.getName(), str(e)))
 
     trackList.saveXML(args.outputTracks)
 
