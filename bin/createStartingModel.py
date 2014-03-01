@@ -52,11 +52,11 @@ def main(argv=None):
     parser.add_argument("--selfTran", help="This script will always write all"
                         " the self-transition probabilities to the output file. "
                         "They will all be set to the specified value using this"
-                        " option, or estimated from the data if -1", default=0.5,
+                        " option, or estimated from the data if -1", default=-1.,
                         type=float)
     parser.add_argument("--em", help="Emission probability for input track ("
                         "ie probability that state emits itself)",
-                        type=float, default=0.9)
+                        type=float, default=0.95)
                         
     addLoggingOptions(parser)
     args = parser.parse_args()
