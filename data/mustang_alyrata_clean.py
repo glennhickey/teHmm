@@ -108,8 +108,15 @@ def runCleaning(args, tempTracksInfo):
     terminiTrack = trackList.getTrackByName(args.termini)
     if terminiTrack is not None:
         outFile = cleanPath(args, terminiTrack)
-        runShellCommand("cleanTermini.py %s %s" % (terminiTrack.getPath(),
-                                                   outFile))
+        inFile = terminiTrack.getPath()
+        tempBed = None
+        if inFile[-3] == ".bb":
+            tempBed = getLocalTempPath("termini", ".bed")
+            runShellCommand("bigBedToBed %s %s" % (inFile, tempBed))
+            inFile = tempBed
+        runShellCommand("cleanTermini.py %s %s" % (inFile, outFile))
+        if tempBed is not None:
+            runShellCommand("rm -f %s" % tempBed)
         terminiTrack.setPath(outFile)
     else:
         logger.warning("Could not find termini track")
