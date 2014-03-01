@@ -62,6 +62,16 @@ The track list file contains a single *teModelConfig* element which in turn cont
 * *scale* Scale values by spefied factor and round them to an integer (useful for binning numeric states)
 * *logScale* .  Scale values by taking logarithm with the given value as base then rounding to integer. Zeros are not scaled. 
 
+Testing
+-
+
+Unit tests can be performed by running `./allTests.py` *from the teHmm/ directory*.  If these don't run successfully it's unlikely any of the examples below will either. 
+
+Temporary Files
+-
+
+Some temporary files and directories can will be created by many of the programs in this package.  These will always be created in the directory from which the executable is run.  These files can be left on the drive in the event of an early termination, so it it wise to  check for them periodicalyl and delete them (as they can be quite large).  They will generally contain tempXXXXX (where the Xs signify random alhpa-numeric characters).  The temporary files will be listed in the logging output if set to debug (--logDebug).   
+
 Training
 -----
 The TE model is created by training on given track data using the `teHmmTrain.py` script. Two training modes are supported:
@@ -221,6 +231,56 @@ Sometimes it is desirable to tweek a handful of parameters so that they take on 
      LTRLEFT  LastzTermini  LTerm  1
 
 This will have the effect of renormalizing all other emissions of LTRLEFT on this track to 0.  
+
+Complete List of Tools Included (contents of /bin)
+=====
+
+In general, running any executable with `--help` will print a brief description of the tool and all its input parameters.   Often, larger descriptions and examples can be found at the top of the script files themselves.
+
+**HMM**
+
+* **teHmmTrain.py** : Create a model
+* **teHmmEval.py** : Predict most likely sequence of states of input data given a model
+* **teHmmView.py**: Print all parameters of a given model
+* **createStartingModel.py** :  Given an input track and a prior confidence value, create transition and probability matrix files (which can be tuned by hand) to pass to teHmmTrain.py
+
+**Track Name Munging**
+
+* **cleanChaux.py** : Remove BED ID suffixes (ex. after pipe or slash) to attempt to map IDs to repeat families
+* **cleanLTRFinderID.py**:  Similar to above, but designed to only delete the numeric ID at end of token.  Also produces mappings for symmetric and TSD free state names.
+* **cleanTermini.py**:  Transform a bed file representing alignments (where aligned regions share same id) into a bed file where, for each aligned pair, the leftmost region is named LTerm and the rightmost region is named RTerm.
+* **setBedCol.py**: Set the entire column of a BED file to a given value.
+
+**Track Processing**
+
+* **addBedColours.py**  : Assign unique colours to BED regions according to their ID
+* **addBedGaps.py** : Ensure that every base in the genome is covered by a BED file by filling gaps between regions.  Necessary for supervised training.
+* **removeBedOverlaps.py** : Sort the bed file and chop regions up so that each base is covered by at most 1 bed interval.  It's important that bed regions never overlap since the HMM can only emit a single value per track per base.
+* **removeBedState.py** : Remove all intervals with given ID.  Useful for removing numeric IDs as grepping them out is much more difficult.
+* **fillTermini.py** : Add intervals to cover gaps between left and right termini pairs (ie as generated with cleanTermini.py)
+* **chopBedStates.py**: Slice up given intervals in BED according to their ID and some other parameters.
+* **addTrackHeader.py** : Set or modify track header of BED file in order to display on Genome Browser.
+
+**Scaling and Binning**
+
+* **setTrackScaling.py** : Compute the best scaling factor (between linear and log) for each track in the XML file for a given number of bases, and annotate the XML file accordingly.  Only applies to numeric tracks.
+* **scaleVals.py** : Scale each value of a BED or WIG file.  (Above function better as it automatically computes parameters, and doesn't create any new data files)
+
+**Alignment**
+
+* **tsdFinder.py** : Use kmer hash to find short exact sequence matches between intervals that flank the left and right side of target BED regions.
+
+**Simple Statistics**
+
+* **valStats.py** : Compute simple statistics of numeric track data
+* **countBedStates.py** : Print number of unique IDs
+
+**Validation**
+
+* **teHmmBenchmark.py** : Wrapper to train, evaluate, and compare model on given data
+* **compareBedStates.py** : Compute base and interval-level precision and recall of one bed file vis-a-vis another.  Both files must cover exactly the same region.
+
+
 
 
 
