@@ -30,7 +30,8 @@ def readTrackData(trackPath, chrom=None, start=None, end=None, **kwargs):
 
     trackExt = os.path.splitext(trackPath)[1]
     tempPath = None
-    if trackExt == ".bw" or trackExt == ".bigwig" or trackExt == ".wg":
+    if trackExt == ".bw" or trackExt == ".bigwig" or trackExt == ".wg" or\
+      trackExt == ".bb" or trackExt == "bigbed":
         #just writing in current directory.  something more principaled might
         #be safer / nicer eventually
         # make a little id tag:
@@ -39,14 +40,17 @@ def readTrackData(trackPath, chrom=None, start=None, end=None, **kwargs):
   
         tempPath = os.path.splitext(os.path.basename(trackPath))[0] \
                    + "_temp%s.bed" % tag
-        logger.info("Extracting wig to temp bed %s. Make sure to erase"
-                     " in event of crash" % os.path.abspath(tempPath))
+        logger.info("Extracting %s to temp bed %s. Make sure to erase"
+                     " in event of crash" % (trackExt,
+                                              os.path.abspath(tempPath)))
         coords = ""
         if chrom is not None:
             assert start is not None and end is not None
             coords = "-chrom=%s -start=%d -end=%d" % (chrom, start ,end)
-        runShellCommand("bigWigToBedGraph %s %s %s" % (trackPath, tempPath,
-                                                       coords))
+        tool = "bigWigToBedGraph"
+        if trackExt == ".bb" or trackExt == ".bigbed":
+            tool = "bigBedToBed"
+        runShellCommand("%s %s %s %s" % (tool, trackPath, tempPath, coords))
         trackExt = ".bed"
         trackPath = tempPath
         if (kwargs is None):

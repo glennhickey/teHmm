@@ -24,6 +24,7 @@ The following software needs to be installed first.  They can usually be install
 * [bedtools](https://code.google.com/p/bedtools/downloads/list)
 * [pybedtools](http://pythonhosted.org/pybedtools/main.html)
 * [bigWigtoBedGraph for BigWig support](http://hgdownload.cse.ucsc.edu/admin/exe/)
+* [bigBedtoBed for BigBed support](http://hgdownload.cse.ucsc.edu/admin/exe/)
 
 teHmm can then be downloaded and installed as follows:
 
