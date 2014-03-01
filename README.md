@@ -13,6 +13,10 @@ Acknowledgements
 -----
 This project is being developed in [Professor Mathieu Blanchette's](http://www.mcb.mcgill.ca/~blanchem/) lab under his supervision.   We also thank Douglas Hoen and Professor Thomas Bureau for their valuable input and discussions, as well as providing much of the input data for the A.Lyrata genome.
 
+Citing
+-----
+Code still in beta stages and manuscript still in preparation.  Please check back later for updates
+
 Installation
 -----
 
@@ -23,8 +27,8 @@ The following software needs to be installed first.  They can usually be install
 * [numpy](http://www.scipy.org/install.html)
 * [bedtools](https://code.google.com/p/bedtools/downloads/list)
 * [pybedtools](http://pythonhosted.org/pybedtools/main.html)
-* [bigWigtoBedGraph for BigWig support](http://hgdownload.cse.ucsc.edu/admin/exe/)
-* [bigBedtoBed for BigBed support](http://hgdownload.cse.ucsc.edu/admin/exe/)
+* [bigWigToBedGraph for BigWig support](http://hgdownload.cse.ucsc.edu/admin/exe/)
+* [bigBedToBed for BigBed support](http://hgdownload.cse.ucsc.edu/admin/exe/)
 
 teHmm can then be downloaded and installed as follows:
 
