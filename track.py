@@ -10,6 +10,7 @@ import sys
 import logging
 import numpy as np
 import xml.etree.ElementTree as ET
+import xml.dom.minidom
 
 from .trackIO import readTrackData
 from .common import EPSILON, logger
@@ -35,7 +36,7 @@ class Track(object):
         self.dist = "multinomial"
         #: Scale numeric values (use fraction to bin)
         self.scale = None
-        #: Like above (scale), but take log first
+        #: Use specified value as logarithm base for scaling
         self.logScale = None
         #: Bed column to take value from (default 3==name)
         self.valCol = 3
@@ -100,7 +101,8 @@ class Track(object):
             elem.attrib["logScale"] = str(self.logScale)
         elif self.scale is not None:
             elem.attrib["scale"] = str(self.scale)
-        if self.caseSensitive is not None:
+        if self.caseSensitive is not None and\
+          self.caseSensitive is not False:
             elem.attrib["caseSensitive"] = str(self.caseSensitive)
         return elem
 
@@ -119,14 +121,25 @@ class Track(object):
     def getPath(self):
         return self.path
 
+    def setPath(self, path):
+        self.path = path
+
     def getValCol(self):
         return self.valCol
 
     def getScale(self):
         return self.scale
 
+    def setScale(self, scale):
+        self.scale = scale
+        self.logScale = None
+
     def getLogScale(self):
         return self.logScale
+
+    def setLogScale(self, logScale):
+        self.logScale = logScale
+        self.scale = None
 
     def getCaseSensitive(self):
         return self.caseSensitive
@@ -204,8 +217,12 @@ class TrackList(object):
            root.append(track.toXMLElement())
        if self.alignmentTrack is not None:
            root.append(self.alignmentTrack.toXMLElement())
-       ET.ElementTree(root).write(path)
-
+       x = xml.dom.minidom.parseString(ET.tostring(root))
+       pretty_xml_as_string = x.toprettyxml()
+       f = open(path, "w")
+       f.write(pretty_xml_as_string)
+       f.close()
+       
    def __check(self):
        for i,track in enumerate(self.trackList):
            assert track.number == i
@@ -283,6 +300,11 @@ class TrackTable(object):
 
 """Track Table where every value is an integer"""
 class IntegerTrackTable(TrackTable):
+    """ Note: we consider each row as an array corresponding to a single track
+    for the purposes of this interface (ie writeRow, getRow etc).  Internally,
+    the rows are stored in array columns, because we want quicker access to
+    data columns for the HMM interface.  Ie, value for each track at a given base
+    """
     def __init__(self, numTracks, chrom, start, end, dtype=INTEGER_ARRAY_TYPE):
         super(IntegerTrackTable, self).__init__(numTracks, chrom, start, end)
         
@@ -314,6 +336,15 @@ class IntegerTrackTable(TrackTable):
 
     def getNumPyArray(self):
         return self.data
+
+    def getRow(self, row):
+        assert row < self.data.shape[1]
+        rowArray = self.data[:,row]
+        assert rowArray is not None
+        return rowArray
+
+    def initRow(self, row, val):
+        self.data[:,row] = val
             
 ###########################################################################
             
@@ -324,7 +355,8 @@ class CategoryMap(object):
         self.catMapBack = dict()
         self.reserved = reserved
         self.scaleFac = None
-        self.logScaleFac = None
+        self.logScaleBase = None
+        self.logScaleDiv = None
         
     def update(self, inVal):
         val = self.__scale(inVal)
@@ -360,25 +392,26 @@ class CategoryMap(object):
 
     def setScale(self, scale):
         self.scaleFac = scale
-        self.logScaleFac = None
+        self.logScaleBase = None
         
     def setLogScale(self, logScale):
-        self.logScaleFac = logScale
+        self.logScaleBase = logScale
+        self.logScaleDiv = np.log(self.logScaleBase)
         self.scaleFac = None
 
     def __scale(self, x):
         if self.scaleFac is not None:
             return str(int(self.scaleFac * float(x)))
-        elif self.logScaleFac is not None:
-            return str(int(np.log(float(x) + EPSILON) * self.logScaleFac))
+        elif self.logScaleBase is not None and float(x) != 0.0:
+            return str(int(np.log(float(x)) / self.logScaleDiv))
         else:
             return x
 
     def __scaleInv(self, x):
         if self.scaleFac is not None:
             return float(x) / float(self.scaleFac)
-        elif self.logScaleFac is not None:
-            return np.exp(float(x) / float(self.logScaleFac))
+        elif self.logScaleBase is not None and float(x) != 0.0:
+            return np.power(self.logScaleBase, float(x))
         else:
             return x
 
@@ -495,15 +528,17 @@ class TrackData(object):
                 sys.stderr.write("Warning: track %s not learned\n" %
                                  trackName)
                 continue
-            rawArray = readTrackData(trackPath, chrom, start, end,
-                                     valCol=inputTrack.getValCol(),
-                                     valMap=selfTrack.getValueMap(),
-                                     updateValMap=init,
-                                     caseSensitive=
-                                     inputTrack.getCaseSensitive())
-            if rawArray is not None:
-                track = self.getTrackList().getTrackByName(trackName)
-                trackTable.writeRow(track.getNumber(), rawArray)
+            track = self.getTrackList().getTrackByName(trackName)
+            trackNo = track.getNumber()
+            trackTable.initRow(track.getNumber(),
+                               selfTrack.getValueMap().getMissingVal())
+
+            readTrackData(trackPath, chrom, start, end,
+                          valCol=inputTrack.getValCol(),
+                          valMap=selfTrack.getValueMap(),
+                          updateValMap=init,
+                          caseSensitive=inputTrack.getCaseSensitive(),
+                          outputBuf=trackTable.getRow(trackNo))
 
         self.trackTableList.append(trackTable)
 

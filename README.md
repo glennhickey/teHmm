@@ -1,25 +1,42 @@
 teHmm
 =====
+Copyright (C) 2013 - 2014 by Glenn Hickey (glenn.hickey@gmail.com)
+Released under the MIT license, see LICENSE.txt
 
-Prototype code for identification of transposable elements in annotated DNA sequence using a HMM.  
+Prototype code for identification of transposable elements in annotated DNA sequence using a HMM.  The model slightly generalizes a classical HMM by allowing emission of *k*-dimensional vectors, where each value drawn from an *independent* multinomial distribution.   Maximum likelihood estimates of parameters can be learned directly from a gold standard, or using the Baum Welch algorithm.   A Stochastic Context Free Grammar is also provided, but is still in an early stage. 
+
+Code Contributors
+-----
+* Glenn Hickey (McGill)
+
+Acknowledgements
+-----
+This project is being developed in [Professor Mathieu Blanchette's](http://www.mcb.mcgill.ca/~blanchem/) lab under his supervision.   We also thank Douglas Hoen and Professor Thomas Bureau for their valuable input and discussions, as well as providing much of the input data for the A.Lyrata genome.
+
+Citing
+-----
+Code still in beta stages and manuscript still in preparation.  Please check back later for updates
 
 Installation
 -----
 
-The following software needs to be installed first.  They can usually be installed via your linux distribution's package manager, from source, MacPorts, or easy_install. (Make sure PATH and PYTHONPATH are updated accordingly)
+The following software needs to be installed first.  They can usually be installed via your Linux distribution's package manager, from source, MacPorts, or easy_install. (Make sure PATH and PYTHONPATH are updated accordingly)
 * [git](http://git-scm.com/downloads)
 * [python 2.7](http://www.python.org/getit/)
 * [cython](http://docs.cython.org/src/quickstart/install.html)
 * [numpy](http://www.scipy.org/install.html)
 * [bedtools](https://code.google.com/p/bedtools/downloads/list)
 * [pybedtools](http://pythonhosted.org/pybedtools/main.html)
-* [bigWigtoBedGraph for BigWig support](http://hgdownload.cse.ucsc.edu/admin/exe/)
+* [bigWigToBedGraph for BigWig support](http://hgdownload.cse.ucsc.edu/admin/exe/)
+* [bigBedToBed for BigBed support](http://hgdownload.cse.ucsc.edu/admin/exe/)
 
 teHmm can then be downloaded and installed as follows:
 
      git clone git@github.com:glennhickey/teHmm.git
      cd teHmm
      ./setup.sh
+
+It some cases, a firewall or other network issue can prevent cloning via ssh.   The address above can be changed to https://github.com/glennhickey/teHmm.git to access GitHub via HTTPS instead.  
 
 It's also a good idea to add teHmm to your PATH and PYTHON path.  If you cloned it in /home/tools, then you would run the following:
 
@@ -48,7 +65,17 @@ The track list file contains a single *teModelConfig* element which in turn cont
   * *sparse_multinomial* same as above except regions outside of intervals are considered unobserved.
 * *valCol* 0-based (so name=3) column of bed file to read state from for multinomial distribution
 * *scale* Scale values by spefied factor and round them to an integer (useful for binning numeric states)
-* *logScale* As above, but first apply log transform.
+* *logScale* .  Scale values by taking logarithm with the given value as base then rounding to integer. Zeros are not scaled. 
+
+Testing
+-
+
+Unit tests can be performed by running `./allTests.py` *from the teHmm/ directory*.  If these don't run successfully it's unlikely any of the examples below will either. 
+
+Temporary Files
+-
+
+Some temporary files and directories can will be created by many of the programs in this package.  These will always be created in the directory from which the executable is run.  These files can be left on the drive in the event of an early termination, so it it wise to  check for them periodicalyl and delete them (as they can be quite large).  They will generally contain tempXXXXX (where the Xs signify random alhpa-numeric characters).  The temporary files will be listed in the logging output if set to debug (--logDebug).   
 
 Training
 -----
@@ -209,6 +236,56 @@ Sometimes it is desirable to tweek a handful of parameters so that they take on 
      LTRLEFT  LastzTermini  LTerm  1
 
 This will have the effect of renormalizing all other emissions of LTRLEFT on this track to 0.  
+
+Complete List of Tools Included (contents of /bin)
+=====
+
+In general, running any executable with `--help` will print a brief description of the tool and all its input parameters.   Often, larger descriptions and examples can be found at the top of the script files themselves.
+
+**HMM**
+
+* **teHmmTrain.py** : Create a model
+* **teHmmEval.py** : Predict most likely sequence of states of input data given a model
+* **teHmmView.py**: Print all parameters of a given model
+* **createStartingModel.py** :  Given an input track and a prior confidence value, create transition and probability matrix files (which can be tuned by hand) to pass to teHmmTrain.py
+
+**Track Name Munging**
+
+* **cleanChaux.py** : Remove BED ID suffixes (ex. after pipe or slash) to attempt to map IDs to repeat families
+* **cleanLTRFinderID.py**:  Similar to above, but designed to only delete the numeric ID at end of token.  Also produces mappings for symmetric and TSD free state names.
+* **cleanTermini.py**:  Transform a bed file representing alignments (where aligned regions share same id) into a bed file where, for each aligned pair, the leftmost region is named LTerm and the rightmost region is named RTerm.
+* **setBedCol.py**: Set the entire column of a BED file to a given value.
+
+**Track Processing**
+
+* **addBedColours.py**  : Assign unique colours to BED regions according to their ID
+* **addBedGaps.py** : Ensure that every base in the genome is covered by a BED file by filling gaps between regions.  Necessary for supervised training.
+* **removeBedOverlaps.py** : Sort the bed file and chop regions up so that each base is covered by at most 1 bed interval.  It's important that bed regions never overlap since the HMM can only emit a single value per track per base.
+* **removeBedState.py** : Remove all intervals with given ID.  Useful for removing numeric IDs as grepping them out is much more difficult.
+* **fillTermini.py** : Add intervals to cover gaps between left and right termini pairs (ie as generated with cleanTermini.py)
+* **chopBedStates.py**: Slice up given intervals in BED according to their ID and some other parameters.
+* **addTrackHeader.py** : Set or modify track header of BED file in order to display on Genome Browser.
+
+**Scaling and Binning**
+
+* **setTrackScaling.py** : Compute the best scaling factor (between linear and log) for each track in the XML file for a given number of bases, and annotate the XML file accordingly.  Only applies to numeric tracks.
+* **scaleVals.py** : Scale each value of a BED or WIG file.  (Above function better as it automatically computes parameters, and doesn't create any new data files)
+
+**Alignment**
+
+* **tsdFinder.py** : Use kmer hash to find short exact sequence matches between intervals that flank the left and right side of target BED regions.
+
+**Simple Statistics**
+
+* **valStats.py** : Compute simple statistics of numeric track data
+* **countBedStates.py** : Print number of unique IDs
+
+**Validation**
+
+* **teHmmBenchmark.py** : Wrapper to train, evaluate, and compare model on given data
+* **compareBedStates.py** : Compute base and interval-level precision and recall of one bed file vis-a-vis another.  Both files must cover exactly the same region.
+
+
 
 
 

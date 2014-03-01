@@ -11,6 +11,7 @@ import string
 import random
 import logging
 import array
+import numpy as np
 from pybedtools import BedTool, Interval
 from .common import runShellCommand, logger
 
@@ -19,7 +20,7 @@ will eventually add WIG and maybe eventually bigbed / bigwig """
 
 ###########################################################################
 
-def readTrackData(trackPath, chrom, start, end, **kwargs):
+def readTrackData(trackPath, chrom=None, start=None, end=None, **kwargs):
     """ read genome annotation track into python list of values.  a value
     is returned for every element in range (default value is None).  The
     type of file is detected from the extension"""
@@ -29,7 +30,8 @@ def readTrackData(trackPath, chrom, start, end, **kwargs):
 
     trackExt = os.path.splitext(trackPath)[1]
     tempPath = None
-    if trackExt == ".bw" or trackExt == ".bigwig" or trackExt == ".wg":
+    if trackExt == ".bw" or trackExt == ".bigwig" or trackExt == ".wg" or\
+      trackExt == ".bb" or trackExt == "bigbed":
         #just writing in current directory.  something more principaled might
         #be safer / nicer eventually
         # make a little id tag:
@@ -38,10 +40,17 @@ def readTrackData(trackPath, chrom, start, end, **kwargs):
   
         tempPath = os.path.splitext(os.path.basename(trackPath))[0] \
                    + "_temp%s.bed" % tag
-        logger.info("Extracting wig to temp bed %s. Make sure to erase"
-                     " in event of crash" % os.path.abspath(tempPath)) 
-        runShellCommand("bigWigToBedGraph %s %s -chrom=%s -start=%d -end=%d" %
-                        (trackPath, tempPath, chrom, start, end))
+        logger.info("Extracting %s to temp bed %s. Make sure to erase"
+                     " in event of crash" % (trackExt,
+                                              os.path.abspath(tempPath)))
+        coords = ""
+        if chrom is not None:
+            assert start is not None and end is not None
+            coords = "-chrom=%s -start=%d -end=%d" % (chrom, start ,end)
+        tool = "bigWigToBedGraph"
+        if trackExt == ".bb" or trackExt == ".bigbed":
+            tool = "bigBedToBed"
+        runShellCommand("%s %s %s %s" % (tool, trackPath, tempPath, coords))
         trackExt = ".bed"
         trackPath = tempPath
         if (kwargs is None):
@@ -62,10 +71,15 @@ def readTrackData(trackPath, chrom, start, end, **kwargs):
 ###########################################################################
 
 def readBedData(bedPath, chrom, start, end, **kwargs):
-
+    """ Read a bed file into an array with one entry per base, doing
+    name mapping if specified.  If chrom, start, and end are None, then
+    unique values are read (at just one per interval).  This is kind of a hack
+    and should get its own function.
+    Returns a list of values.  Note that the buffer used can be passed
+    with outBuffer argument"""
     valCol = None
     sort = False
-    needIntersect = True
+    needIntersect = chrom is not None
     if kwargs is not None and "valCol" in kwargs:
         valCol = int(kwargs["valCol"])
     valMap = None
@@ -81,18 +95,37 @@ def readBedData(bedPath, chrom, start, end, **kwargs):
         sort = kwargs["sort"] == True
     if kwargs is not None and "needIntersect" in kwargs:
         needIntersect = kwargs["needIntersect"]
+    outputBuf = None
+    def clamp(x):
+        return x
+    if kwargs is not None and "outputBuf" in kwargs:
+        outputBuf = kwargs["outputBuf"]
+        npi = np.iinfo
+        if outputBuf.dtype == np.float:
+           npi = np.finfo
+        maxVal = npi(outputBuf.dtype).max
+        minVal = npi(outputBuf.dtype).min
+        def clamp(x):
+            if x < minVal or x > maxVal:
+                y = min(max(x, minVal), maxVal)
+                logger.warning("Clamping track data value %s to %s" % x, y)
+                return y
+            return x
 
-    data = [defVal] * (end - start)
+    if outputBuf is None:
+        data = [defVal] * (end - start)
+    else:
+        data = outputBuf
+
     logger.debug("readBedData(%s, update=%s)" % (bedPath, updateMap))
     bedTool = BedTool(bedPath)
     if sort is True:
         logger.debug("sortBed(%s)" % bedPath)
         bedTool = bedTool.sort()
-        
-    interval = Interval(chrom, start, end)
 
     # todo: check how efficient this is
     if needIntersect is True:
+        interval = Interval(chrom, start, end)
         logger.debug("intersecting (%s,%d,%d) and %s" % (
             chrom, start, end, bedPath))
         # Below, we try switching from all_hits to intersect()
@@ -123,10 +156,20 @@ def readBedData(bedPath, chrom, start, end, **kwargs):
         if valMap is not None:
             ov  = val
             val = valMap.getMap(val, update=updateMap)
-            
-        for i in xrange(oEnd - oStart):
-            data[i + oStart - start] = val
-        basesRead += oEnd - oStart
+
+        if start is not None and end is not None:
+            for i in xrange(oEnd - oStart):
+                data[i + oStart - start] = val
+            basesRead += oEnd - oStart
+        else:
+            # no query range, just keep dumping into array.
+            # note pretty different logic in this mode where we only store
+            # one base per interval
+            if len(data) <= basesRead:
+                data = np.resize(data, (int(
+                    runShellCommand("wc -l %s" % bedPath).split()[0])))
+            data[basesRead] = val
+            basesRead += 1
 
     logger.debug("done readBedData(%s). %d bases read" % (bedPath, basesRead))
 
@@ -230,9 +273,15 @@ def readFastaData(faPath, chrom, start, end, **kwargs):
         updateMap = kwargs["updateValMap"]
     caseSensitive = False
     if kwargs is not None and "caseSensitive" in kwargs:
-        caseSensitive = kwargs["caseSensitive"]        
+        caseSensitive = kwargs["caseSensitive"]
+    outputBuf = None
+    if kwargs is not None and "outputBuf" in kwargs:
+        outputBuf = kwargs["outputBuf"]
 
-    data = [defVal] * (end - start)
+    if outputBuf is None:
+        data = [defVal] * (end - start)
+    else:
+        data = outputBuf
     logger.debug("readFastaData(%s, update=%s)" % (faPath, updateMap))
 
     faFile = open(faPath, "r")

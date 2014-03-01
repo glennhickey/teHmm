@@ -215,8 +215,8 @@ class TestCase(TestBase):
         assert cmap.getMap(1100, update=True) == 3
         assert cmap.getMap(1600, update=True) == 3
         cmb = cmap.getMapBack(3)
-        assert int(np.log(cmb)) == int(np.log(1100))
-        assert int(np.log(cmb)) == int(np.log(1600))
+        assert int(np.log2(cmb)) == int(np.log2(1100))
+        assert int(np.log2(cmb)) == int(np.log2(1600))
         
     def testFastaTrack(self):
         trackData = TrackData()
