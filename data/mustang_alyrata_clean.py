@@ -74,11 +74,11 @@ def main(argv=None):
         raise RuntimeError("Unable to find or create cleanTrack dir %s" %
                            args.cleanTrackPath)
 
-    tempTracksInfo = getLocalTempPath("mustang_alyrata_clean", "xml")
+    tempTracksInfo = getLocalTempPath("mustang_alyrata_clean_temp", "xml")
     runCleaning(args, tempTracksInfo)
     assert os.path.isfile(tempTracksInfo)
     
-    runScaling(args, tempTracksInfo)
+    #runScaling(args, tempTracksInfo)
 
     runShellCommand("rm -f %s" % tempTracksInfo)
 
@@ -89,7 +89,7 @@ def cleanPath(args, track):
     oldPath = track.getPath()
     oldFile = os.path.basename(oldPath)
     oldName, oldExt = os.path.splitext(oldFile)
-    return os.path.join(args.cleanTrackPath, oldName + "_clean" + oldExt)
+    return os.path.join(args.cleanTrackPath, oldName + "_clean" + ".bed")
     
 def runCleaning(args, tempTracksInfo):
     """ run scripts for cleaning chaux, ltr_finder, and termini"""
@@ -100,7 +100,7 @@ def runCleaning(args, tempTracksInfo):
     if chauxTrack is not None:
         inFile = chauxTrack.getPath()
         outFile = cleanPath(args, chauxTrack)
-        tempBed = getLocalTempPath("chaux", ".bed")
+        tempBed = getLocalTempPath("chaux_temp", ".bed")
         runShellCommand("removeBedOverlaps.py %s > %s" % (inFile, tempBed))
         runShellCommand("cleanChaux.py %s --keepSlash > %s" % (tempBed, outFile))
         runShellCommand("rm -f %s" % tempBed)
@@ -114,11 +114,11 @@ def runCleaning(args, tempTracksInfo):
         outFile = cleanPath(args, terminiTrack)
         inFile = terminiTrack.getPath()
         tempBed = None
-        if inFile[-3] == ".bb":
-            tempBed = getLocalTempPath("termini", ".bed")
+        if inFile[-3:] == ".bb":
+            tempBed = getLocalTempPath("termini_temp", ".bed")
             runShellCommand("bigBedToBed %s %s" % (inFile, tempBed))
             inFile = tempBed
-        tempBed2 = getLocalTempPath("termini2", ".bed")
+        tempBed2 = getLocalTempPath("termini2_temp", ".bed")
         runShellCommand("removeBedOverlaps.py %s > %s" % (inFile, tempBed2))
         runShellCommand("cleanTermini.py %s %s" % (tempBed2, outFile))
         runShellCommand("rm -f %s" % tempBed2)
@@ -133,7 +133,7 @@ def runCleaning(args, tempTracksInfo):
     if ltrfinderTrack is not None:
         inFile = ltrfinderTrack.getPath()
         outFile = cleanPath(args, ltrfinderTrack)
-        tempBed = getLocalTempPath("ltrfinder", ".bed")
+        tempBed = getLocalTempPath("ltrfinder_temp", ".bed")
         runShellCommand("removeBedOverlaps.py %s > %s" % (inFile, tempBed))
         runShellCommand("cleanLtrFinderID.py %s %s" % (tempBed, outFile))
         runShellCommand("rm -f %s" % tempBed)
