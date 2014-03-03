@@ -144,9 +144,11 @@ def main(argv=None):
     if args.combinationRange is not None:
         toks = args.combinationRange.split(",")
         sizeRange = int(toks[0]),int(toks[1]) + 1
+        logger.debug("manual range (%d, %d) " % sizeRange)
     mandTracks = set()
     if args.mandTracks is not None:
         mandTracks = set(args.mandTracks.split(","))
+        logger.debug("mandatory set %s" % str(mandTracks))
 
     if args.emStates is not None:
         trainFlags = "--numStates %d" % args.emStates
@@ -281,7 +283,8 @@ def subsetTrackList(trackList, sizeRange, mandTracks):
     optionally using size range to limit the different sizes tried. so, for
     example, given input list [t1, t2, t3] and sizeRange=None this
     will gneerate [t1] [t2] [t3] [t1,t2] [t1,t3] [t2,t3] [t1,t2,t3] """
-    assert sizeRange[0] > 0 and sizeRange[1] <= len(trackList) + 1
+    assert sizeRange[0] > 0
+    sizeRange  = (sizeRange[0], min(sizeRange[1], len(trackList) + 1))
     for outLen in xrange(*sizeRange):
         for perm in itertools.combinations([x for x in xrange(len(trackList))],
                                             outLen):
@@ -290,8 +293,9 @@ def subsetTrackList(trackList, sizeRange, mandTracks):
             for trackNo in perm:
                 track = copy.deepcopy(trackList.getTrackByNumber(trackNo))
                 permList.addTrack(track)
-                if mandList is not None and track.getName() in mandTracks:
-                    ++mandFound
+                if track.getName() in mandTracks:
+                    mandFound += 1
+
             if mandFound == len(mandTracks):
                 yield permList
 
