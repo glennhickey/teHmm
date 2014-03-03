@@ -125,6 +125,14 @@ def main(argv=None):
                         "explore track combination in given (closed) range. "
                         "A more refined version of --allTrackCombinations.",
                         default=None)
+    parser.add_argument("--supervised", help="Use name (4th) column of "
+                        "<traingingBed> for the true hidden states of the"
+                        " model.  Transition parameters will be estimated"
+                        " directly from this information rather than EM."
+                        " NOTE: The number of states will be determined "
+                        "from the bed.",
+                        action = "store_true", default = False)
+        
     addLoggingOptions(parser)
     args = parser.parse_args()
     setLoggingFromOptions(args)
@@ -150,16 +158,16 @@ def main(argv=None):
     if args.mandTracks is not None:
         mandTracks = set(args.mandTracks.split(","))
         logger.debug("mandatory set %s" % str(mandTracks))
-
+    trainFlags = ""
     if args.emStates is not None:
-        trainFlags = "--numStates %d" % args.emStates
-    else:
-        trainFlags = "--supervised"
+        trainFlags += " --numStates %d" % args.emStates
+    if args.supervised is True:
+        trainFlags += " --supervised"
     trainFlags += " --emFac %d" % args.emFac
     if args.forceEmProbs is not None:
         trainFlags += " --forceEmProbs %s" % args.forceEmProbs
     if args.iter is not None:
-        assert args.emStates is not None
+        assert args.emStates is not None or args.initTransProbs is not None
         trainFlags += " --iter %d" % args.iter
     if args.initTransProbs is not None:
         trainFlags += " --initTransProbs %s" % args.initTransProbs
