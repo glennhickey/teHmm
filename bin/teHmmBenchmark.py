@@ -16,6 +16,7 @@ from teHmm.common import runParallelShellCommands
 from teHmm.track import TrackList
 from pybedtools import BedTool, Interval
 from teHmm.common import addLoggingOptions, setLoggingFromOptions, logger
+from teHmm.common import getLogLevelString
 
 """ This script automates evaluating the hmm te model by doing training,
 parsing, comparing back to truth, and summerizing the resutls in a table all
@@ -127,7 +128,7 @@ def main(argv=None):
     addLoggingOptions(parser)
     args = parser.parse_args()
     setLoggingFromOptions(args)
-    logOps = "--logLevel %s" % args.logLevel
+    logOps = "--logLevel %s" % getLogLevelString()
     if args.logFile is not None:
         logOps += " --logFile %s" % args.logFile
 
