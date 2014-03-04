@@ -83,6 +83,16 @@ def main(argv=None):
     parser.add_argument("--fixEm", help="Do not learn emission parameters"
                         " (best used with --initEmProbs)",
                         action="store_true", default=False)
+    parser.add_argument("--initStartProbs", help="Path of text file where each "
+                        "line has two entries: State Probability"
+                        ".  This file (all other start probs get probability 0)"
+                        " is used to specifiy the initial start dist. All "
+                        "states specified in this file must appear in the file"
+                        " specified with --initTransProbs (but not vice versa).",
+                        default = None)
+    parser.add_argument("--fixStart", help="Do not learn emission parameters"
+                        " (best used with --initStartProbs)",
+                        action="store_true", default=False)
     parser.add_argument("--forceTransProbs",
                         help="Path of text file where each "
                         "line has three entries: FromState ToState Probability" 
@@ -109,6 +119,7 @@ def main(argv=None):
                         " different emission or transition probability to begin"
                         " with, they will never learn to be different.",
                         action="store_true", default=False)
+
     addLoggingOptions(parser)
     args = parser.parse_args()
     if args.cfg is True:
@@ -188,13 +199,23 @@ def main(argv=None):
         applyUserEmissions(args.initEmProbs, emissionModel, catMap,
                            trackData.getTrackList())
 
+    # initialize the user specified start probabilities now if necessary
+    userStart = None
+    if args.initStartProbs is not None:
+        logger.debug("initializing start probabilities with user data")
+        assert catMap is not None
+        userStart = applyUserStarts(args.initStartProbs, None, catMap)
+
     # create the model
     if not args.cfg:
         logger.info("creating hmm model")
         model = MultitrackHmm(emissionModel, n_iter=args.iter,
-                              state_name_map=catMap, transmat=userTrans,
+                              state_name_map=catMap,
+                              startprob=userStart,
+                              transmat=userTrans,
                               fixTrans = args.fixTrans,
-                              fixEmission = args.fixEm)
+                              fixEmission = args.fixEm,
+                              fixStart = args.fixStart)
     else:
         pairEM = PairEmissionModel(emissionModel, [args.saPrior] *
                                    emissionModel.getNumStates())
@@ -211,6 +232,7 @@ def main(argv=None):
     if args.supervised is False:
         logger.info("training via EM")
         model.train(trackData)
+        print model._get_startprob()
     else:
         logger.info("training from input bed states")
         model.supervisedTrain(trackData, truthIntervals)
@@ -247,7 +269,7 @@ def mapStateNames(bedIntervals):
 
 ###########################################################################
 
-def applyUserTrans(userTransPath, transMap = None, catMap = None):
+def applyUserTrans(userTransPath, transMat = None, catMap = None):
     """ Modify the transtion probability matrix so that it contains the
     probabilities specified by the given text file.  If a stateNameMap (catMap)
     is provided, it is used (and missing values trigger errors).  If the map
@@ -274,7 +296,8 @@ def applyUserTrans(userTransPath, transMap = None, catMap = None):
     mask = np.zeros((N, N), dtype=np.int8)
 
     # init the transmap if ncessary
-    transMat = 1. / float(N) + np.zeros((N, N), dtype=np.float)
+    if transMat is None:
+        transMat = 1. / float(N) + np.zeros((N, N), dtype=np.float)
 
     # 2nd pass to read the probabilities into the transmap
     f = open(userTransPath, "r")    
@@ -402,6 +425,61 @@ def applyUserEmissions(userEmPath, emission, stateMap, trackList):
     emission.validate()
     
     f.close()
+
+###########################################################################
+    
+def applyUserStarts(userStartPath, startProbs, stateMap):
+    """ modify a HMM that was constructed using supervisedTrain() so that
+    it contains the start probabilities specified in the userStartPath File."""
+    logger.debug("Applying user emissions to supervised trained HMM")
+    f = open(userStartPath, "r")
+
+    N = len(stateMap)
+    if startProbs is None:
+        startProbs = 1. / float(len(stateMap)) + np.zeros((N))
+    mask = np.zeros(startProbs.shape, dtype=np.int8)
+
+    # scan file and set values in logProbs matrix
+    for line in f:
+        if len(line.lstrip()) > 0 and line.lstrip()[0] is not "#":
+            toks = line.split()
+            assert len(toks) == 2
+            stateName = toks[0]
+            prob = float(toks[1])
+            if not stateMap.has(stateName):
+                raise RuntimeError("State %s not found in supervised data" %
+                                   stateName)
+            state = stateMap.getMap(stateName)
+            startProbs[state] = prob
+            mask[state] = 1
+    
+    # normalize all other probabilities (ie that are unmaksed) so that they
+    # add up.
+    # total probability of learned states
+    curTotal = 0.0
+    # total probability of learned states after normalization
+    tgtTotal = 1.0            
+
+    for state in xrange(N):
+        if mask[state] == 1:
+            tgtTotal -= startProbs[state]
+        else:
+            curTotal += startProbs[state]
+            
+        if tgtTotal < 0.:
+            raise RuntimeError("User defined start probabiliies exceed 1")
+
+    for state in xrange(N):
+        # same correction as applyUserTransmissions()....
+        if mask[state] == 0:
+            if tgtTotal == 0.:
+                startProbs[state] = 0.
+            else:
+                startProbs[state] *= (tgtTotal / curTotal)
+
+    f.close()
+
+    return startProbs
 
 if __name__ == "__main__":
     sys.exit(main())
