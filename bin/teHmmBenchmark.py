@@ -92,6 +92,16 @@ def main(argv=None):
     parser.add_argument("--fixEm", help="Do not learn emission parameters"
                         " (best used with --initEmProbs)",
                         action="store_true", default=False)
+    parser.add_argument("--initStartProbs", help="Path of text file where each "
+                        "line has two entries: State Probability"
+                        ".  This file (all other start probs get probability 0)"
+                        " is used to specifiy the initial start dist. All "
+                        "states specified in this file must appear in the file"
+                        " specified with --initTransProbs (but not vice versa).",
+                        default = None)
+    parser.add_argument("--fixStart", help="Do not learn emission parameters"
+                        " (best used with --initStartProbs)",
+                        action="store_true", default=False)
     parser.add_argument("--forceTransProbs",
                         help="Path of text file where each "
                         "line has three entries: FromState ToState Probability" 
@@ -175,6 +185,10 @@ def main(argv=None):
         trainFlags += " --initEmProbs %s" % args.initEmProbs
     if args.fixEm is True:
         trainFlags += " --fixEm"
+    if args.initStartProbs is not None:
+        trainFlags += " --initStartProbs %s" % args.initStartProbs
+    if args.fixStart is True:
+        trainFlags += " --fixStart"
     if args.forceTransProbs is not None:
         trainFlags += " --forceTransProbs %s" % args.forceTransProbs
     if args.forceEmProbs is not None:
