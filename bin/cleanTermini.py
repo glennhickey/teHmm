@@ -72,17 +72,10 @@ def main(argv=None):
     rbFile = getFile(rbPath)
 
     seen = set()
-    prevInterval = None
+
     for interval in BedTool(args.inBed).sort():
         
         origInterval = copy.deepcopy(interval)
-
-        if prevInterval is not None:
-            if (prevInterval.chrom == interval.chrom and
-                prevInterval.end > interval.start):
-                raise RuntimeError("Consecutive intervals out of order"
-                                   "\n%s%s" % (prevInterval, interval))
-        prevInterval = interval
 
         # Right termini
         if interval.name in seen:

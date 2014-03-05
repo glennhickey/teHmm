@@ -119,11 +119,11 @@ def runCleaning(args, tempTracksInfo):
             runShellCommand("bigBedToBed %s %s" % (inFile, tempBed))
             inFile = tempBed
         runShellCommand("cleanTermini.py --splitStrand %s %s" % (inFile,
-                                                                 tempBed2))
+                                                                 outFile))
         if tempBed is not None:
             runShellCommand("rm -f %s" % tempBed)
         # hardcode forward strand (and --splitstrand above for now)
-        terminiTrack.setPath(outFile.replace(".bed", "_f.bed")
+        terminiTrack.setPath(outFile.replace(".bed", "_f.bed"))
     else:
         logger.warning("Could not find termini track")
 
