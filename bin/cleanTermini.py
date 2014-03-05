@@ -73,7 +73,7 @@ def main(argv=None):
 
     seen = set()
     prevInterval = None
-    for interval in BedTool(args.inBed):
+    for interval in BedTool(args.inBed).sort():
         
         origInterval = copy.deepcopy(interval)
 
