@@ -12,7 +12,7 @@
 	<track distribution="multinomial" logScale="4.0307" name="srna" path="/gbdb/alyrata/wib/AlsmallCS.wg" valCol="3"/>
 	<track distribution="binary" name="trf" path="/data/douglas.hoen/sharebrowser/tracks/alyrata/permanent/misc/trf_8_scaffolds.bed" valCol="0"/>
 	<track distribution="binary" name="polyA" path="/data/douglas.hoen/sharebrowser/tracks/alyrata/permanent/misc/polyA.bb" valCol="0"/>
-	<track distribution="binary" name="polyN" path="/data/douglas.hoen/sharebrowser/tracks/alyrata/permanent/misc/polyN.bb" valCol="0"/>
+	<track distribution="binary" name="polyN" path="/data/douglas.hoen/sharebrowser/tracks/alyrata/bed/Ns_sites.bed" valCol="0"/>
 	<track distribution="binary" name="hollister" path="/data/douglas.hoen/sharebrowser/tracks/alyrata/bed/te_hollister_2011.bed" valCol="0"/>
 	<track distribution="multinomial" name="tsd" path="/data/glenn.hickey/genomes/alyrata/tracks/termini/all_scaffolds.termini_search_clean_f_tsd.bed" valCol="3"/>
 	<track distribution="multinomial" name="sequence" path="/data/douglas.hoen/data/genomes/a_lyrata/unmasked_renamed/scaffolds1-8.trf_softmasked.fas" valCol="3"/>
