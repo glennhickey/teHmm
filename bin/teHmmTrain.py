@@ -381,7 +381,7 @@ def applyUserEmissions(userEmPath, emission, stateMap, trackList):
                 if symbolName == "0" or symbolName == "None":
                     symbolName = None
             elif not symbolMap.has(symbolName):
-                sys.stderr.write("Warning: Track %s Symbol %s not found in"
+                logger.warning("Warning: Track %s Symbol %s not found in"
                                  "data (setting as null value)\n" %
                                  (trackName, symbolName))
             symbol = symbolMap.getMap(symbolName)
@@ -422,7 +422,7 @@ def applyUserEmissions(userEmPath, emission, stateMap, trackList):
                 assert numUnmasked > 0
                 addAmt = (1. - tgtTotal) / float(numUnmasked)
             else:
-                assert curTota > 0.
+                assert curTotal > 0.
                 multAmt = tgtTotal / curTotal
                 
             # same correction as applyUserTransmissions()....
