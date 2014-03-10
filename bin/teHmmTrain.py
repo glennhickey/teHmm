@@ -411,13 +411,29 @@ def applyUserEmissions(userEmPath, emission, stateMap, trackList):
                                        (stateMap.getMapBack(state),
                                         symbolMap.getMapBack(symbol)))
 
+            # special case:
+            # we have set probabilities that total < 1 and no remaining
+            # probabilities to boost with factor. ex (1, 0, 0, 0) ->
+            #(0.95, 0, 0, 0)  (where the first prob is being set)
+            additive = False
+            if curTotal == 0. and tgtTotal < 1.:
+                additive = True
+                numUnmasked = len(mask[track, state]) - np.sum(mask[track,state])
+                assert numUnmasked > 0
+                addAmt = (1. - tgtTotal) / float(numUnmasked)
+            else:
+                assert curTota > 0.
+                multAmt = tgtTotal / curTotal
+                
             # same correction as applyUserTransmissions()....
             for symbol in emission.getTrackSymbols(track):
                 if mask[track, state, symbol] == 0:
                     if tgtTotal == 0.:
                         probs[track, state, symbol] = 0.
+                    elif additive is False:
+                        probs[track, state, symbol] *= multAmt
                     else:
-                        probs[track, state, symbol] *= (tgtTotal / curTotal)
+                        probs[track, state, symbol] += addAmt
 
     # Make sure we set our new log probs back into object
     emission.logProbs = myLog(probs)
