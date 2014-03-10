@@ -1,0 +1,17 @@
+These are parameters for initializing a TE model that is based on class names from the Chaux RepeatMasker track.  The initial distributions
+
+chauxEmissionInit.dist and chauxTransitionInit.dist
+
+were generated with createStartingModel.py as run on the chaux track with default options.  The model was edited by hand to replace the LTR state with a 3-state based LTR model similar to the ltrfinder track.  Two further "lastz" states were added for termini matches that don't necessarily bookend LTR TEs.
+
+The initial start distribution was created by hand and forces the model to always start in the Outside state. 
+
+The emission clamping parameters were also created by hand to ensure that the termini states always emit lastz matches with probability (and the other states do not).  Without doing this, the model tends to predict a termini state around nearly every lastz match, resulting in many false positive predictions. 
+
+An example training command line for this model is 
+
+teHmmTrain.py ../../mustang_alyrata_tracks_clean.xml /data/glenn.hickey/genomes/alyrata/tracks/manual/manualChaux.bed manualChaux.mod --forceEmProbs chauxEmissionClamp.dist --initTransProbs chauxTransitionInit.dist --initEmProbs chauxEmissionInit.dist --initStartProbs chauxStartInit.dist --fixStart --flatEm
+
+Note the second parameter is a bed file specifying regions of the genome to train on.  
+
+To run the above within in the benchmark framework (which also generates an annotation and compares it with some gold standard), run teHmmBenchmark.py on the same input as above (use --help to note slightly different syntax for output)

@@ -1,0 +1,34 @@
+DNA	chaux	DNA	0.950000
+DNA	ltr_finder	None	0.950000
+DNA	termini		None 0.95
+Simple_repeat	chaux	Simple_repeat	0.950000
+Simple_repeat	ltr_finder	None	0.950000
+Simple_repeat	termini		None 0.95
+non-LTR	chaux	non-LTR	0.950000
+non-LTR	ltr_finder	None	0.950000
+non-LTR	termini		None 0.95
+Unknown	chaux	Unknown	0.950000
+Unknown	ltr_finder	None	0.950000
+Unknown	termini		None 0.95
+DNAt	chaux	DNAt	0.950000
+DNAt	ltr_finder	None	0.950000
+DNAt	termini		None 0.95
+Low_complexity	chaux	Low_complexity	0.950000
+Low_complexity	ltr_finder	None	0.950000
+Low_complexity	termini		None 0.95
+Outside	chaux	None	0.950000
+
+LTR|left	ltr_finder	LTR|left	0.950000
+inside	ltr_finder	inside	0.950000
+LTR|right	ltr_finder	LTR|right	0.950000
+
+Outside	ltr_finder	None	0.950000
+
+LTR|left termini		L_Term 0.95
+LTR|right	termini		R_Term 0.95
+inside		chaux			LTR	 0.95
+LTR|left		chaux			LTR	 0.95
+LTR|right	chaux			LTR	 0.95
+
+lastz|left termini L_Term 0.95
+lastz|right termini R_Term 0.95
