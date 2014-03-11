@@ -9,6 +9,7 @@ ctypedef np.float64_t dtype_t
 ctypedef np.int32_t itype_t
 
 cdef dtype_t _NINF = -np.inf
+cdef dtype_t _MINDBL = -10e-20
 
 def canFast(obs):
     return isinstance(obs, TrackTable) or (
@@ -53,12 +54,21 @@ def _fastAllLogProbsU8(itype_t nObs, itype_t nTracks, itype_t nStates,
                       np.ndarray[dtype_t, ndim=2] outProbs,
                       dtype_t normalize):
     cdef itype_t i, j, k
+    cdef maxProb = _MINDBL
     for i in xrange(nObs):
        for j in xrange(nStates):
            outProbs[i,j] = 0.0
            for k in xrange(nTracks):
                outProbs[i, j] += logProbs[k, j, obs[i, k]]
            outProbs[i, j] *= normalize
+           if outProbs[i, j] > maxProb:
+               maxProb = outProbs[i, j]
+       # no state that can emit symbol so we give every state 0
+       # NOTE: should print a warning message since this implies
+       # that data impossible with model.
+       if maxProb == _MINDBL:
+           for j in xrange(nStates):
+               outProbs[i, j] = 0.0
        
 @cython.boundscheck(False)
 def _fastAllLogProbsU16(itype_t nObs, itype_t nTracks, itype_t nStates,
@@ -66,13 +76,22 @@ def _fastAllLogProbsU16(itype_t nObs, itype_t nTracks, itype_t nStates,
                         np.ndarray[dtype_t, ndim=3] logProbs,
                         np.ndarray[dtype_t, ndim=2] outProbs,
                         dtype_t normalize):
-    cdef itype_t i, j, k    
+    cdef itype_t i, j, k
+    cdef maxProb = _MINDBL
     for i in xrange(nObs):
        for j in xrange(nStates):
            outProbs[i,j] = 0.0
            for k in xrange(nTracks):
                outProbs[i, j] += logProbs[k, j, obs[i, k]]
            outProbs[i, j] *= normalize
+           if outProbs[i, j] > maxProb:
+               maxProb = outProbs[i, j]
+       # no state that can emit symbol so we give every state 0
+       # NOTE: should print a warning message since this implies
+       # that data impossible with model.
+       if maxProb == _MINDBL:
+           for j in xrange(nStates):
+               outProbs[i, j] = 0.0
 
 @cython.boundscheck(False)
 def _fastAllLogProbs32(itype_t nObs, itype_t nTracks, itype_t nStates,
@@ -80,13 +99,22 @@ def _fastAllLogProbs32(itype_t nObs, itype_t nTracks, itype_t nStates,
                       np.ndarray[dtype_t, ndim=3] logProbs,
                       np.ndarray[dtype_t, ndim=2] outProbs,
                       dtype_t normalize):
-    cdef itype_t i, j, k    
+    cdef itype_t i, j, k
+    cdef maxProb = _MINDBL
     for i in xrange(nObs):
        for j in xrange(nStates):
            outProbs[i,j] = 0.0
            for k in xrange(nTracks):
                outProbs[i, j] += logProbs[k, j, obs[i, k]]
            outProbs[i, j] *= normalize
+           if outProbs[i, j] > maxProb:
+               maxProb = outProbs[i, j]
+       # no state that can emit symbol so we give every state 0
+       # NOTE: should print a warning message since this implies
+       # that data impossible with model.
+       if maxProb == _MINDBL:
+           for j in xrange(nStates):
+               outProbs[i, j] = 0.0
 
 @cython.boundscheck(False)
 def fastAccumulateStats(obs, obsStats, posteriors):
