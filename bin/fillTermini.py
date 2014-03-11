@@ -34,9 +34,8 @@ def main(argv=None):
 
     parser = argparse.ArgumentParser(
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
-        description="Add interval between pairs of candidate termini.  Input "
-    "bed must have pairs of termini (left first) in contiguous rows (or be "
-    "like output of cleanTermini.py")
+        description="Add interval between pairs of candidate termini, ex as "
+        "output by cleanTermini.py")
     parser.add_argument("inBed", help="bed with ltr results to process")
     parser.add_argument("outBed", help="bed to write output to.")
     
@@ -44,17 +43,13 @@ def main(argv=None):
     assert os.path.exists(args.inBed)
     outFile = open(args.outBed, "w")
 
-    prevInterval = None
-    for interval in BedTool(args.inBed):
-        
-        # Right termini
-        if prevInterval is not None:
-            if interval.name != prevInterval.name and (
-                    interval.name != "R_Term" or prevInterval.name != "L_Term"):
-                raise RuntimeError("Consecutive intervals dont have same id"
-                                   "\n%s%s" % (prevInterval, interval))
+    seen = dict()
+    for interval in BedTool(args.inBed).sort():
 
-            # make the new interval, dont bother giving a new name for now
+        # Right termini
+        if interval.name in seen:
+            prevInterval = seen[interval.name]
+            seen.remove(interval.name)
             fillInterval = copy.deepcopy(prevInterval)
             fillInterval.start = min(prevInterval.end, interval.end)
             fillInterval.end = max(prevInterval.start, interval.start)
@@ -64,12 +59,15 @@ def main(argv=None):
                     prevInterval, interval))
             else:
                 outFile.write(str(fillInterval))
-            outFile.write(str(interval))
-            prevInterval = None
+            outFile.write(str(interval))            
             
+            if args.leaveName is False:
+                interval.name = "R_Term"
+            left = False
+
         # Left termini
         else:
-            prevInterval = interval
+            seen[interval.name] = interval
             
     outFile.close()
         
