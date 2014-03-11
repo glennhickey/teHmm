@@ -6,11 +6,9 @@ were generated with createStartingModel.py as run on the chaux track with defaul
 
 The initial start distribution was created by hand and forces the model to always start in the Outside state. 
 
-The emission clamping parameters were also created by hand to ensure that the termini states always emit lastz matches with probability (and the other states do not).  Without doing this, the model tends to predict a termini state around nearly every lastz match, resulting in many false positive predictions. 
-
 An example training command line for this model is 
 
-teHmmTrain.py ../../mustang_alyrata_tracks_clean.xml /data/glenn.hickey/genomes/alyrata/tracks/manual/manualChaux.bed manualChaux.mod --forceEmProbs chauxEmissionClamp.dist --initTransProbs chauxTransitionInit.dist --initEmProbs chauxEmissionInit.dist --initStartProbs chauxStartInit.dist --fixStart --flatEm
+teHmmTrain.py ../../mustang_alyrata_tracks_clean.xml /data/glenn.hickey/genomes/alyrata/tracks/manual/manualChaux.bed manualChaux.mod --initTransProbs chauxTransitionInit.dist --initEmProbs chauxEmissionInit.dist --initStartProbs chauxStartInit.dist --fixStart --flatEm
 
 Note the second parameter is a bed file specifying regions of the genome to train on.  
 

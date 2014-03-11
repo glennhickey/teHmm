@@ -18,17 +18,17 @@ Low_complexity	ltr_finder	None	0.950000
 Low_complexity	termini		None 0.95
 Outside	chaux	None	0.950000
 
-LTR|left	ltr_finder	LTR|left	0.950000
-inside	ltr_finder	inside	0.950000
-LTR|right	ltr_finder	LTR|right	0.950000
+LTR|left	ltr_finder	LTR|left	0.750000
+inside	ltr_finder	inside	0.750000
+LTR|right	ltr_finder	LTR|right	0.750000
 
 Outside	ltr_finder	None	0.950000
 
-LTR|left termini		L_Term 0.95
-LTR|right	termini		R_Term 0.95
-inside		chaux			LTR	 0.95
-LTR|left		chaux			LTR	 0.95
-LTR|right	chaux			LTR	 0.95
+LTR|left termini		L_Term 0.99
+LTR|right	termini		R_Term 0.99
+inside		chaux			LTR	 0.75
+LTR|left		chaux			LTR	 0.75
+LTR|right	chaux			LTR	 0.75
 
 lastz|left termini L_Term 0.95
 lastz|right termini R_Term 0.95
