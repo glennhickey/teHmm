@@ -69,7 +69,8 @@ class MultitrackHmm(BaseHMM):
                  state_name_map=None,
                  fudge=0.0,
                  fixTrans=False,
-                 fixEmission=False):
+                 fixEmission=False,
+                 fixStart=True):
         if emissionModel is not None:
             n_components = emissionModel.getNumStates()
         else:
@@ -104,6 +105,8 @@ class MultitrackHmm(BaseHMM):
         self.fixTrans = fixTrans
         # freeze input EmissionModel
         self.fixEmission = fixEmission
+        # freeze input Start Probs
+        self.fixStart = fixStart
         # keep track of number of EM iterations performed
         self.current_iteration = None
 
@@ -251,6 +254,8 @@ class MultitrackHmm(BaseHMM):
             self.params = self.params.replace("t", "")
         if self.fixEmission is True:
             self.params = self.params.replace("e", "")
+        if self.fixStart is True:
+            self.params = self.params.replace("s", "")
         super(MultitrackHmm, self)._init(obs, params=params)
         self.random_state = check_random_state(self.random_state)
 
@@ -325,6 +330,24 @@ class MultitrackHmm(BaseHMM):
 
     transmat_ = property(_get_transmat, _set_transmat)
 
+    def _get_startprob(self):
+        """Mixing startprob for each state."""
+        return np.exp(self._log_startprob)
+
+    def _set_startprob(self, startprob):
+        if startprob is None:
+            startprob = np.tile(1.0 / self.n_components, self.n_components)
+        else:
+            startprob = np.asarray(startprob, dtype=np.float)
+
+        if len(startprob) != self.n_components:
+            raise ValueError('startprob must have length n_components')
+        if not np.allclose(np.sum(startprob), 1.0):
+            raise ValueError('startprob must sum to 1.0')
+
+        self._log_startprob = myLog(np.asarray(startprob).copy())
+
+    startprob_ = property(_get_startprob, _set_startprob)        
     
     def _do_viterbi_pass(self, framelogprob):
         """ Viterbi dynamic programming.  Overrides the original version

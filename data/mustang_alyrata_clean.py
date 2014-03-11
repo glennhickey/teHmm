@@ -118,13 +118,12 @@ def runCleaning(args, tempTracksInfo):
             tempBed = getLocalTempPath("termini_temp", ".bed")
             runShellCommand("bigBedToBed %s %s" % (inFile, tempBed))
             inFile = tempBed
-        tempBed2 = getLocalTempPath("termini2_temp", ".bed")
-        runShellCommand("removeBedOverlaps.py %s > %s" % (inFile, tempBed2))
-        runShellCommand("cleanTermini.py %s %s" % (tempBed2, outFile))
-        runShellCommand("rm -f %s" % tempBed2)
+        runShellCommand("cleanTermini.py --splitStrand %s %s" % (inFile,
+                                                                 outFile))
         if tempBed is not None:
             runShellCommand("rm -f %s" % tempBed)
-        terminiTrack.setPath(outFile)
+        # hardcode forward strand (and --splitstrand above for now)
+        terminiTrack.setPath(outFile.replace(".bed", "_f.bed"))
     else:
         logger.warning("Could not find termini track")
 

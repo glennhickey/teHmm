@@ -74,6 +74,11 @@ def initBedTool(tempPrefix=""):
     tempPath = os.path.join(os.getcwd(), "%sTempBedTool_%s" % (tempPrefix, tag))
     logger.info("Temporary directory for BedTools (you may need to manually"
                  " erase in event of crash): %s" % tempPath)
+    try:
+        os.makedirs(tempPath)
+    except:
+        pass
+    pybedtools.set_tempdir(tempPath)
     return tempPath
 
 def cleanBedTool(tempPath):

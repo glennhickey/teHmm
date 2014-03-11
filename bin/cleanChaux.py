@@ -37,11 +37,17 @@ def main(argv=None):
                         " elements to which it applies.  This option can be"
                         " specified more than once. ex --mapPrefix DNA/HELI "
                         "--maxPrefix DNA/ASINE.", action="append")
+    parser.add_argument("--minScore", help="Minimum score value to not filter"
+                        " out", default=100, type=float)
 
     args = parser.parse_args()
     assert os.path.exists(args.inBed)
 
     for interval in BedTool(args.inBed).sort():
+        # filter score if exists
+        if interval.score is not None and\
+          float(interval.score) < args.minScore:
+            continue
         prefix = findPrefix(interval.name, args.mapPrefix)
         if prefix is not None:
             # prefix was specified with --mapPrefix, that's what we use

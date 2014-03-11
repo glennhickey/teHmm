@@ -16,6 +16,7 @@ from teHmm.common import runParallelShellCommands
 from teHmm.track import TrackList
 from pybedtools import BedTool, Interval
 from teHmm.common import addLoggingOptions, setLoggingFromOptions, logger
+from teHmm.common import getLogLevelString
 
 """ This script automates evaluating the hmm te model by doing training,
 parsing, comparing back to truth, and summerizing the resutls in a table all
@@ -61,14 +62,6 @@ def main(argv=None):
                         "totally lost. 0 = no normalization. 1 ="
                         " divide by number of tracks.  k = divide by number "
                         "of tracks / k", type=int, default=0)
-    parser.add_argument("--forceEmProbs", help="Path of text file where each "
-                        "line has four entries: State Track Symbol Probability"
-                        ". These "
-                        "emission probabilities will override any learned"
-                        " probabilities after training (unspecified "
-                        "will not be set to 0 in this case. the learned values"
-                        " will be kept, but normalized as needed." ,
-                        default = None)
     parser.add_argument("--mod", help="Path to trained model.  This will "
                         "bypass the training phase that would normally be done"
                         " and just skip to the evaluation.  Note that the user"
@@ -79,10 +72,81 @@ def main(argv=None):
                         " used in conjunction with --emStates to specify EM"
                         " training",
                         type = int, default=None)
+    parser.add_argument("--initTransProbs", help="Path of text file where each "
+                        "line has three entries: FromState ToState Probability"
+                        ".  This file (all other transitions get probability 0)"
+                        " is used to specifiy the initial transition model."
+                        " The names and number of states will be initialized "
+                        "according to this file (overriding --numStates)",
+                        default = None)
+    parser.add_argument("--fixTrans", help="Do not learn transition parameters"
+                        " (best used with --initTransProbs)",
+                        action="store_true", default=False)
+    parser.add_argument("--initEmProbs", help="Path of text file where each "
+                        "line has four entries: State Track Symbol Probability"
+                        ".  This file (all other emissions get probability 0)"
+                        " is used to specifiy the initial emission model. All "
+                        "states specified in this file must appear in the file"
+                        " specified with --initTransProbs (but not vice versa).",
+                        default = None)
+    parser.add_argument("--fixEm", help="Do not learn emission parameters"
+                        " (best used with --initEmProbs)",
+                        action="store_true", default=False)
+    parser.add_argument("--initStartProbs", help="Path of text file where each "
+                        "line has two entries: State Probability"
+                        ".  This file (all other start probs get probability 0)"
+                        " is used to specifiy the initial start dist. All "
+                        "states specified in this file must appear in the file"
+                        " specified with --initTransProbs (but not vice versa).",
+                        default = None)
+    parser.add_argument("--fixStart", help="Do not learn emission parameters"
+                        " (best used with --initStartProbs)",
+                        action="store_true", default=False)
+    parser.add_argument("--forceTransProbs",
+                        help="Path of text file where each "
+                        "line has three entries: FromState ToState Probability" 
+                        ". These transition probabilities will override any "
+                        " learned probabilities after training (unspecified "
+                        "will not be set to 0 in this case. the learned values"
+                        " will be kept, but normalized as needed" ,
+                        default=None)
+    parser.add_argument("--forceEmProbs", help="Path of text file where each "
+                        "line has four entries: State Track Symbol Probability"
+                        ". These "
+                        "emission probabilities will override any learned"
+                        " probabilities after training (unspecified "
+                        "will not be set to 0 in this case. the learned values"
+                        " will be kept, but normalized as needed." ,
+                        default = None) 
+    parser.add_argument("--flatEm", help="Use a flat emission distribution as "
+                        "a baseline.  If not specified, the initial emission "
+                        "distribution will be randomized by default.  Emission"
+                        " probabilities specified with --initEmpProbs or "
+                        "--forceEmProbs will never be affected by randomizaiton"
+                        ".  The randomization is important for Baum Welch "
+                        "training, since if two states dont have at least one"
+                        " different emission or transition probability to begin"
+                        " with, they will never learn to be different.",
+                        action="store_true", default=False)
+    parser.add_argument("--mandTracks", help="Mandatory track names for use "
+                        "with --allTrackCombinations in comma-separated list",
+                        default=None)
+    parser.add_argument("--combinationRange", help="in form MIN,MAX: Only "
+                        "explore track combination in given (closed) range. "
+                        "A more refined version of --allTrackCombinations.",
+                        default=None)
+    parser.add_argument("--supervised", help="Use name (4th) column of "
+                        "<traingingBed> for the true hidden states of the"
+                        " model.  Transition parameters will be estimated"
+                        " directly from this information rather than EM."
+                        " NOTE: The number of states will be determined "
+                        "from the bed.",
+                        action = "store_true", default = False)
+        
     addLoggingOptions(parser)
     args = parser.parse_args()
     setLoggingFromOptions(args)
-    logOps = "--logLevel %s" % args.logLevel
+    logOps = "--logLevel %s" % getLogLevelString()
     if args.logFile is not None:
         logOps += " --logFile %s" % args.logFile
 
@@ -96,18 +160,41 @@ def main(argv=None):
     sizeRange = (len(trainingTrackList), len(trainingTrackList) + 1)
     if args.allTrackCombinations is True:
         sizeRange = (1, len(trainingTrackList) + 1)
-
+    if args.combinationRange is not None:
+        toks = args.combinationRange.split(",")
+        sizeRange = int(toks[0]),int(toks[1]) + 1
+        logger.debug("manual range (%d, %d) " % sizeRange)
+    mandTracks = set()
+    if args.mandTracks is not None:
+        mandTracks = set(args.mandTracks.split(","))
+        logger.debug("mandatory set %s" % str(mandTracks))
+    trainFlags = ""
     if args.emStates is not None:
-        trainFlags = "--numStates %d" % args.emStates
-    else:
-        trainFlags = "--supervised"
+        trainFlags += " --numStates %d" % args.emStates
+    if args.supervised is True:
+        trainFlags += " --supervised"
     trainFlags += " --emFac %d" % args.emFac
     if args.forceEmProbs is not None:
         trainFlags += " --forceEmProbs %s" % args.forceEmProbs
     if args.iter is not None:
-        assert args.emStates is not None
+        assert args.emStates is not None or args.initTransProbs is not None
         trainFlags += " --iter %d" % args.iter
-    
+    if args.initTransProbs is not None:
+        trainFlags += " --initTransProbs %s" % args.initTransProbs
+    if args.initEmProbs is not None:
+        trainFlags += " --initEmProbs %s" % args.initEmProbs
+    if args.fixEm is True:
+        trainFlags += " --fixEm"
+    if args.initStartProbs is not None:
+        trainFlags += " --initStartProbs %s" % args.initStartProbs
+    if args.fixStart is True:
+        trainFlags += " --fixStart"
+    if args.forceTransProbs is not None:
+        trainFlags += " --forceTransProbs %s" % args.forceTransProbs
+    if args.forceEmProbs is not None:
+        trainFlags += " --forceEmProbs %s" % args.forceEmProbs
+    if args.flatEm is True:
+        trainFlags += " --flatEm"
 
     # write out command line for posteriorty's sake
     if not os.path.exists(args.outputDir):
@@ -120,7 +207,8 @@ def main(argv=None):
     #todo: try to get timing for each command
     commands = []
     rows = dict()
-    for pn, pList in enumerate(subsetTrackList(trainingTrackList, sizeRange)):
+    for pn, pList in enumerate(subsetTrackList(trainingTrackList, sizeRange,
+                                               mandTracks)):
         if len(pList) == len(trainingTrackList):
             outDir = args.outputDir
         else:
@@ -213,20 +301,26 @@ def main(argv=None):
     writeTables(args.outputDir, rows)
 
 
-def subsetTrackList(trackList, sizeRange):
+def subsetTrackList(trackList, sizeRange, mandTracks):
     """ generate tracklists of all combinations of tracks in the input list
     optionally using size range to limit the different sizes tried. so, for
     example, given input list [t1, t2, t3] and sizeRange=None this
     will gneerate [t1] [t2] [t3] [t1,t2] [t1,t3] [t2,t3] [t1,t2,t3] """
-    assert sizeRange[0] > 0 and sizeRange[1] <= len(trackList) + 1
+    assert sizeRange[0] > 0
+    sizeRange  = (sizeRange[0], min(sizeRange[1], len(trackList) + 1))
     for outLen in xrange(*sizeRange):
         for perm in itertools.combinations([x for x in xrange(len(trackList))],
                                             outLen):
             permList = TrackList()
+            mandFound = 0
             for trackNo in perm:
                 track = copy.deepcopy(trackList.getTrackByNumber(trackNo))
                 permList.addTrack(track)
-            yield permList
+                if track.getName() in mandTracks:
+                    mandFound += 1
+
+            if mandFound == len(mandTracks):
+                yield permList
 
 def splitBed(inBed, outBed1, outBed2):
     """ Used for cross validation option.  The first half in input bed gets

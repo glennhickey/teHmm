@@ -1,0 +1,26 @@
+DNA	DNA	0.996807
+DNA	Outside	0.003193
+Simple_repeat	Simple_repeat	0.973103
+Simple_repeat	Outside	0.026897
+non-LTR	non-LTR	0.997856
+non-LTR	Outside	0.002144
+Unknown	Unknown	0.995024
+Unknown	Outside	0.004976
+DNAt	DNAt	0.997964
+DNAt	Outside	0.002036
+Low_complexity	Low_complexity	0.980758
+Low_complexity	Outside	0.019242
+Outside	Outside	0.998753
+Outside  inside  0
+Outside  LTR|right 0
+LTR|left	LTR|left	0.998531
+LTR|left	inside	0.001469
+inside	inside	0.999849
+inside	LTR|right	0.000151
+LTR|right	LTR|right	0.998651
+LTR|right	Outside	0.001349
+lastz|right  lastz|right 0.5
+lastz|right Outside 0.5
+lastz|left  lastz|left 0.5
+lastz|left Outside 0.5
+
