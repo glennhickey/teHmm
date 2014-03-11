@@ -49,7 +49,7 @@ def main(argv=None):
         # Right termini
         if interval.name in seen:
             prevInterval = seen[interval.name]
-            seen.remove(interval.name)
+            del seen[interval.name]
             fillInterval = copy.deepcopy(prevInterval)
             fillInterval.start = min(prevInterval.end, interval.end)
             fillInterval.end = max(prevInterval.start, interval.start)
@@ -61,10 +61,6 @@ def main(argv=None):
                 outFile.write(str(fillInterval))
             outFile.write(str(interval))            
             
-            if args.leaveName is False:
-                interval.name = "R_Term"
-            left = False
-
         # Left termini
         else:
             seen[interval.name] = interval
