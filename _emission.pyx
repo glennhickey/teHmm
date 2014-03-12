@@ -9,7 +9,7 @@ ctypedef np.float64_t dtype_t
 ctypedef np.int32_t itype_t
 
 cdef dtype_t _NINF = -np.inf
-cdef dtype_t _MINDBL = -10e-20
+cdef dtype_t _MINDBL = -1e20
 
 def canFast(obs):
     return isinstance(obs, TrackTable) or (
