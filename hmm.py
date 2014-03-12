@@ -296,7 +296,23 @@ class MultitrackHmm(BaseHMM):
     def _do_mstep(self, stats, params):
         logger.debug("%d: beginning MultitrackHMM M-step" %
                       self.current_iteration)
-        super(MultitrackHmm, self)._do_mstep(stats, params)
+        if self.startprob_prior is None:
+            self.startprob_prior = 1.0
+        if self.transmat_prior is None:
+            self.transmat_prior = 1.0
+
+        if 's' in params:
+            self.startprob_ = normalize(
+                np.maximum(self.startprob_prior - 1.0 + stats['start'], 1e-20))
+
+        if 't' in params:
+            transmat_ = self.transmat_prior - 1.0 + stats['trans']
+            for row in xrange(len(transmat_)):
+                rowSum = np.sum(transmat_[row])
+                assert rowSum > 0
+                transmat_[row] = transmat_[row] / rowSum
+            self.transmat_ = transmat_
+
         if 'e' in params:
             self.emissionModel.maximize(stats['obs'])
         logger.debug("%d: ending MultitrackHMM M-step" %
