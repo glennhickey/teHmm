@@ -22,9 +22,9 @@ import pybedtools
 LOGZERO = -1e100
 EPSILON = np.finfo(float).eps
 
-def __myLogFloat(x):
-    if np.abs(x) < EPSILON:
-        return LOGZERO
+def __myLogFloat(x, logZeroVal = LOGZERO, epsilonVal = EPSILON):
+    if np.abs(x) < epsilonVal:
+        return logZeroVal
     return np.log(x)
 
 """ Replace np.log to accept zero """

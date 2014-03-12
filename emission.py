@@ -213,9 +213,9 @@ class IndependentMultinomialEmissionModel(object):
                     # no longer want to have absolute zero emissions
                     # as it can lead to unrecognizable strings (we elect to
                     # allow for epsilon in emissions but keep the 0s in
-                    # transitions)
-                    symbolProb = max(EPSILON, symbolProb)
-                    self.logProbs[track][state][symbol] = myLog(symbolProb)
+                    # transitions) so we override logZero
+                    self.logProbs[track][state][symbol] = myLog(symbolProb,
+                                                                logZeroVal=-1e6)
         self.validate()
 
     def validate(self):
