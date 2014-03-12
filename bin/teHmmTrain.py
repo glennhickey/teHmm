@@ -232,7 +232,6 @@ def main(argv=None):
     if args.supervised is False:
         logger.info("training via EM")
         model.train(trackData)
-        print model._get_startprob()
     else:
         logger.info("training from input bed states")
         model.supervisedTrain(trackData, truthIntervals)
