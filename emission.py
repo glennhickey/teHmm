@@ -210,6 +210,11 @@ class IndependentMultinomialEmissionModel(object):
                         symbolProb = obsStats[track, state, symbol] / denom
                     else:
                         symbolProb = 0.
+                    # no longer want to have absolute zero emissions
+                    # as it can lead to unrecognizable strings (we elect to
+                    # allow for epsilon in emissions but keep the 0s in
+                    # transitions)
+                    symbolProb = max(EPSILON, symbolProb)
                     self.logProbs[track][state][symbol] = myLog(symbolProb)
         self.validate()
 
