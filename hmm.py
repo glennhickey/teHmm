@@ -445,6 +445,7 @@ class MultitrackHmm(BaseHMM):
     def _do_mstep(self, stats, params):
         logger.debug("%d: beginning MultitrackHMM M-step" %
                       self.current_iteration)
+        self.validate()
         if self.startprob_prior is None:
             self.startprob_prior = 1.0
         if self.transmat_prior is None:
@@ -463,7 +464,6 @@ class MultitrackHmm(BaseHMM):
                     # orphaned state.  dont zap just leave values from
                     # last iteration
                     transmat_[row] = lastMat[row]
-                    assert assert_array_almost_equal(np.sum(transmat_[row]), 1.)
                 else:
                     transmat_[row] = transmat_[row] / rowSum
             self.transmat_ = transmat_
