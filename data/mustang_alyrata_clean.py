@@ -123,6 +123,7 @@ def runCleaning(args, tempTracksInfo):
                 runShellCommand("bigBedToBed %s %s" % (inFile, tempBed))
                 inFile = tempBed
             runShellCommand("cleanTermini.py %s %s" % (inFile, outFile))
+            terminiTrack.setPath(outFile)
             if tempBed is not None:
                 runShellCommand("rm -f %s" % tempBed)
         else:
