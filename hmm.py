@@ -482,6 +482,8 @@ class MultitrackHmm(BaseHMM):
         if self.forceUserStart is not None:
             self.applyUserStarts(self.forceUserStart)
 
+        self.validate()
+
     def fit(self, obs, **kwargs):
         self.current_iteration = 1
         return BaseHMM.fit(self, obs, **kwargs)
