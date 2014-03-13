@@ -233,6 +233,9 @@ def main(argv=None):
         with open(args.initStartProbs) as f:
             model.applyUserStarts(f.readlines())
 
+    # make sure initialization didnt screw up
+    model.validate()
+
     # do the training
     if args.supervised is False:
         logger.info("training via EM")
