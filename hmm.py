@@ -309,8 +309,14 @@ class MultitrackHmm(BaseHMM):
             transmat_ = self.transmat_prior - 1.0 + stats['trans']
             for row in xrange(len(transmat_)):
                 rowSum = np.sum(transmat_[row])
-                assert rowSum > 0
-                transmat_[row] = transmat_[row] / rowSum
+                if rowSum == 0:
+                    # legacy functionality till we see what triggers
+                    # this case
+                    logger.warning("Old normalize 0 trans row for state %s" %
+                                   self.stateNameMap.getMapBack(row))
+                    transmat_[row] = normalize(transmat_[row])
+                else:
+                    transmat_[row] = transmat_[row] / rowSum
             self.transmat_ = transmat_
 
         if 'e' in params:
