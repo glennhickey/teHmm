@@ -111,7 +111,7 @@ def runCleaning(args, tempTracksInfo):
         logger.warning("Could not find chaux track")
 
     # run cleanTermini.py
-    lastTracks = [trackList.getTrackByName(args.termini),
+    lastzTracks = [trackList.getTrackByName(args.termini),
                   trackList.getTrackByName(args.tir)]
     for terminiTrack in lastzTracks:
         if terminiTrack is not None:
