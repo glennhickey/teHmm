@@ -79,7 +79,7 @@ def writeEmissionClusters(model, args):
     for track in trackList:
         hcNames.append(track.getName())
         points = [emissionDist[track.getNumber()][x] for x in xrange(N)]
-        hc = hierarchicalCluster(points, normalizeDistances=True)
+        hc = hierarchicalCluster(points, normalizeDistances=False)
         hcList.append(hc)
 
     # write clusters to pdf
