@@ -97,17 +97,19 @@ def main(argv=None):
                         help="Path of text file where each "
                         "line has three entries: FromState ToState Probability" 
                         ". These transition probabilities will override any "
-                        " learned probabilities after training (unspecified "
+                        " learned probabilities after each training iteration"
+                        " (unspecified "
                         "will not be set to 0 in this case. the learned values"
-                        " will be kept, but normalized as needed" ,
+                        " will be kept, but normalized as needed)" ,
                         default=None)
     parser.add_argument("--forceEmProbs", help="Path of text file where each "
                         "line has four entries: State Track Symbol Probability"
                         ". These "
                         "emission probabilities will override any learned"
-                        " probabilities after training (unspecified "
+                        " probabilities after each training iteration "
+                        "(unspecified "
                         "will not be set to 0 in this case. the learned values"
-                        " will be kept, but normalized as needed." ,
+                        " will be kept, but normalized as needed.)" ,
                         default = None) 
     parser.add_argument("--flatEm", help="Use a flat emission distribution as "
                         "a baseline.  If not specified, the initial emission "
@@ -167,7 +169,7 @@ def main(argv=None):
     userTrans = None
     if args.supervised is False and args.initTransProbs is not None:
         logger.debug("initializing transition model with user data")
-        userTrans, catMap = applyUserTrans(args.initTransProbs)
+        catMap = stateNamesFromUserTrans(args.initTransProbs)
         # state number is overrided by the transProbs file
         args.numStates = len(catMap)
 
@@ -192,30 +194,16 @@ def main(argv=None):
         normalizeFac=args.emFac,
         randomize=randomize)
 
-    # initialize the user specified emission probabilities now if necessary
-    if args.initEmProbs is not None:
-        logger.debug("initializing emission model with user data")
-        assert catMap is not None
-        applyUserEmissions(args.initEmProbs, emissionModel, catMap,
-                           trackData.getTrackList())
-
-    # initialize the user specified start probabilities now if necessary
-    userStart = None
-    if args.initStartProbs is not None:
-        logger.debug("initializing start probabilities with user data")
-        assert catMap is not None
-        userStart = applyUserStarts(args.initStartProbs, None, catMap)
-
     # create the model
     if not args.cfg:
         logger.info("creating hmm model")
         model = MultitrackHmm(emissionModel, n_iter=args.iter,
                               state_name_map=catMap,
-                              startprob=userStart,
-                              transmat=userTrans,
                               fixTrans = args.fixTrans,
                               fixEmission = args.fixEm,
-                              fixStart = args.fixStart)
+                              fixStart = args.fixStart,
+                              forceUserEmissions = args.forceEmProbs,
+                              forceUserTrans = args.forceTransProbs)
     else:
         pairEM = PairEmissionModel(emissionModel, [args.saPrior] *
                                    emissionModel.getNumStates())
@@ -228,6 +216,23 @@ def main(argv=None):
         model = MultitrackCfg(emissionModel, pairEM, nestStates,
                               state_name_map=catMap)
 
+    # initialize the user specified transition probabilities now if necessary
+    if args.initTransProbs is not None:
+        with open(args.initTransProbs) as f:
+            model.applyUserTrans(f.readlines())
+
+    # initialize the user specified emission probabilities now if necessary
+    if args.initEmProbs is not None:
+        with open(args.initEmProbs) as f:
+            # can't apply emissions without a track list! 
+            model.trackList = trackData.getTrackList()
+            model.applyUserEmissions(f.readlines())
+
+    # initialize the user specified start probabilities now if necessary
+    if args.initStartProbs is not None:
+        with open(args.initStartProbs) as f:
+            model.applyUserStarts(f.readlines())
+
     # do the training
     if args.supervised is False:
         logger.info("training via EM")
@@ -236,21 +241,37 @@ def main(argv=None):
         logger.info("training from input bed states")
         model.supervisedTrain(trackData, truthIntervals)
 
-    # hack user-specified values back in as desired before saving
+    # reset the user specified transition probabilities now if necessary
     if args.forceTransProbs is not None:
-        applyUserTrans(model.transmat_, args.forceTransProbs, 
-                       model.stateNameMap)
+        with open(args.forceTransProbs) as f:
+            model.applyUserTrans(f.readlines())
+
+    # reset the user specified emission probabilities now if necessary
     if args.forceEmProbs is not None:
-        stateMap = model.getStateNameMap()
-        trackList = model.trackList
-        emission = model.getEmissionModel()
-        applyUserEmissions(args.forceEmProbs, emission, stateMap, trackList)
+        with open(args.forceEmProbs) as f:
+            model.applyUserEmissions(f.readlines())
 
     # write the model to a pickle
     logger.info("saving trained model to %s" % args.outputModel)
     saveModel(args.outputModel, model)
 
     cleanBedTool(tempBedToolPath)
+
+###########################################################################
+    
+def stateNamesFromUserTrans(userTransPath):
+    """ Scan the user transitions to determine all state names.  """
+    catMap = CategoryMap(reserved=0)
+    f = open(userTransPath, "r")
+    for line in f:
+        if len(line.lstrip()) > 0 and line.lstrip()[0] is not "#":
+            toks = line.split()
+            assert len(toks) == 3
+            float(toks[2])
+            catMap.getMap(toks[0], update=True)
+            catMap.getMap(toks[1], update=True)
+    f.close()
+    return catMap
 
 ###########################################################################
     
@@ -268,233 +289,7 @@ def mapStateNames(bedIntervals):
 
 ###########################################################################
 
-def applyUserTrans(userTransPath, transMat = None, catMap = None):
-    """ Modify the transtion probability matrix so that it contains the
-    probabilities specified by the given text file.  If a stateNameMap (catMap)
-    is provided, it is used (and missing values trigger errors).  If the map
-    is None, then one is created.  If the transmap is None, one is created
-    as well (with default values being flat distribution.
-    The modified transMat and catMap are returned as a tuple, can can be
-    applied to the hmm."""
-    logger.debug("Applying user transitions to supervised trained HMM")
-    
-    # first pass just to count the states
-    if catMap is None:
-        catMap = CategoryMap(reserved=0)
-        f = open(userTransPath, "r")
-        for line in f:
-            if len(line.lstrip()) > 0 and line.lstrip()[0] is not "#":
-                toks = line.split()
-                assert len(toks) == 3
-                float(toks[2])
-                catMap.getMap(toks[0], update=True)
-                catMap.getMap(toks[1], update=True)
-        f.close()
 
-    N = len(catMap)
-    mask = np.zeros((N, N), dtype=np.int8)
-
-    # init the transmap if ncessary
-    if transMat is None:
-        transMat = 1. / float(N) + np.zeros((N, N), dtype=np.float)
-
-    # 2nd pass to read the probabilities into the transmap
-    f = open(userTransPath, "r")    
-    for line in f:
-        if len(line.lstrip()) > 0 and line.lstrip()[0] is not "#":
-            toks = line.split()
-            assert len(toks) == 3
-            prob = float(toks[2])
-            fromState = toks[0]
-            toState = toks[1]
-            if not catMap.has(fromState) or not catMap.has(toState):
-                raise RuntimeError("Cannot apply transition %s->%s to model"
-                                   " since at least one of the states was not "
-                                   "found in the supervised data." % (fromState,
-                                                                      toState))
-            fid = catMap.getMap(fromState)
-            tid = catMap.getMap(toState)
-            # remember that this is a user transition
-            mask[fid, tid] = 1
-            # set the trnasition probability in the matrix
-            transMat[fid, tid] = prob
-
-    # normalize all other probabilities (ie that are unmaksed) so that they
-    # add up.
-    for fid in xrange(N):
-        # total probability of learned states
-        curTotal = 0.0
-        # total probability of learned states after normalization
-        tgtTotal = 1.0
-        for tid in xrange(N):
-            if mask[fid, tid] == 1:
-                tgtTotal -= transMat[fid, tid]
-            else:
-                curTotal += transMat[fid, tid]
-        if tgtTotal < -EPSILON:
-            raise RuntimeError("User defined probability %f from state %s "
-                               "exceeds 1" % (tgtTotal, catMap.getMapBack(fid)))
-        for tid in xrange(N):
-            if mask[fid, tid] == 0:
-                if tgtTotal == 0.:
-                    transMat[fid, tid] = 0.
-                else:
-                    transMat[fid, tid] *= (tgtTotal / curTotal)
-
-    f.close()
-
-    return (transMat, catMap)
-    
-###########################################################################
-    
-def applyUserEmissions(userEmPath, emission, stateMap, trackList):
-    """ modify a HMM that was constructed using supervisedTrain() so that
-    it contains the emission probabilities specified in the userEmPath File."""
-    logger.debug("Applying user emissions to supervised trained HMM")
-    f = open(userEmPath, "r")
-    logProbs = emission.getLogProbs()
-    mask = np.zeros(logProbs.shape, dtype=np.int8)
-
-    # scan file and set values in logProbs matrix
-    for line in f:
-        if len(line.lstrip()) > 0 and line.lstrip()[0] is not "#":
-            toks = line.split()
-            assert len(toks) == 4
-            stateName = toks[0]
-            trackName = toks[1]
-            symbolName = toks[2]
-            prob = float(toks[3])
-            if not stateMap.has(stateName):
-                raise RuntimeError("State %s not found in supervised data" %
-                                   stateName)
-            state = stateMap.getMap(stateName)
-            track = trackList.getTrackByName(trackName)
-            if track is None:
-                raise RuntimeError("Track %s (in user emissions) not found" %
-                                   trackName)
-            symbolMap = track.getValueMap()
-            track = track.getNumber()
-            if isinstance(symbolMap, BinaryMap):
-                # hack in conversion for binary data, where map expects either
-                # None or non-None
-                if symbolName == "0" or symbolName == "None":
-                    symbolName = None
-            elif not symbolMap.has(symbolName):
-                logger.warning("Warning: Track %s Symbol %s not found in"
-                                 "data (setting as null value)\n" %
-                                 (trackName, symbolName))
-            symbol = symbolMap.getMap(symbolName)
-            assert symbol in emission.getTrackSymbols(track)
-            logProbs[track, state, symbol] = myLog(prob)
-            mask[track, state, symbol] = 1
-
-    # easier to work outside log space
-    probs = np.exp(logProbs)
-    
-    # normalize all other probabilities (ie that are unmaksed) so that they
-    # add up.
-    for track in xrange(emission.getNumTracks()):
-        for state in xrange(emission.getNumStates()):
-            # total probability of learned states
-            curTotal = 0.0
-            # total probability of learned states after normalization
-            tgtTotal = 1.0            
-            for symbol in emission.getTrackSymbols(track):
-                if mask[track, state, symbol] == 1:
-                    tgtTotal -= probs[track, state, symbol]
-                else:
-                    curTotal += probs[track, state, symbol]
-                if tgtTotal < 0.:
-                    raise RuntimeError("User defined probability from state %s"
-                                       " for track %s exceeds 1" %
-                                       (stateMap.getMapBack(state),
-                                        symbolMap.getMapBack(symbol)))
-
-            # special case:
-            # we have set probabilities that total < 1 and no remaining
-            # probabilities to boost with factor. ex (1, 0, 0, 0) ->
-            #(0.95, 0, 0, 0)  (where the first prob is being set)
-            additive = False
-            if curTotal == 0. and tgtTotal < 1.:
-                additive = True
-                numUnmasked = len(mask[track, state]) - np.sum(mask[track,state])
-                assert numUnmasked > 0
-                addAmt = (1. - tgtTotal) / float(numUnmasked)
-            else:
-                assert curTotal > 0.
-                multAmt = tgtTotal / curTotal
-                
-            # same correction as applyUserTransmissions()....
-            for symbol in emission.getTrackSymbols(track):
-                if mask[track, state, symbol] == 0:
-                    if tgtTotal == 0.:
-                        probs[track, state, symbol] = 0.
-                    elif additive is False:
-                        probs[track, state, symbol] *= multAmt
-                    else:
-                        probs[track, state, symbol] += addAmt
-
-    # Make sure we set our new log probs back into object
-    emission.logProbs = myLog(probs)
-    
-    emission.validate()
-    
-    f.close()
-
-###########################################################################
-    
-def applyUserStarts(userStartPath, startProbs, stateMap):
-    """ modify a HMM that was constructed using supervisedTrain() so that
-    it contains the start probabilities specified in the userStartPath File."""
-    logger.debug("Applying user emissions to supervised trained HMM")
-    f = open(userStartPath, "r")
-
-    N = len(stateMap)
-    if startProbs is None:
-        startProbs = 1. / float(len(stateMap)) + np.zeros((N))
-    mask = np.zeros(startProbs.shape, dtype=np.int8)
-
-    # scan file and set values in logProbs matrix
-    for line in f:
-        if len(line.lstrip()) > 0 and line.lstrip()[0] is not "#":
-            toks = line.split()
-            assert len(toks) == 2
-            stateName = toks[0]
-            prob = float(toks[1])
-            if not stateMap.has(stateName):
-                raise RuntimeError("State %s not found in supervised data" %
-                                   stateName)
-            state = stateMap.getMap(stateName)
-            startProbs[state] = prob
-            mask[state] = 1
-    
-    # normalize all other probabilities (ie that are unmaksed) so that they
-    # add up.
-    # total probability of learned states
-    curTotal = 0.0
-    # total probability of learned states after normalization
-    tgtTotal = 1.0            
-
-    for state in xrange(N):
-        if mask[state] == 1:
-            tgtTotal -= startProbs[state]
-        else:
-            curTotal += startProbs[state]
-            
-        if tgtTotal < 0.:
-            raise RuntimeError("User defined start probabiliies exceed 1")
-
-    for state in xrange(N):
-        # same correction as applyUserTransmissions()....
-        if mask[state] == 0:
-            if tgtTotal == 0.:
-                startProbs[state] = 0.
-            else:
-                startProbs[state] *= (tgtTotal / curTotal)
-
-    f.close()
-
-    return startProbs
 
 if __name__ == "__main__":
     sys.exit(main())

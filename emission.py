@@ -16,7 +16,7 @@ import time
 from numpy.testing import assert_array_equal, assert_array_almost_equal
 from operator import mul
 from ._emission import canFast, fastAllLogProbs, fastAccumulateStats, fastUpdateCounts
-from .track import TrackTable
+from .track import TrackTable, BinaryMap
 from .common import EPSILON, myLog, logger
 from .basehmm import normalize, NEGINF
 
@@ -285,6 +285,101 @@ class IndependentMultinomialEmissionModel(object):
             for track in xrange(self.getNumTracks()):
                 obsStats[track, state, emissions[track]] += 1.
 
+    def applyUserEmissions(self, userEmLines, stateMap, trackList):
+        """ modify a HMM that was constructed using supervisedTrain() so that
+        it contains the emission probabilities specified in the userEmPath File.
+        """
+        logger.debug("Applying user emissions Emission Model")
+        f = userEmLines
+        logProbs = self.getLogProbs()
+        mask = np.zeros(logProbs.shape, dtype=np.int8)
+
+        # scan file and set values in logProbs matrix
+        for line in f:
+            if len(line.lstrip()) > 0 and line.lstrip()[0] is not "#":
+                toks = line.split()
+                assert len(toks) == 4
+                stateName = toks[0]
+                trackName = toks[1]
+                symbolName = toks[2]
+                prob = float(toks[3])
+                if not stateMap.has(stateName):
+                    raise RuntimeError("User Emission: State %s not found" %
+                                       stateName)
+                state = stateMap.getMap(stateName)
+                track = trackList.getTrackByName(trackName)
+                if track is None:
+                    raise RuntimeError("Track %s (in user emissions) not found" %
+                                       trackName)
+                symbolMap = track.getValueMap()
+                track = track.getNumber()
+                if isinstance(symbolMap, BinaryMap):
+                    # hack in conversion for binary data, where map expects
+                    # either None or non-None
+                    if symbolName == "0" or symbolName == "None":
+                        symbolName = None
+                elif not symbolMap.has(symbolName):
+                    logger.warning("Warning: Track %s Symbol %s not found in"
+                                     "data (setting as null value)\n" %
+                                     (trackName, symbolName))
+                symbol = symbolMap.getMap(symbolName)
+                assert symbol in self.getTrackSymbols(track)
+                logProbs[track, state, symbol] = myLog(prob)
+                mask[track, state, symbol] = 1
+
+        # easier to work outside log space
+        probs = np.exp(logProbs)
+
+        # normalize all other probabilities (ie that are unmaksed) so that they
+        # add up.
+        for track in xrange(self.getNumTracks()):
+            for state in xrange(self.getNumStates()):
+                # total probability of learned states
+                curTotal = 0.0
+                # total probability of learned states after normalization
+                tgtTotal = 1.0            
+                for symbol in self.getTrackSymbols(track):
+                    if mask[track, state, symbol] == 1:
+                        tgtTotal -= probs[track, state, symbol]
+                    else:
+                        curTotal += probs[track, state, symbol]
+                    if tgtTotal < 0.:
+                        raise RuntimeError("User defined prob from state %s"
+                                           " for track %s exceeds 1" %
+                                           (stateMap.getMapBack(state),
+                                            symbolMap.getMapBack(symbol)))
+
+                # special case:
+                # we have set probabilities that total < 1 and no remaining
+                # probabilities to boost with factor. ex (1, 0, 0, 0) ->
+                #(0.95, 0, 0, 0)  (where the first prob is being set)
+                additive = False
+                if curTotal == 0. and tgtTotal < 1.:
+                    additive = True
+                    numUnmasked = len(mask[track, state]) - \
+                      np.sum(mask[track,state])
+                    assert numUnmasked > 0
+                    addAmt = (1. - tgtTotal) / float(numUnmasked)
+                else:
+                    assert curTotal > 0.
+                    multAmt = tgtTotal / curTotal
+
+                # same correction as applyUserTransmissions()....
+                for symbol in self.getTrackSymbols(track):
+                    if mask[track, state, symbol] == 0:
+                        if tgtTotal == 0.:
+                            probs[track, state, symbol] = 0.
+                        elif additive is False:
+                            probs[track, state, symbol] *= multAmt
+                        else:
+                            probs[track, state, symbol] += addAmt
+
+        # Make sure we set our new log probs back into object
+        self.logProbs = myLog(probs)
+
+        self.validate()
+                
+                
 """ Simple pair emission model that supports emitting 1 or two states
 simultaneousy.  Based on a normal emission but makes a simple distribution
 for pairs """
