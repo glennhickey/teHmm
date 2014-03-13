@@ -52,6 +52,7 @@ from .emission import IndependentMultinomialEmissionModel
 from .track import TrackList, TrackTable, Track
 from .common import EPSILON, myLog, logger
 from .basehmm import BaseHMM, check_random_state, NEGINF, ZEROLOGPROB, logsumexp
+from .basehmm import normalize
 from . import _hmm
 
 """
