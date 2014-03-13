@@ -42,7 +42,7 @@ def hierarchicalCluster(points, normalizeDistances=False):
     distanceMatrix = scipy.spatial.distance.pdist(points, "euclidean")
     if normalizeDistances is True:
         distanceMatrix = normalize(distanceMatrix)
-    hc = scipy.cluster.hierarchy.linkage(distanceMatrix, method='complete')
+    hc = scipy.cluster.hierarchy.linkage(distanceMatrix, method='average')
     return hc
 
 def rankHierarchies(hcList, rankStat):
