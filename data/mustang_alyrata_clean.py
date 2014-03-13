@@ -60,6 +60,8 @@ def main(argv=None):
                         default="ltr_finder")
     parser.add_argument("--termini", help="Name of termini track",
                         default="termini")
+    parser.add_argument("--tir", help="Name of tir_termini track",
+                        default="tir_termini")
     
     addLoggingOptions(parser)
     args = parser.parse_args()
@@ -109,23 +111,22 @@ def runCleaning(args, tempTracksInfo):
         logger.warning("Could not find chaux track")
 
     # run cleanTermini.py
-    terminiTrack = trackList.getTrackByName(args.termini)
-    if terminiTrack is not None:
-        outFile = cleanPath(args, terminiTrack)
-        inFile = terminiTrack.getPath()
-        tempBed = None
-        if inFile[-3:] == ".bb":
-            tempBed = getLocalTempPath("termini_temp", ".bed")
-            runShellCommand("bigBedToBed %s %s" % (inFile, tempBed))
-            inFile = tempBed
-        runShellCommand("cleanTermini.py --splitStrand %s %s" % (inFile,
-                                                                 outFile))
-        if tempBed is not None:
-            runShellCommand("rm -f %s" % tempBed)
-        # hardcode forward strand (and --splitstrand above for now)
-        terminiTrack.setPath(outFile.replace(".bed", "_f.bed"))
-    else:
-        logger.warning("Could not find termini track")
+    lastTracks = [trackList.getTrackByName(args.termini),
+                  trackList.getTrackByName(args.tir)]
+    for terminiTrack in lastzTracks:
+        if terminiTrack is not None:
+            outFile = cleanPath(args, terminiTrack)
+            inFile = terminiTrack.getPath()
+            tempBed = None
+            if inFile[-3:] == ".bb":
+                tempBed = getLocalTempPath("termini_temp", ".bed")
+                runShellCommand("bigBedToBed %s %s" % (inFile, tempBed))
+                inFile = tempBed
+            runShellCommand("cleanTermini.py %s %s" % (inFile, outFile))
+            if tempBed is not None:
+                runShellCommand("rm -f %s" % tempBed)
+        else:
+            logger.warning("Could not find termini track")
 
     # run cleanLtrFinder.py
     ltrfinderTrack = trackList.getTrackByName(args.ltrfinder)
