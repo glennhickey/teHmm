@@ -325,8 +325,8 @@ class IndependentMultinomialEmissionModel(object):
                     if symbolName == "0" or symbolName == "None":
                         symbolName = None
                 elif not symbolMap.has(symbolName):
-                    logger.warning("Warning: Track %s Symbol %s not found in"
-                                     "data (setting as null value)\n" %
+                    logger.warning("Track %s Symbol %s not found in"
+                                     "data (setting as null value)" %
                                      (trackName, symbolName))
                 symbol = symbolMap.getMap(symbolName)
                 assert symbol in self.getTrackSymbols(track)
