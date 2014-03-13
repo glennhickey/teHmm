@@ -204,6 +204,8 @@ class IndependentMultinomialEmissionModel(object):
                 totalSymbol = 0.0
                 for symbol in self.getTrackSymbols(track):
                     totalSymbol += obsStats[track, state, symbol]
+                lastMat = copy.deepcopy(self.logProbs[track][state])
+                trackSum = 0
                 for symbol in self.getTrackSymbols(track):
                     denom = max(self.fudge, totalSymbol)
                     if denom != 0.:
@@ -214,8 +216,12 @@ class IndependentMultinomialEmissionModel(object):
                     # as it can lead to unrecognizable strings (we elect to
                     # allow for epsilon in emissions but keep the 0s in
                     # transitions) so we override logZero
+                    trackSum += symbolProb
                     self.logProbs[track][state][symbol] = myLog(symbolProb,
                                                                 logZeroVal=-1e6)
+                if trackSum < EPSILON:
+                    # orphaned state/track has no emission. just leave as was
+                    self.logProbs[track][state] = lastMat
         self.validate()
 
     def validate(self):
