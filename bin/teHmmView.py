@@ -15,7 +15,7 @@ from teHmm.cfg import MultitrackCfg
 from teHmm.modelIO import loadModel
 try:
     from teHmm.parameterAnalysis import plotHierarchicalClusters
-    from teHmm.parameterAnalysis import hierarchicalCluster
+    from teHmm.parameterAnalysis import hierarchicalCluster, rankHierarchies
     canPlot = True
 except:
     canPlot = False
@@ -82,11 +82,13 @@ def writeEmissionClusters(model, args):
         hc = hierarchicalCluster(points, normalizeDistances=True)
         hcList.append(hc)
 
-    # write clusters to pdf
-    plotHierarchicalClusters(hcList, hcNames, stateNames, args.ec)
+    # write clusters to pdf (ranked in decreasing order based on total
+    # branch length)
+    ranks = rankHierarchies(hcList)
+    plotHierarchicalClusters([hcList[i] for i in ranks],
+                             [hcNames[i] for i in ranks],
+                             stateNames, args.ec)
         
-    #todo: ranking
-    
     
 if __name__ == "__main__":
     sys.exit(main())

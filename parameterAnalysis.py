@@ -48,17 +48,26 @@ def hierarchicalCluster(points, normalizeDistances=False):
     hc = scipy.cluster.hierarchy.linkage(distanceMatrix, method='average')
     return hc
 
-def rankHierarchies(hcList, rankStat):
+def rankHierarchies(hcList, rankStat = "branch_length"):
     """ produce a ranking of hierarchical clusterings using one of a variety
     of statistics. Each element of hcList is the output of
-    hierarchichalCluster() """
-    
-    pass
+    hierarchichalCluster()
+    Return list of integer indexes in increasing order"""
+
+    inputRanking = [x for x in xrange(len(hcList))]
+        
+    if rankStat == "branch_length":
+        totalLengths = [np.sum([x[2] for x in hc]) for hc in hcList]
+        sortedRanking = sorted(zip(totalLengths, inputRanking), reverse=True)
+        ranks = list(zip(*sortedRanking)[1])
+        return ranks
+    else:
+        raise RuntimeError("Rankstat %s not recognized" % rankStat)
 
 def plotHierarchicalClusters(hcList, titles, leafNames, outFile):
     """ print out a bunch of dendrograms to a PDF file.  Each element of
     hcList is the output of hierarchichalCluster()"""
-    cols = 3
+    cols = 4
     rows = int(np.ceil(float(len(hcList)) / float(cols)))
     width=10
     height=5 * rows
@@ -67,7 +76,9 @@ def plotHierarchicalClusters(hcList, titles, leafNames, outFile):
     fig = plt.figure(figsize=(width, height))
     plt.clf()
     for i, hc in enumerate(hcList):
-        plt.subplot(rows, cols, i)
+        # +1 below is to prevent 1st element from being put last
+        # (ie sublot seems to behave as if indices are 1-base)
+        plt.subplot(rows, cols, (i + 1) % len(hcList))
         dgram = scipy.cluster.hierarchy.dendrogram(
             hc, color_threshold=0.25, labels=leafNames, show_leaf_counts=False)
 #            p=6,
