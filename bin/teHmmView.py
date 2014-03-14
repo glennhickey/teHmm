@@ -87,12 +87,24 @@ def writeEmissionClusters(model, args):
     # cluster for each track
     hcList = []
     hcNames = []
+    # list for each state
+    allPoints = []
+    for i in xrange(N):
+        allPoints.append([])
+
     for track in trackList:
         hcNames.append(track.getName())
         points = [emissionDist[track.getNumber()][x] for x in xrange(N)]
+        for j in xrange(N):
+            allPoints[j] += list(points[j])
         hc = hierarchicalCluster(points, normalizeDistances=True)
         hcList.append(hc)
 
+    # all at once
+    hc = hierarchicalCluster(allPoints, normalizeDistances=True)
+    hcList.append(hc)
+    hcNames.append("all_tracks")
+    
     # write clusters to pdf (ranked in decreasing order based on total
     # branch length)
     ranks = rankHierarchies(hcList)
@@ -117,6 +129,7 @@ def writeEmissionScatters(model, args):
     scatterList = []
     scatterScores = []
     hcNames = []
+        
     for track in trackList:
         hcNames.append(track.getName())
         points = [emissionDist[track.getNumber()][x] for x in xrange(N)]
@@ -127,11 +140,11 @@ def writeEmissionScatters(model, args):
         except Exception as e:
             print "PCA FAIL %s" % track.getName()
 
+    # sort by score
     zipRank = zip(scatterScores, [x for x in xrange(len(scatterScores))])
     zipRank = sorted(zipRank)
     ranking = zip(*zipRank)[1]
 
-    # write scatters to pdf (no ranking yet)
     if len(scatterList) > 0:
         plotPoints2d([scatterList[i] for i in ranking],
                      [hcNames[i] for i in ranking],
