@@ -25,6 +25,8 @@ def main(argv=None):
     parser.add_argument("--keepSlash", help="dont strip anything after slash "
                         "ex: DNA/HELITRONY1C -> DNA", action="store_true",
                         default=False)
+    parser.add_argument("--keepUnderscore", help="dont strip anything after _ ",
+                        action="store_true", default=False)
     parser.add_argument("--leaveNumbers", help="by default, numbers as the end"
                         " of names are trimmed off.  ex: DNA/HELITRONY1C -> "
                         " DNA/HELITRONY. This option disables this behaviour",
@@ -57,11 +59,14 @@ def main(argv=None):
             interval.name = prefix
         else:
             # otherwise, strip after |
-            interval.name = interval.name[:interval.name.find("|")]
+            if "|" in interval.name:
+                interval.name = interval.name[:interval.name.find("|")]
             # strip after ?
-            interval.name = interval.name[:interval.name.find("?")]
-            #strip after _
-            interval.name = interval.name[:interval.name.find("_")]
+            if "?" in interval.name:
+                interval.name = interval.name[:interval.name.find("?")]
+            #strip after _ unlerss told not to
+            if "_" in interval.name and args.keepUnderscore is False:
+                interval.name = interval.name[:interval.name.find("_")]
             # strip after "/" unless told not to
             if "/" in interval.name and args.keepSlash is False:
                 interval.name = interval.name[:interval.name.find("/")]

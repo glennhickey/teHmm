@@ -106,7 +106,8 @@ def runCleaning(args, tempTracksInfo):
         outFile = cleanPath(args, chauxTrack)
         tempBed = getLocalTempPath("chaux_temp", ".bed")
         runShellCommand("removeBedOverlaps.py %s > %s" % (inFile, tempBed))
-        runShellCommand("cleanChaux.py %s > %s" % (tempBed, outFile))
+        runShellCommand("cleanChaux.py --keepUnderscore %s > %s" % (tempBed,
+                                                                    outFile))
         runShellCommand("rm -f %s" % tempBed)
         chauxTrack.setPath(outFile)
     else:
