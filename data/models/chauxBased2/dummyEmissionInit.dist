@@ -1,0 +1,10 @@
+LTR|left	ltr_finder	LTR|left	1.00000
+inside	ltr_finder	inside	1.00000
+LTR|right	ltr_finder	LTR|right	1.00000
+
+DNA	chaux	DNA	1.00000
+DNAt	chaux	DNAt	1.00000
+non-LTR	chaux	non-LTR	1.00000
+
+lastz|left		termini	L_Term	0.99
+lastz|right		termini	R_Term	0.99

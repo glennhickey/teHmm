@@ -1,0 +1,19 @@
+# hacky script to generate gold standard.  needs to be run in ~/genomes/alyrata/tracks/manual at this point
+
+intersectBed -a /data/glenn.hickey/genomes/alyrata/tracks/clean/chaux_sorted_clean.bed -b allManual_clean.bed > temp1.bed
+removeBedState.py temp1.bed LTR > temp2a.bed
+removeBedState.py temp2a.bed non-LTR > temp2.bed
+removeBedState.py manualTraining.bed 0 > temp3.bed
+cat annotated_nonltr_elements_regions_1_20_1state_merge.bed >> temp3.bed
+setBedCol.py --a temp3.bed 4 0 > temp3a.bed
+setBedCol.py --a temp3a.bed 5 + > temp3.bed
+intersectBed -a temp2.bed -b temp3.bed > temp4.bed
+subtractBed -a temp2.bed -b temp4.bed > temp5.bed
+cat temp5.bed > temp6.bed
+cat temp3.bed >> temp6.bed
+removeBedOverlaps.py temp6.bed > manualChaux.bed
+wc -l manualChaux.bed
+wc -l temp6.bed
+addBedGaps.py allManual_clean5.bed manualChaux.bed temp10.bed --state Outside
+mv temp10.bed manualChaux.bed
+
