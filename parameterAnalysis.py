@@ -82,7 +82,7 @@ def plotHierarchicalClusters(hcList, titles, leafNames, outFile):
         # (ie sublot seems to behave as if indices are 1-base)
         plt.subplot(rows, cols, (i + 1) % len(hcList))
         dgram = scipy.cluster.hierarchy.dendrogram(
-            hc, color_threshold=0.25, labels=leafNames, show_leaf_counts=False)
+            hc, color_threshold=None, labels=leafNames, show_leaf_counts=False)
 #            p=6,
 #            truncate_mode='lastp')
         plt.title(titles[i])
