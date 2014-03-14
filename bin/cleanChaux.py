@@ -11,7 +11,7 @@ import re
 from pybedtools import BedTool, Interval
 
 """
-Remove everything past the first | and / in the name column
+Remove everything past the first occurence of | / ? _ in the name column
 """
 
 def main(argv=None):
@@ -20,7 +20,7 @@ def main(argv=None):
 
     parser = argparse.ArgumentParser(
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
-        description="Cut names off at first | and or /")
+        description="Cut names off at first |, /, ?, or _")
     parser.add_argument("inBed", help="bed with chaux results to process")
     parser.add_argument("--keepSlash", help="dont strip anything after slash "
                         "ex: DNA/HELITRONY1C -> DNA", action="store_true",
@@ -45,9 +45,12 @@ def main(argv=None):
 
     for interval in BedTool(args.inBed).sort():
         # filter score if exists
-        if interval.score is not None and\
-          float(interval.score) < args.minScore:
-            continue
+        try:
+            if interval.score is not None and\
+                float(interval.score) < args.minScore:
+                continue
+        except:
+            pass
         prefix = findPrefix(interval.name, args.mapPrefix)
         if prefix is not None:
             # prefix was specified with --mapPrefix, that's what we use
@@ -55,6 +58,10 @@ def main(argv=None):
         else:
             # otherwise, strip after |
             interval.name = interval.name[:interval.name.find("|")]
+            # strip after ?
+            interval.name = interval.name[:interval.name.find("?")]
+            #strip after _
+            interval.name = interval.name[:interval.name.find("_")]
             # strip after "/" unless told not to
             if "/" in interval.name and args.keepSlash is False:
                 interval.name = interval.name[:interval.name.find("/")]

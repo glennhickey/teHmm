@@ -24,6 +24,8 @@ from matplotlib.ticker import MultipleLocator, FormatStrFormatter, LogLocator
 from matplotlib.ticker import LogFormatter
 import matplotlib.mlab as mlab
 from mpl_toolkits.axes_grid1 import make_axes_locatable
+from matplotlib.mlab import PCA
+
 
 from teHmm.basehmm import normalize
 
