@@ -7,6 +7,7 @@ import sys
 import os
 import argparse
 import logging
+import numpy as np
 
 from teHmm.trackIO import getMergedBedIntervals, fastaRead, writeBedIntervals
 from teHmm.kmer import KmerTable
@@ -35,18 +36,22 @@ def main(argv=None):
                         "we wish to search")
     parser.add_argument("outBed", help="BED file containing (only) output TSDs")
     parser.add_argument("--min", help="Minimum length of a TSD",
-                        default=4, type=int)
+                        default=3, type=int)
     parser.add_argument("--max", help="Maximum length of a TSD",
-                        default=8, type=int)
+                        default=6, type=int)
     parser.add_argument("--all", help="Report all matches in region (as opposed"
                         " to only the nearest to the BED element which is the "
                         "default behaviour", action="store_true", default=False)
     parser.add_argument("--left", help="Number of bases immediately left of the "
                         "BED element to search for the left TSD",
-                        default=20, type=int)
+                        default=8, type=int)
     parser.add_argument("--right", help="Number of bases immediately right of "
                         "the BED element to search for the right TSD",
-                        default=20, type=int)
+                        default=8, type=int)
+    parser.add_argument("--overlap", help="Number of bases overlapping the "
+                        "BED element to include in search (so total space "
+                        "on each side will be --left + overlap, and --right + "
+                        "--overlap", default=3, type=int)
     parser.add_argument("--leftName", help="Name of left TSDs in output Bed",
                         default="L_TSD")
     parser.add_argument("--rightName", help="Name of right TSDs in output Bed",
@@ -125,10 +130,11 @@ def findTsds(args, mergedIntervals):
 def intervalTsds(args, sequence, bedInterval):
     """ given a single bed interval, do a string search to find tsd candidates
     on the left and right flank."""
+    overlap = min(args.overlap, (bedInterval[2] - bedInterval[1]) / 2)
     l1 = max(0, bedInterval[1] - args.left)
-    r1 = bedInterval[1]
+    r1 = bedInterval[1] + args.overlap
 
-    l2 = bedInterval[2]
+    l2 = bedInterval[2] - args.overlap
     r2 = min(bedInterval[2] + args.right, len(sequence))
 
     if r1 - l1 < args.min or r2 - l2 < args.min:
@@ -142,24 +148,34 @@ def intervalTsds(args, sequence, bedInterval):
     matches = kt.exactMatches(leftFlank, minMatchLen = args.min,
                               maxMatchLen = args.max)
 
-    # if we don't want every match, find the match with the lowest minimum
+    # if we don't want every match, find the match with the lowest maximum
     # distance to the interval. will probably need to look into better 
     # heuristics for this
     if args.all is False and len(matches) > 1:
         dmin = len(sequence)
         bestMatch = None
         for match in matches:
-            d = bedInterval[1] - match[1]
-            assert d >= 0
-            d += match[2] - bedInterval[2]
+            d1 = np.abs(bedInterval[1] - (l1 + match[1]))
+            assert d1 >= 0
+            d2 = np.abs(bedInterval[2] - (l2 + match[2]))
+            d = max(d1, d2)
             if d < dmin:
                 dmin = d
                 bestMatch = match
         matches = [bestMatch]
 
-    return matchesToBedInts(args, bedInterval, matches)
+    tsds = matchesToBedInts(args, bedInterval, matches, l1, l2)
 
-def matchesToBedInts(args, bedInterval, matches):
+    # sanity check
+    assert len(tsds) % 2 == 0
+    for i in xrange(0, len(tsds), 2):
+        lt = tsds[i]
+        rt = tsds[i+1]
+        assert sequence[lt[1]:lt[2]].lower() == sequence[rt[1]:rt[2]].lower()
+
+    return tsds
+
+def matchesToBedInts(args, bedInterval, matches, l1, l2):
     """ convert substring matches as returned from the kmer table into bed 
     intervals that will be output by the tool"""
 
@@ -169,33 +185,22 @@ def matchesToBedInts(args, bedInterval, matches):
         name = args.leftName
         if args.id is True:
             name += "_" + str(args.nextId)
-        offset = bedInterval[1] - args.left
-        left = (bedInterval[0], offset + match[0], offset + match[1], name,
-                bedInterval[1] - offset - match[1])
+        left = (bedInterval[0], l1 + match[0], l1 + match[1], name,
+                np.abs(bedInterval[1] - (l1 + match[1])))            
         bedIntervals.append(left)
 
         name = args.rightName
         if args.id is True:
             name += "_" + str(args.nextId)
-        offset = bedInterval[2]
-        right = (bedInterval[0], offset + match[2], offset + match[3], name,
-                 offset + match[2] - bedInterval[2])
+        right = (bedInterval[0], l2 + match[2], l2 + match[3], name,
+                 np.abs(bedInterval[2] - (l2 + match[2])))
         bedIntervals.append(right)
 
         args.nextId += 1
         
     return bedIntervals
         
-        
-        
-        
-
-        
     
-    
-    
-                
-                
         
     
 if __name__ == "__main__":
