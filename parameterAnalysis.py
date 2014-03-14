@@ -68,7 +68,7 @@ def plotHierarchicalClusters(hcList, titles, leafNames, outFile):
     for i, hc in enumerate(hcList):
         plt.subplot(rows, cols, i)
         dgram = scipy.cluster.hierarchy.dendrogram(
-            hc, color_threshold=1, labels=leafNames, show_leaf_counts=False)
+            hc, color_threshold=0.1, labels=leafNames, show_leaf_counts=False)
 #            p=6,
 #            truncate_mode='lastp')
         plt.title(titles[i])
