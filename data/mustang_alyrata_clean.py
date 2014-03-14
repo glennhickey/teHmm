@@ -64,6 +64,8 @@ def main(argv=None):
                         default="tir_termini")
     parser.add_argument("--hollister", help="Name of hollister track",
                         default="hollister")
+    parser.add_argument("--noScale", help="Dont do any scaling", default=False,
+                        action="store_true")
     
     addLoggingOptions(parser)
     args = parser.parse_args()
@@ -170,9 +172,12 @@ def runScaling(args, tempTracksInfo):
     if args.skipScale is not None:
         skipArg = args.skipScale
 
-    cmd = "setTrackScaling.py %s %d %s --logLevel %s %s %s" % (
-        tempTracksInfo, args.numBins, args.outTracksInfo,
-        getLogLevelString(), tracksArg, skipArg)
+    if args.noScale is False:
+        cmd = "setTrackScaling.py %s %d %s --logLevel %s %s %s" % (
+            tempTracksInfo, args.numBins, args.outTracksInfo,
+            getLogLevelString(), tracksArg, skipArg)
+    else:
+        cmd = "cp %s %s" % (tempTracksInfo, args.outTracksInfo)
     runShellCommand(cmd)
 
 

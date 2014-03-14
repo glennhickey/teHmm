@@ -9,7 +9,7 @@ import argparse
 import logging
 import numpy as np
 
-from teHmm.trackIO import getMergedBedIntervals, fastaRead, writeBedIntervals
+from teHmm.trackIO import readBedIntervals, fastaRead, writeBedIntervals
 from teHmm.kmer import KmerTable
 from teHmm.common import addLoggingOptions, setLoggingFromOptions, logger
 
@@ -58,6 +58,9 @@ def main(argv=None):
                         default="R_TSD")
     parser.add_argument("--id", help="Assign left/right pairs of TSDs a unique"
                         " matching ID", action="store_true", default=False)
+    parser.add_argument("--names", help="Only apply to bed interval whose "
+                        "name is in (comma-separated) list.  If not specified"
+                        " then all intervals are processed", default=None)
     addLoggingOptions(parser)
     args = parser.parse_args()
     setLoggingFromOptions(args)
@@ -69,12 +72,12 @@ def main(argv=None):
 
     # read intervals from the bed file
     logger.info("loading target intervals from %s" % args.inBed)
-    mergedIntervals = getMergedBedIntervals(args.inBed, ncol=4, sort=True)
-    if mergedIntervals is None or len(mergedIntervals) < 1:
+    bedIntervals = readBedIntervals(args.inBed, ncol=4, sort=True)
+    if bedIntervals is None or len(bedIntervals) < 1:
         raise RuntimeError("Could not read any intervals from %s" %
                            args.inBed)
     
-    tsds = findTsds(args, mergedIntervals)
+    tsds = findTsds(args, bedIntervals)
 
     writeBedIntervals(tsds, args.outBed)
 
@@ -104,23 +107,30 @@ def buildSeqTable(bedIntervals):
     return bedSeqTable
         
     
-def findTsds(args, mergedIntervals):
+def findTsds(args, bedIntervals):
     """ search through input bed intervals, loading up the FASTA sequence
     for each one """
     
     # index for quick lookups in bed file (to be used while scanning fasta file)
-    seqTable = buildSeqTable(mergedIntervals)
+    seqTable = buildSeqTable(bedIntervals)
     outTsds = []
     faFile = open(args.fastaSequence, "r")
+    nameSet = None
+    if args.names is not None:
+        nameSet = set(args.names.split(","))
     for seqName, sequence in fastaRead(faFile):
         if seqName in seqTable:
             logger.debug("Scanning FASTA sequence %s" % seqName)
             bedRange = seqTable[seqName]
             for bedIdx in xrange(bedRange[0], bedRange[1]):
-                bedInterval = mergedIntervals[bedIdx]
-                # we make sequence lower case below because we dont care
-                # about soft masking
-                outTsds += intervalTsds(args, sequence.lower(), bedInterval)
+                bedInterval = bedIntervals[bedIdx]
+                name = None
+                if len(bedInterval) > 3:
+                    name = bedInterval[3]
+                if nameSet is None or name in nameSet:
+                    # we make sequence lower case below because we dont care
+                    # about soft masking
+                    outTsds += intervalTsds(args, sequence.lower(), bedInterval)
         else:
             logger.debug("Skipping FASTA sequence %s because no intervals "
                           "found" % seqName)
