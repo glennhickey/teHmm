@@ -14,6 +14,7 @@ import scipy
 import scipy.spatial
 import scipy.cluster
 import matplotlib
+import math
 #matplotlib.use('Agg')
 import matplotlib.backends.backend_pdf as pltBack
 import matplotlib.lines as lines
@@ -43,7 +44,7 @@ def hierarchicalCluster(points, normalizeDistances=False):
     assert points is not None and len(points) > 0
     distanceMatrix = scipy.spatial.distance.pdist(points, "euclidean")
     if normalizeDistances is True:
-        distanceMatrix /= len(points[0])
+        distanceMatrix /= math.pow(len(points[0]), 0.5)
     hc = scipy.cluster.hierarchy.linkage(distanceMatrix, method='average')
     return hc
 
@@ -68,7 +69,7 @@ def plotHierarchicalClusters(hcList, titles, leafNames, outFile):
     for i, hc in enumerate(hcList):
         plt.subplot(rows, cols, i)
         dgram = scipy.cluster.hierarchy.dendrogram(
-            hc, color_threshold=0.1, labels=leafNames, show_leaf_counts=False)
+            hc, color_threshold=0.25, labels=leafNames, show_leaf_counts=False)
 #            p=6,
 #            truncate_mode='lastp')
         plt.title(titles[i])
