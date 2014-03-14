@@ -115,20 +115,27 @@ def writeEmissionScatters(model, args):
 
     # scatter for each track
     scatterList = []
+    scatterScores = []
     hcNames = []
     for track in trackList:
         hcNames.append(track.getName())
         points = [emissionDist[track.getNumber()][x] for x in xrange(N)]
         try:
-            pcaPoints = pcaFlatten(points)
+            pcaPoints, score = pcaFlatten(points)
             scatterList.append(pcaPoints)
+            scatterScores.append(score)
         except Exception as e:
-            print str(e)
             print "PCA FAIL %s" % track.getName()
+
+    zipRank = zip(scatterScores, [x for x in xrange(len(scatterScores))])
+    zipRank = sorted(zipRank)
+    ranking = zip(*zipRank)[1]
 
     # write scatters to pdf (no ranking yet)
     if len(scatterList) > 0:
-        plotPoints2d(scatterList, hcNames, stateNames, args.pca)    
+        plotPoints2d([scatterList[i] for i in ranking],
+                     [hcNames[i] for i in ranking],
+                     stateNames, args.pca)    
     
 if __name__ == "__main__":
     sys.exit(main())

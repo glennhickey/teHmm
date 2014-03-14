@@ -26,6 +26,8 @@ from matplotlib.ticker import LogFormatter
 import matplotlib.mlab as mlab
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 from matplotlib.mlab import PCA
+import matplotlib.cm as cm
+
 
 
 from teHmm.basehmm import normalize
@@ -108,14 +110,35 @@ def pcaFlatten(points, outDim = 2):
     assert len(cleanPoints) > 0
     
     pca = PCA(cleanPoints)
-    return pca.Y    
+    return pca.Y, np.sum(pca.fracs[:2])
 
+colorList = ['#1f77b4', # dark blue
+             '#aec7e8', # light blue
+            '#ff7f0e', # bright orange
+            '#ffbb78', # light orange
+            '#4B4C5E', # dark slate gray
+            '#9edae5', # light blue 
+            '#7F80AB', # purple-ish slate blue
+            '#c7c7c7', # light gray
+            '#9467bd', # dark purple
+            '#c5b0d5', # light purple
+            '#d62728', # dark red
+            '#ff9896', # light red
+                 ]
 def plotPoints2d(distList, titles, stateNames, outFile):
     """ plot some points to a pdf file """
-    cols = 4
+    cols = 2
     rows = int(np.ceil(float(len(distList)) / float(cols)))
     width=10
     height=5 * rows
+    alpha = 0.7
+
+    # pallettes are here : cm.datad.keys()
+    rgbs = [cm.gist_rainbow_r(float(i) / float(len(stateNames)))
+            for i in xrange(len(stateNames))]
+    for i in xrange(len(rgbs)):
+        rgbs[i] = list(rgbs[i])
+        rgbs[i][3] = alpha
 
     pdf = pltBack.PdfPages(outFile)
     fig = plt.figure(figsize=(width, height))
@@ -124,11 +147,21 @@ def plotPoints2d(distList, titles, stateNames, outFile):
         # +1 below is to prevent 1st element from being put last
         # (ie sublot seems to behave as if indices are 1-base)
         plt.subplot(rows, cols, (i + 1) % len(distList))
-        plt.scatter(dist[:, 0], dist[:, 1])
+        plotList = []
+        for j in xrange(len(dist)):
+            plotList.append(plt.scatter(dist[j, 0], dist[j, 1], c=rgbs[j],
+                                        s=100))
         plt.axis('equal')
         plt.grid(True)
         plt.title(titles[i])
-        #plt.setp(plt.xticks()[1], rotation=-90, fontsize=10)
+        if i % cols == 0:
+            # write legend
+            plt.legend(plotList, stateNames, 
+            scatterpoints=1,
+            loc='upper left',
+            ncol=3,
+            fontsize=8)
+
     fig.tight_layout()
     fig.savefig(pdf, format = 'pdf')
     pdf.close()
