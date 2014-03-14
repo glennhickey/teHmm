@@ -43,7 +43,7 @@ def hierarchicalCluster(points, normalizeDistances=False):
     assert points is not None and len(points) > 0
     distanceMatrix = scipy.spatial.distance.pdist(points, "euclidean")
     if normalizeDistances is True:
-        distanceMatrix = normalize(distanceMatrix)
+        distanceMatrix /= len(points[0])
     hc = scipy.cluster.hierarchy.linkage(distanceMatrix, method='average')
     return hc
 
