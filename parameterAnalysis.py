@@ -91,11 +91,47 @@ def plotHierarchicalClusters(hcList, titles, leafNames, outFile):
 
 def pcaFlatten(points, outDim = 2):
     """ flatten points to given dimensionality using PCA """
-    pass
+    assert outDim == 2
+    
+    # will get LinAlgError: SVD did not converge exception if all points
+    # lie on some plane (ie all values equal for some dimension so we
+    # have to check for that first
+    dims = []
+    for dim in xrange(len(points[0])):
+        vals = set()
+        for point in points:
+            vals.add(point[dim])
+        if len(vals) > 1:
+            dims.append(dim)
+    assert len(dims) > 0
+    cleanPoints = np.array([[point[i] for i in dims] for point in points])
+    assert len(cleanPoints) > 0
+    
+    pca = PCA(cleanPoints)
+    return pca.Y    
 
-def plotPoints2d(points, label, outFile):
+def plotPoints2d(distList, titles, stateNames, outFile):
     """ plot some points to a pdf file """
-    pass
+    cols = 4
+    rows = int(np.ceil(float(len(distList)) / float(cols)))
+    width=10
+    height=5 * rows
+
+    pdf = pltBack.PdfPages(outFile)
+    fig = plt.figure(figsize=(width, height))
+    plt.clf()
+    for i,  dist in enumerate(distList):
+        # +1 below is to prevent 1st element from being put last
+        # (ie sublot seems to behave as if indices are 1-base)
+        plt.subplot(rows, cols, (i + 1) % len(distList))
+        plt.scatter(dist[:, 0], dist[:, 1])
+        plt.axis('equal')
+        plt.grid(True)
+        plt.title(titles[i])
+        #plt.setp(plt.xticks()[1], rotation=-90, fontsize=10)
+    fig.tight_layout()
+    fig.savefig(pdf, format = 'pdf')
+    pdf.close()
 
 
 ### Crappy sandbox for testing ###
