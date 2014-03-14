@@ -62,6 +62,8 @@ def main(argv=None):
                         default="termini")
     parser.add_argument("--tir", help="Name of tir_termini track",
                         default="tir_termini")
+    parser.add_argument("--hollister", help="Name of hollister track",
+                        default="hollister")
     
     addLoggingOptions(parser)
     args = parser.parse_args()
@@ -97,7 +99,7 @@ def runCleaning(args, tempTracksInfo):
     """ run scripts for cleaning chaux, ltr_finder, and termini"""
     trackList = TrackList(args.tracksInfo)
 
-    # run cleanChaux.py
+    # run cleanChaux.py on chaux track
     chauxTrack = trackList.getTrackByName(args.chaux)
     if chauxTrack is not None:
         inFile = chauxTrack.getPath()
@@ -110,6 +112,19 @@ def runCleaning(args, tempTracksInfo):
     else:
         logger.warning("Could not find chaux track")
 
+    # run cleanChaux.py on hollister track
+    hollisterTrack = trackList.getTrackByName(args.hollister)
+    if hollisterTrack is not None:
+        inFile = hollisterTrack.getPath()
+        outFile = cleanPath(args, hollisterTrack)
+        tempBed = getLocalTempPath("hollister_temp", ".bed")
+        runShellCommand("removeBedOverlaps.py %s > %s" % (inFile, tempBed))
+        runShellCommand("cleanChaux.py %s > %s" % (tempBed, outFile))
+        runShellCommand("rm -f %s" % tempBed)
+        hollisterTrack.setPath(outFile)
+    else:
+        logger.warning("Could not find hollister track")
+                
     # run cleanTermini.py
     lastzTracks = [trackList.getTrackByName(args.termini),
                   trackList.getTrackByName(args.tir)]
