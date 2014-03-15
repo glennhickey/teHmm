@@ -37,7 +37,9 @@ def main(argv=None):
                         " to given file in PDF format", default=None)
     parser.add_argument("--pca", help="Print emission pca scatters"
                         " to given file in PDF format", default=None)
-
+    parser.add_argument("--t", help="Print transition matrix to given"
+                        " file in GRAPHVIZ DOT format.  Convert to PDF with "
+                        " dot <file> -Tpdf > <outFile>", default=None)
     
     args = parser.parse_args()
 
@@ -69,6 +71,9 @@ def main(argv=None):
             raise RuntimeError("Unable to write plots.  Maybe matplotlib is "
                                "not installed?")
         writeEmissionScatters(model, args)
+
+    if args.t is not None:
+        writeTransitionGraph(model, args)
 
 
 def writeEmissionClusters(model, args):
@@ -149,6 +154,27 @@ def writeEmissionScatters(model, args):
         plotPoints2d([scatterList[i] for i in ranking],
                      [hcNames[i] for i in ranking],
                      stateNames, args.pca)    
+
+def writeTransitionGraph(model, args):
+    """ write a graphviz text file """
+    trackList = model.getTrackList()
+    stateNameMap = model.getStateNameMap()
+    stateNames = map(stateNameMap.getMapBack, xrange(len(stateNameMap)))
+    stateNames = map(lambda x: x.replace("-", "_"), stateNames)
+    stateNames = map(lambda x: x.replace("|", "_"), stateNames)
+    
+    N = len(stateNames)
+    f = open(args.t, "w")
+    f.write("Digraph G {\n")
+    for i, state in enumerate(stateNames):
+        for j, toState in enumerate(stateNames):
+            tp = model.getTransitionProbs()[i, j]
+            if tp > 0.:
+                label = "label=\"%.3f\"" % tp
+                width = "penwidth=%d" % (1 + int(tp * 2.0))
+                f.write("%s -> %s [%s,%s];\n" % (state, toState, label, width))
+    f.write("}\n")
+    f.close()
     
 if __name__ == "__main__":
     sys.exit(main())
