@@ -36,7 +36,7 @@ def main(argv=None):
                         "we wish to search")
     parser.add_argument("outBed", help="BED file containing (only) output TSDs")
     parser.add_argument("--min", help="Minimum length of a TSD",
-                        default=3, type=int)
+                        default=4, type=int)
     parser.add_argument("--max", help="Maximum length of a TSD",
                         default=6, type=int)
     parser.add_argument("--all", help="Report all matches in region (as opposed"
@@ -44,10 +44,10 @@ def main(argv=None):
                         "default behaviour", action="store_true", default=False)
     parser.add_argument("--left", help="Number of bases immediately left of the "
                         "BED element to search for the left TSD",
-                        default=8, type=int)
+                        default=7, type=int)
     parser.add_argument("--right", help="Number of bases immediately right of "
                         "the BED element to search for the right TSD",
-                        default=8, type=int)
+                        default=7, type=int)
     parser.add_argument("--overlap", help="Number of bases overlapping the "
                         "BED element to include in search (so total space "
                         "on each side will be --left + overlap, and --right + "
