@@ -169,7 +169,7 @@ def writeTransitionGraph(model, args):
     for i, state in enumerate(stateNames):
         for j, toState in enumerate(stateNames):
             tp = model.getTransitionProbs()[i, j]
-            if tp > 0.:
+            if tp > 0. and i != j:
                 label = "label=\"%.3f\"" % tp
                 width = "penwidth=%d" % (1 + int(tp * 2.0))
                 f.write("%s -> %s [%s,%s];\n" % (state, toState, label, width))
