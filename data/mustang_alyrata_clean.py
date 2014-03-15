@@ -243,10 +243,11 @@ def runTsd(args, tempTracksInfo):
         if tsdInputTracks[i] == args.chaux:
             nameString = "--names non-LTR"
 
+        tempXMLOut = getLocalTempPath("Temp_tsd_xml", ".xml")
         runShellCommand("addTsdTrack.py %s %s %s %s %s %s --inPath %s %s %s %s" % (
-            args.tracksInfo,
-            args.cleanTrackPath,
             tempTracksInfo,
+            args.cleanTrackPath,
+            tempXMLOut,
             tsdInputTracks[i],
             args.sequence,
             args.tsd,
@@ -254,6 +255,8 @@ def runTsd(args, tempTracksInfo):
             appString,
             nameString,
             args.logOpString))
+        
+        runShellCommand("mv %s %s" % (tempXMLOut, tempTracksInfo))
 
     for i in xrange(len(tempFiles)):
         runShellCommand("rm %s" % tempFiles[i])
