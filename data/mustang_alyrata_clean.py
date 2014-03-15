@@ -36,7 +36,7 @@ def main(argv=None):
         description="Generate HMM-usable tracklist from raw tracklist. EX "
         "used to transform mustang_alyrata_tracks.xml -> "
         "mustang_alyrata_clean.xml.  Runs cleanChaux.py cleanLtrFinder.py and "
-        " cleanTermini.py and setTrackScaling.py (also runs "
+        " cleanTermini.py and addTsdTrack.py and setTrackScaling.py (also runs "
         " removeBedOverlaps.py before each of the clean scripts)")
     
     parser.add_argument("tracksInfo", help="Path of Tracks Info file "
@@ -60,17 +60,28 @@ def main(argv=None):
                         default="ltr_finder")
     parser.add_argument("--termini", help="Name of termini track",
                         default="termini")
+    parser.add_argument("--sequence", help="Name of fasta sequence track",
+                        default="sequence")
+    parser.add_argument("--tsd", help="Name of tsd track to generate",
+                        default="tsd")
     parser.add_argument("--tir", help="Name of tir_termini track",
                         default="tir_termini")
     parser.add_argument("--hollister", help="Name of hollister track",
                         default="hollister")
     parser.add_argument("--noScale", help="Dont do any scaling", default=False,
                         action="store_true")
+    parser.add_argument("--noTsd", help="Dont generate TSD track.  NOTE:"
+                        " TSD track is hardcoded to be generated from "
+                        "termini and (non-LTR elements of ) chaux",
+                        default=False, action="store_true")
     
     addLoggingOptions(parser)
     args = parser.parse_args()
     setLoggingFromOptions(args)
     tempBedToolPath = initBedTool()
+    args.logOpString = "--logLevel %s" % getLogLevelString()
+    if args.logFile is not None:
+        args.logOpString += " --logFile %s" % args.logFile
 
     try:
         os.makedirs(args.cleanTrackPath)
@@ -80,9 +91,11 @@ def main(argv=None):
         raise RuntimeError("Unable to find or create cleanTrack dir %s" %
                            args.cleanTrackPath)
 
-    tempTracksInfo = getLocalTempPath("mustang_alyrata_clean_temp", "xml")
+    tempTracksInfo = getLocalTempPath("Temp_mustang_alyrata_clean", "xml")
     runCleaning(args, tempTracksInfo)
     assert os.path.isfile(tempTracksInfo)
+
+    runTsd(args, tempTracksInfo)
     
     runScaling(args, tempTracksInfo)
 
@@ -106,7 +119,7 @@ def runCleaning(args, tempTracksInfo):
     if chauxTrack is not None:
         inFile = chauxTrack.getPath()
         outFile = cleanPath(args, chauxTrack)
-        tempBed = getLocalTempPath("chaux_temp", ".bed")
+        tempBed = getLocalTempPath("Temp_chaux", ".bed")
         runShellCommand("removeBedOverlaps.py %s > %s" % (inFile, tempBed))
         runShellCommand("cleanChaux.py --keepUnderscore %s > %s" % (tempBed,
                                                                     outFile))
@@ -120,7 +133,7 @@ def runCleaning(args, tempTracksInfo):
     if hollisterTrack is not None:
         inFile = hollisterTrack.getPath()
         outFile = cleanPath(args, hollisterTrack)
-        tempBed = getLocalTempPath("hollister_temp", ".bed")
+        tempBed = getLocalTempPath("Temp_hollister", ".bed")
         runShellCommand("removeBedOverlaps.py %s > %s" % (inFile, tempBed))
         runShellCommand("cleanChaux.py %s > %s" % (tempBed, outFile))
         runShellCommand("rm -f %s" % tempBed)
@@ -137,7 +150,7 @@ def runCleaning(args, tempTracksInfo):
             inFile = terminiTrack.getPath()
             tempBed = None
             if inFile[-3:] == ".bb":
-                tempBed = getLocalTempPath("termini_temp", ".bed")
+                tempBed = getLocalTempPath("Temp_termini", ".bed")
                 runShellCommand("bigBedToBed %s %s" % (inFile, tempBed))
                 inFile = tempBed
             runShellCommand("cleanTermini.py %s %s" % (inFile, outFile))
@@ -152,7 +165,7 @@ def runCleaning(args, tempTracksInfo):
     if ltrfinderTrack is not None:
         inFile = ltrfinderTrack.getPath()
         outFile = cleanPath(args, ltrfinderTrack)
-        tempBed = getLocalTempPath("ltrfinder_temp", ".bed")
+        tempBed = getLocalTempPath("Temp_ltrfinder", ".bed")
         runShellCommand("removeBedOverlaps.py %s > %s" % (inFile, tempBed))
         runShellCommand("cleanLtrFinderID.py %s %s" % (tempBed, outFile))
         runShellCommand("rm -f %s" % tempBed)
@@ -180,6 +193,63 @@ def runScaling(args, tempTracksInfo):
         cmd = "cp %s %s" % (tempTracksInfo, args.outTracksInfo)
     runShellCommand(cmd)
 
+def runTsd(args, tempTracksInfo):
+    """ run addTsdTrack on termini and chaux to generate tsd track"""
+    if args.noTsd is True:
+        return
+
+    trackList = TrackList(args.tracksInfo)
+
+    tempFiles = []
+    tsdInputFiles = []
+    tsdInputTracks = []
+        
+    # preprocess termini
+    lastzTracks = [trackList.getTrackByName(args.termini),
+                  trackList.getTrackByName(args.tir)]
+    for terminiTrack in lastzTracks:
+        if terminiTrack is not None:
+            inFile = terminiTrack.getPath()
+            fillFile = getLocalTempPath("Temp_fill", ".bed")
+            tempBed = None
+            if inFile[-3:] == ".bb":
+                tempBed = getLocalTempPath("Temp_termini", ".bed")
+                runShellCommand("bigBedToBed %s %s" % (inFile, tempBed))
+                inFile = tempBed
+            runShellCommand("fillTermini.py %s %s" % (inFile, fillFile))
+            tsdInputFiles.append(fillFile)
+            tsdInputTracks.append(terminiTrack.getName())
+            tempFiles.append(fillFile)
+            if tempBed is not None:
+                runShellCommand("rm -f %s" % tempBed)
+        else:
+            logger.warning("Could not find termini track")
+
+    # add chaux
+    chauxTrack = trackList.getTrackByName(args.chaux)
+    if chauxTrack is not None:
+        tsdInputFiles.append(chauxTrack.getPath())
+        tsdInputTracks.append(chauxTrack.getName())
+
+    # run addTsdTrack (appending except first time)
+    assert len(tsdInputFiles) == len(tsdInputTracks)
+    for i in xrange(len(tsdInputFile)):
+        appString = ""
+        if i > 0:
+            appString = "--append"
+        runShellCommand("addTsdTrack.py %s %s %s %s %s %s --inPath %s %s %s" % (
+            args.tracksInfo,
+            args.cleanTrackPath,
+            tempTracksInfo,
+            tsdInputTracks[0],
+            args.sequence,
+            args.tsd,
+            tsdInputFiles[0],
+            appString,
+            args.logOpString))
+
+    for i in xrange(len(tempFiles)):
+        runShellCommand("rm %s" % tempFiles[i])
 
 if __name__ == "__main__":
     sys.exit(main())

@@ -43,6 +43,8 @@ def main(argv=None):
                         " --append option)")
     parser.add_argument("--append", help="Add onto existing TSD track if exists",
                         default=False, action="store_true")
+    parser.add_argument("--inPath", help="Use given file instead of inputTrack"
+                        " path to generate TSD", default=None)
 
     ############ TSDFINDER OPTIONS ##############
     parser.add_argument("--min", help="Minimum length of a TSD",
@@ -99,15 +101,18 @@ def main(argv=None):
 
     trackList = TrackList(args.tracksInfo)
     outTrackList = copy.deepcopy(trackList)
-    inputTrack = outTrackList.getTrackByName(args.inputTrack)
+    inputTrack = trackList.getTrackByName(args.inputTrack)
     if inputTrack is None:
         raise RuntimeError("Track %s not found" % args.inputTrack)
+    if args.inPath is not None:
+        assert os.path.isfile(args.inPath)
+        inputTrack.setPath(args.inPath)
     inTrackExt = os.path.splitext(inputTrack.getPath())[1].lower()
     if inTrackExt != ".bb" and inTrackExt != ".bed":
         raise RuntimeError("Track %s has non-bed extension %s" % (
             args.inputTrack, inTrackExt))
 
-    fastaTrack = outTrackList.getTrackByName(args.fastaTrack)
+    fastaTrack = trackList.getTrackByName(args.fastaTrack)
     if fastaTrack is None:
         raise RuntimeError("Fasta Track %s not found" % args.fastaTrack)
     faTrackExt = os.path.splitext(fastaTrack.getPath())[1].lower()
