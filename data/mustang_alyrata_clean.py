@@ -233,19 +233,23 @@ def runTsd(args, tempTracksInfo):
 
     # run addTsdTrack (appending except first time)
     assert len(tsdInputFiles) == len(tsdInputTracks)
-    for i in xrange(len(tsdInputFile)):
+    for i in xrange(len(tsdInputFiles)):
         appString = ""
         if i > 0:
             appString = "--append"
-        runShellCommand("addTsdTrack.py %s %s %s %s %s %s --inPath %s %s %s" % (
+        nameString = ""
+        if tsdInputTracks == args.chaux:
+            nameString == "--names non-LTR"
+        runShellCommand("addTsdTrack.py %s %s %s %s %s %s --inPath %s %s %s %s" % (
             args.tracksInfo,
             args.cleanTrackPath,
             tempTracksInfo,
-            tsdInputTracks[0],
+            tsdInputTracks[i],
             args.sequence,
             args.tsd,
-            tsdInputFiles[0],
+            tsdInputFiles[i],
             appString,
+            nameString,
             args.logOpString))
 
     for i in xrange(len(tempFiles)):
