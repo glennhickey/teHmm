@@ -141,11 +141,12 @@ def findTsds(args, bedIntervals):
 def intervalTsds(args, sequence, bedInterval):
     """ given a single bed interval, do a string search to find tsd candidates
     on the left and right flank."""
-    overlap = min(args.overlap, (bedInterval[2] - bedInterval[1]) / 2)
+    overlap = min(args.overlap, (bedInterval[2] - bedInterval[1]) / 2 - 1)
+    overlap = max(0, overlap)
     l1 = max(0, bedInterval[1] - args.left)
-    r1 = bedInterval[1] + args.overlap
+    r1 = bedInterval[1] + overlap
 
-    l2 = bedInterval[2] - args.overlap
+    l2 = bedInterval[2] - overlap
     r2 = min(bedInterval[2] + args.right, len(sequence))
 
     if r1 - l1 < args.min or r2 - l2 < args.min:

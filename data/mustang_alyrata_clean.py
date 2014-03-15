@@ -198,15 +198,16 @@ def runTsd(args, tempTracksInfo):
     if args.noTsd is True:
         return
 
-    trackList = TrackList(args.tracksInfo)
+    origTrackList = TrackList(args.tracksInfo)
+    outTrackList = TrackList(tempTracksInfo)
 
     tempFiles = []
     tsdInputFiles = []
     tsdInputTracks = []
         
     # preprocess termini
-    lastzTracks = [trackList.getTrackByName(args.termini),
-                  trackList.getTrackByName(args.tir)]
+    lastzTracks = [origTrackList.getTrackByName(args.termini)]
+                  #origTrackList.getTrackByName(args.tir)]
     for terminiTrack in lastzTracks:
         if terminiTrack is not None:
             inFile = terminiTrack.getPath()
@@ -226,20 +227,22 @@ def runTsd(args, tempTracksInfo):
             logger.warning("Could not find termini track")
 
     # add chaux
-    chauxTrack = trackList.getTrackByName(args.chaux)
+    chauxTrack = outTrackList.getTrackByName(args.chaux)
     if chauxTrack is not None:
         tsdInputFiles.append(chauxTrack.getPath())
         tsdInputTracks.append(chauxTrack.getName())
 
     # run addTsdTrack (appending except first time)
+    # note we override input track paths in each case
     assert len(tsdInputFiles) == len(tsdInputTracks)
     for i in xrange(len(tsdInputFiles)):
         appString = ""
         if i > 0:
             appString = "--append"
         nameString = ""
-        if tsdInputTracks == args.chaux:
-            nameString == "--names non-LTR"
+        if tsdInputTracks[i] == args.chaux:
+            nameString = "--names non-LTR"
+
         runShellCommand("addTsdTrack.py %s %s %s %s %s %s --inPath %s %s %s %s" % (
             args.tracksInfo,
             args.cleanTrackPath,

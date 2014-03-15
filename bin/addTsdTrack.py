@@ -122,9 +122,6 @@ def main(argv=None):
 
     tsdTrack = outTrackList.getTrackByName(args.outputTrack)
     if tsdTrack is None:
-        if args.append is True:
-            raise RuntimeError("TSD Track %s not found so --append option "
-                               "invalid" % args.tsdTrack)
         tsdTrack = Track()
         tsdTrack.name = args.outputTrack
         tsdTrack.path = os.path.join(args.tsdTrackDir, args.inputTrack + "_" +
