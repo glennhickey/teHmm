@@ -88,7 +88,8 @@ def buildSeqTable(bedIntervals):
     bedIntervals.  This only works if bedIntervals are sorted (and should 
     raise an assertion error if that's not the case. 
     """
-    logger.debug("building index of %d bed intervals" % len(bedIntervals))
+    logger.info("building sequence name index of %d bed intervals" %
+                 len(bedIntervals))
     bedSeqTable = dict()
     prevName = None
     prevIdx = 0
@@ -120,7 +121,7 @@ def findTsds(args, bedIntervals):
         nameSet = set(args.names.split(","))
     for seqName, sequence in fastaRead(faFile):
         if seqName in seqTable:
-            logger.debug("Scanning FASTA sequence %s" % seqName)
+            logger.info("Scanning FASTA sequence %s" % seqName)
             bedRange = seqTable[seqName]
             for bedIdx in xrange(bedRange[0], bedRange[1]):
                 bedInterval = bedIntervals[bedIdx]
@@ -132,7 +133,7 @@ def findTsds(args, bedIntervals):
                     # about soft masking
                     outTsds += intervalTsds(args, sequence.lower(), bedInterval)
         else:
-            logger.debug("Skipping FASTA sequence %s because no intervals "
+            logger.info("Skipping FASTA sequence %s because no intervals "
                           "found" % seqName)
 
     return outTsds
