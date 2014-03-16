@@ -52,6 +52,7 @@ from .emission import IndependentMultinomialEmissionModel
 from .track import TrackList, TrackTable, Track
 from .common import EPSILON, myLog, logger
 from .basehmm import BaseHMM, check_random_state, NEGINF, ZEROLOGPROB, logsumexp
+from .basehmm import normalize
 from . import _hmm
 
 """
@@ -70,7 +71,10 @@ class MultitrackHmm(BaseHMM):
                  fudge=0.0,
                  fixTrans=False,
                  fixEmission=False,
-                 fixStart=True):
+                 fixStart=True,
+                 forceUserTrans=None,
+                 forceUserEmissions=None,
+                 forceUserStart=None):
         if emissionModel is not None:
             n_components = emissionModel.getNumStates()
         else:
@@ -109,6 +113,21 @@ class MultitrackHmm(BaseHMM):
         self.fixStart = fixStart
         # keep track of number of EM iterations performed
         self.current_iteration = None
+        # userTransition file (as line list) to apply after each iteration
+        self.forceUserTrans = forceUserTrans
+        if forceUserTrans is not None:
+            with open(forceUserTrans) as f:
+                self.forceUserTrans = f.readlines()
+        # userEmissions file (as line list) to apply after each iteration
+        self.forceUserEmissions = forceUserEmissions
+        if forceUserEmissions is not None:
+            with open(forceUserEmissions) as f:
+                self.forceUserEmissions = f.readlines()
+        # userStart file (as line list) to apply after each iteration
+        self.forceUserStart = forceUserStart
+        if forceUserStart is not None:
+            with open(forceUserStart) as f:
+                self.forceUserStart = f.readlines()
 
     def train(self, trackData):
         """ Use EM to estimate best parameters from scratch (unsupervised)"""
@@ -239,6 +258,136 @@ class MultitrackHmm(BaseHMM):
             assert_array_almost_equal(np.sum(self.transmat_[i]), 1.)
         self.emissionModel.validate()
         
+    def applyUserEmissions(self, userEmLines):
+        """ Modify the emission distribution with user specified values
+        read directly from text file into line array"""
+        assert self.stateNameMap is not None
+        assert self.trackList is not None
+        assert self.emissionModel is not None
+        self.emissionModel.applyUserEmissions(userEmLines, self.stateNameMap,
+                                              self.trackList)
+        
+    def applyUserTrans(self, userTransLines):
+        """ Modify the transtion probability matrix so that it contains the
+        probabilities specified by the given text file.  If a stateNameMap
+        (catMap)
+        is provided, it is used (and missing values trigger errors).  If the map
+        is None, then one is created.  If the transmap is None, one is created
+        as well (with default values being flat distribution.
+        The modified transMat and catMap are returned as a tuple, can can be
+        applied to the hmm."""
+        logger.debug("Applying user transitions to HMM")
+
+        N = self.n_components
+        mask = np.zeros((N, N), dtype=np.int8)
+        transMat = self.transmat_
+        catMap = self.stateNameMap
+
+        # init the transmap if ncessary
+        if transMat is None:
+            transMat = 1. / float(N) + np.zeros((N, N), dtype=np.float)
+
+        # read the probabilities into the transmap
+        f = userTransLines    
+        for line in f:
+            if len(line.lstrip()) > 0 and line.lstrip()[0] is not "#":
+                toks = line.split()
+                assert len(toks) == 3
+                prob = float(toks[2])
+                fromState = toks[0]
+                toState = toks[1]
+                if not catMap.has(fromState) or not catMap.has(toState):
+                    raise RuntimeError("Cannot apply transition %s->%s to model"
+                                       " since at least one of the states was "
+                                       "not found in the supervised data." % (
+                                           fromState, toState))
+                fid = catMap.getMap(fromState)
+                tid = catMap.getMap(toState)
+                # remember that this is a user transition
+                mask[fid, tid] = 1
+                # set the trnasition probability in the matrix
+                transMat[fid, tid] = prob
+
+        # normalize all other probabilities (ie that are unmaksed) so that they
+        # add up.
+        for fid in xrange(N):
+            # total probability of learned states
+            curTotal = 0.0
+            # total probability of learned states after normalization
+            tgtTotal = 1.0
+            for tid in xrange(N):
+                if mask[fid, tid] == 1:
+                    tgtTotal -= transMat[fid, tid]
+                else:
+                    curTotal += transMat[fid, tid]
+            if tgtTotal < -EPSILON:
+                raise RuntimeError("User defined probability %f from state %s "
+                                   "exceeds 1" % (tgtTotal,
+                                                  catMap.getMapBack(fid)))
+            for tid in xrange(N):
+                if mask[fid, tid] == 0:
+                    if tgtTotal == 0.:
+                        transMat[fid, tid] = 0.
+                    else:
+                        transMat[fid, tid] *= (tgtTotal / curTotal)
+
+        # reset back to make sure logs get updated too
+        self.transmat_ = transMat
+
+        
+    def applyUserStarts(self, userStartLines):
+        """ modify a HMM that was constructed using supervisedTrain() so that
+        it contains the start probabilities specified in the userStartPath File."""
+        logger.debug("Applying user starts to HMM")
+        f = userStartLines
+        startProbs = self.startprob_
+
+        N = self.n_components
+        if startProbs is None:
+            startProbs = 1. / float(len(self.stateNameMap)) + np.zeros((N))
+        mask = np.zeros(startProbs.shape, dtype=np.int8)
+
+        # scan file and set values in logProbs matrix
+        for line in f:
+            if len(line.lstrip()) > 0 and line.lstrip()[0] is not "#":
+                toks = line.split()
+                assert len(toks) == 2
+                stateName = toks[0]
+                prob = float(toks[1])
+                if not self.stateNameMap.has(stateName):
+                    raise RuntimeError("State %s not found in supervised data" %
+                                       stateName)
+                state = self.stateNameMap.getMap(stateName)
+                startProbs[state] = prob
+                mask[state] = 1
+
+        # normalize all other probabilities (ie that are unmaksed) so that they
+        # add up.
+        # total probability of learned states
+        curTotal = 0.0
+        # total probability of learned states after normalization
+        tgtTotal = 1.0            
+
+        for state in xrange(N):
+            if mask[state] == 1:
+                tgtTotal -= startProbs[state]
+            else:
+                curTotal += startProbs[state]
+
+            if tgtTotal < 0.:
+                raise RuntimeError("User defined start probabiliies exceed 1")
+
+        for state in xrange(N):
+            # same correction as applyUserTransmissions()....
+            if mask[state] == 0:
+                if tgtTotal == 0.:
+                    startProbs[state] = 0.
+                else:
+                    startProbs[state] *= (tgtTotal / curTotal)
+
+        self.startprob_ = startProbs
+
+                
     ###########################################################################
     #       SCIKIT LEARN BASEHMM OVERRIDES BELOW 
     ###########################################################################
@@ -296,12 +445,44 @@ class MultitrackHmm(BaseHMM):
     def _do_mstep(self, stats, params):
         logger.debug("%d: beginning MultitrackHMM M-step" %
                       self.current_iteration)
-        super(MultitrackHmm, self)._do_mstep(stats, params)
+        self.validate()
+        if self.startprob_prior is None:
+            self.startprob_prior = 1.0
+        if self.transmat_prior is None:
+            self.transmat_prior = 1.0
+
+        if 's' in params:
+            self.startprob_ = normalize(
+                np.maximum(self.startprob_prior - 1.0 + stats['start'], 1e-20))
+
+        if 't' in params:
+            lastMat = copy.deepcopy(self.transmat_)
+            transmat_ = self.transmat_prior - 1.0 + stats['trans']
+            for row in xrange(len(transmat_)):
+                rowSum = np.sum(transmat_[row])
+                if rowSum < EPSILON:
+                    # orphaned state.  dont zap just leave values from
+                    # last iteration
+                    transmat_[row] = lastMat[row]
+                else:
+                    transmat_[row] = transmat_[row] / rowSum
+            self.transmat_ = transmat_
+
         if 'e' in params:
             self.emissionModel.maximize(stats['obs'])
         logger.debug("%d: ending MultitrackHMM M-step" %
                       self.current_iteration)
         self.current_iteration += 1
+
+        # apply the force user params if specified
+        if self.forceUserTrans is not None:
+            self.applyUserTrans(self.forceUserTrans)
+        if self.forceUserEmissions is not None:
+            self.applyUserEmissions(self.forceUserEmissions)
+        if self.forceUserStart is not None:
+            self.applyUserStarts(self.forceUserStart)
+
+        self.validate()
 
     def fit(self, obs, **kwargs):
         self.current_iteration = 1

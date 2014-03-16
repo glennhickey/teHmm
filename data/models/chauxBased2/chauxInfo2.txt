@@ -1,0 +1,2 @@
+Similar to chaux based, but adding some more outside states and other tweaks.  
+results are also based on newer tracks xml including hollister and filtered lastz

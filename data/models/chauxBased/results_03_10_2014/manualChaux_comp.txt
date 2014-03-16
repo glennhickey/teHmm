@@ -1,0 +1,13 @@
+{'DNAt': [5, 1469, 30757], 'DNA': [19, 0, 128463], 'Simple_repeat': [0, 0, 142], 'non-LTR': [4, 65691, 50260], 'Unknown': [2, 0, 9719], 'inside': [6343, 45626, 160347], 'lastz|left': [0, 195423, 0], 'lastz|right': [0, 158643, 0], 'LTR|left': [1075, 10797, 16280], 'Outside': [1581575, 75, 102286], 'LTR|right': [1530, 9564, 16899], 'Low_complexity': [0, 1103265, 0]}
+Accuaracy: 515153 / 3696259 = 0.139371
+State-by-state (Precision, Recall):
+{'DNA': (1.0, 0.99985211936302365), 'DNAt': (0.95441568919505992, 0.99983746180352384), 'non-LTR': (0.4334589611128839, 0.999920420181442), 'Unknown': (1.0, 0.99979425984980974), 'inside': (0.77848552965679962, 0.96194732737416766), 'lastz|left': (0.0, 0.0), 'lastz|right': (0.0, 0.0), 'LTR|left': (0.60124829190826168, 0.93805819648516275), 'Outside': (0.99926729906898137, 0.060744918968964778), 'LTR|right': (0.63858972905566258, 0.91697867491453688), 'Low_complexity': (0.0, 0.0), 'Simple_repeat': (1.0, 1.0)}
+
+Interval-level stats (threshold=0.800000)
+{'DNAt': [1, 1, 63], 'DNA': [0, 0, 399], 'Simple_repeat': [0, 0, 2], 'non-LTR': [0, 403, 114], 'Unknown': [0, 0, 47], 'inside': [4, 98, 63], 'lastz|left': [0, 1010, 0], 'lastz|right': [0, 1552, 0], 'LTR|left': [4, 62, 52], 'Outside': [324, 64, 3200], 'LTR|right': [5, 120, 54], 'Low_complexity': [0, 1193, 0]}
+Accuaracy: 3994 / 8835 = 0.452066
+State-by-state (Precision, Recall):
+{'DNA': (1.0, 1.0), 'DNAt': (0.984375, 0.984375), 'non-LTR': (0.22050290135396519, 1.0), 'Unknown': (1.0, 1.0), 'inside': (0.39130434782608697, 0.94029850746268662), 'lastz|left': (0.0, 0.0), 'lastz|right': (0.0, 0.0), 'LTR|left': (0.45614035087719296, 0.9285714285714286), 'Outside': (0.98039215686274506, 0.90805902383654935), 'LTR|right': (0.31034482758620691, 0.9152542372881356), 'Low_complexity': (0.0, 0.0), 'Simple_repeat': (1.0, 1.0)}
+
+totAcc DNA_Prec DNA_Rec DNA_F1 DNAt_Prec DNAt_Rec DNAt_F1 LTR|left_Prec LTR|left_Rec LTR|left_F1 LTR|right_Prec LTR|right_Rec LTR|right_F1 Low_complexity_Prec Low_complexity_Rec Low_complexity_F1 Outside_Prec Outside_Rec Outside_F1 Simple_repeat_Prec Simple_repeat_Rec Simple_repeat_F1 Unknown_Prec Unknown_Rec Unknown_F1 inside_Prec inside_Rec inside_F1 lastz|left_Prec lastz|left_Rec lastz|left_F1 lastz|right_Prec lastz|right_Rec lastz|right_F1 non-LTR_Prec non-LTR_Rec non-LTR_F1
+0.139371456383 1.0 0.999852119363 0.999926054214 0.954415689195 0.999837461804 0.976598717216 0.601248291908 0.938058196485 0.732805185452 0.638589729056 0.916978674915 0.752873563218 0.0 0.0 0 0.999267299069 0.060744918969 0.114527757468 1.0 1.0 1.0 1.0 0.99979425985 0.999897119342 0.778485529657 0.961947327374 0.860546928458 0.0 0.0 0 0.0 0.0 0 0.433458961113 0.999920420181 0.60475889661

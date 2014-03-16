@@ -119,6 +119,8 @@ def main(argv=None):
     # write the emission model for use with teHmmTrain.py --initEmProbs
     writeEmissions(bedIntervals, nameMap, outNameMap, args)
 
+    cleanBedTool(tempBedToolPath)
+
 
 def writeTransitions(bedIntervals, nameMap, outNameMap, args):
     tfile = open(args.outTransProbs, "w")
