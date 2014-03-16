@@ -11,6 +11,11 @@ import logging
 import numpy as np
 
 from teHmm.trackIO import readBedIntervals
+try:
+    from teHmm.parameterAnalysis import pcaFlatten, plotPoints2d
+    canPlot = True
+except:
+    canPlot = False
 
 """ Compare bed files (EX Truth vs. Viterbi output).  They must cover same
 genomic region in the same order """
@@ -39,6 +44,8 @@ def main(argv=None):
                         " that overlap a single line of length 10 in bed2 will"
                         "still be considered a perfect match.",
                         type=float, default=0.8)
+    parser.add_argument("--plot", help="Path of file to write Precision/Recall"
+                        " graphs to in PDF format", default=None)
 
     args = parser.parse_args()
 
@@ -74,6 +81,14 @@ def main(argv=None):
     header, row = summaryRow(accuracy, stats, accMap)
     print " ".join(header)
     print " ".join(row)
+
+    # make graph
+    if args.plot is not None:
+        if canPlot is False:
+            raise RuntimeError("Unable to write plots.  Maybe matplotlib is "
+                               "not installed?")
+        writeAccPlots(accuracy, stats, accMap, intStats, intAccMap, args.plot)
+
 
 def compareIntervals(intervals1, intervals2, col, threshold):
     """ return dictionary that maps each state to (i1 but not i2, i2 but not i1,
@@ -124,6 +139,10 @@ def compareIntervals(intervals1, intervals2, col, threshold):
                 runningTally1[1] += 1
                 runningTally2[1] += 1
 
+    # make sure tally gets updated for last intervals
+    updateIntStats(i1[col], runningTally1, intStats, 1, threshold)
+    updateIntStats(i2[col], runningTally2, intStats, 2, threshold)
+
     return stats, intStats
 
 def updateIntStats(state, tally, intStats, idx, threshold):
@@ -138,12 +157,15 @@ def updateIntStats(state, tally, intStats, idx, threshold):
             intStats[state] = [0, 0, 0]
         frac = float(tally[0]) / float(tally[0] + tally[1])
         if frac >= threshold:
-            intStats[state][2] += 1
-        elif idx == 1:
-            intStats[state][0] += 1
+            # only count truth in terms of first bed do avoid double count
+            if idx == 1:
+                intStats[state][2] += 1
         else:
-            assert idx == 2
-            intStats[state][1] += 1
+            if idx == 1:
+                intStats[state][0] += 1
+            else:
+                assert idx == 2
+                intStats[state][1] += 1
 
     tally[0] = 0
     tally[1] = 0
@@ -184,7 +206,36 @@ def summaryRow(accuracy, stats, accMap):
     row = map(str, row)
     assert len(header) == len(row)
     return header, row
-    
 
+def writeAccPlots(accuracy, stats, accMap, intStats, intAccMap, outFile):
+    """ plot accuracies as scatter plots"""
+    distList = [[], []]
+    titles = []
+    stateNames = []
+    fscore = [[], []] 
+
+    for state in sorted(accMap.keys()):
+        acc = accMap[state]
+        prec = acc[0]
+        rec = acc[1]
+
+        intAcc = intAccMap[state]
+        intPrec = intAcc[0]
+        intRec = intAcc[1]
+
+        if (prec > 0.0 or rec > 0.0) and (intPrec > 0.0 or intRec > 0.0):
+            stateNames.append(state)
+            fs = 2 * ((prec * rec) / (prec + rec))
+            ifs = 2 * ((intPrec * intRec) / (intPrec + intRec))
+            fscore[0].append(fs)
+            fscore[1].append(ifs)
+            distList[0].append((prec, rec))
+            distList[1].append((intPrec, intRec))
+
+    titles.append("Base Acc. (avg f1score=%.3f)" % np.mean(fscore[0]))
+    titles.append("Inteval Acc. (avg f1score=%.3f)" % np.mean(fscore[1]))
+    plotPoints2d(distList, titles, stateNames, outFile, xRange=(0,1.1),
+                 yRange=(0, 1.4), ptSize=50)
+            
 if __name__ == "__main__":
     sys.exit(main())

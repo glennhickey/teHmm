@@ -125,7 +125,8 @@ colorList = ['#1f77b4', # dark blue
             '#d62728', # dark red
             '#ff9896', # light red
                  ]
-def plotPoints2d(distList, titles, stateNames, outFile):
+def plotPoints2d(distList, titles, stateNames, outFile, xRange=None,
+                 yRange=None, ptSize=100):
     """ plot some points to a pdf file """
     cols = 2
     rows = int(np.ceil(float(len(distList)) / float(cols)))
@@ -146,11 +147,11 @@ def plotPoints2d(distList, titles, stateNames, outFile):
     for i,  dist in enumerate(distList):
         # +1 below is to prevent 1st element from being put last
         # (ie sublot seems to behave as if indices are 1-base)
-        plt.subplot(rows, cols, (i + 1) % len(distList))
+        ax = plt.subplot(rows, cols, (i + 1) % len(distList))
         plotList = []
         for j in xrange(len(dist)):
-            plotList.append(plt.scatter(dist[j, 0], dist[j, 1], c=rgbs[j],
-                                        s=100))
+            plotList.append(plt.scatter(dist[j][0], dist[j][1], c=rgbs[j],
+                                        s=ptSize))
         plt.axis('equal')
         plt.grid(True)
         plt.title(titles[i])
@@ -161,6 +162,10 @@ def plotPoints2d(distList, titles, stateNames, outFile):
             loc='upper left',
             ncol=3,
             fontsize=8)
+        if yRange is not None:
+            assert xrange is not None
+            ax.set_ylim(yRange)
+            ax.set_xlim(xRange)
 
     fig.tight_layout()
     fig.savefig(pdf, format = 'pdf')
