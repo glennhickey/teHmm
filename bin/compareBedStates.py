@@ -11,11 +11,11 @@ import logging
 import numpy as np
 
 from teHmm.trackIO import readBedIntervals
-try:
-    from teHmm.parameterAnalysis import pcaFlatten, plotPoints2d
-    canPlot = True
-except:
-    canPlot = False
+#try:
+from teHmm.parameterAnalysis import pcaFlatten, plotPoints2d
+canPlot = True
+#except:
+#    canPlot = False
 
 """ Compare bed files (EX Truth vs. Viterbi output).  They must cover same
 genomic region in the same order """
@@ -234,9 +234,9 @@ def writeAccPlots(accuracy, stats, accMap, intStats, intAccMap, outFile):
 
     titles.append("Base Acc. (avg f1score=%.3f)" % np.mean(fscore[0]))
     titles.append("Inteval Acc. (avg f1score=%.3f)" % np.mean(fscore[1]))
-    plotPoints2d(distList, titles, stateNames, outFile, xRange=(0,1.1),
+    plotPoints2d(distList[:1], titles, stateNames, outFile, xRange=(0,1.1),
                  yRange=(0, 1.4), ptSize=50, xLabel="Precision",
-                 yLabel="Recall")
+                 yLabel="Recall", cols=1, width=5, rowHeight=5)
             
 if __name__ == "__main__":
     sys.exit(main())
