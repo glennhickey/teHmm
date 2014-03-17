@@ -246,7 +246,7 @@ In general, running any executable with `--help` will print a brief description 
 
 * **teHmmTrain.py** : Create a model
 * **teHmmEval.py** : Predict most likely sequence of states of input data given a model
-* **teHmmView.py**: Print all parameters of a given model
+* **teHmmView.py**: Print all parameters of a given model.  Options to generate some figures. 
 * **createStartingModel.py** :  Given an input track and a prior confidence value, create transition and probability matrix files (which can be tuned by hand) to pass to teHmmTrain.py
 
 **Track Name Munging**
@@ -274,6 +274,7 @@ In general, running any executable with `--help` will print a brief description 
 **Alignment**
 
 * **tsdFinder.py** : Use kmer hash to find short exact sequence matches between intervals that flank the left and right side of target BED regions.
+* **addTsdTrack.py** : Interface that calls tsdFinder.py in order to add a TSD track to a tracks XML file.
 
 **Simple Statistics**
 

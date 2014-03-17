@@ -1,0 +1,42 @@
+Outside inside	 0
+
+inside			 LTR|right		  0.5
+inside			 inside			  0.5
+
+LTR|left			 inside	0.25
+LTR|left			 Outside	0.25
+LTR|left			 LTR|left 0.5
+
+LTR|right		 Outside			  0.5
+LTR|right		 LTR|right		  0.4
+LTR|right		 TSD|right		  0.1
+
+TSD|left			 TSD|left		  0.4
+TSD|left			 LTR|left		  0.2
+TSD|left			 non-LTR			  0.2
+TSD|left			 Outside			  0.2
+
+TSD|right		 TSD|right		  0.5
+TSD|right		 Outside			  0.5
+
+DNA				 DNA				  0.5
+DNA				 Outside			  0.5
+
+DNAt				 DNAt				  0.5
+DNAt				 Outside			  0.5
+
+non-LTR				 non-LTR				  0.5
+non-LTR				 Outside			  0.4
+non-LTR				 TSD|right		  0.1
+
+Other1				 Other1			  0.5
+Other1				 Outside			  0.5
+
+Other2				 Other2			  0.5
+Other2				 Outside			  0.5
+
+Other3				 Other3			  0.5
+Other3				 Outside			  0.5
+
+
+
