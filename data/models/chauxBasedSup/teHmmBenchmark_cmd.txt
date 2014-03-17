@@ -1,0 +1,1 @@
+/data/glenn.hickey/genomes/teHmm/bin/teHmmBenchmark.py /data/glenn.hickey/genomes/teHmm/data/mustang_alyrata_tracks_clean.xml /data/glenn.hickey/genomes/teHmm/data/mustang_alyrata_tracks_clean.xml test10sup /data/glenn.hickey/genomes/alyrata/tracks/manual/manualChaux.bed --supervised --logInfo
