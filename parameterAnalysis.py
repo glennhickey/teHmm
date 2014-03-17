@@ -126,7 +126,7 @@ colorList = ['#1f77b4', # dark blue
             '#ff9896', # light red
                  ]
 def plotPoints2d(distList, titles, stateNames, outFile, xRange=None,
-                 yRange=None, ptSize=100):
+                 yRange=None, ptSize=100, xLabel=None, yLabel=None):
     """ plot some points to a pdf file """
     cols = 2
     rows = int(np.ceil(float(len(distList)) / float(cols)))
@@ -166,6 +166,10 @@ def plotPoints2d(distList, titles, stateNames, outFile, xRange=None,
             assert xrange is not None
             ax.set_ylim(yRange)
             ax.set_xlim(xRange)
+        if xLabel is not None:
+            plt.xlabel(xLabel)
+        if yLabel is not None:
+            plt.ylabel(yLabel)
 
     fig.tight_layout()
     fig.savefig(pdf, format = 'pdf')

@@ -235,7 +235,8 @@ def writeAccPlots(accuracy, stats, accMap, intStats, intAccMap, outFile):
     titles.append("Base Acc. (avg f1score=%.3f)" % np.mean(fscore[0]))
     titles.append("Inteval Acc. (avg f1score=%.3f)" % np.mean(fscore[1]))
     plotPoints2d(distList, titles, stateNames, outFile, xRange=(0,1.1),
-                 yRange=(0, 1.4), ptSize=50)
+                 yRange=(0, 1.4), ptSize=50, xLabel="Precision",
+                 yLabel="Recall")
             
 if __name__ == "__main__":
     sys.exit(main())
