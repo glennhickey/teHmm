@@ -1,0 +1,5 @@
+manualChaux.bed   Gold standard created from chaux track, but with LTR and NON-LTR replaced by manual annotations (see manualChaux.txt to recreate)
+
+allChaux.bed  Original chaux track (but sliced into annoated regions)
+
+ltrChaux.bed Original chaux track (sliced) but with LTR elements replaced from ltr_finder track
