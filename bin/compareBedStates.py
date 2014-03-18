@@ -11,11 +11,11 @@ import logging
 import numpy as np
 
 from teHmm.trackIO import readBedIntervals
-#try:
-from teHmm.parameterAnalysis import pcaFlatten, plotPoints2d
-canPlot = True
-#except:
-#    canPlot = False
+try:
+    from teHmm.parameterAnalysis import pcaFlatten, plotPoints2d
+    canPlot = True
+except:
+    canPlot = False
 
 """ Compare bed files (EX Truth vs. Viterbi output).  They must cover same
 genomic region in the same order """
