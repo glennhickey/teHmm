@@ -2,6 +2,7 @@
 <teModelConfig>
 	<track distribution="multinomial" name="ltr_finder" path="/data/glenn.hickey/genomes/alyrata/tracks/clean/a_lyrata-ltr_finder_clean.bed" valCol="3"/>
 	<track distribution="multinomial" name="chaux" path="/data/glenn.hickey/genomes/alyrata/tracks/clean/chaux_sorted_clean.bed" valCol="3"/>
+<track distribution="multinomial" name="te_domains" path="/data/douglas.hoen/sharebrowser/tracks/alyrata/permanent/domains/TE_domains.bed" valCol="3"/>
 	<track distribution="multinomial" logScale="2.8329" name="copy" path="/data/douglas.hoen/sharebrowser/tracks/alyrata/permanent/mathieu/AL_v_AL_100_nonSelf.hits.bw" valCol="3"/>
 	<track distribution="multinomial" logScale="1.776" name="copy_cv" path="/data/douglas.hoen/sharebrowser/tracks/alyrata/permanent/mathieu/variation/AL_v_AL_100_nonSelf.cv100.bw" valCol="3"/>
 	<track distribution="multinomial" logScale="2.6982" name="left_peak" path="/data/douglas.hoen/sharebrowser/tracks/alyrata/permanent/mathieu/AL_v_AL_100_nonSelf.left.bw" valCol="3"/>
