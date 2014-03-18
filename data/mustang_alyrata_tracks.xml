@@ -2,6 +2,7 @@
 <currentTracks>
 <track name="ltr_finder"    path="/data/douglas.hoen/sharebrowser/tracks/alyrata/permanent/te_search_programs/a_lyrata-ltr_finder.bed"/>
 <track name="chaux"         path="/data/douglas.hoen/sharebrowser/tracks/alyrata/permanent/repeatmasker/chaux_sorted.bed"/>
+<track name="te_domains"    path="/data/douglas.hoen/sharebrowser/tracks/alyrata/permanent/domains/TE_domains.bed"/>
 <track name="copy"          path="/data/douglas.hoen/sharebrowser/tracks/alyrata/permanent/mathieu/AL_v_AL_100_nonSelf.hits.bw"/>
 <track name="copy_cv"       path="/data/douglas.hoen/sharebrowser/tracks/alyrata/permanent/mathieu/variation/AL_v_AL_100_nonSelf.cv100.bw"/>
 <track name="left_peak"     path="/data/douglas.hoen/sharebrowser/tracks/alyrata/permanent/mathieu/AL_v_AL_100_nonSelf.left.bw"/>
