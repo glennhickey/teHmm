@@ -51,13 +51,14 @@ import numpy as np
 cimport numpy as np
 cimport cython
 from libc.stdlib cimport malloc, free
+from teHmm.common import LOGZERO
 
 np.import_array()
 
 ctypedef np.float64_t dtype_t
 
 cdef dtype_t _NINF = -np.inf
-cdef dtype_t ZEROLOGPROB = -1e200
+cdef dtype_t ZEROLOGPROB = LOGZERO
 
 @cython.boundscheck(False)
 def _log_sum_lneta(int n_observations, int n_components,
@@ -80,23 +81,28 @@ def _log_sum_lneta(int n_observations, int n_components,
     for t in range(n_observations - 1):
         for i in range(n_components):
             for j in range(n_components):
-                x = fwdlattice[t, i] + log_transmat[i, j] \
-                  + framelogprob[t + 1, j] + bwdlattice[t + 1, j] - logprob
-                if x > maxMatrix[i, j]:
-                    maxMatrix[i, j] = x
+                if log_transmat[i, j] > ZEROLOGPROB:
+                    x = fwdlattice[t, i] + log_transmat[i, j] \
+                      + framelogprob[t + 1, j] + bwdlattice[t + 1, j] - logprob
+                    if x > maxMatrix[i, j]:
+                        maxMatrix[i, j] = x
 
     # sum exp(x - max)
     for t in xrange(0, n_observations - 1):
         for i in xrange(0, n_components):
             for j in xrange(0, n_components):
-                x = fwdlattice[t, i] + log_transmat[i, j] \
-                    + framelogprob[t + 1, j] + bwdlattice[t + 1, j] - logprob
-                logsum_lneta[i, j] += exp(x - maxMatrix[i, j])
+                if log_transmat[i, j] > ZEROLOGPROB:
+                    x = fwdlattice[t, i] + log_transmat[i, j] \
+                        + framelogprob[t + 1, j] + bwdlattice[t + 1, j] - logprob
+                    logsum_lneta[i, j] += exp(x - maxMatrix[i, j])
 
     # return log(sum(x-max)) + max
     for i in xrange(0, n_components):
         for j in xrange(0, n_components):
-            logsum_lneta[i, j] = log(logsum_lneta[i, j]) + maxMatrix[i, j]
+            if log_transmat[i, j] > ZEROLOGPROB:
+                logsum_lneta[i, j] = log(logsum_lneta[i, j]) + maxMatrix[i, j]
+            else:
+                logsum_lneta[i, j] = ZEROLOGPROB
 
             
 @cython.boundscheck(False)
@@ -120,15 +126,17 @@ def _forward(int n_observations, int n_components,
         for j in xrange(n_components):
             vmax = _NINF
             for i in xrange(n_components):
-                work_buffer[i] = fwdlattice[t - 1, i] + log_transmat[i, j]
-                if work_buffer[i] > vmax:
-                    vmax = work_buffer[i]
+                if log_transmat[i, j] > ZEROLOGPROB:
+                    work_buffer[i] = fwdlattice[t - 1, i] + log_transmat[i, j]
+                    if work_buffer[i] > vmax:
+                        vmax = work_buffer[i]
             power_sum = 0.0
             for i in xrange(n_components):
-                power_sum += exp(work_buffer[i] - vmax)                
+                if log_transmat[i, j] > ZEROLOGPROB:                    
+                    power_sum += exp(work_buffer[i] - vmax)                
             fwdlattice[t, j] = log(power_sum) + vmax + framelogprob[t, j]
-            if fwdlattice[t, i] <= ZEROLOGPROB:
-                fwdlattice[t, i] = _NINF
+            if fwdlattice[t, j] <= ZEROLOGPROB:
+                fwdlattice[t, j] = _NINF
     free(work_buffer)
 
 @cython.boundscheck(False)
@@ -152,13 +160,15 @@ def _backward(int n_observations, int n_components,
         for i in xrange(n_components):
             vmax = _NINF
             for j in xrange(n_components):
-                work_buffer[j] = log_transmat[i, j] + framelogprob[t + 1, j] \
-                    + bwdlattice[t + 1, j]
-                if work_buffer[j] > vmax:
-                    vmax = work_buffer[j]
+                if log_transmat[i, j] > ZEROLOGPROB:
+                    work_buffer[j] = log_transmat[i, j] + \
+                      framelogprob[t + 1, j] + bwdlattice[t + 1, j]
+                    if work_buffer[j] > vmax:
+                        vmax = work_buffer[j]
             power_sum = 0.0
             for j in xrange(n_components):
-                power_sum += exp(work_buffer[j] - vmax)
+                if log_transmat[i, j] > ZEROLOGPROB:
+                    power_sum += exp(work_buffer[j] - vmax)
             bwdlattice[t, i] = log(power_sum) + vmax
             if bwdlattice[t, i] <= ZEROLOGPROB:
                 bwdlattice[t, i] = _NINF
