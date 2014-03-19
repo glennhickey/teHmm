@@ -217,6 +217,25 @@ class TestCase(TestBase):
         cmb = cmap.getMapBack(3)
         assert int(np.log2(cmb)) == int(np.log2(1100))
         assert int(np.log2(cmb)) == int(np.log2(1600))
+
+    def testDeltaMode(self):
+        trackData1 = TrackData()
+        trackData1.loadTrackData(getTracksInfoPath(5),
+                                 [("scaffold_1", 0, 100)])
+
+        tableList1 = trackData1.getTrackTableList()
+        track1 = trackData1.getTrackList().getTrackByName("kmer")
+        track2 = trackData1.getTrackList().getTrackByName("kmerDelta")
+        trackNo1 = track1.getNumber()
+        trackNo2 = track2.getNumber()
+        pv1 = 0
+        for i in xrange(len(tableList1[0])):
+            bedVal = tableList1[0][i][trackNo1]
+            bedVal2 = tableList1[0][i][trackNo2]
+            v1 = int(track1.getValueMap().getMapBack(bedVal))
+            v2 = int(track2.getValueMap().getMapBack(bedVal2))
+            assert v2 == v1 - pv1
+            pv1 = v1
         
     def testFastaTrack(self):
         trackData = TrackData()

@@ -95,6 +95,9 @@ def readBedData(bedPath, chrom, start, end, **kwargs):
         sort = kwargs["sort"] == True
     if kwargs is not None and "needIntersect" in kwargs:
         needIntersect = kwargs["needIntersect"]
+    useDelta = False
+    if kwargs is not None and "useDelta" in kwargs:
+        useDelta = kwargs["useDelta"]
     outputBuf = None
     def clamp(x):
         return x
@@ -140,6 +143,10 @@ def readBedData(bedPath, chrom, start, end, **kwargs):
         intersections = bedTool
     logger.debug("loading data from intersections")
     basesRead = 0
+    # prevInterval / prevVal only updated in useDelta mode
+    prevInterval = None
+    prevVal = 0
+        
     for overlap in intersections:
         oStart = max(start, overlap.start)
         oEnd = min(end, overlap.end)
@@ -153,23 +160,39 @@ def readBedData(bedPath, chrom, start, end, **kwargs):
             else:
                 assert valCol == 3
                 assert overlap.name is not None and overlap.name != ""
+
+        val0 = val
+        if useDelta is True:
+            if prevInterval is not None and overlap.start == prevInterval.end \
+              and prevInterval.chrom == overlap.chrom:
+                try: # numeric delta
+                    val0 = float(val) - float(prevVal)
+                except: # fallback to 0 : same 1 : different
+                    val0 = int(val != prevVal)
+            prevVal = val
+            prevInterval = overlap
+            val = 0
+        
         if valMap is not None:
-            ov  = val
             val = valMap.getMap(val, update=updateMap)
+            val0 = valMap.getMap(val0, update=updateMap)
 
         if start is not None and end is not None:
-            for i in xrange(oEnd - oStart):
-                data[i + oStart - start] = val
+            data[oStart - start] = val0
+            for i in xrange(1, oEnd - oStart):
+                    data[i + oStart - start] = val
             basesRead += oEnd - oStart
         else:
             # no query range, just keep dumping into array.
-            # note pretty different logic in this mode where we only store
-            # one base per interval
-            if len(data) <= basesRead:
-                data = np.resize(data, (int(
-                    runShellCommand("wc -l %s" % bedPath).split()[0])))
-            data[basesRead] = val
+            overlapLen = overlap.end - overlap.start
+            if len(data) <= basesRead + overlapLen:
+                data = np.resize(data, max(2 * len(data), data + overlapLen))
+            data[basesRead] = val0
             basesRead += 1
+            for i in xrange(1, overlapLen):
+                data[basesRead] = val
+                basesRead += 1
+            
 
     logger.debug("done readBedData(%s). %d bases read" % (bedPath, basesRead))
 

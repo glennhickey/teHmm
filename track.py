@@ -42,6 +42,12 @@ class Track(object):
         self.valCol = 3
         #: For fasta only
         self.caseSensitive = False
+        #: Flag specifying that track values are represented as the difference
+        # between the previous and current value (or 0 for start).  Best
+        # used on numeric tracks.  Note that we only store the flag here and
+        # it is up to the data reader to actually do the computations.  The
+        # delta operation occurs *before* any binning or scaling. 
+        self.delta = False
 
         if xmlElement is not None:
             self._fromXMLElement(xmlElement)
@@ -66,6 +72,10 @@ class Track(object):
                     self.name))
         elif self.scale is not None:
             self.valMap.setScale(self.scale)
+        if self.delta is True:
+            if self.logScale is not None:
+                raise RuntimeError("track %s: delta attribute not compatible"
+                                   " with logScale" % self.getName())
 
     def _fromXMLElement(self, elem, number=-1):
         self.name = elem.attrib["name"]
@@ -86,6 +96,15 @@ class Track(object):
                 self.caseSensitive = True
             else:
                 self.caseSensitive = False
+        if "delta" in elem.attrib:
+            d = elem.attrib["delta"].lower()
+            if d == "1" or d == "true":
+                self.delta = True
+            else:
+                self.delta = False
+            if self.logScale is not None:
+                raise RuntimeError("track %s: delta attribute not compatible"
+                                   " with logScale" % self.getName())
             
     def toXMLElement(self):
         elem = ET.Element("track")
@@ -104,6 +123,8 @@ class Track(object):
         if self.caseSensitive is not None and\
           self.caseSensitive is not False:
             elem.attrib["caseSensitive"] = str(self.caseSensitive)
+        if self.delta is True:
+            elem.attrib["delta"] = "True"
         return elem
 
     def getValueMap(self):
@@ -143,6 +164,9 @@ class Track(object):
 
     def getCaseSensitive(self):
         return self.caseSensitive
+
+    def getDelta(self):
+        return self.delta
 ###########################################################################
 """list of tracks (see above) that we can index by name or number as well as
 load from or save to a file. this strucuture needs to accompany a trained
@@ -412,8 +436,7 @@ class CategoryMap(object):
             return float(x) / float(self.scaleFac)
         elif self.logScaleBase is not None and float(x) != 0.0:
             return np.power(self.logScaleBase, float(x))
-        else:
-            return x
+        return x
 
     
 ###########################################################################
@@ -538,7 +561,8 @@ class TrackData(object):
                           valMap=selfTrack.getValueMap(),
                           updateValMap=init,
                           caseSensitive=inputTrack.getCaseSensitive(),
-                          outputBuf=trackTable.getRow(trackNo))
+                          outputBuf=trackTable.getRow(trackNo),
+                          useDelta=inputTrack.getDelta())
 
         self.trackTableList.append(trackTable)
 
