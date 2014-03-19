@@ -65,7 +65,9 @@ The track list file contains a single *teModelConfig* element which in turn cont
   * *sparse_multinomial* same as above except regions outside of intervals are considered unobserved.
 * *valCol* 0-based (so name=3) column of bed file to read state from for multinomial distribution
 * *scale* Scale values by spefied factor and round them to an integer (useful for binning numeric states)
-* *logScale* .  Scale values by taking logarithm with the given value as base then rounding to integer. Zeros are not scaled. 
+* *logScale* .  Scale values by taking logarithm with the given value as base then rounding to integer. Zeros are not scaled.
+* *delta*.  When set to "true", the value at each is read as an offset from the value at the preivous position.  If no value was read at the previous position, the previous value is assumed to be 0.  This
+operation is performed before scaling.  Note, since deltas can be negative this mode is incompatible with *logScale*.  Using this flag with non-numeric tracks is probably not a great idea.  
 
 Testing
 -
