@@ -102,7 +102,7 @@ class Track(object):
                 self.delta = True
             else:
                 self.delta = False
-            if self.logScale is not None:
+            if self.logScale is not None and self.delta is True:
                 raise RuntimeError("track %s: delta attribute not compatible"
                                    " with logScale" % self.getName())
             
