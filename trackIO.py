@@ -186,7 +186,10 @@ def readBedData(bedPath, chrom, start, end, **kwargs):
             # no query range, just keep dumping into array.
             overlapLen = overlap.end - overlap.start
             if len(data) <= basesRead + overlapLen:
-                data = np.resize(data, max(2 * len(data), data + overlapLen))
+                data = np.resize(data, max(2 * len(data),
+                                           len(data) + overlapLen))
+                for i in xrange(basesRead, len(data)):
+                    data[i] = data[basesRead]
             data[basesRead] = val0
             basesRead += 1
             for i in xrange(1, overlapLen):

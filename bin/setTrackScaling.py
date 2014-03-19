@@ -66,10 +66,10 @@ def main(argv=None):
            track.getDist() == "sparse_multinomial") and\
           not isFasta:
           try:
-            setTrackScale(track, args.numBins)
+              setTrackScale(track, args.numBins)
           except ValueError as e:
-            logger.warning("Skipping (non-numeric?) track %s due to: %s" % (
-              track.getName(), str(e)))
+              logger.warning("Skipping (non-numeric?) track %s due to: %s" % (
+                  track.getName(), str(e)))
 
     trackList.saveXML(args.outputTracks)
     cleanBedTool(tempBedToolPath)
@@ -99,7 +99,9 @@ def readTrackIntoFloatArray(track):
     assert numLines > 0
     logger.debug("Allocating track array of size %d" % numLines)
     data = np.finfo(np.float).max + np.zeros((numLines), dtype=np.float)
-    data = readTrackData(track.getPath(), outputBuf=data, valCol=track.getValCol())
+    data = readTrackData(track.getPath(), outputBuf=data,
+                         valCol=track.getValCol(),
+                         useDelta=track.getDelta())
     lastIdx = len(data) - 1
     for i in xrange(1, len(data)):
         if data[-i] != np.finfo(np.float).max:
@@ -158,7 +160,7 @@ def computeScale(data, numBins):
                 newMin = data[i]
         minVal = newMin
     # dont support negative numbers in log mode for now
-    if maxVal != 0.0 and minVal != sys.maxint:
+    if maxVal != 0.0 and minVal >= 0:
         ratio = float(maxVal) / float(minVal)
         logBase = np.power(ratio, 1. / float(numBins - 2.00))
         minBin = np.power(logBase, np.floor(np.log(minVal) / np.log(logBase)))
