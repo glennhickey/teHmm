@@ -81,29 +81,23 @@ def _log_sum_lneta(int n_observations, int n_components,
     for t in range(n_observations - 1):
         for i in range(n_components):
             for j in range(n_components):
-                if log_transmat[i, j] > ZEROLOGPROB:
-                    x = fwdlattice[t, i] + log_transmat[i, j] \
-                      + framelogprob[t + 1, j] + bwdlattice[t + 1, j] - logprob
-                    if x > maxMatrix[i, j]:
-                        maxMatrix[i, j] = x
+                x = fwdlattice[t, i] + log_transmat[i, j] \
+                  + framelogprob[t + 1, j] + bwdlattice[t + 1, j] - logprob
+                if x > maxMatrix[i, j]:
+                    maxMatrix[i, j] = x
 
     # sum exp(x - max)
     for t in xrange(0, n_observations - 1):
         for i in xrange(0, n_components):
             for j in xrange(0, n_components):
-                if log_transmat[i, j] > ZEROLOGPROB:
-                    x = fwdlattice[t, i] + log_transmat[i, j] \
-                        + framelogprob[t + 1, j] + bwdlattice[t + 1, j] - logprob
-                    logsum_lneta[i, j] += exp(x - maxMatrix[i, j])
+                x = fwdlattice[t, i] + log_transmat[i, j] \
+                    + framelogprob[t + 1, j] + bwdlattice[t + 1, j] - logprob
+                logsum_lneta[i, j] += exp(x - maxMatrix[i, j])
 
     # return log(sum(x-max)) + max
     for i in xrange(0, n_components):
         for j in xrange(0, n_components):
-            if log_transmat[i, j] > ZEROLOGPROB:
-                logsum_lneta[i, j] = log(logsum_lneta[i, j]) + maxMatrix[i, j]
-            else:
-                logsum_lneta[i, j] = ZEROLOGPROB
-
+            logsum_lneta[i, j] = log(logsum_lneta[i, j]) + maxMatrix[i, j]
             
 @cython.boundscheck(False)
 def _forward(int n_observations, int n_components,
