@@ -3,15 +3,15 @@
 	<track distribution="multinomial" name="ltr_finder" path="/data/glenn.hickey/genomes/alyrata/tracks/clean/a_lyrata-ltr_finder_clean.bed" valCol="3"/>
 	<track distribution="multinomial" name="chaux" path="/data/glenn.hickey/genomes/alyrata/tracks/clean/chaux_sorted_clean.bed" valCol="3"/>
 	<track distribution="multinomial" name="te_domains" path="/data/douglas.hoen/sharebrowser/tracks/alyrata/permanent/domains/TE_domains.bed" valCol="3"/>
-	<track delta="True" distribution="multinomial" name="copy" path="/data/douglas.hoen/sharebrowser/tracks/alyrata/permanent/mathieu/AL_v_AL_100_nonSelf.hits.bw" scale="0.0033" valCol="3"/>
-	<track delta="True" distribution="multinomial" name="copy_cv" path="/data/douglas.hoen/sharebrowser/tracks/alyrata/permanent/mathieu/variation/AL_v_AL_100_nonSelf.cv100.bw" scale="1.0227" valCol="3"/>
-	<track delta="True" distribution="multinomial" name="left_peak" path="/data/douglas.hoen/sharebrowser/tracks/alyrata/permanent/mathieu/AL_v_AL_100_nonSelf.left.bw" scale="0.0033" valCol="3"/>
-	<track delta="True" distribution="multinomial" name="right_peak" path="/data/douglas.hoen/sharebrowser/tracks/alyrata/permanent/mathieu/AL_v_AL_100_nonSelf.right.bw" scale="0.0032" valCol="3"/>
+	<track delta="True" distribution="multinomial" name="copy" path="/data/douglas.hoen/sharebrowser/tracks/alyrata/permanent/mathieu/AL_v_AL_100_nonSelf.hits.bw" scale="0.0015" shift="0.0" valCol="3"/>
+	<track delta="True" distribution="multinomial" name="copy_cv" path="/data/douglas.hoen/sharebrowser/tracks/alyrata/permanent/mathieu/variation/AL_v_AL_100_nonSelf.cv100.bw" scale="0.4545" shift="0.0" valCol="3"/>
+	<track delta="True" distribution="multinomial" name="left_peak" path="/data/douglas.hoen/sharebrowser/tracks/alyrata/permanent/mathieu/AL_v_AL_100_nonSelf.left.bw" scale="0.0014" shift="0.0" valCol="3"/>
+	<track delta="True" distribution="multinomial" name="right_peak" path="/data/douglas.hoen/sharebrowser/tracks/alyrata/permanent/mathieu/AL_v_AL_100_nonSelf.right.bw" scale="0.0014" shift="0.0" valCol="3"/>
 	<track distribution="multinomial" name="termini" path="/data/glenn.hickey/genomes/alyrata/tracks/clean/all_scaffolds.termini_search.filter_2.ltr.sorted_clean.bed" valCol="3"/>
 	<track distribution="multinomial" name="tir_termini" path="/data/glenn.hickey/genomes/alyrata/tracks/clean/all_scaffolds.termini_search.filter_2.tir.sorted_clean.bed" valCol="3"/>
-	<track delta="False" distribution="multinomial" logScale="1.1298" name="ortho_depth" path="/gbdb/alyrata/wib/All_Al_depth.bw" valCol="3"/>
-	<track delta="True" distribution="multinomial" name="mrna" path="/gbdb/alyrata/wib/splicemap.bw" scale="9.82522024869e-05" valCol="3"/>
-	<track delta="False" distribution="multinomial" logScale="1.8581" name="srna" path="/gbdb/alyrata/wib/AlsmallCS.wg" valCol="3"/>
+	<track delta="True" distribution="multinomial" name="ortho_depth" path="/data/douglas.hoen/sharebrowser/tracks/alyrata/permanent/misc/All_Al_depth_fixed.bw" scale="0.4706" shift="0.0" valCol="3"/>
+	<track delta="True" distribution="multinomial" name="mrna" path="/gbdb/alyrata/wib/splicemap.bw" scale="4.36676455497e-05" shift="0.0" valCol="3"/>
+	<track delta="True" distribution="multinomial" name="srna" path="/data/douglas.hoen/sharebrowser/tracks/alyrata/permanent/misc/AlsmallCS_fixed.bw" scale="5.74217628481e-05" shift="0.0" valCol="3"/>
 	<track distribution="binary" name="trf" path="/data/douglas.hoen/sharebrowser/tracks/alyrata/permanent/misc/trf_8_scaffolds.bed" valCol="0"/>
 	<track distribution="binary" name="polyA" path="/data/douglas.hoen/sharebrowser/tracks/alyrata/permanent/misc/polyA.bb" valCol="0"/>
 	<track distribution="binary" name="polyN" path="/data/douglas.hoen/sharebrowser/tracks/alyrata/bed/Ns_sites.bed" valCol="0"/>
