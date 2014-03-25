@@ -24,7 +24,7 @@ The following software needs to be installed first.  They can usually be install
 * [git](http://git-scm.com/downloads)
 * [python 2.7](http://www.python.org/getit/)
 * [cython](http://docs.cython.org/src/quickstart/install.html)
-* [numpy](http://www.scipy.org/install.html)
+* [numpy 1.72](http://www.scipy.org/install.html)
 * [bedtools](https://code.google.com/p/bedtools/downloads/list)
 * [pybedtools](http://pythonhosted.org/pybedtools/main.html)
 * [bigWigToBedGraph for BigWig support](http://hgdownload.cse.ucsc.edu/admin/exe/)
