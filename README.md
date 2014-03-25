@@ -20,13 +20,13 @@ Code still in beta stages and manuscript still in preparation.  Please check bac
 Installation
 -----
 
-The following software needs to be installed first.  They can usually be installed via your Linux distribution's package manager, from source, MacPorts, or easy_install. (Make sure PATH and PYTHONPATH are updated accordingly)
+The following software needs to be installed first.  They can usually be installed via your Linux distribution's package manager, from source, MacPorts, or easy_install. Newer versions than the ones indicated will probably be generally OK -- please let me know otherwise.  (Make sure PATH and PYTHONPATH are updated accordingly)
 * [git](http://git-scm.com/downloads)
 * [python 2.7](http://www.python.org/getit/)
-* [cython](http://docs.cython.org/src/quickstart/install.html)
+* [cython 0.19.2](http://docs.cython.org/src/quickstart/install.html)
 * [numpy 1.72](http://www.scipy.org/install.html)
-* [bedtools](https://code.google.com/p/bedtools/downloads/list)
-* [pybedtools](http://pythonhosted.org/pybedtools/main.html)
+* [bedtools 2.17](https://code.google.com/p/bedtools/downloads/list)
+* [pybedtools 0.62](http://pythonhosted.org/pybedtools/main.html)
 * [bigWigToBedGraph for BigWig support](http://hgdownload.cse.ucsc.edu/admin/exe/)
 * [bigBedToBed for BigBed support](http://hgdownload.cse.ucsc.edu/admin/exe/)
 
