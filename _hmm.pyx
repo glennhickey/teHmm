@@ -113,6 +113,7 @@ def _forward(int n_observations, int n_components,
     cdef dtype_t power_sum = 0.0
     cdef double* work_buffer = <double *> \
       malloc(n_components * cython.sizeof(double))
+    cdef dtype_t zval
 
     for i in xrange(n_components):
         fwdlattice[0, i] = log_startprob[i] + framelogprob[0, i]
@@ -125,8 +126,12 @@ def _forward(int n_observations, int n_components,
                 if work_buffer[i] > vmax:
                     vmax = work_buffer[i]
             power_sum = 0.0
+            zval = exp(ZEROLOGPROB - vmax)
             for i in xrange(n_components):
-                power_sum += exp(work_buffer[i] - vmax)                
+                if work_buffer[i] > ZEROLOGPROB:
+                    power_sum += exp(work_buffer[i] - vmax)
+                else:
+                    power_sum += zval
             fwdlattice[t, j] = log(power_sum) + vmax + framelogprob[t, j]
             if fwdlattice[t, i] <= ZEROLOGPROB:
                 fwdlattice[t, i] = _NINF
@@ -145,6 +150,7 @@ def _backward(int n_observations, int n_components,
     cdef dtype_t power_sum = 0.0
     cdef double* work_buffer = <double *> \
       malloc(n_components * cython.sizeof(double))
+    cdef dtype_t zval
 
     for i in xrange(n_components):
         bwdlattice[n_observations - 1, i] = 0.0
@@ -158,8 +164,12 @@ def _backward(int n_observations, int n_components,
                 if work_buffer[j] > vmax:
                     vmax = work_buffer[j]
             power_sum = 0.0
+            zval = exp(ZEROLOGPROB - vmax)
             for j in xrange(n_components):
-                power_sum += exp(work_buffer[j] - vmax)
+                if work_buffer[j] > ZEROLOGPROB:
+                    power_sum += exp(work_buffer[j] - vmax)
+                else:
+                    power_sum += zval
             bwdlattice[t, i] = log(power_sum) + vmax
             if bwdlattice[t, i] <= ZEROLOGPROB:
                 bwdlattice[t, i] = _NINF
