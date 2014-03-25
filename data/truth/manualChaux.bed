@@ -1,4 +1,7 @@
-scaffold_1	1100001	1104583	Outside	0	+
+scaffold_1	1100001	1101260	inside	0	+
+scaffold_1	1101260	1101511	LTR|right	0	+
+scaffold_1	1101511	1101517	TSD|right	0	+
+scaffold_1	1101517	1104583	Outside	0	+
 scaffold_1	1104583	1104795	DNA	113	+
 scaffold_1	1104795	1104840	Unknown	103	-
 scaffold_1	1104840	1108843	Outside	0	+
