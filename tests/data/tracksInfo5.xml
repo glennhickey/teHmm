@@ -6,4 +6,6 @@
   <track name="kmer" path="tests/data/alyrata_kmer14.bed"
 			distribution="multinomial" valCol="3"/>
   <track name="te2" path="tests/data/alyrata_scaffold1_teii3.7.bed" distribution="multinomial" valCol="4"/>
+  <track name="kmerShift" path="tests/data/alyrata_kmer14.bed" distribution="multinomial" valCol="3" shift="10"/>
+  <track name="kmerShiftLog" path="tests/data/alyrata_kmer14.bed" distribution="multinomial" valCol="3" shift="10" logScale="2"/>
 </teModelConfig>

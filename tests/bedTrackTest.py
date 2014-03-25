@@ -236,7 +236,30 @@ class TestCase(TestBase):
             v2 = int(track2.getValueMap().getMapBack(bedVal2))
             assert v2 == v1 - pv1
             pv1 = v1
+
+    def testShift(self):
+        trackData1 = TrackData()
+        trackData1.loadTrackData(getTracksInfoPath(5),
+                                 [("scaffold_1", 999, 1002)])
+        tableList1 = trackData1.getTrackTableList()
+        track1 = trackData1.getTrackList().getTrackByName("kmer")
+        track2 = trackData1.getTrackList().getTrackByName("kmerShift")
+        track3 = trackData1.getTrackList().getTrackByName("kmerShiftLog")
+        trackNo1 = track1.getNumber()
+        trackNo2 = track2.getNumber()
+        trackNo3 = track3.getNumber()
+
+        vm1 = track1.getValueMap()
+        vm2 = track2.getValueMap()
+        vm3 = track3.getValueMap()
         
+        for i in xrange(len(tableList1[0])):
+            bedVal1 = float(vm1.getMapBack(tableList1[0][i][trackNo1]))
+            bedVal2 = float(vm2.getMapBack(tableList1[0][i][trackNo2]))
+            bedVal3 = float(vm3.getMapBack(tableList1[0][i][trackNo3]))
+            assert bedVal2 == bedVal1
+            assert bedVal3 == np.power(2., int(np.log(bedVal1 + 10.0) / np.log(2.))) - 10.0
+    
     def testFastaTrack(self):
         trackData = TrackData()
         trackData.loadTrackData(getTracksInfoPath(4),

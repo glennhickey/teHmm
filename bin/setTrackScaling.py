@@ -79,7 +79,7 @@ def setTrackScale(track, numBins):
     computed scaling paramaters below """
     data = readTrackIntoFloatArray(track)
     if len(data) > numBins:
-        scaleType, scaleParam = computeScale(data, numBins)
+        scaleType, scaleParam, shift = computeScale(data, numBins)
         # round down so xml file doesnt look too ugly
         if scaleParam > 1e-4:
             scaleParam = float("%.4f" % scaleParam)
@@ -91,6 +91,9 @@ def setTrackScale(track, numBins):
             logger.info("Setting track %s logScale to %f" % (track.getName(),
                                                              scaleParam))
             track.setLogScale(scaleParam)
+        logger.info("Setting track %s shift to %f" % (track.getName(),
+                                                      shift))
+        track.setShift(shift)
     
 def readTrackIntoFloatArray(track):
     """ use the track API to directly read an entire data file into memory
@@ -149,31 +152,28 @@ def computeScale(data, numBins):
     # try log scale
     logVar = sys.maxint
 
-    # for the purposes of scaling (see track.CategoryMap.__scale()), we
-    # assume log(0) == 0.  Therefore there is effectively always a 0-bin
-    # for logScaling, and we essentially ignore 0-values below. 
-    if minVal == 0:
-        # second smallest value
-        newMin = sys.maxint
-        for i in xrange(len(data)):
-            if data[i] > minVal and data[i] < newMin:
-                newMin = data[i]
-        minVal = newMin
-    # dont support negative numbers in log mode for now
-    if maxVal != 0.0 and minVal >= 0:
-        ratio = float(maxVal) / float(minVal)
-        logBase = np.power(ratio, 1. / float(numBins - 2.00))
-        minBin = np.power(logBase, np.floor(np.log(minVal) / np.log(logBase)))
-        logBins = [minBin] * numBins
-        for i in xrange(1, numBins):
-            logBins[i] = logBins[i-1] * logBase
-        logger.debug("Log bins %s" % logBins)
-        logVar = histVariance(data, sorted(logBins), fromLog = True)
-        logger.debug("Log base=%f has variance=%f" % (logBase, logVar))
+    # shift parameter is a constant that gets added before log scaling
+    # to make sure that we always deal with positive numbers
+    shift = 0.
+    if minVal <= 0.:
+        shift = 1.0 - minVal
+        data += shift
+        minVal += shift
+        maxVal += shift
 
-    ret = "scale", linearScale
+    ratio = float(maxVal) / float(minVal)
+    logBase = np.power(ratio, 1. / float(numBins - 2.00))
+    minBin = np.power(logBase, np.floor(np.log(minVal) / np.log(logBase)))
+    logBins = [minBin] * numBins
+    for i in xrange(1, numBins):
+        logBins[i] = logBins[i-1] * logBase
+    logger.debug("Log bins %s" % logBins)
+    logVar = histVariance(data, sorted(logBins), fromLog = True)
+    logger.debug("Log base=%f has variance=%f" % (logBase, logVar))
+
+    ret = "scale", linearScale, 0.
     if logVar < linearVar:
-        ret = "logScale", logBase
+        ret = "logScale", logBase, shift
     return ret
             
 if __name__ == "__main__":

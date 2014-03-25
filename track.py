@@ -38,6 +38,8 @@ class Track(object):
         self.scale = None
         #: Use specified value as logarithm base for scaling
         self.logScale = None
+        #: Value to add (before scaling)
+        self.shift = None
         #: Bed column to take value from (default 3==name)
         self.valCol = 3
         #: For fasta only
@@ -72,6 +74,8 @@ class Track(object):
                     self.name))
         elif self.scale is not None:
             self.valMap.setScale(self.scale)
+        if self.shift is not None:
+            self.valMap.setShift(self.shift)
         if self.delta is True:
             if self.logScale is not None:
                 raise RuntimeError("track %s: delta attribute not compatible"
@@ -90,6 +94,8 @@ class Track(object):
             self.scale = float(elem.attrib["scale"])
         if "logScale" in elem.attrib:
             self.logScale = float(elem.attrib["logScale"])
+        if "shift" in elem.attrib:
+            self.shift = float(elem.attrib["shift"])
         if "caseSensitive" in elem.attrib:
             cs = elem.attrib["caseSensitive"].lower()
             if cs == "1" or cs == "true":
@@ -120,6 +126,8 @@ class Track(object):
             elem.attrib["logScale"] = str(self.logScale)
         elif self.scale is not None:
             elem.attrib["scale"] = str(self.scale)
+        if self.shift is not None:
+            elem.attrib["shift"] = str(self.shift)
         if self.caseSensitive is not None and\
           self.caseSensitive is not False:
             elem.attrib["caseSensitive"] = str(self.caseSensitive)
@@ -161,6 +169,12 @@ class Track(object):
     def setLogScale(self, logScale):
         self.logScale = logScale
         self.scale = None
+
+    def getShift(self):
+        return self.shift
+
+    def setShift(self, shift):
+        self.shift = shift
 
     def getCaseSensitive(self):
         return self.caseSensitive
@@ -381,6 +395,7 @@ class CategoryMap(object):
         self.scaleFac = None
         self.logScaleBase = None
         self.logScaleDiv = None
+        self.shift = None
         
     def update(self, inVal):
         val = self.__scale(inVal)
@@ -423,20 +438,28 @@ class CategoryMap(object):
         self.logScaleDiv = np.log(self.logScaleBase)
         self.scaleFac = None
 
+    def setShift(self, shift):
+        self.shift = float(shift)
+
     def __scale(self, x):
+        y = x
+        if self.shift is not None:
+            y = float(y) + self.shift
         if self.scaleFac is not None:
-            return str(int(self.scaleFac * float(x)))
+            return str(int(self.scaleFac * float(y)))
         elif self.logScaleBase is not None and float(x) != 0.0:
-            return str(int(np.log(float(x)) / self.logScaleDiv))
-        else:
-            return x
+            return str(int(np.log(float(y)) / self.logScaleDiv))
+        return y
 
     def __scaleInv(self, x):
+        y = x
         if self.scaleFac is not None:
-            return float(x) / float(self.scaleFac)
-        elif self.logScaleBase is not None and float(x) != 0.0:
-            return np.power(self.logScaleBase, float(x))
-        return x
+            y = float(x) / float(self.scaleFac)
+        elif self.logScaleBase is not None and float(x) != 0.0:            
+            y = np.power(self.logScaleBase, float(x))
+        if self.shift is not None:
+            y = float(y) - self.shift
+        return y
 
     
 ###########################################################################
