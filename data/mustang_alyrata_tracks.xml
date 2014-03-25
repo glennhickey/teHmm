@@ -11,7 +11,7 @@
 <track name="tir_termini"       path="/data/douglas.hoen/sharebrowser/tracks/alyrata/permanent/termini/all_scaffolds.termini_search.filter_2.tir.sorted.bed"/>
 <track name="ortho_depth"   path="/data/douglas.hoen/sharebrowser/tracks/alyrata/permanent/misc/All_Al_depth_fixed.bw" delta="true"/>
 <track name="mrna"          path="/gbdb/alyrata/wib/splicemap.bw" delta="true"/>
-<track name="srna"          path="/data/douglas.hoen/sharebrowser/tracks/alyrata/permanent/misc/AlsmallCS_fixed.bw/AlsmallCS.wg" delta="true"/>
+<track name="srna"          path="/data/douglas.hoen/sharebrowser/tracks/alyrata/permanent/misc/AlsmallCS_fixed.bw" delta="true"/>
 <track name="trf"           path="/data/douglas.hoen/sharebrowser/tracks/alyrata/permanent/misc/trf_8_scaffolds.bed" distribution="binary"/>
 <track name="polyA"         path="/data/douglas.hoen/sharebrowser/tracks/alyrata/permanent/misc/polyA.bb" distribution="binary"/>
 <track name="polyN"         path="/data/douglas.hoen/sharebrowser/tracks/alyrata/bed/Ns_sites.bed" distribution="binary"/>
