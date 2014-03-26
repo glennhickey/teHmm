@@ -441,6 +441,25 @@ class CategoryMap(object):
     def setShift(self, shift):
         self.shift = float(shift)
 
+    def sort(self):
+        """ sort dictionary so that value1 < value2 iff key1 < key2 """
+        oldMap = self.catMap
+        self.catMap = dict()
+        self.catMapBack = dict()
+        keys = oldMap.keys()
+        # sort by numeric value whenever possible, otherwise resort to lex
+        try:
+            numericKeys = [float(key) for key in oldMap.keys()]
+        except:
+            numericKeys = keys
+        for numericKey, key in sorted(zip(numericKeys, keys)):
+            newVal = len(self.catMap) + self.reserved
+            self.catMap[key] = newVal
+            self.catMapBack[newVal] = key
+        assert len(oldMap) == len(self.catMap)
+        assert len(self.catMap) == len(self.catMapBack)
+
+
     def __scale(self, x):
         y = x
         if self.shift is not None:
@@ -475,7 +494,7 @@ class NoMap(CategoryMap):
         return val
     
     def getMapBack(self, val):
-        return val    
+        return val
 
 ###########################################################################
     
@@ -586,7 +605,7 @@ class TrackData(object):
                           caseSensitive=inputTrack.getCaseSensitive(),
                           outputBuf=trackTable.getRow(trackNo),
                           useDelta=inputTrack.getDelta())
-
+            
         self.trackTableList.append(trackTable)
 
         if self.trackList.getAlignmentTrack() is not None:

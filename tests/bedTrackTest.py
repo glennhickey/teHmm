@@ -330,7 +330,41 @@ class TestCase(TestBase):
             assert bval == binTrack.getValueMap().getMissingVal()
             assert val == track.getValueMap().getMissingVal()
             assert valCS == trackCS.getValueMap().getMissingVal()
-        
+
+    def testCatMapSort(self):        
+        catMap = CategoryMap()
+        catMap.update(1000)
+        catMap.update(66)
+        catMap.update(0)
+        catMap.update(1)
+        catMap.update(2)
+
+        catMap.sort()
+
+        for key, val in catMap.catMap.items():
+            for key2, val2 in catMap.catMap.items():
+                if key2 < key:
+                    assert val2 < val
+                elif key < key2:
+                    assert val2 > val
+
+        catMap.update('1000')
+        catMap.update('66')
+        catMap.update('0')
+        catMap.update('1')
+        catMap.update('2')
+
+        catMap.sort()
+
+        for key, val in catMap.catMap.items():
+            for key2, val2 in catMap.catMap.items():
+                if int(key2) < int(key):
+                    assert val2 < val
+                elif int(key) < int(key2):
+                    assert val2 > val
+
+
+
 def main():
     sys.argv = sys.argv[:1]
     unittest.main()
