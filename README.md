@@ -2,7 +2,7 @@ teHmm
 =====
 Copyright (C) 2013 - 2014 by Glenn Hickey (glenn.hickey@gmail.com)
 Released under the MIT license, see LICENSE.txt
-
+ 
 Prototype code for identification of transposable elements in annotated DNA sequence using a HMM.  The model slightly generalizes a classical HMM by allowing emission of *k*-dimensional vectors, where each value drawn from an *independent* multinomial distribution.   Maximum likelihood estimates of parameters can be learned directly from a gold standard, or using the Baum Welch algorithm.   A Stochastic Context Free Grammar is also provided, but is still in an early stage. 
 
 Code Contributors
