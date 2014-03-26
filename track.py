@@ -50,6 +50,8 @@ class Track(object):
         # it is up to the data reader to actually do the computations.  The
         # delta operation occurs *before* any binning or scaling. 
         self.delta = False
+        #: Specify value given to unannotated bases
+        self.defaultVal = None
 
         if xmlElement is not None:
             self._fromXMLElement(xmlElement)
@@ -57,7 +59,11 @@ class Track(object):
 
     def _init(self):
         if self.dist == "multinomial":
-            self.valMap = CategoryMap(reserved=2)
+            if self.defaultVal is None:
+                self.valMap = CategoryMap(reserved=2)
+            else:
+                self.valMap = CategoryMap(reserved=1,
+                                          defaultVal=self.defaultVal)
         if self.dist == "sparse_multinomial":
             self.valMap = CategoryMap(reserved=1)
         elif self.dist == "binary":
@@ -111,6 +117,8 @@ class Track(object):
             if self.logScale is not None and self.delta is True:
                 raise RuntimeError("track %s: delta attribute not compatible"
                                    " with logScale" % self.getName())
+        if "default" in elem.attrib:
+            self.defaultVal = elem.attrib["default"]
             
     def toXMLElement(self):
         elem = ET.Element("track")
@@ -133,6 +141,8 @@ class Track(object):
             elem.attrib["caseSensitive"] = str(self.caseSensitive)
         if self.delta is True:
             elem.attrib["delta"] = "True"
+        if self.defaultVal is not None:
+            elem.attrib["default"] = str(self.defaultVal)
         return elem
 
     def getValueMap(self):
@@ -181,6 +191,10 @@ class Track(object):
 
     def getDelta(self):
         return self.delta
+
+    def getDefaultVal(self):
+        return self.defaultVal
+    
 ###########################################################################
 """list of tracks (see above) that we can index by name or number as well as
 load from or save to a file. this strucuture needs to accompany a trained
@@ -388,7 +402,7 @@ class IntegerTrackTable(TrackTable):
             
 """ map a value to an integer category """
 class CategoryMap(object):
-    def __init__(self, reserved = 1):
+    def __init__(self, reserved = 1, defaultVal = None):
         self.catMap = dict()
         self.catMapBack = dict()
         self.reserved = reserved
@@ -396,6 +410,10 @@ class CategoryMap(object):
         self.logScaleBase = None
         self.logScaleDiv = None
         self.shift = None
+        self.defaultVal = defaultVal
+        self.missingVal = max(0, self.reserved - 1)
+        if self.defaultVal is not None:
+            self.missingVal = self.getMap(self.defaultVal, update = True)
         
     def update(self, inVal):
         val = self.__scale(inVal)
@@ -420,8 +438,11 @@ class CategoryMap(object):
     def getMapBack(self, val):
         if val in self.catMapBack:
             return self.__scaleInv(self.catMapBack[val])
+        elif self.defaultVal is not None:
+            return self.__scaleInv(self.catMapBack[
+                self.getMap(self.defaultVal)])
         else:
-            return self.getMissingVal()
+            return None
 
     def getMissingVal(self):
         return max(0, self.reserved - 1)
@@ -510,7 +531,7 @@ class BinaryMap(CategoryMap):
         return 1
 
     def getMapBack(self, val):
-        return val
+        return val - 1
 
     def getMissingVal(self):
         return 1

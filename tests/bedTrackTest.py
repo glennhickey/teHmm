@@ -300,7 +300,7 @@ class TestCase(TestBase):
             val = track.getValueMap().getMapBack(val)
             valCS = trackCS.getValueMap().getMapBack(valCS)
 
-            assert bval == 2
+            assert bval == 1
             assert val == trueString[i].upper()
             assert valCS == trueString[i]
 
@@ -314,7 +314,7 @@ class TestCase(TestBase):
             val = track.getValueMap().getMapBack(val)
             valCS = trackCS.getValueMap().getMapBack(valCS)
 
-            assert bval == 2
+            assert bval == 1
             assert val == trueString[i].upper()
             assert valCS == trueString[i]
 
@@ -327,9 +327,9 @@ class TestCase(TestBase):
             val = track.getValueMap().getMapBack(val)
             valCS = trackCS.getValueMap().getMapBack(valCS)
 
-            assert bval == binTrack.getValueMap().getMissingVal()
-            assert val == track.getValueMap().getMissingVal()
-            assert valCS == trackCS.getValueMap().getMissingVal()
+            assert bval == 0
+            assert val == None
+            assert valCS == None
 
     def testCatMapSort(self):        
         catMap = CategoryMap()
@@ -363,7 +363,32 @@ class TestCase(TestBase):
                 elif int(key) < int(key2):
                     assert val2 > val
 
+    def testDefault(self):
+        trackData1 = TrackData()
+        trackData1.loadTrackData(getTracksInfoPath(5),
+                                 [("scaffold_1", 99999, 100001)])
+        tableList1 = trackData1.getTrackTableList()
+        track1 = trackData1.getTrackList().getTrackByName("kmer")
+        track2 = trackData1.getTrackList().getTrackByName("kmerDefault")
+        trackNo1 = track1.getNumber()
+        trackNo2 = track2.getNumber()
 
+        vm1 = track1.getValueMap()
+        vm2 = track2.getValueMap()
+
+        assert track1.getDefaultVal() == None
+        assert track2.getDefaultVal() == "0.0"
+
+        i = 0
+        bedVal1 = float(vm1.getMapBack(tableList1[0][i][trackNo1]))
+        bedVal2 = float(vm2.getMapBack(tableList1[0][i][trackNo2]))
+        assert bedVal2 == bedVal1
+
+        i = 1
+        bedVal1 = vm1.getMapBack(tableList1[0][i][trackNo1])
+        bedVal2 = vm2.getMapBack(tableList1[0][i][trackNo2])
+        assert bedVal1 == None
+        assert bedVal2 == "0.0"
 
 def main():
     sys.argv = sys.argv[:1]
