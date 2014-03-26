@@ -109,6 +109,7 @@ def readTrackIntoFloatArray(track, allIntervals):
         defaultVal = np.finfo(float).max
     else:
         # sanity check : we assume that no one ever actually uses this value
+        defaultVal = float(defaultVal)
         assert defaultVal != np.finfo(float).max
     readBuffers = []
     totalLen = 0
@@ -116,13 +117,14 @@ def readTrackIntoFloatArray(track, allIntervals):
         logger.debug("Allocating track array of size %d" % (
              interval[2] - interval[1]))
         buf = defaultVal + np.zeros((interval[2] - interval[1]), dtype=np.float)
-        buf = readTrackData(track.getPath(), outputBuf=data,
+        buf = readTrackData(track.getPath(), interval[0], interval[1],
+                            interval[2], outputBuf=buf,
                             valCol=track.getValCol(),
                             useDelta=track.getDelta)
         readBuffers.append(buf)
         totalLen += len(buf)
 
-    data = concatenate(*readBuffers)
+    data = np.concatenate(readBuffers)
     assert len(data) == totalLen
     readBuffers = None
 
