@@ -51,14 +51,13 @@ import numpy as np
 cimport numpy as np
 cimport cython
 from libc.stdlib cimport malloc, free
-from teHmm.common import LOGZERO
 
 np.import_array()
 
 ctypedef np.float64_t dtype_t
 
 cdef dtype_t _NINF = -np.inf
-cdef dtype_t ZEROLOGPROB = LOGZERO
+cdef dtype_t ZEROLOGPROB = -1e200
 
 @cython.boundscheck(False)
 def _log_sum_lneta(int n_observations, int n_components,
@@ -113,7 +112,6 @@ def _forward(int n_observations, int n_components,
     cdef dtype_t power_sum = 0.0
     cdef double* work_buffer = <double *> \
       malloc(n_components * cython.sizeof(double))
-    cdef dtype_t zval
 
     for i in xrange(n_components):
         fwdlattice[0, i] = log_startprob[i] + framelogprob[0, i]
@@ -126,12 +124,8 @@ def _forward(int n_observations, int n_components,
                 if work_buffer[i] > vmax:
                     vmax = work_buffer[i]
             power_sum = 0.0
-            zval = exp(ZEROLOGPROB - vmax)
             for i in xrange(n_components):
-                if work_buffer[i] > ZEROLOGPROB:
-                    power_sum += exp(work_buffer[i] - vmax)
-                else:
-                    power_sum += zval
+                power_sum += exp(work_buffer[i] - vmax)                
             fwdlattice[t, j] = log(power_sum) + vmax + framelogprob[t, j]
             if fwdlattice[t, i] <= ZEROLOGPROB:
                 fwdlattice[t, i] = _NINF
@@ -150,7 +144,6 @@ def _backward(int n_observations, int n_components,
     cdef dtype_t power_sum = 0.0
     cdef double* work_buffer = <double *> \
       malloc(n_components * cython.sizeof(double))
-    cdef dtype_t zval
 
     for i in xrange(n_components):
         bwdlattice[n_observations - 1, i] = 0.0
@@ -164,12 +157,8 @@ def _backward(int n_observations, int n_components,
                 if work_buffer[j] > vmax:
                     vmax = work_buffer[j]
             power_sum = 0.0
-            zval = exp(ZEROLOGPROB - vmax)
             for j in xrange(n_components):
-                if work_buffer[j] > ZEROLOGPROB:
-                    power_sum += exp(work_buffer[j] - vmax)
-                else:
-                    power_sum += zval
+                power_sum += exp(work_buffer[j] - vmax)
             bwdlattice[t, i] = log(power_sum) + vmax
             if bwdlattice[t, i] <= ZEROLOGPROB:
                 bwdlattice[t, i] = _NINF
