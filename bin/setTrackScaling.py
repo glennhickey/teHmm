@@ -135,8 +135,8 @@ def readTrackIntoFloatArray(track, allIntervals):
         stripData = np.ndarray((totalLen), dtype=np.float)
         basesRead = 0
         for i in xrange(totalLen):
-            if buf[i] != defaultVal:
-                stripDate[basesRead] = buf[i]
+            if data[i] != defaultVal:
+                stripData[basesRead] = data[i]
                 basesRead += 1
         stripData.resize(basesRead)
         data = stripData
