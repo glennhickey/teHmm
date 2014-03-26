@@ -41,6 +41,7 @@ def main(argv=None):
     
     parser.add_argument("tracksInfo", help="Path of Tracks Info file "
                         "containing paths to genome annotation tracks")
+    parser.add_argument("allBed", help="Bed file spanning entire genome")
     parser.add_argument("cleanTrackPath", help="Directory to write cleaned BED"
                         " tracks to")
     parser.add_argument("outTracksInfo", help="Path to write modified tracks XML"
@@ -186,8 +187,8 @@ def runScaling(args, tempTracksInfo):
         skipArg = args.skipScale
 
     if args.noScale is False:
-        cmd = "setTrackScaling.py %s %d %s --logLevel %s %s %s" % (
-            tempTracksInfo, args.numBins, args.outTracksInfo,
+        cmd = "setTrackScaling.py %s %s %s --numBins %d --logLevel %s %s %s" % (
+            tempTracksInfo, args.allBed, args.outTracksInfo, args.numBins,
             getLogLevelString(), tracksArg, skipArg)
     else:
         cmd = "cp %s %s" % (tempTracksInfo, args.outTracksInfo)

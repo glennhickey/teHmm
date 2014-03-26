@@ -72,14 +72,12 @@ def readTrackData(trackPath, chrom=None, start=None, end=None, **kwargs):
 
 def readBedData(bedPath, chrom, start, end, **kwargs):
     """ Read a bed file into an array with one entry per base, doing
-    name mapping if specified.  If chrom, start, and end are None, then
-    unique values are read (at just one per interval).  This is kind of a hack
-    and should get its own function.
+    name mapping if specified.  
     Returns a list of values.  Note that the buffer used can be passed
     with outBuffer argument"""
     valCol = None
     sort = False
-    needIntersect = chrom is not None
+    needIntersect = True
     if kwargs is not None and "valCol" in kwargs:
         valCol = int(kwargs["valCol"])
     valMap = None
@@ -176,26 +174,11 @@ def readBedData(bedPath, chrom, start, end, **kwargs):
         if valMap is not None:
             val = valMap.getMap(val, update=updateMap)
             val0 = valMap.getMap(val0, update=updateMap)
-
-        if start is not None and end is not None:
-            data[oStart - start] = val0
-            for i in xrange(1, oEnd - oStart):
-                    data[i + oStart - start] = val
-            basesRead += oEnd - oStart
-        else:
-            # no query range, just keep dumping into array.
-            overlapLen = overlap.end - overlap.start
-            if len(data) <= basesRead + overlapLen:
-                data = np.resize(data, max(2 * len(data),
-                                           len(data) + overlapLen))
-                for i in xrange(basesRead, len(data)):
-                    data[i] = data[basesRead]
-            data[basesRead] = val0
-            basesRead += 1
-            for i in xrange(1, overlapLen):
-                data[basesRead] = val
-                basesRead += 1
-            
+    
+        data[oStart - start] = val0
+        for i in xrange(1, oEnd - oStart):
+            data[i + oStart - start] = val
+            basesRead += oEnd - oStart            
 
     logger.debug("done readBedData(%s). %d bases read" % (bedPath, basesRead))
 

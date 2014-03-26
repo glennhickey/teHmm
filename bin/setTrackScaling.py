@@ -13,7 +13,7 @@ import math
 import copy
 
 from teHmm.track import TrackList
-from teHmm.trackIO import readTrackData
+from teHmm.trackIO import readTrackData, getMergedBedIntervals
 from teHmm.common import myLog, EPSILON, initBedTool, cleanBedTool
 from teHmm.common import addLoggingOptions, setLoggingFromOptions, logger
 from teHmm.common import runShellCommand
@@ -29,10 +29,11 @@ def main(argv=None):
     
     parser.add_argument("tracksInfo", help="Path of Tracks Info file "
                         "containing paths to genome annotation tracks")
-    parser.add_argument("numBins", help="Maximum number of bins after scaling",
-                        default=10, type=int)
+    parser.add_argument("allBed", help="Bed file spanning entire genome")
     parser.add_argument("outputTracks", help="Path to write modified tracks XML"
                         " to.")
+    parser.add_argument("--numBins", help="Maximum number of bins after scaling",
+                        default=10, type=int)
     parser.add_argument("--tracks", help="Comma-separated list of tracks "
                         "to process. If not set, all"
                         " tracks listed as having a multinomial distribution"
@@ -57,6 +58,8 @@ def main(argv=None):
     trackList = TrackList(args.tracksInfo)
     outTrackList = copy.deepcopy(trackList)
 
+    allIntervals = getMergedBedIntervals(args.allBed)
+
     for track in trackList:
         trackExt = os.path.splitext(track.getPath())[1]
         isFasta = len(trackExt) >= 3 and trackExt[:3].lower() == ".fa"
@@ -66,7 +69,7 @@ def main(argv=None):
            track.getDist() == "sparse_multinomial") and\
           not isFasta:
           try:
-              setTrackScale(track, args.numBins)
+              setTrackScale(track, args.numBins, allIntervals)
           except ValueError as e:
               logger.warning("Skipping (non-numeric?) track %s due to: %s" % (
                   track.getName(), str(e)))
@@ -74,10 +77,10 @@ def main(argv=None):
     trackList.saveXML(args.outputTracks)
     cleanBedTool(tempBedToolPath)
 
-def setTrackScale(track, numBins):
+def setTrackScale(track, numBins, allIntervals):
     """ Modify the track XML element in place with the heuristically
     computed scaling paramaters below """
-    data = readTrackIntoFloatArray(track)
+    data = readTrackIntoFloatArray(track, allIntervals)
     if len(data) > numBins:
         scaleType, scaleParam, shift = computeScale(data, numBins)
         # round down so xml file doesnt look too ugly
@@ -95,25 +98,49 @@ def setTrackScale(track, numBins):
                                                       shift))
         track.setShift(shift)
     
-def readTrackIntoFloatArray(track):
+def readTrackIntoFloatArray(track, allIntervals):
     """ use the track API to directly read an entire data file into memory
-    as an array of floats"""
-    numLines = int(runShellCommand("wc -l %s" % track.getPath()).split()[0])
-    assert numLines > 0
-    logger.debug("Allocating track array of size %d" % numLines)
-    data = np.finfo(np.float).max + np.zeros((numLines), dtype=np.float)
-    data = readTrackData(track.getPath(), outputBuf=data,
-                         valCol=track.getValCol(),
-                         useDelta=track.getDelta())
-    lastIdx = len(data) - 1
-    for i in xrange(1, len(data)):
-        if data[-i] != np.finfo(np.float).max:
-            lastIdx = len(data) - i
-            break
-    data = data[:lastIdx]
-    assert data[-1] != np.finfo(np.float).max
-    return data
+    as an array of floats.  If the track has an associated defaultVal, it will
+    be used to cover all gaps in the coverage.  If not, only annotated values
+    will be kept"""
+    defaultVal = track.getDefaultVal()
+    hasDefault = defaultVal != None
+    if not hasDefault:
+        defaultVal = np.finfo(float).max
+    else:
+        # sanity check : we assume that no one ever actually uses this value
+        assert defaultVal != np.finfo(float).max
+    readBuffers = []
+    totalLen = 0
+    for interval in allIntervals:
+        logger.debug("Allocating track array of size %d" % (
+             interval[2] - interval[1]))
+        buf = defaultVal + np.zeros((interval[2] - interval[1]), dtype=np.float)
+        buf = readTrackData(track.getPath(), outputBuf=data,
+                            valCol=track.getValCol(),
+                            useDelta=track.getDelta)
+        readBuffers.append(buf)
+        totalLen += len(buf)
 
+    data = concatenate(*readBuffers)
+    assert len(data) == totalLen
+    readBuffers = None
+
+    if not hasDefault:
+        # strip out all the float_max values we put in there since there is
+        # no default value for unannotated regions, and we just ignore them
+        # (ie as original implementation)
+        stripData = np.ndarray((totalLen), dtype=np.float)
+        basesRead = 0
+        for i in xrange(totalLen):
+            if buf[i] != defaultVal:
+                stripDate[basesRead] = buf[i]
+                basesRead += 1
+        stripData.resize(basesRead)
+        data = stripData
+
+    return data
+    
 def histVariance(data, bins, fromLog = False):
     """ use histogram variance as a proxy for quality of binning"""
     freq, bins = np.histogram(data, bins)
