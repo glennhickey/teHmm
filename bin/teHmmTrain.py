@@ -33,7 +33,10 @@ def main(argv=None):
     parser.add_argument("tracksInfo", help="Path of Tracks Info file "
                         "containing paths to genome annotation tracks")
     parser.add_argument("trainingBed", help="Path of BED file containing"
-                        " elements to train  model on")
+                        " genome regions to train model on.  If --supervised "
+                        "is used, the names in this bed file will be treated "
+                        "as the true annotation (otherwise it is only used for "
+                        "interval coordinates)")
     parser.add_argument("outputModel", help="Path of output hmm")
     parser.add_argument("--numStates", help="Number of states in model",
                         type = int, default=2)
