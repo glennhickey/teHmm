@@ -225,7 +225,7 @@ class MultitrackHmm(BaseHMM):
                 for idx, symbol in enumerate(em.getTrackSymbols(trackNo)):
                     symbolName = track.getValueMap().getMapBack(symbol)
                     prob = np.exp(emProbs[trackNo][state][symbol])
-                    if prob > 0.00005:
+                    if prob > 0.0000005:
                         logval = str(myLog(prob))
                         if prob == 0.0:
                             logval = "-inf"
