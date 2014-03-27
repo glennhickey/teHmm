@@ -194,7 +194,7 @@ class TestCase(TestBase):
         cmap = CategoryMap()
         assert cmap.getMap(None) == 0
 
-        cmap.setScale(0.1)
+        cmap = CategoryMap(scale=0.1)
         assert cmap.getMap(10, update=True) == 1
         assert cmap.getMapBack(1) == 10
         assert cmap.getMap(15, update=True) == 1
@@ -205,8 +205,7 @@ class TestCase(TestBase):
         assert cmap.getMap(0, update=True) == 4
         assert cmap.getMapBack(4) == 0
 
-        cmap = CategoryMap()
-        cmap.setLogScale(2.)
+        cmap = CategoryMap(logScale=2.)
         assert cmap.getMap(0) == 0
         assert cmap.getMap(1) == 0
         assert cmap.getMap(0, update=True) == 1

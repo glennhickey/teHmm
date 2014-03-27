@@ -59,13 +59,17 @@ class Track(object):
 
     def _init(self):
         if self.dist == "multinomial":
-            if self.defaultVal is None:
-                self.valMap = CategoryMap(reserved=2)
-            else:
-                self.valMap = CategoryMap(reserved=1,
-                                          defaultVal=self.defaultVal)
+            reserved = 2
+            if self.defaultVal is not None:
+                reserved = 1
+            self.valMap = CategoryMap(reserved=reserved,
+                                      defaultVal=self.defaultVal,
+                                      scale=self.scale, logScale=self.logScale,
+                                      shift=self.shift)
         if self.dist == "sparse_multinomial":
-            self.valMap = CategoryMap(reserved=1)
+            self.valMap = CategoryMap(reserved=1,
+                                      scale=self.scale, logScale=self.logScale,
+                                      shift=self.shift)
         elif self.dist == "binary":
             self.valMap = BinaryMap()
             self.valCol = 0
@@ -74,14 +78,9 @@ class Track(object):
         assert self.dist == "multinomial" or self.dist == "binary" \
                or self.dist == "alignment"
         if self.logScale is not None:
-            self.valMap.setLogScale(self.logScale)
             if self.scale is not None:
-                sys.stderr("Warning, logScale overriding scale for track %s" %(
+                logger.warning("logScale overriding scale for track %s" %(
                     self.name))
-        elif self.scale is not None:
-            self.valMap.setScale(self.scale)
-        if self.shift is not None:
-            self.valMap.setShift(self.shift)
         if self.delta is True:
             if self.logScale is not None:
                 raise RuntimeError("track %s: delta attribute not compatible"
@@ -374,13 +373,13 @@ class IntegerTrackTable(TrackTable):
         assert len(rowArray) == len(self)
         for i in xrange(len(self)):
             if rowArray[i] > self.iinfo.max:
-                sys.stderr.write("WARNING Clamping input value %d of track# %d"
-                                 " from %d to %d\n" % (i, row, rowArray[i],
+                logger.warning("Clamping input value %d of track# %d"
+                               " from %d to %d\n" % (i, row, rowArray[i],
                                                        self.iinfo.max))
                 self.data[i][row] = self.iinfo.max
             elif rowArray[i] < self.iinfo.min:
-                sys.stderr.write("WARNING Clamping input value %d of track# %d"
-                                 " from %d to %d\n" % (i, row, rowArray[i],
+                logger.warning("Clamping input value %d of track# %d"
+                               " from %d to %d\n" % (i, row, rowArray[i],
                                                        self.iinfo.min))
                 self.data[i][row] = self.iinfo.min
             else:
@@ -402,7 +401,8 @@ class IntegerTrackTable(TrackTable):
             
 """ map a value to an integer category """
 class CategoryMap(object):
-    def __init__(self, reserved = 1, defaultVal = None):
+    def __init__(self, reserved = 1, defaultVal = None, scale=None,
+                 logScale=None, shift=None):
         self.catMap = dict()
         self.catMapBack = dict()
         self.reserved = reserved
@@ -412,6 +412,15 @@ class CategoryMap(object):
         self.shift = None
         self.defaultVal = defaultVal
         self.missingVal = max(0, self.reserved - 1)
+        if logScale is not None:
+            self.__setLogScale(logScale)
+        elif scale is not None:
+            self.__setScale(scale)
+        if shift is not None:
+            self.__setShift(shift)
+        # Note: scale needs to be set before missingVal (because getMap used)
+        # which is way setScale methods made private and scaling now only
+        # passed in constructor
         if self.defaultVal is not None:
             self.missingVal = int(self.getMap(self.defaultVal, update = True))
         
@@ -450,16 +459,16 @@ class CategoryMap(object):
     def __len__(self):
         return len(self.catMap) + max(0, self.reserved - 1)
 
-    def setScale(self, scale):
+    def __setScale(self, scale):
         self.scaleFac = scale
         self.logScaleBase = None
         
-    def setLogScale(self, logScale):
+    def __setLogScale(self, logScale):
         self.logScaleBase = logScale
         self.logScaleDiv = np.log(self.logScaleBase)
         self.scaleFac = None
 
-    def setShift(self, shift):
+    def __setShift(self, shift):
         self.shift = float(shift)
 
     def sort(self):
@@ -611,8 +620,7 @@ class TrackData(object):
             trackPath = inputTrack.getPath()
             selfTrack = self.trackList.getTrackByName(trackName)
             if selfTrack is None:
-                sys.stderr.write("Warning: track %s not learned\n" %
-                                 trackName)
+                logger.warning("track %s not learned\n" % trackName)
                 continue
             track = self.getTrackList().getTrackByName(trackName)
             trackNo = track.getNumber()
