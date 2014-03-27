@@ -496,7 +496,8 @@ class CategoryMap(object):
             y = float(y) + self.shift
         if self.scaleFac is not None:
             return str(int(self.scaleFac * float(y)))
-        elif self.logScaleBase is not None and float(x) != 0.0:
+        elif self.logScaleBase is not None:
+            assert y != 0.0
             return str(int(np.log(float(y)) / self.logScaleDiv))
         return y
 
@@ -504,7 +505,7 @@ class CategoryMap(object):
         y = x
         if self.scaleFac is not None:
             y = float(x) / float(self.scaleFac)
-        elif self.logScaleBase is not None and float(x) != 0.0:            
+        elif self.logScaleBase is not None:
             y = np.power(self.logScaleBase, float(x))
         if self.shift is not None:
             y = float(y) - self.shift

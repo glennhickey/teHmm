@@ -206,9 +206,8 @@ class TestCase(TestBase):
         assert cmap.getMapBack(4) == 0
 
         cmap = CategoryMap(logScale=2.)
-        assert cmap.getMap(0) == 0
         assert cmap.getMap(1) == 0
-        assert cmap.getMap(0, update=True) == 1
+        assert cmap.getMap(1, update=True) == 1
         assert cmap.getMap(0.001, update=True) == 2
         assert cmap.getMap(0.0015, update=True) == 2
         assert cmap.getMap(1100, update=True) == 3
