@@ -413,7 +413,7 @@ class CategoryMap(object):
         self.defaultVal = defaultVal
         self.missingVal = max(0, self.reserved - 1)
         if self.defaultVal is not None:
-            self.missingVal = self.getMap(self.defaultVal, update = True)
+            self.missingVal = int(self.getMap(self.defaultVal, update = True))
         
     def update(self, inVal):
         val = self.__scale(inVal)
