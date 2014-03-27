@@ -257,6 +257,23 @@ class TestCase(TestBase):
             bedVal3 = float(vm3.getMapBack(tableList1[0][i][trackNo3]))
             assert bedVal2 == bedVal1
             assert bedVal3 == np.power(2., int(np.log(bedVal1 + 10.0) / np.log(2.))) - 10.0
+
+        cmap = CategoryMap(shift=1, logScale=10, defaultVal=0.0)
+        for i in xrange(0, 999):
+            cmap.update(i)
+        x = cmap.getMap('0')
+        for i in xrange(0, 9):
+            assert cmap.getMap(str(i)) == x
+        y = cmap.getMap('10')
+        assert y != x
+        for i in xrange(10, 99):
+            assert cmap.getMap(str(i)) == y
+        z = cmap.getMap('100')
+        assert z != x and z != y
+        for i in xrange(100, 999):
+            assert cmap.getMap(str(i)) == z
+
+            
     
     def testFastaTrack(self):
         trackData = TrackData()
