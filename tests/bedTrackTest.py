@@ -272,6 +272,7 @@ class TestCase(TestBase):
         assert z != x and z != y
         for i in xrange(100, 999):
             assert cmap.getMap(str(i)) == z
+        assert cmap.getMissingVal() == cmap.getMap('0')
 
             
     
