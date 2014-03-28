@@ -69,7 +69,7 @@ The track list file contains a single *teModelConfig* element which in turn cont
 * *delta*.  When set to "true", the value at each is read as an offset from the value at the preivous position.  If no value was read at the previous position, the previous value is assumed to be 0.  This
 operation is performed before scaling.  Note, since deltas can be negative this mode is incompatible with *logScale*.  Using this flag with non-numeric tracks is probably not a great idea.  
 * *shift*. Add constant to track data value, and is applied before scaling. Useful in conjunction with *logScale* to process values less than or equal to 0.
-* *default*. Default value for regions of genome that are not annotated by track (only applies to *multinomial* distribution).  If not specified, unannotated bases are assigned a special NULL symbol.  For numeric tracks, such as those specified in BigWig format, it will probably most often make sense to set default="0.0"
+* *default*. Default value for regions of genome that are not annotated by track (only applies to *multinomial* distribution).  If not specified, unannotated bases are assigned a special NULL symbol.  For numeric tracks, such as those specified in BigWig format, it will probably most often make sense to set default="0.0" (Warning: if default=0 is used in conjunction with logScale, shift must be set to at least 1)
 
 Testing
 -

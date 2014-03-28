@@ -118,6 +118,14 @@ class Track(object):
                                    " with logScale" % self.getName())
         if "default" in elem.attrib:
             self.defaultVal = elem.attrib["default"]
+            df = float(self.defaultVal)
+            if df <= 0. and self.logScale is not None:
+                if self.shift is None or float(self.shift) + df <= 0:
+                    raise RuntimeError("track %s: default set to %s in "
+                                       "conjunction with logScale requires "
+                                       "shift attribute set to at least %f" % (
+                                           self.getName(), self.defaultVal,
+                                           1. - df))
             
     def toXMLElement(self):
         elem = ET.Element("track")
