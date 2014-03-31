@@ -11,6 +11,7 @@ import logging
 import numpy as np
 import math
 import copy
+import scipy
 
 from teHmm.track import TrackList, TrackData
 from teHmm.trackIO import readTrackData, getMergedBedIntervals
@@ -74,8 +75,7 @@ def segmentTracks(trackData, args):
         # scan each column (base) in region, and write new bed segment
         # if necessary (ie too much change in track values)
         for i in xrange(1, intervalLen):
-            if isNewSegment(trackTable, interval[1], interval[1] + i,
-                            args) is True:
+            if isNewSegment(trackTable, i, args) is True:
                 oFile.write("%s\t%d\t%d\n" % (interval[0], interval[1],
                                               interval[1] + i))
                 interval[1] = interval[1] + i
@@ -87,9 +87,20 @@ def segmentTracks(trackData, args):
     
     oFile.close()
 
-def isNewSegment(trackTable, first, pos, args):
-    if pos - first > 10:
-        return True
-            
+def isNewSegment(trackTable, i, args):
+    """ may be necessary to cythonize this down the road """
+    assert i > 0
+    assert i < len(trackTable)
+
+    # faster to just call pdist(trackTable[i-1:i], 'hamming')? 
+    col = trackTable[i]
+    prev = trackTable[i-1]
+    difCount = 0
+    for j in xrange(len(col)):
+        if col[j] != prev[j]:
+            difCount += 1
+
+    return difCount > args.thresh
+                
 if __name__ == "__main__":
     sys.exit(main())
