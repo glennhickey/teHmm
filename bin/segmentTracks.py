@@ -37,6 +37,12 @@ def main(argv=None):
                         "before a new segment formed.  Increasing this value"
                         " increases the expected lengths of output segments",
                         type=int, default=0)
+    parser.add_argument("--cutTracks", help="Create a new segment if something"
+                        " changes in one of these tracks (as specified by "
+                        "comman-separated list), overriding --thresh options"
+                        " if necessary.  For example, --cutTracks tsd,chaux"
+                        " would invoke a new segment everytime the value at"
+                        "either of these tracks changed", default=None)
     
     addLoggingOptions(parser)
     args = parser.parse_args()
@@ -54,6 +60,20 @@ def main(argv=None):
     logger.info("loading tracks %s" % args.tracksInfo)
     trackData = TrackData()
     trackData.loadTrackData(args.tracksInfo, mergedIntervals)
+
+    # process the --cutTracks option
+    trackList = trackData.getTrackList()
+    cutList = np.zeros((len(trackList)), np.int)
+    if args.cutTracks is not None:
+        cutNames = args.cutTracks.split(",")
+        for name in cutNames:
+            track = trackList.getTrackByName(name)
+            if track is None:
+                raise RuntimeError("cutTrack %s not found" % name)
+            trackNo = track.getNumber()
+            assert trackNo < len(cutList)
+            cutList[trackNo] = 1
+    args.cutList = cutList
 
     # segment the tracks
     segmentTracks(trackData, args)
@@ -103,6 +123,9 @@ def isNewSegment(trackTable, i, args):
     for j in xrange(len(col)):
         if col[j] != prev[j]:
             difCount += 1
+            # cutList track is different
+            if args.cutList[j] == 1:
+                return True
 
     return difCount > args.thresh
                 
