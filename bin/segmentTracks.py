@@ -27,7 +27,7 @@ def main(argv=None):
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
         description="Produce a bed file of genome segments which are atomic"
         " elements with resepect to the hmm. ie each segment emits a single"
-        " state.")
+        " state.  Output intervals are assigned name 0 1 0 1 etc.")
     
     parser.add_argument("tracksInfo", help="Path of Tracks Info file "
                         "containing paths to genome annotation tracks")
@@ -74,16 +74,19 @@ def segmentTracks(trackData, args):
         intervalLen = interval[2] - interval[1]
         # scan each column (base) in region, and write new bed segment
         # if necessary (ie too much change in track values)
+        count = 0
         for i in xrange(1, intervalLen):
             if isNewSegment(trackTable, i, args) is True:
-                oFile.write("%s\t%d\t%d\n" % (interval[0], interval[1],
-                                              interval[1] + i))
+                oFile.write("%s\t%d\t%d\t%d\n" % (interval[0], interval[1],
+                                                interval[1] + i, count % 2))
                 interval[1] = interval[1] + i
                 interval[2] = interval[1] + 1
+                count += 1
         # write last segment
         if interval[1] < trackTable.getEnd():
-            oFile.write("%s\t\%d\t%d\n" % (interval[0], interval[1],
-                                            trackTable.getEnd()))        
+            oFile.write("%s\t\%d\t%d\t%d\n" % (interval[0], interval[1],
+                                                trackTable.getEnd(),
+                                                count % 2))        
     
     oFile.close()
 
