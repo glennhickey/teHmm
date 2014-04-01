@@ -243,7 +243,7 @@ This will have the effect of renormalizing all other emissions of LTRLEFT on thi
 
 ### Segmenting the Genome
 
-By default, the HMM emits a state for each base of the target genomic region.   Performance can be substantially increased, at least in theory, by pre-segmenting the data so that states are emitted for multi-base blocks.   These blocks should contain a minimal amount of variation across all tracks within them.  A tool, segmentTracks.py,  is included to use a simple heuristic to generate a segment from some input tracks.  It can be used in conjunction with the `--segments` option of teHmmTrain.py and teHmmEval.py to switch from a base-level model to a segment-level model.  For example, we could modify the train and eval commands from the example above:
+By default, the HMM emits a state for each base of the target genomic region.   Performance can be substantially increased, at least in theory, by pre-segmenting the data so that states are emitted for multi-base blocks.   These blocks should contain a minimal amount of variation across all tracks within them.  A tool, segmentTracks.py,  is included to use a simple heuristic to generate a segmentation from some input tracks.  It can be used in conjunction with the `--segments` option of teHmmTrain.py and teHmmEval.py to switch from a base-level model to a segment-level model.  For example, we could modify the train and eval commands from the example above:
 
 	segmentTracks.py tracks.xml ltrfinder_all.bed segments.bed 
 	teHmmTrain.py tracks.xml ltrfinder_all.bed ltrfinder.hmm --supervised --segments segments.bed
