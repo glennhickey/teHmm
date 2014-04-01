@@ -142,14 +142,11 @@ def main(argv=None):
                         " NOTE: The number of states will be determined "
                         "from the bed.",
                         action = "store_true", default = False)
-    parser.add_argument("--segment", help="Bed file of segments to treat as "
-                        "single columns for HMM (ie as created with "
-                        "segmentTracks.py).  IMPORTANT: this file must cover "
-                        "the same regions as the traininBed file. Unless in "
-                        "supervised mode, probably best to use same bed file "
-                        " as both traingBed and --segment argument.  Otherwise"
-                        " use intersectBed to make sure the overlap is exact",
-                        default=None)
+    parser.add_argument("--segment", help="Input bed files are also used to "
+                        "segment data.  Ie teHmmTrain is called with --segment"
+                        " set to the input file. Not currently working with "
+                        " --supervised",
+                        action = "store_true", default=False)
         
     addLoggingOptions(parser)
     args = parser.parse_args()
