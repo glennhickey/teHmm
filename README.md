@@ -217,7 +217,7 @@ This step must also be applied to any other output from step 2) (ex ltr_finder_c
 
 To train the HMM, run:
 
-     teHmmTrain.py tracks.xml ltrfinder_all.bed ltrfinder.hmm
+     teHmmTrain.py tracks.xml ltrfinder_all.bed ltrfinder.hmm --supervised
 
 To view the model parameters, run:
 
@@ -240,6 +240,14 @@ Sometimes it is desirable to tweek a handful of parameters so that they take on 
      LTRLEFT  LastzTermini  LTerm  1
 
 This will have the effect of renormalizing all other emissions of LTRLEFT on this track to 0.  
+
+### Segmenting the Genome
+
+By default, the HMM emits a state for each base of the target genomic region.   Performance can be substantially increased, at least in theory, by pre-segmenting the data so that states are emitted for multi-base blocks.   These blocks should contain a minimal amount of variation across all tracks within them.  A tool, segmentTracks.py,  is included to use a simple heuristic to generate a segment from some input tracks.  It can be used in conjunction with the `--segments` option of teHmmTrain.py and teHmmEval.py to switch from a base-level model to a segment-level model.  For example, we could modify the train and eval commands from the example above:
+
+	segmentTracks.py tracks.xml ltrfinder_all.bed segments.bed 
+	teHmmTrain.py tracks.xml ltrfinder_all.bed ltrfinder.hmm --supervised --segments segments.bed
+	teHmmEval.py tracks.xml ltrfinder.hmm segments.bed --bed predictions.bed --segments
 
 Complete List of Tools Included (contents of /bin)
 =====
@@ -270,10 +278,12 @@ In general, running any executable with `--help` will print a brief description 
 * **chopBedStates.py**: Slice up given intervals in BED according to their ID and some other parameters.
 * **addTrackHeader.py** : Set or modify track header of BED file in order to display on Genome Browser.
 
-**Scaling and Binning**
+**Scaling, Binning and Segmentation**
 
 * **setTrackScaling.py** : Compute the best scaling factor (between linear and log) for each track in the XML file for a given number of bases, and annotate the XML file accordingly.  Only applies to numeric tracks.
 * **scaleVals.py** : Scale each value of a BED or WIG file.  (Above function better as it automatically computes parameters, and doesn't create any new data files)
+* **segmentTracks.py** : Segment the track data into chunks of consistent columns.  These chunks
+can then be considered atomic units (as opposed to bases) by the model using the --segment option.
 
 **Alignment**
 
