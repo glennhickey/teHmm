@@ -11,6 +11,7 @@ import logging
 import numpy as np
 import xml.etree.ElementTree as ET
 import xml.dom.minidom
+from numpy.testing import assert_array_equal, assert_array_almost_equal
 
 from .trackIO import readTrackData
 from .common import EPSILON, logger, binSearch
@@ -380,6 +381,7 @@ class TrackTable(object):
             j += 1
 
         self.compressSegments()
+        self.shape = (len(self), self.getNumTracks())
         
 
 ###########################################################################
@@ -435,7 +437,11 @@ class IntegerTrackTable(TrackTable):
     def compressSegments(self):
         """ cut up data so that only one value per segment """
         assert self.segOffsets is not None and len(self.segOffsets) > 0
+        oldShape = self.data.shape
         self.data = self.data[self.segOffsets]
+        newShape = self.data.shape
+        assert newShape[0] == len(self.segOffsets)
+        assert_array_equal(oldShape[1:], newShape[1:])
             
 ###########################################################################
             
@@ -657,7 +663,11 @@ class TrackData(object):
             self.__loadTrackDataInterval(inputTrackList, interval[0],
                                          interval[1], interval[2], initTracks)
             if segmentIntervals is not None:
+                oldShape = self.trackTableList[-1].getNumPyArray().shape
                 self.trackTableList[-1].segment(segmentIntervals)
+                newShape = self.trackTableList[-1].getNumPyArray().shape
+                logger.info("Compressed track table from %s to %s" % (
+                    str(oldShape), str(newShape)))
 
     def __loadTrackDataInterval(self, inputTrackList, chrom, start, end, init):
         trackTable = IntegerTrackTable(self.getNumTracks(), chrom, start, end,
