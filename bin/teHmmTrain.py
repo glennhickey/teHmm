@@ -124,6 +124,13 @@ def main(argv=None):
                         " different emission or transition probability to begin"
                         " with, they will never learn to be different.",
                         action="store_true", default=False)
+    parser.add_argument("--segment", help="Bed file of segments to treat as "
+                        "single columns for HMM (ie as created with "
+                        "segmentTracks.py).  IMPORTANT: this file must cover "
+                        "the same regions as the traininBed file. Unless in "
+                        "supervised mode, probably best to use same bed file "
+                        " as both traingBed and --segment argument",
+                        default=None)
 
     addLoggingOptions(parser)
     args = parser.parse_args()
@@ -163,10 +170,17 @@ def main(argv=None):
         raise RuntimeError("Could not read any intervals from %s" %
                            args.trainingBed)
 
+    # read segment intervals
+    segIntervals = None
+    if args.segment is not None:
+        logger.info("loading segment intervals from %s" % args.segment)
+        segIntervals = readBedIntervals(args.segment, sort=True)
+
     # read the tracks, while intersecting them with the training intervals
     logger.info("loading tracks %s" % args.tracksInfo)
     trackData = TrackData()
-    trackData.loadTrackData(args.tracksInfo, mergedIntervals)
+    trackData.loadTrackData(args.tracksInfo, mergedIntervals,
+                            segmentIntervals=segIntervals)
 
     catMap = None
     userTrans = None

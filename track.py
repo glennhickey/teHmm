@@ -360,6 +360,9 @@ class TrackTable(object):
     def getNumPyArray(self):
         raise RuntimeError("Not implemented")
 
+    def getSegmentOffsets(self):
+        return self.segOffsets
+
     def segment(self, segIntervals):
         """ completely transform table to contain only one coordinate per
         segment interval (compression).  For now we just use the first column

@@ -47,12 +47,20 @@ def main(argv=None):
                         "useful when model is a CFG to keep memory down. "
                         "When 0, no slicing is done",
                         type=int, default=0)
+    parser.add_argument("--segment", help="Use the intervals in bedRegions"
+                        " as segments which each count as a single column"
+                        " for evaluattion.  Note the model should have been"
+                        " trained with the --segment option pointing to this"
+                        " same bed file.", action="store_true", default=False)
     addLoggingOptions(parser)
     args = parser.parse_args()
     setLoggingFromOptions(args)
     tempBedToolPath = initBedTool()
     if args.slice <= 0:
         args.slice = sys.maxint
+    elif args.segment is True:
+        raise RuntimeError("--slice and --segment options are not compatible at "
+                           "this time")
         
     # load model created with teHmmTrain.py
     logger.info("loading model %s" % args.inputModel)
@@ -68,6 +76,12 @@ def main(argv=None):
     # slice if desired
     choppedIntervals = [x for x in slicedIntervals(mergedIntervals, args.slice)]
 
+    # read segment intervals
+    segIntervals = None
+    if args.segment is not None:
+        logger.info("loading segment intervals from %s" % args.bedRegions)
+        segIntervals = readBedIntervals(args.bedRegions, sort=True)
+
     # load the input
     # read the tracks, while intersecting them with the given interval
     trackData = TrackData()
@@ -75,7 +89,8 @@ def main(argv=None):
     # because we do not want to generate a new one.
     logger.info("loading tracks %s" % args.tracksInfo)
     trackData.loadTrackData(args.tracksInfo, choppedIntervals, 
-                            model.getTrackList())
+                            model.getTrackList(),
+                            segmentIntervals=segIntervals)
 
     # do the viterbi algorithm
     if isinstance(model, MultitrackHmm):
@@ -95,7 +110,8 @@ def main(argv=None):
             trackTable = trackData.getTrackTableList()[tableIndex]
             tableIndex += 1
             statesToBed(trackTable.getChrom(), trackTable.getStart(),
-                        trackTable.getEnd(), vitStates, vitOutFile)
+                        trackTable.getEnd(), trackTable.getSegmentOffsets(),
+                        vitStates, vitOutFile)
 
     print "Viterbi (log) score: %f" % totalScore
     if isinstance(model, MultitrackHmm) and model.current_iteration is not None:
@@ -105,14 +121,24 @@ def main(argv=None):
 
     cleanBedTool(tempBedToolPath)
 
-def statesToBed(chrom, start, end, states, bedFile):
+def statesToBed(chrom, start, end, segmentOffsets, states, bedFile):
     """write a sequence of states out in bed format where intervals are
     maximum runs of contiguous states."""
-    assert len(states) == end - start
-    prevInterval = (chrom, start, start + 1, states[0])
+    if segmentOffsets is None:
+        assert len(states) == end - start
+    intLen = 1
+    if segmentOffsets is not None:
+        if len(segmentOffsets) > 1:
+            intLen = segmentOffsets[1]
+        else
+            intLen = end - start
+    prevInterval = (chrom, start, start + intLen, states[0])
+    
     for i in xrange(1, len(states) + 1):
         if i < len(states):
             state = states[i]
+            if segmentOffsets is not None > 1:
+                intLen = segmentOffsets[i] - segmentOffsets[i-1]
         else:
             state = None
         if state != prevInterval[3]:
@@ -120,10 +146,10 @@ def statesToBed(chrom, start, end, states, bedFile):
             assert prevInterval[1] >= start and prevInterval[2] <= end
             bedFile.write("%s\t%d\t%d\t%s\n" % prevInterval)
             prevInterval = (prevInterval[0], prevInterval[2],
-                            prevInterval[2] + 1, state)
+                            prevInterval[2] + intLen, state)
         else:
             prevInterval = (prevInterval[0], prevInterval[1],
-                            prevInterval[2] + 1, prevInterval[3])
+                            prevInterval[2] + intLen, prevInterval[3])
 
 def slicedIntervals(bedIntervals, chunkSize):
     """slice bed intervals by a given length.  used as a quick way to get
