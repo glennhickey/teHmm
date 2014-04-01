@@ -628,13 +628,9 @@ class TrackData(object):
             track = self.trackList.getTrackByNumber(i)
             nspt[i] = len(track.getValueMap())
         return nspt
-
-    def segmentTracks(self, segmentIntervals):
-        """ apply segmentation to all track tables """
-        for trackTable in self.trackTableList:
-            trackTable.segment(segmentIntervals)
     
-    def loadTrackData(self, trackListPath, intervals, trackList = None):
+    def loadTrackData(self, trackListPath, intervals, trackList = None,
+                      segmentIntervals = None):
         """ load track data for list of given intervals.  tracks is either
         a TrackList object loaded from a saved pickle, or None in
         which case they will be generated from the data.  each interval
@@ -657,6 +653,8 @@ class TrackData(object):
             assert len(interval) >= 3 and interval[2] > interval[1]
             self.__loadTrackDataInterval(inputTrackList, interval[0],
                                          interval[1], interval[2], initTracks)
+            if segmentIntervals is not None:
+                self.trackTableList[-1].segment(segmentIntervals)
 
     def __loadTrackDataInterval(self, inputTrackList, chrom, start, end, init):
         trackTable = IntegerTrackTable(self.getNumTracks(), chrom, start, end,

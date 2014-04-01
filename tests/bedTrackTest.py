@@ -421,8 +421,8 @@ class TestCase(TestBase):
         trackData.loadTrackData(getTracksInfoPath(), bedIntervals)
 
         segTrackData = TrackData()
-        segTrackData.loadTrackData(getTracksInfoPath(), bedIntervals)
-        segTrackData.segmentTracks(segIntervals)
+        segTrackData.loadTrackData(getTracksInfoPath(), bedIntervals,
+                                   segmentIntervals=segIntervals)
 
         tlist1 = trackData.getTrackTableList()
         tlist2 = segTrackData.getTrackTableList()
