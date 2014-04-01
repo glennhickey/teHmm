@@ -88,7 +88,32 @@ def cleanBedTool(tempPath):
     pybedtools.cleanup(remove_all=True)
     runShellCommand("rm -rf %s" % tempPath)
 
-        
+def binSearch(items, val, idx = [0,1], first = None, last = None):
+    """ binary search list of items for val, where each item is a tuple
+    and we are searching for val in a subtuple of that tuple.  items of
+    course must be sorted along the specified index"""
+    assert len(val) == len(idx)
+    if first is None:
+        first = 0
+    if last is None:
+        last = len(items) - 1
+
+    pivot = (first + last) / 2
+    pv = tuple([items[pivot][i] for i in idx])
+    
+    if first == last:
+        if pv == val:
+            return first
+        return None
+
+    assert pivot != last
+    if pv == val:
+        return pivot
+    elif pv > val:
+        return binSearch(items, val, idx, first, pivot)
+    else:
+        return binSearch(items, val, idx, pivot + 1, last)
+                      
 #########################################################
 #########################################################
 #########################################################  

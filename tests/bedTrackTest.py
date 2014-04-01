@@ -6,6 +6,7 @@
 import unittest
 import sys
 import os
+from numpy.testing import assert_array_equal, assert_array_almost_equal
 
 from teHmm.trackIO import *
 from teHmm.track import *
@@ -23,6 +24,9 @@ def getTrackList(idx = 1):
 
 def getStatesPath():
     return getTestDirPath("states.bed")
+
+def getSegmentsPath():
+    return getTestDirPath("segments.bed")
 
 class TestCase(TestBase):
 
@@ -405,6 +409,38 @@ class TestCase(TestBase):
         bedVal2 = vm2.getMapBack(tableList1[0][i][trackNo2])
         assert bedVal1 == None
         assert bedVal2 == "0.0"
+
+    def testSegment(self):
+        statesPath = getStatesPath()
+        segPath = getSegmentsPath()
+
+        bedIntervals = readBedIntervals(getStatesPath(), sort=True)
+        segIntervals = readBedIntervals(getSegmentsPath(), sort=True)
+        
+        trackData = TrackData()
+        trackData.loadTrackData(getTracksInfoPath(), bedIntervals)
+
+        segTrackData = TrackData()
+        segTrackData.loadTrackData(getTracksInfoPath(), bedIntervals)
+        segTrackData.segmentTracks(segIntervals)
+
+        tlist1 = trackData.getTrackTableList()
+        tlist2 = segTrackData.getTrackTableList()
+        assert len(tlist1) == len(tlist2)
+        assert len(tlist1) == 5
+
+        icount = 0
+        segLens = [2, 1, 3, 2, 2]
+        for i in xrange(5):
+            t1 = tlist1[i]
+            t2 = tlist2[i]
+            assert len(t1) == bedIntervals[i][2] - bedIntervals[i][1]
+            assert len(t2) == segLens[i]
+            for j in xrange(len(t2)):
+                assert_array_equal(t2[j], t1[t2.segOffsets[j]])
+                coord = t2.segOffsets[j] + t2.getStart()
+                assert coord == segIntervals[icount][1]
+                icount += 1
 
 def main():
     sys.argv = sys.argv[:1]

@@ -13,7 +13,7 @@ import xml.etree.ElementTree as ET
 import xml.dom.minidom
 
 from .trackIO import readTrackData
-from .common import EPSILON, logger
+from .common import EPSILON, logger, binSearch
 
 INTEGER_ARRAY_TYPE = np.uint8
 
@@ -311,12 +311,17 @@ class TrackTable(object):
         #: End coordinate (last coordinate plus 1)
         self.end = end
         assert end > start
+        #: offsets used for segmentation (optional)
+        self.segOffsets = None
         #: mimic numpy array
         self.shape = (len(self), self.getNumTracks())
 
     def __len__(self):
         """ Number of columns in the table """
-        return self.end - self.start
+        if self.segOffsets is None:
+            return self.end - self.start
+        else:
+            return len(self.segOffsets)
 
     def getNumTracks(self):
         """ Number of rows in the table """
@@ -355,6 +360,25 @@ class TrackTable(object):
     def getNumPyArray(self):
         raise RuntimeError("Not implemented")
 
+    def segment(self, segIntervals):
+        """ completely transform table to contain only one coordinate per
+        segment interval (compression).  For now we just use the first column
+        of each such interval """
+        firstIdx = binSearch(segIntervals, (self.chrom, self.start), [0,1])
+        lastIdx = binSearch(segIntervals, (self.chrom, self.end), [0,2])
+
+        assert firstIdx is not None
+        assert lastIdx is not None
+
+        self.segOffsets = np.zeros((1 + lastIdx - firstIdx), np.int)
+        j = 0
+        for i in xrange(firstIdx, lastIdx + 1):
+            self.segOffsets[j] = int(segIntervals[i][1]) - self.start
+            j += 1
+
+        self.compressSegments()
+        
+
 ###########################################################################
 
 """Track Table where every value is an integer"""
@@ -366,10 +390,10 @@ class IntegerTrackTable(TrackTable):
     """
     def __init__(self, numTracks, chrom, start, end, dtype=INTEGER_ARRAY_TYPE):
         super(IntegerTrackTable, self).__init__(numTracks, chrom, start, end)
-        
         #: (end-start) X (numTracks) integer data array
         self.data = np.zeros((end-start, numTracks), dtype=dtype)
         self.iinfo = np.iinfo(dtype)
+        self.segOffsets
 
     def __getitem__(self, index):
         return self.data[index]
@@ -404,6 +428,11 @@ class IntegerTrackTable(TrackTable):
 
     def initRow(self, row, val):
         self.data[:,row] = val
+
+    def compressSegments(self):
+        """ cut up data so that only one value per segment """
+        assert self.segOffsets is not None and len(self.segOffsets) > 0
+        self.data = self.data[self.segOffsets]
             
 ###########################################################################
             
@@ -599,6 +628,11 @@ class TrackData(object):
             track = self.trackList.getTrackByNumber(i)
             nspt[i] = len(track.getValueMap())
         return nspt
+
+    def segmentTracks(self, segmentIntervals):
+        """ apply segmentation to all track tables """
+        for trackTable in self.trackTableList:
+            trackTable.segment(segmentIntervals)
     
     def loadTrackData(self, trackListPath, intervals, trackList = None):
         """ load track data for list of given intervals.  tracks is either
