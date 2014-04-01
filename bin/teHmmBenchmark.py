@@ -142,6 +142,14 @@ def main(argv=None):
                         " NOTE: The number of states will be determined "
                         "from the bed.",
                         action = "store_true", default = False)
+    parser.add_argument("--segment", help="Bed file of segments to treat as "
+                        "single columns for HMM (ie as created with "
+                        "segmentTracks.py).  IMPORTANT: this file must cover "
+                        "the same regions as the traininBed file. Unless in "
+                        "supervised mode, probably best to use same bed file "
+                        " as both traingBed and --segment argument.  Otherwise"
+                        " use intersectBed to make sure the overlap is exact",
+                        default=None)
         
     addLoggingOptions(parser)
     args = parser.parse_args()
@@ -173,6 +181,9 @@ def main(argv=None):
         trainFlags += " --numStates %d" % args.emStates
     if args.supervised is True:
         trainFlags += " --supervised"
+        if args.segment is True:
+            raise RuntimeError("--supervised not currently compatible with "
+                               "--segment")
     trainFlags += " --emFac %d" % args.emFac
     if args.forceEmProbs is not None:
         trainFlags += " --forceEmProbs %s" % args.forceEmProbs
@@ -252,6 +263,8 @@ def main(argv=None):
                                                             modPath,
                                                             logOps,
                                                             trainFlags)
+                if args.segment is not None:
+                    command += " --segment %s" % truthBed
 
             # view
             viewPath = os.path.join(outDir,
@@ -266,6 +279,9 @@ def main(argv=None):
                                                                   testBed,
                                                                   evalBed,
                                                                   logOps)
+            if args.segment is not None:
+                command += " --segment"
+                
             # compare
             compPath = os.path.join(outDir,
                                     os.path.splitext(base)[0] + "_comp.txt")

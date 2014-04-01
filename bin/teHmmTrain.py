@@ -129,7 +129,8 @@ def main(argv=None):
                         "segmentTracks.py).  IMPORTANT: this file must cover "
                         "the same regions as the traininBed file. Unless in "
                         "supervised mode, probably best to use same bed file "
-                        " as both traingBed and --segment argument",
+                        " as both traingBed and --segment argument.  Otherwise"
+                        " use intersectBed to make sure the overlap is exact",
                         default=None)
 
     addLoggingOptions(parser)
