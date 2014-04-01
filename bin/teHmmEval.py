@@ -15,7 +15,7 @@ import copy
 from teHmm.track import TrackData
 from teHmm.hmm import MultitrackHmm
 from teHmm.cfg import MultitrackCfg
-from teHmm.trackIO import getMergedBedIntervals
+from teHmm.trackIO import getMergedBedIntervals, readBedIntervals
 from teHmm.modelIO import loadModel
 from teHmm.common import myLog, EPSILON, initBedTool, cleanBedTool
 from teHmm.common import addLoggingOptions, setLoggingFromOptions, logger
@@ -130,17 +130,23 @@ def statesToBed(chrom, start, end, segmentOffsets, states, bedFile):
     if segmentOffsets is not None:
         if len(segmentOffsets) > 1:
             intLen = segmentOffsets[1]
-        else
+            assert segmentOffsets[-1] - (end - start)
+        else:
             intLen = end - start
     prevInterval = (chrom, start, start + intLen, states[0])
     
     for i in xrange(1, len(states) + 1):
         if i < len(states):
             state = states[i]
-            if segmentOffsets is not None > 1:
-                intLen = segmentOffsets[i] - segmentOffsets[i-1]
         else:
             state = None
+            
+        if segmentOffsets is not None:
+            if i == len(states) - 1:
+                intLen = end - (start + segmentOffsets[-1])
+            elif i < len(states) - 1:
+                intLen = segmentOffsets[i+1] - segmentOffsets[i]
+                
         if state != prevInterval[3]:
             assert prevInterval[3] is not None
             assert prevInterval[1] >= start and prevInterval[2] <= end
