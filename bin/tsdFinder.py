@@ -42,6 +42,11 @@ def main(argv=None):
     parser.add_argument("--all", help="Report all matches in region (as opposed"
                         " to only the nearest to the BED element which is the "
                         "default behaviour", action="store_true", default=False)
+    parser.add_argument("--maxScore", help="Only report matches with given "
+                        "score or smaller.  The score  is definied as the "
+                        "maximum distance between the (two) TSD intervals and "
+                        "the query interval",
+                        default=None, type=int)
     parser.add_argument("--left", help="Number of bases immediately left of the "
                         "BED element to search for the left TSD",
                         default=7, type=int)
@@ -138,6 +143,14 @@ def findTsds(args, bedIntervals):
 
     return outTsds
 
+def getScore(bedInterval, l1, l2, match):
+    """ Given a bedInterval, the two window (left coords), and a candidate
+    mathc, compute the score of the match (lower is better)"""
+    d1 = np.abs(bedInterval[1] - (l1 + match[1]))
+    assert d1 >= 0
+    d2 = np.abs(bedInterval[2] - (l2 + match[2]))
+    return max(d1, d2)
+
 def intervalTsds(args, sequence, bedInterval):
     """ given a single bed interval, do a string search to find tsd candidates
     on the left and right flank."""
@@ -160,6 +173,14 @@ def intervalTsds(args, sequence, bedInterval):
     matches = kt.exactMatches(leftFlank, minMatchLen = args.min,
                               maxMatchLen = args.max)
 
+    # filter by score if applicable
+    if args.maxScore is not None:
+        filterMatches = []
+        for match in matches:
+            if getScore(bedInterval, l1, l2, match) <= args.maxScore:
+                filterMatches.append(match)
+        matches = filterMatches        
+
     # if we don't want every match, find the match with the lowest maximum
     # distance to the interval. will probably need to look into better 
     # heuristics for this
@@ -168,10 +189,7 @@ def intervalTsds(args, sequence, bedInterval):
         bestLen = 0
         bestMatch = None
         for match in matches:
-            d1 = np.abs(bedInterval[1] - (l1 + match[1]))
-            assert d1 >= 0
-            d2 = np.abs(bedInterval[2] - (l2 + match[2]))
-            d = max(d1, d2)
+            d = getScore(bedInterval, l1, l2, match)
             matchLen = match[1] - match[0]
             assert matchLen == match[3] - match[2]
             if d < dmin or (d == dmin and matchLen > bestLen):
