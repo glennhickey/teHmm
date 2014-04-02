@@ -54,6 +54,11 @@ def main(argv=None):
     parser.add_argument("--all", help="Report all matches in region (as opposed"
                         " to only the nearest to the BED element which is the "
                         "default behaviour", action="store_true", default=False)
+    parser.add_argument("--maxScore", help="Only report matches with given "
+                            "score or smaller.  The score  is definied as the "
+                        "maximum distance between the (two) TSD intervals and "
+                        "the query interval",
+                        default=None, type=int)
     parser.add_argument("--left", help="Number of bases immediately left of the "
                         "BED element to search for the left TSD",
                         default=None, type=int)
@@ -83,7 +88,7 @@ def main(argv=None):
     args.tsdFinderOptions = "--logLevel %s" % getLogLevelString()
     if args.logFile is not None:
         args.tsdFinderOptions += " --logFile %s" % args.logFile
-    for option in ["min", "max", "all", "left", "right", "overlap",
+    for option in ["min", "max", "all", "maxScore", "left", "right", "overlap",
                    "leftName", "rightName", "id", "names"]:
         val = getattr(args, option)
         if val is True:
