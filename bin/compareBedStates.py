@@ -9,6 +9,7 @@ import os
 import argparse
 import logging
 import numpy as np
+import copy
 
 from teHmm.trackIO import readBedIntervals
 from teHmm.common import intersectSize
@@ -48,8 +49,14 @@ def main(argv=None):
                         type=float, default=0.8)
     parser.add_argument("--plot", help="Path of file to write Precision/Recall"
                         " graphs to in PDF format", default=None)
+    parser.add_argument("--ignore", help="Comma-separated list of stateNames to"
+                        " ignore", default=None)
 
     args = parser.parse_args()
+    if args.ignore is not None:
+        args.ignore = set(args.ignore.split(","))
+    else:
+        args.ignore = set()
 
     assert args.col == 3 or args.col ==4
 
@@ -57,13 +64,30 @@ def main(argv=None):
     intervals2 = readBedIntervals(args.bed2, ncol = args.col)
     stats = compareBaseLevel(intervals1, intervals2, args.col - 1)
 
-    totalRight, totalWrong, accMap = summarizeComparision(stats)
+    totalRight, totalWrong, accMap = summarizeBaseComparision(stats, args.ignore)
     print stats
     totalBoth = totalRight + totalWrong
     accuracy = float(totalRight) / float(totalBoth)
     print "Accuaracy: %d / %d = %f" % (totalRight, totalBoth, accuracy)
     print "State-by-state (Precision, Recall):"
     print accMap
+
+    trueStats = compareIntervalsOneSided(intervals1, intervals2, args.col -1,
+                                         args.thresh)
+    predStats = compareIntervalsOneSided(intervals2, intervals1, args.col -1,
+                                         args.thresh)
+    intAccMap = summarizeIntervalComparison(trueStats, predStats, False,
+                                            args.ignore)
+    intAccMapWeighted = summarizeIntervalComparison(trueStats, predStats, True,
+                                                     args.ignore)
+    print "\nInterval Accuracy"
+    print intAccMap
+    print ""
+
+    print "\nWeighted Interval Accuracy"
+    print intAccMapWeighted
+    print ""
+
 
     # print some row data to be picked up by scrapeBenchmarkRow.py
     header, row = summaryRow(accuracy, stats, accMap)
@@ -75,7 +99,8 @@ def main(argv=None):
         if canPlot is False:
             raise RuntimeError("Unable to write plots.  Maybe matplotlib is "
                                "not installed?")
-        writeAccPlots(accuracy, stats, accMap, intStats, intAccMap, args.plot)
+        writeAccPlots(accuracy, accMap, intAccMap, intAccMapWeighted,
+                      args.thresh, args.plot)
 
 
 def compareBaseLevel(intervals1, intervals2, col):
@@ -129,6 +154,10 @@ def compareIntervalsOneSided(trueIntervals, predIntervals, col, threshold):
     This is effectively a recall measure.  Of course, calling a second time
     with truth and pred swapped, will yield the precision.
 
+    We also include the total lengths of the true predicted and false predicted
+    elements.  So each states maps to a tuplie like
+    (numTrue, totTrueLen, numFalse, totFalseLen)
+
     NOTE: this test will return a positive hit if a giant predicted interval
     overlaps a tiny true interval.  this can be changed, but since this form
     of innacuracy will be caught when called with true/pred swapped (precision)
@@ -174,22 +203,26 @@ def compareIntervalsOneSided(trueIntervals, predIntervals, col, threshold):
 
         # update stats
         if trueState not in stats:
-            stats[trueState] = [0, 0]
+            stats[trueState] = [0, 0, 0, 0]
 
         if float(bestOverlap) / trueLen >= threshold:
             stats[trueState][0] += 1
+            stats[trueState][1] += trueLen
         else:
             # dont really need this (can be inferred from total number of
             # true intervals but whatever)
-            stats[trueState][1] += 1
+            stats[trueState][2] += 1
+            stats[trueState][3] += trueLen
 
     return stats
     
-def summarizeComparision(stats):
+def summarizeBaseComparision(stats, ignore):
     totalRight = 0
     totalWrong = 0
     accMap = dict()
     for state, stat in stats.items():
+        if state in ignore:
+            continue
         totalRight += stat[2]
         totalWrong += stat[0] + stat[1]
         tp = float(stat[2])
@@ -198,6 +231,57 @@ def summarizeComparision(stats):
         accMap[state] = (tp / (np.finfo(float).eps + tp + fp),
                          tp / (np.finfo(float).eps + tp + fn))
     return (totalRight, totalWrong, accMap)
+
+def summarizeIntervalComparison(trueStats, predStats, weighted, ignore):
+    """ like above but done on two 1-sided interval comparisions.  only
+    retunrs a map (ie no totalright total wrong) """
+    accMap = dict()
+    stateSet = set(predStats.keys()).union(set(trueStats.keys())) - ignore
+
+    totalTrueTp = 0
+    totalTrueFp = 0
+    totalPredTp = 0
+    totalPredFp = 0
+    
+    for state in stateSet:
+        recall = 0.0
+        if state in trueStats:
+            tp = trueStats[state][0]
+            fp = trueStats[state][2]
+            if weighted is True:
+                tp *= trueStats[state][1]
+                fp *= trueStats[state][3]
+            totalTrueTp += tp
+            totalTrueFp += fp
+            if tp + fp > 0:
+                recall = float(tp) / float(tp + fp)
+
+        precision = 0.0
+        if state in predStats:
+            tp = predStats[state][0]
+            fp = predStats[state][2]
+            if weighted is True:
+                tp *= predStats[state][1]
+                fp *= predStats[state][3]
+            totalPredTp += tp
+            totalPredFp += fp
+            if tp + fp > 0:
+                precision = float(tp) / float(tp + fp)
+
+        accMap[state] = (precision, recall)
+
+    totalRecall = 0.
+    if totalTrueTp + totalTrueFp > 0:
+        totalRecall = float(totalTrueTp) / float(totalTrueTp + totalTrueFp)
+    totalPrecision = 0.
+    if totalPredTp + totalPredFp > 0:
+        totalPrecision = float(totalPredTp) / float(totalPredTp + totalPredFp)
+
+    assert "Overall" not in accMap
+    accMap["Overall"] = (totalPrecision, totalRecall)
+    
+    return accMap
+        
 
 def summaryRow(accuracy, stats, accMap):
     header = []
@@ -222,36 +306,56 @@ def summaryRow(accuracy, stats, accMap):
     assert len(header) == len(row)
     return header, row
 
-def writeAccPlots(accuracy, stats, accMap, intStats, intAccMap, outFile):
+def writeAccPlots(accuracy, baseAccMap, intAccMap, intAccMapWeighted,
+                  threshold, outFile):
     """ plot accuracies as scatter plots"""
-    distList = [[], []]
+
+    accMaps = [baseAccMap, intAccMap, intAccMapWeighted]
+    names = ["Base", "Interval thresh=%.2f" % threshold,
+             "Weighted Interval thresh=%.2f" % threshold]
+
+    stateNames = set()
+    for am in accMaps:
+        stateNames = stateNames.union(set(am.keys()))
+    emptyStates = set()
+    for state in stateNames:
+        total = 0.
+        for am in accMaps:
+            if state in am:
+                total += am[state][0]
+                total += am[state][1]
+        if total == 0.:
+            emptyStates.add(state)
+        
+    stateNames = list(stateNames - emptyStates)
+
+    distList = []
+    for i in xrange(len(accMaps)):
+        distList.append([(0,0)] * len(stateNames))
     titles = []
-    stateNames = []
-    fscore = [[], []] 
 
-    for state in sorted(accMap.keys()):
-        acc = accMap[state]
-        prec = acc[0]
-        rec = acc[1]
+    for i, accMap in enumerate(accMaps):
+        totalF = 0.0
+        numF = 0.0
+        for state in sorted(accMap.keys()):
+            acc = accMap[state]
+            prec = acc[0]
+            rec = acc[1]
 
-        intAcc = intAccMap[state]
-        intPrec = intAcc[0]
-        intRec = intAcc[1]
-
-        if (prec > 0.0 or rec > 0.0) and (intPrec > 0.0 or intRec > 0.0):
-            stateNames.append(state)
-            fs = 2 * ((prec * rec) / (prec + rec))
-            ifs = 2 * ((intPrec * intRec) / (intPrec + intRec))
-            fscore[0].append(fs)
-            fscore[1].append(ifs)
-            distList[0].append((prec, rec))
-            distList[1].append((intPrec, intRec))
-
-    titles.append("Base Acc. (avg f1score=%.3f)" % np.mean(fscore[0]))
-    titles.append("Inteval Acc. (avg f1score=%.3f)" % np.mean(fscore[1]))
-    plotPoints2d(distList[:1], titles, stateNames, outFile, xRange=(0,1.1),
-                 yRange=(0, 1.4), ptSize=50, xLabel="Precision",
-                 yLabel="Recall", cols=1, width=5, rowHeight=5)
+            if prec > 0.0 or rec > 0.0:
+                stateIdx = stateNames.index(state)
+                fs = 2. * ((prec * rec) / (prec + rec))
+                totalF += fs
+                numF += 1.
+                distList[i][stateIdx] = (prec, rec)
+            
+        avgF = 0.
+        if totalF > 0:
+            avgF = totalF / numF
+        titles.append("%s Acc. (avg f1=%.3f)" % (names[i], avgF))
+    plotPoints2d(distList, titles, stateNames, outFile, xRange=(0,1.1),
+                 yRange=(0, 1.4), ptSize=75, xLabel="Precision",
+                 yLabel="Recall", cols=2, width=10, rowHeight=5)
             
 if __name__ == "__main__":
     sys.exit(main())

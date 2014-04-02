@@ -21,6 +21,7 @@ import matplotlib.lines as lines
 import matplotlib.patches as patches
 import matplotlib.pylab  as pylab
 import matplotlib.pyplot as plt
+import matplotlib.markers
 from matplotlib.ticker import MultipleLocator, FormatStrFormatter, LogLocator
 from matplotlib.ticker import LogFormatter
 import matplotlib.mlab as mlab
@@ -127,8 +128,13 @@ colorList = ['#1f77b4', # dark blue
                  ]
 def plotPoints2d(distList, titles, stateNames, outFile, xRange=None,
                  yRange=None, ptSize=100, xLabel=None, yLabel=None, cols=2,
-                 width=10, rowHeight=5):
-    """ plot some points to a pdf file """
+                 width=10, rowHeight=5, singleLegendPerRow=False,
+                 markerList=["o", "s", "^"]):
+    """ plot some points to a pdf file.  Some other marker sets are
+                 matplotlib.markers.MarkerStyle.filled_markers
+                 matplotlib.markers.MarkerStyle.markers
+    """
+
     rows = int(np.ceil(float(len(distList)) / float(cols)))
     height=rowHeight * rows
     alpha = 0.7
@@ -150,11 +156,12 @@ def plotPoints2d(distList, titles, stateNames, outFile, xRange=None,
         plotList = []
         for j in xrange(len(dist)):
             plotList.append(plt.scatter(dist[j][0], dist[j][1], c=rgbs[j],
-                                        s=ptSize))
+                                        s=ptSize,
+                                        marker=markerList[j%len(markerList)]))
         plt.axis('equal')
         plt.grid(True)
         plt.title(titles[i])
-        if i % cols == 0:
+        if i % cols == 0 or not singleLegendPerRow:
             # write legend
             plt.legend(plotList, stateNames, 
             scatterpoints=1,
