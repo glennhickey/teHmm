@@ -146,8 +146,8 @@ def intervalTsds(args, sequence, bedInterval):
     l1 = max(0, bedInterval[1] - args.left)
     r1 = bedInterval[1] + overlap
 
-    l2 = bedInterval[2] - overlap
-    r2 = min(bedInterval[2] + args.right, len(sequence))
+    l2 = bedInterval[2] - 1 - overlap
+    r2 = min(bedInterval[2] - 1 + args.right, len(sequence))
 
     if r1 - l1 < args.min or r2 - l2 < args.min:
         return []
