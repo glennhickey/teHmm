@@ -12,7 +12,7 @@ import numpy as np
 import copy
 
 from teHmm.trackIO import readBedIntervals
-from teHmm.common import intersectSize
+from teHmm.common import intersectSize, initBedTool, cleanBedTool
 
 try:
     from teHmm.parameterAnalysis import pcaFlatten, plotPoints2d
@@ -53,6 +53,8 @@ def main(argv=None):
                         " ignore", default=None)
 
     args = parser.parse_args()
+    tempBedToolPath = initBedTool()
+
     if args.ignore is not None:
         args.ignore = set(args.ignore.split(","))
     else:
@@ -102,6 +104,7 @@ def main(argv=None):
         writeAccPlots(accuracy, accMap, intAccMap, intAccMapWeighted,
                       args.thresh, args.plot)
 
+    cleanBedTool(tempBedToolPath)
 
 def compareBaseLevel(intervals1, intervals2, col):
     """ return dictionary that maps each state to (i1 but not i2, i2 but not i1,
@@ -251,8 +254,12 @@ def summarizeIntervalComparison(trueStats, predStats, weighted, ignore):
             if weighted is True:
                 tp *= trueStats[state][1]
                 fp *= trueStats[state][3]
-            totalTrueTp += tp
-            totalTrueFp += fp
+            # Warning: can skip total fail in overall with this step
+            # (but we need to do it to filter out stuff were not trying to
+            # predict
+            if state in trueStats and state in predStats:
+                totalTrueTp += tp
+                totalTrueFp += fp
             if tp + fp > 0:
                 recall = float(tp) / float(tp + fp)
 
@@ -263,8 +270,12 @@ def summarizeIntervalComparison(trueStats, predStats, weighted, ignore):
             if weighted is True:
                 tp *= predStats[state][1]
                 fp *= predStats[state][3]
-            totalPredTp += tp
-            totalPredFp += fp
+            # Warning: can skip total fail in overall with this step
+            # (but we need to do it to filter out stuff were not trying to
+            # predict
+            if state in trueStats and state in predStats:
+                totalPredTp += tp
+                totalPredFp += fp
             if tp + fp > 0:
                 precision = float(tp) / float(tp + fp)
 
@@ -311,8 +322,8 @@ def writeAccPlots(accuracy, baseAccMap, intAccMap, intAccMapWeighted,
     """ plot accuracies as scatter plots"""
 
     accMaps = [baseAccMap, intAccMap, intAccMapWeighted]
-    names = ["Base", "Interval thresh=%.2f" % threshold,
-             "Weighted Interval thresh=%.2f" % threshold]
+    names = ["Base Acc.", "Int. Acc. thr=%.2f" % threshold,
+             "Wgt Int. Acc. thr=%.2f" % threshold]
 
     stateNames = set()
     for am in accMaps:
@@ -352,9 +363,10 @@ def writeAccPlots(accuracy, baseAccMap, intAccMap, intAccMapWeighted,
         avgF = 0.
         if totalF > 0:
             avgF = totalF / numF
-        titles.append("%s Acc. (avg f1=%.3f)" % (names[i], avgF))
-    plotPoints2d(distList, titles, stateNames, outFile, xRange=(0,1.1),
-                 yRange=(0, 1.4), ptSize=75, xLabel="Precision",
+        titles.append("%s (avg f1=%.3f)" % (names[i], avgF))
+    print distList[1]
+    plotPoints2d(distList, titles, stateNames, outFile, xRange=(-0.1,1.1),
+                 yRange=(-0.1, 1.4), ptSize=75, xLabel="Precision",
                  yLabel="Recall", cols=2, width=10, rowHeight=5)
             
 if __name__ == "__main__":

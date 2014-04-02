@@ -158,7 +158,7 @@ def plotPoints2d(distList, titles, stateNames, outFile, xRange=None,
             plotList.append(plt.scatter(dist[j][0], dist[j][1], c=rgbs[j],
                                         s=ptSize,
                                         marker=markerList[j%len(markerList)]))
-        plt.axis('equal')
+        #plt.axis('equal')
         plt.grid(True)
         plt.title(titles[i])
         if i % cols == 0 or not singleLegendPerRow:
