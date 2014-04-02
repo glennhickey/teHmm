@@ -1,0 +1,3 @@
+filterPredictions.py mc_seg1s_eval.bed --mustBefore "LTR|left,inside" --mustAfter "inside,LTR|right" > t.bed
+filterPredictions.py t.bed --mustBefore "TSD|left,LTR|left" --mustAfter "LTR|right,TSD|right" > mc_seg1s_eval_filter.bed
+compareBedStates.py ../../../truth/manualChaux.bed mc_seg1s_eval_filter.bed --plot mc_seg1s_eval_filter_acc.pdf --ignore Outside --thresh 0.95
