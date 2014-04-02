@@ -13,7 +13,7 @@ import itertools
 import ast
 
 from teHmm.common import intersectSize
-
+from teHmm.bin.compareBedStates import compareIntervalsOneSided
 from teHmm.tests.common import getTestDirPath
 from teHmm.tests.common import TestBase
 
@@ -83,7 +83,88 @@ class TestCase(TestBase):
         assert intersectSize(a[1], a[5]) == 90
         assert intersectSize(a[5], a[1]) == 90
 
+    def testCompareIntervals(self):
+        bed1 = []
+        bed1.append(("chr1", 0, 10, 'A'))
+        bed1.append(("chr1", 10, 20, 'B'))
+        bed1.append(("chr1", 30, 40, 'A'))
+        bed1.append(("chr2", 10, 30, 'C'))
 
+        bed2 = []
+        bed2.append(("chr1", 0, 15, 'A'))
+        bed2.append(("chr1", 15, 20, 'B'))
+        bed2.append(("chr1", 30, 40, 'A'))
+        bed2.append(("chr2", 10, 20, 'D'))
+        bed2.append(("chr2", 20, 30, 'C'))
+
+        stats = compareIntervalsOneSided(bed1, bed2, 3, 0.8)
+
+        trueA, falseA = stats['A'][0], stats['A'][1]
+        assert trueA == 2
+        assert falseA == 0
+
+        trueB, falseB = stats['B'][0], stats['B'][1]
+        assert trueB == 0
+        assert falseB == 1
+
+        trueC, falseC = stats['C'][0], stats['C'][1]
+        assert trueC == 0
+        assert falseC == 1
+
+        assert 'D' not in stats
+
+        stats = compareIntervalsOneSided(bed1, bed2, 3, 0.51)
+
+        trueA, falseA = stats['A'][0], stats['A'][1]
+        assert trueA == 2
+        assert falseA == 0
+
+        trueB, falseB = stats['B'][0], stats['B'][1]
+        assert trueB == 0
+        assert falseB == 1
+
+        trueC, falseC = stats['C'][0], stats['C'][1]
+        assert trueC == 0
+        assert falseC == 1
+
+        assert 'D' not in stats
+
+    
+        stats = compareIntervalsOneSided(bed1, bed2, 3, 0.5)
+
+        trueA, falseA = stats['A'][0], stats['A'][1]
+        assert trueA == 2
+        assert falseA == 0
+
+        trueB, falseB = stats['B'][0], stats['B'][1]
+        assert trueB == 1
+        assert falseB == 0
+
+        trueC, falseC = stats['C'][0], stats['C'][1]
+        assert trueC == 1
+        assert falseC == 0
+
+        assert 'D' not in stats
+
+        stats = compareIntervalsOneSided(bed2, bed1, 3, 0.8)
+
+        trueA, falseA = stats['A'][0], stats['A'][1]
+        assert trueA == 1
+        assert falseA == 1
+
+        trueB, falseB = stats['B'][0], stats['B'][1]
+        assert trueB == 1
+        assert falseB == 0
+
+        trueC, falseC = stats['C'][0], stats['C'][1]
+        assert trueC == 1
+        assert falseC == 0
+
+        trueD, falseD = stats['D'][0], stats['D'][1]
+        assert trueD == 0
+        assert falseD == 1
+        
+        
         
         
 def main():

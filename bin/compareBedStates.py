@@ -11,6 +11,8 @@ import logging
 import numpy as np
 
 from teHmm.trackIO import readBedIntervals
+from teHmm.common import intersectSize
+
 try:
     from teHmm.parameterAnalysis import pcaFlatten, plotPoints2d
     canPlot = True
@@ -53,7 +55,7 @@ def main(argv=None):
 
     intervals1 = readBedIntervals(args.bed1, ncol = args.col)
     intervals2 = readBedIntervals(args.bed2, ncol = args.col)
-    stats = compareIntervals(intervals1, intervals2, args.col - 1)
+    stats = compareBaseLevel(intervals1, intervals2, args.col - 1)
 
     totalRight, totalWrong, accMap = summarizeComparision(stats)
     print stats
@@ -76,7 +78,7 @@ def main(argv=None):
         writeAccPlots(accuracy, stats, accMap, intStats, intAccMap, args.plot)
 
 
-def compareIntervals(intervals1, intervals2, col):
+def compareBaseLevel(intervals1, intervals2, col):
     """ return dictionary that maps each state to (i1 but not i2, i2 but not i1,
     both) for base level stats, and also a similar dictionary for interval
     stats. """
@@ -113,6 +115,73 @@ def compareIntervals(intervals1, intervals2, col):
             else:
                 stats[state1][0] += 1
                 stats[state2][1] += 1
+
+    return stats
+
+def compareIntervalsOneSided(trueIntervals, predIntervals, col, threshold):
+    """ Same idea as baselevel comparison above, but treats bed intervals
+    as single unit, and does not perform symmetric test.  In particular, we
+    return the following stats here: for each true interval, is it covered
+    by a predicted interval (with the same name) by at least threshold pct?
+    The stats returned is therefore a pair for each state:
+    (num intervals in truth correctly predicted , num intervals in truth
+    incorrectly predicted)
+    This is effectively a recall measure.  Of course, calling a second time
+    with truth and pred swapped, will yield the precision.
+
+    NOTE: this test will return a positive hit if a giant predicted interval
+    overlaps a tiny true interval.  this can be changed, but since this form
+    of innacuracy will be caught when called with true/pred swapped (precision)
+    I'm not sure if it's necessary
+    """
+
+    # as in base level comp, both interval sets must cover exactly same regions
+    # in same order.  the asserts below only partially check this:
+    assert trueIntervals[0][0] == predIntervals[0][0]
+    assert trueIntervals[0][1] == predIntervals[0][1]
+    assert trueIntervals[-1][2] == predIntervals[-1][2]
+
+    LP = len(predIntervals)
+    LT = len(trueIntervals)
+
+    stats = dict()
+    
+    pi = 0
+    for ti in xrange(LT):
+
+        trueInterval = trueIntervals[ti]
+        trueState = trueInterval[col]
+        trueLen = float(trueInterval[2] - trueInterval[1])
+        
+        # advance pi to first pred interval that intersects ti
+        while True:
+            if pi < LP and intersectSize(trueInterval,
+                                         predIntervals[pi]) == 0:
+                pi += 1
+            else:
+                break
+
+        # scan all intersecting predIntervals with ti
+
+        bestOverlap = 0
+        for i in xrange(pi, LP):
+            overlapSize = intersectSize(trueInterval, predIntervals[i])
+            if overlapSize > 0:
+                if predIntervals[i][col] == trueState:
+                    bestOverlap = max(bestOverlap, overlapSize)
+            else:
+                break
+
+        # update stats
+        if trueState not in stats:
+            stats[trueState] = [0, 0]
+
+        if float(bestOverlap) / trueLen >= threshold:
+            stats[trueState][0] += 1
+        else:
+            # dont really need this (can be inferred from total number of
+            # true intervals but whatever)
+            stats[trueState][1] += 1
 
     return stats
     
