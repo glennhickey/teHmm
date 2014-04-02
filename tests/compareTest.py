@@ -12,6 +12,8 @@ from numpy.testing import assert_array_equal, assert_array_almost_equal
 import itertools
 import ast
 
+from teHmm.common import intersectSize
+
 from teHmm.tests.common import getTestDirPath
 from teHmm.tests.common import TestBase
 
@@ -55,6 +57,34 @@ class TestCase(TestBase):
         assert outputStats['B'] == [5, 0, 5]
         assert outputStats['C'] == [10, 0, 10]
         assert outputStats['D'] == [0, 10, 0]
+
+    def testIntersect(self):
+        a = [0] * 6
+        a[0] = ("b", 10, 100)
+        a[1] = ("a", 10, 100)
+        a[2] = ("a", 5, 15)
+        a[3] = ("a", 11, 12)
+        a[4] = ("a", 95, 105)
+        a[5] = ("a", 0, 1000)
+
+        for i in xrange(1, 6):
+            assert intersectSize(a[0], a[i]) == 0
+            assert intersectSize(a[i], a[0]) == 0
+
+        assert intersectSize(a[1], a[2]) == 5
+        assert intersectSize(a[2], a[1]) == 5
+
+        assert intersectSize(a[1], a[3]) == 1
+        assert intersectSize(a[3], a[1]) == 1
+        
+        assert intersectSize(a[1], a[4]) == 5
+        assert intersectSize(a[4], a[1]) == 5
+
+        assert intersectSize(a[1], a[5]) == 90
+        assert intersectSize(a[5], a[1]) == 90
+
+
+        
         
 def main():
     sys.argv = sys.argv[:1]

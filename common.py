@@ -113,6 +113,19 @@ def binSearch(items, val, idx = [0,1], first = None, last = None):
         return binSearch(items, val, idx, first, pivot)
     else:
         return binSearch(items, val, idx, pivot + 1, last)
+
+def intersectSize(interval1, interval2):
+    """ return the size of the overlap between two intervals of format
+    (chrom, start, end) """
+    overlap = 0
+    if interval1[0] == interval2[0]:
+        i1 = interval1
+        i2 = interval2
+        if i1[1] > i2[1]:
+            i1, i2 = i2, i1
+        overlap = min(i1[2], i2[2]) - i2[1]
+        overlap = max(0, overlap)
+    return overlap
                       
 #########################################################
 #########################################################
