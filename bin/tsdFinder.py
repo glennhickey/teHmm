@@ -165,15 +165,19 @@ def intervalTsds(args, sequence, bedInterval):
     # heuristics for this
     if args.all is False and len(matches) > 1:
         dmin = len(sequence)
+        bestLen = 0
         bestMatch = None
         for match in matches:
             d1 = np.abs(bedInterval[1] - (l1 + match[1]))
             assert d1 >= 0
             d2 = np.abs(bedInterval[2] - (l2 + match[2]))
             d = max(d1, d2)
-            if d < dmin:
+            matchLen = match[1] - match[0]
+            assert matchLen == match[3] - match[2]
+            if d < dmin or (d == dmin and matchLen > bestLen):
                 dmin = d
                 bestMatch = match
+                bestLen = matchLen
         matches = [bestMatch]
 
     tsds = matchesToBedInts(args, bedInterval, matches, l1, l2)
