@@ -208,7 +208,7 @@ def runTsd(args, tempTracksInfo):
         
     # preprocess termini
     lastzTracks = [origTrackList.getTrackByName(args.termini)]
-                  #origTrackList.getTrackByName(args.tir)]
+                  origTrackList.getTrackByName(args.tir)]
     for terminiTrack in lastzTracks:
         if terminiTrack is not None:
             inFile = terminiTrack.getPath()
@@ -237,15 +237,34 @@ def runTsd(args, tempTracksInfo):
     # note we override input track paths in each case
     assert len(tsdInputFiles) == len(tsdInputTracks)
     for i in xrange(len(tsdInputFiles)):
-        appString = ""
+        optString = ""
         if i > 0:
-            appString = "--append"
-        nameString = ""
+            optString += " --append"
+        # really rough hardcoded params based on
+        # (A unified classification system for eukaryotic transposable elements
+        # Wicker et. al 2007)
         if tsdInputTracks[i] == args.chaux:
-            nameString = "--names non-LTR"
+            optString += " --names non-LTR"
+            optString += " --maxScore 3"
+            optString += " --left 20"
+            optString += " --right 20"
+            optString += " --min 5"
+            optString += " --max 20"
+        elif tsdInputTracks[i] == args.termini:
+            optString += " --maxScore 2"
+            optString += " --left 8"
+            optString += " --right 8"
+            optString += " --min 3"
+            optString += " --max 6"
+        elif tsdInputTracks[i] == args.tir:
+            optString += " --maxScore 2"
+            optString += " --left 15"
+            optString += " --right 15"
+            optString += " --min 3"
+            optString += " --max 12"
 
         tempXMLOut = getLocalTempPath("Temp_tsd_xml", ".xml")
-        runShellCommand("addTsdTrack.py %s %s %s %s %s %s --inPath %s %s %s %s" % (
+        runShellCommand("addTsdTrack.py %s %s %s %s %s %s --inPath %s %s %s" % (
             tempTracksInfo,
             args.cleanTrackPath,
             tempXMLOut,
@@ -253,8 +272,7 @@ def runTsd(args, tempTracksInfo):
             args.sequence,
             args.tsd,
             tsdInputFiles[i],
-            appString,
-            nameString,
+            optString,
             args.logOpString))
         
         runShellCommand("mv %s %s" % (tempXMLOut, tempTracksInfo))
