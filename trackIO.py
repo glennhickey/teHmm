@@ -295,6 +295,18 @@ def readFastaData(faPath, chrom, start, end, **kwargs):
 
     faFile = open(faPath, "r")
     basesRead = 0
+
+    # skip to sequence using readline (faster than fastaRead)
+    pos = faFile.tell()
+    assert pos == 0
+    chromLen = len(chrom) + 1
+    while True:
+        line = faFile.readline()
+        if len(line) == 0 or (line[0] == '>' and line[1:chromLen] == chrom):
+            break
+        pos = faFile.tell()
+    faFile.seek(pos)
+
     for seqName, seqString in fastaRead(faFile):
         if seqName == chrom:
             for i in xrange(start, end):
