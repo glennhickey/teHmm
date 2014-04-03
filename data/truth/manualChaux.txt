@@ -2,7 +2,7 @@ intersectBed -a /data/glenn.hickey/genomes/alyrata/tracks/clean/chaux_sorted_cle
 removeBedState.py temp1.bed LTR > temp2a.bed
 removeBedState.py temp2a.bed non-LTR > temp2.bed
 removeBedState.py manualTraining.bed 0 > temp3.bed
-cat annotated_nonltr_elements_regions_1_20_1state_merge.bed >> temp3.bed
+cat annotated_nonltr_elements_regions_1_20_3state.bed >> temp3.bed
 intersectBed -a temp3.bed -b allManual_clean.bed > temp3a.bed
 mv temp3a.bed temp3.bed
 setBedCol.py --a temp3.bed 4 0 > temp3a.bed
