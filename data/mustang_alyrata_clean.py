@@ -207,7 +207,7 @@ def runTsd(args, tempTracksInfo):
     tsdInputTracks = []
         
     # preprocess termini
-    lastzTracks = [origTrackList.getTrackByName(args.termini)]
+    lastzTracks = [origTrackList.getTrackByName(args.termini),
                   origTrackList.getTrackByName(args.tir)]
     for terminiTrack in lastzTracks:
         if terminiTrack is not None:
