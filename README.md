@@ -76,6 +76,11 @@ Testing
 
 Unit tests can be performed by running `./allTests.py` *from the teHmm/ directory*.  If these don't run successfully it's unlikely any of the examples below will either. 
 
+Logging
+-
+
+By default, most scripts will not display anything to the screen.  Virtually all executables have logging options (--logDebug, --logInfo, --logWarning, --logCritical) to control the verbosity of messages printed.  The --logFile option can be used to print log messages to a file as well as the screen.  Apart from debugging, logging messages can often give an idea of a tool's progress along with the most time-consuming parts of the computation.  
+
 Temporary Files
 -
 
