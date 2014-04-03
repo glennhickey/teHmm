@@ -1,0 +1,3 @@
+../cleanPrediction.py manualChaux1_eval.bed manualChaux1_eval_filter.bed
+
+compareBedStates.py ../../../truth/manualChaux.bed manualChaux1_eval_filter.bed --plot manualChaux1_eval_filter_acc80.pdf --ignore Outside > manualChaux1_comp.txt
