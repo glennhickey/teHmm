@@ -1,0 +1,11 @@
+LTR|left					termini		L_Term	0.99
+LTR|right				termini		R_Term	0.99
+
+TIR|left					tir_termini			L_Term	0.99
+TIR|right				tir_termini			R_Term	0.99
+
+TSD|left					tsd			L_TSD		0.99
+TSD|right				tsd			R_TSD		0.99
+
+
+

@@ -1,0 +1,23 @@
+
+LTR|left					termini		L_Term	0.99
+LTR|right				termini		R_Term	0.99
+
+TIR|left					tir_termini			L_Term	0.99
+TIR|right				tir_termini			R_Term	0.99
+
+TSD|left					tsd			L_TSD		0.99
+TSD|right				tsd			R_TSD		0.99
+
+DNA						chaux			DNA		0.5
+DNAt						chaux			DNAt		0.5
+non-LTR					chaux			non-LTR	0.5
+
+Other1					chaux				Unknown				  0.3
+Other2					chaux				Low_complexity		  0.3
+Other3					chaux				Simple_repeat		  0.3
+
+Outside					chaux				None					  0.6
+Outside					ltr_finder		None					  0.8
+Outside					termini			None					  0.8
+Outside					tsd				None					  0.8
+
