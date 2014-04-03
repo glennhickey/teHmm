@@ -47,7 +47,7 @@ def main(argv=None):
                         "threshold cutoff.  Options are [first, prev], where"
                         " first compares with first column of segment and "
                         "prev compares with column immediately left",
-                        default="first")
+                        default="prev")
     
     addLoggingOptions(parser)
     args = parser.parse_args()
