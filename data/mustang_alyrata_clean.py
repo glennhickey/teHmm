@@ -245,20 +245,20 @@ def runTsd(args, tempTracksInfo):
         # Wicker et. al 2007)
         if tsdInputTracks[i] == args.chaux:
             optString += " --names non-LTR"
-            optString += " --maxScore 3"
+            optString += " --maxScore 20"
             optString += " --left 20"
             optString += " --right 20"
             optString += " --min 5"
             optString += " --max 20"
             optString += " --overlap 20"
         elif tsdInputTracks[i] == args.termini:
-            optString += " --maxScore 2"
+            optString += " --maxScore 3"
             optString += " --left 8"
             optString += " --right 8"
             optString += " --min 3"
             optString += " --max 6"
         elif tsdInputTracks[i] == args.tir:
-            optString += " --maxScore 2"
+            optString += " --maxScore 3"
             optString += " --left 15"
             optString += " --right 15"
             optString += " --min 3"
