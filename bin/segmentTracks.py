@@ -43,11 +43,19 @@ def main(argv=None):
                         " if necessary.  For example, --cutTracks tsd,chaux"
                         " would invoke a new segment everytime the value at"
                         "either of these tracks changed", default=None)
+    parser.add_argument("--comp", help="Strategy for comparing columns for the "
+                        "threshold cutoff.  Options are [first, prev], where"
+                        " first compares with first column of segment and "
+                        "prev compares with column immediately left",
+                        default="first")
     
     addLoggingOptions(parser)
     args = parser.parse_args()
     setLoggingFromOptions(args)
     tempBedToolPath = initBedTool()
+
+    if args.comp != "first" and args.comp != "prev":
+        raise RuntimeError("--comp must be either first or prev")
 
     # read query intervals from the bed file
     logger.info("loading training intervals from %s" % args.allBed)
@@ -84,6 +92,7 @@ def segmentTracks(trackData, args):
     """ produce a segmentation of the data based on the track values. start with
     a hacky prototype..."""
     oFile = open(args.outBed, "w")
+    prevMode = args.comp == "prev"
 
     trackTableList = trackData.getTrackTableList()
     # for every non-contiguous region
@@ -96,13 +105,17 @@ def segmentTracks(trackData, args):
         # scan each column (base) in region, and write new bed segment
         # if necessary (ie too much change in track values)
         count = 0
+        pi = 0
         for i in xrange(1, intervalLen):
-            if isNewSegment(trackTable, i, args) is True:
+            if isNewSegment(trackTable, pi, i, args) is True:
                 oFile.write("%s\t%d\t%d\t%d\n" % (chrom, interval[1], start + i,
                                                   count % 2))
                 interval[1] = start + i
                 interval[2] = interval[1] + 1
                 count += 1
+                pi = i
+            if prevMode is True:
+                pi = i
         # write last segment
         if interval[1] < trackTable.getEnd():
             oFile.write("%s\t%d\t%d\t%d\n" % (chrom, interval[1],
@@ -111,14 +124,16 @@ def segmentTracks(trackData, args):
     
     oFile.close()
 
-def isNewSegment(trackTable, i, args):
+def isNewSegment(trackTable, pi, i, args):
     """ may be necessary to cythonize this down the road """
     assert i > 0
     assert i < len(trackTable)
+    assert pi >= 0
+    assert pi < i
 
     # faster to just call pdist(trackTable[i-1:i], 'hamming')? 
     col = trackTable[i]
-    prev = trackTable[i-1]
+    prev = trackTable[pi]
     difCount = 0
     for j in xrange(len(col)):
         if col[j] != prev[j]:
