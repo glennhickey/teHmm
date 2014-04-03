@@ -250,6 +250,7 @@ def runTsd(args, tempTracksInfo):
             optString += " --right 20"
             optString += " --min 5"
             optString += " --max 20"
+            optString += " --overlap 20"
         elif tsdInputTracks[i] == args.termini:
             optString += " --maxScore 2"
             optString += " --left 8"
