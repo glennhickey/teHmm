@@ -3,3 +3,5 @@ manualChaux.bed   Gold standard created from chaux track, but with LTR and NON-L
 allChaux.bed  Original chaux track (but sliced into annoated regions)
 
 ltrChaux.bed Original chaux track (sliced) but with LTR elements replaced from ltr_finder track
+
+flat versions were created with ../models/chauxBased4/flattenPrediction.py
