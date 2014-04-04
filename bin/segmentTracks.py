@@ -48,6 +48,9 @@ def main(argv=None):
                         " first compares with first column of segment and "
                         "prev compares with column immediately left",
                         default="prev")
+    parser.add_argument("--ignore", help="Comma-separated list of tracks to "
+                        "ignore (the FASTA DNA sequence would be a good "
+                        "candidate", default=None)
     
     addLoggingOptions(parser)
     args = parser.parse_args()
@@ -82,6 +85,22 @@ def main(argv=None):
             assert trackNo < len(cutList)
             cutList[trackNo] = 1
     args.cutList = cutList
+
+    # process the --ignore option
+    ignoreList = np.zeros((len(trackList)), np.int)
+    if args.ignore is not None:
+        ignoreNames = args.ignore.split(",")
+        for name in ignoreNames:
+            track = trackList.getTrackByName(name)
+            if track is None:
+                raise RuntimeError("ignore track %s not found" % name)
+            trackNo = track.getNumber()
+            assert trackNo < len(ignoreList)
+            ignoreList[trackNo] = 1
+            if args.cutList[trackNo] == 1:
+                raise RuntimeError("Same track (%s) cant be cut and ignored" %
+                                  name)
+    args.ignoreList = ignoreList
 
     # segment the tracks
     segmentTracks(trackData, args)
@@ -136,7 +155,7 @@ def isNewSegment(trackTable, pi, i, args):
     prev = trackTable[pi]
     difCount = 0
     for j in xrange(len(col)):
-        if col[j] != prev[j]:
+        if args.ignoreList[j] == 0 and col[j] != prev[j]:
             difCount += 1
             # cutList track is different
             if args.cutList[j] == 1:
