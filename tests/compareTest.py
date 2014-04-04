@@ -99,15 +99,15 @@ class TestCase(TestBase):
 
         stats = compareIntervalsOneSided(bed1, bed2, 3, 0.8)
 
-        trueA, falseA = stats['A'][0], stats['A'][1]
+        trueA, falseA = stats['A'][0], stats['A'][2]
         assert trueA == 2
         assert falseA == 0
 
-        trueB, falseB = stats['B'][0], stats['B'][1]
+        trueB, falseB = stats['B'][0], stats['B'][2]
         assert trueB == 0
         assert falseB == 1
 
-        trueC, falseC = stats['C'][0], stats['C'][1]
+        trueC, falseC = stats['C'][0], stats['C'][2]
         assert trueC == 0
         assert falseC == 1
 
@@ -115,15 +115,15 @@ class TestCase(TestBase):
 
         stats = compareIntervalsOneSided(bed1, bed2, 3, 0.51)
 
-        trueA, falseA = stats['A'][0], stats['A'][1]
+        trueA, falseA = stats['A'][0], stats['A'][2]
         assert trueA == 2
         assert falseA == 0
 
-        trueB, falseB = stats['B'][0], stats['B'][1]
+        trueB, falseB = stats['B'][0], stats['B'][2]
         assert trueB == 0
         assert falseB == 1
 
-        trueC, falseC = stats['C'][0], stats['C'][1]
+        trueC, falseC = stats['C'][0], stats['C'][2]
         assert trueC == 0
         assert falseC == 1
 
@@ -132,15 +132,15 @@ class TestCase(TestBase):
     
         stats = compareIntervalsOneSided(bed1, bed2, 3, 0.5)
 
-        trueA, falseA = stats['A'][0], stats['A'][1]
+        trueA, falseA = stats['A'][0], stats['A'][2]
         assert trueA == 2
         assert falseA == 0
 
-        trueB, falseB = stats['B'][0], stats['B'][1]
+        trueB, falseB = stats['B'][0], stats['B'][2]
         assert trueB == 1
         assert falseB == 0
 
-        trueC, falseC = stats['C'][0], stats['C'][1]
+        trueC, falseC = stats['C'][0], stats['C'][2]
         assert trueC == 1
         assert falseC == 0
 
@@ -148,19 +148,19 @@ class TestCase(TestBase):
 
         stats = compareIntervalsOneSided(bed2, bed1, 3, 0.8)
 
-        trueA, falseA = stats['A'][0], stats['A'][1]
+        trueA, falseA = stats['A'][0], stats['A'][2]
         assert trueA == 1
         assert falseA == 1
 
-        trueB, falseB = stats['B'][0], stats['B'][1]
+        trueB, falseB = stats['B'][0], stats['B'][2]
         assert trueB == 1
         assert falseB == 0
 
-        trueC, falseC = stats['C'][0], stats['C'][1]
+        trueC, falseC = stats['C'][0], stats['C'][2]
         assert trueC == 1
         assert falseC == 0
 
-        trueD, falseD = stats['D'][0], stats['D'][1]
+        trueD, falseD = stats['D'][0], stats['D'][2]
         assert trueD == 0
         assert falseD == 1
         
