@@ -1,3 +1,6 @@
 ../cleanPrediction.py manualChaux2_eval.bed manualChaux2_eval_filter.bed
-
 compareBedStates.py ../../../truth/manualChaux.bed manualChaux2_eval_filter.bed --plot manualChaux2_eval_filter_acc80.pdf --ignore Outside > manualChaux2_comp.txt
+
+../flattenPrediction.py manualChaux2_eval_filter.bed manualChaux2_eval_filter_flat.bed
+../flattenPrediction.py ../../../truth/manualChaux.bed truth_flat.bed
+compareBedStates.py  truth_flat.bed  manualChaux2_eval_filter_flat.bed --plot manualChaux2_eval_filter_flat_acc80.pdf --ignore Outside > manualChaux2_flat_comp.txt
