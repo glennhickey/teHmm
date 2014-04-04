@@ -1,0 +1,1 @@
+segmentTracks.py ~/genomes/teHmm/data/mustang_alyrata_tracks_clean.xml ~/genomes/teHmm/data/truth/manualChaux.bed manualChaux2.bed --thresh 1 --cutTracks termini,tir_termini,tsd
