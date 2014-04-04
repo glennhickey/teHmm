@@ -51,6 +51,16 @@ def main(argv=None):
                         " graphs to in PDF format", default=None)
     parser.add_argument("--ignore", help="Comma-separated list of stateNames to"
                         " ignore", default=None)
+    parser.add_argument("--strictPrec", help="By default, precision is computed"
+                        " in a manner strictly symmetric to recall.  So calling"
+                        " compareBedStates.py A.bed B.bed would give the exact"
+                        " same output as compareBedStates.py B.bed A.bed except"
+                        " precision and recall values would be swapped.  With "
+                        " this option, a predicted element only counts toward"
+                        " precision if it overlaps with 80pct of the true"
+                        " element, as opposed to only needing 80pct of itself"
+                        " overlapping with the true element. ",
+                        action="store_true", default = False)
 
     args = parser.parse_args()
     tempBedToolPath = initBedTool()
@@ -75,9 +85,9 @@ def main(argv=None):
     print accMap
 
     trueStats = compareIntervalsOneSided(intervals1, intervals2, args.col -1,
-                                         args.thresh)
+                                         args.thresh, False)
     predStats = compareIntervalsOneSided(intervals2, intervals1, args.col -1,
-                                         args.thresh)
+                                         args.thresh, args.strictPrec)
     intAccMap = summarizeIntervalComparison(trueStats, predStats, False,
                                             args.ignore)
     intAccMapWeighted = summarizeIntervalComparison(trueStats, predStats, True,
@@ -146,7 +156,8 @@ def compareBaseLevel(intervals1, intervals2, col):
 
     return stats
 
-def compareIntervalsOneSided(trueIntervals, predIntervals, col, threshold):
+def compareIntervalsOneSided(trueIntervals, predIntervals, col, threshold,
+                             usePredLenForThreshold):
     """ Same idea as baselevel comparison above, but treats bed intervals
     as single unit, and does not perform symmetric test.  In particular, we
     return the following stats here: for each true interval, is it covered
@@ -160,6 +171,10 @@ def compareIntervalsOneSided(trueIntervals, predIntervals, col, threshold):
     We also include the total lengths of the true predicted and false predicted
     elements.  So each states maps to a tuplie like
     (numTrue, totTrueLen, numFalse, totFalseLen)
+
+    the usePredLenForThreshold option is activated by the args.strictPrec
+    flag when computing prediction vs truth (see description of this flag
+    for what it does)
 
     NOTE: this test will return a positive hit if a giant predicted interval
     overlaps a tiny true interval.  this can be changed, but since this form
@@ -194,13 +209,15 @@ def compareIntervalsOneSided(trueIntervals, predIntervals, col, threshold):
                 break
 
         # scan all intersecting predIntervals with ti
-
-        bestOverlap = 0
+        bestFrac = 0.0
         for i in xrange(pi, LP):
             overlapSize = intersectSize(trueInterval, predIntervals[i])
             if overlapSize > 0:
                 if predIntervals[i][col] == trueState:
-                    bestOverlap = max(bestOverlap, overlapSize)
+                    denom = trueLen
+                    if usePredLenForThreshold is True:
+                        denom = float(predIntervals[i][2] - predIntervals[i][1])
+                    bestFrac = max(bestFrac, float(overlapSize) / denom)
             else:
                 break
 
@@ -208,7 +225,7 @@ def compareIntervalsOneSided(trueIntervals, predIntervals, col, threshold):
         if trueState not in stats:
             stats[trueState] = [0, 0, 0, 0]
 
-        if float(bestOverlap) / trueLen >= threshold:
+        if bestFrac >= threshold:
             stats[trueState][0] += 1
             stats[trueState][1] += trueLen
         else:

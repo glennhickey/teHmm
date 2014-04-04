@@ -97,7 +97,7 @@ class TestCase(TestBase):
         bed2.append(("chr2", 10, 20, 'D'))
         bed2.append(("chr2", 20, 30, 'C'))
 
-        stats = compareIntervalsOneSided(bed1, bed2, 3, 0.8)
+        stats = compareIntervalsOneSided(bed1, bed2, 3, 0.8, False)
 
         trueA, falseA = stats['A'][0], stats['A'][2]
         assert trueA == 2
@@ -113,7 +113,7 @@ class TestCase(TestBase):
 
         assert 'D' not in stats
 
-        stats = compareIntervalsOneSided(bed1, bed2, 3, 0.51)
+        stats = compareIntervalsOneSided(bed1, bed2, 3, 0.51, False)
 
         trueA, falseA = stats['A'][0], stats['A'][2]
         assert trueA == 2
@@ -130,7 +130,7 @@ class TestCase(TestBase):
         assert 'D' not in stats
 
     
-        stats = compareIntervalsOneSided(bed1, bed2, 3, 0.5)
+        stats = compareIntervalsOneSided(bed1, bed2, 3, 0.5, False)
 
         trueA, falseA = stats['A'][0], stats['A'][2]
         assert trueA == 2
@@ -146,7 +146,7 @@ class TestCase(TestBase):
 
         assert 'D' not in stats
 
-        stats = compareIntervalsOneSided(bed2, bed1, 3, 0.8)
+        stats = compareIntervalsOneSided(bed2, bed1, 3, 0.8, False)
 
         trueA, falseA = stats['A'][0], stats['A'][2]
         assert trueA == 1
