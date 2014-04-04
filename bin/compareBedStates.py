@@ -364,7 +364,7 @@ def writeAccPlots(accuracy, baseAccMap, intAccMap, intAccMapWeighted,
         if totalF > 0:
             avgF = totalF / numF
         titles.append("%s (avg f1=%.3f)" % (names[i], avgF))
-    print distList[1]
+
     plotPoints2d(distList, titles, stateNames, outFile, xRange=(-0.1,1.1),
                  yRange=(-0.1, 1.4), ptSize=75, xLabel="Precision",
                  yLabel="Recall", cols=2, width=10, rowHeight=5)
