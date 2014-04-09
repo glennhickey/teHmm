@@ -1,0 +1,8 @@
+../../chauxBased4/cleanPrediction.py mcSegment1_eval.bed mcSegment1_eval_filter.bed
+../../chauxBased4/flattenPrediction.py mcSegment1_eval.bed mcSegment1_eval_flat.bed
+../../chauxBased4/flattenPrediction.py mcSegment1_eval_filter.bed mcSegment1_eval_filter_flat.bed
+
+compareBedStates.py ../../../truth/manualChaux.bed  mcSegment1_eval.bed --strictPrec --plot mcSegment1_eval_acc.pdf --ignore Outside > mcSegment1_comp.txt
+compareBedStates.py ../../../truth/manualChaux_flat.bed  mcSegment1_eval_flat.bed --strictPrec --plot mcSegment1_eval_flat_acc.pdf --ignore Outside > mcSegment1_flat_comp.txt
+compareBedStates.py ../../../truth/manualChaux.bed  mcSegment1_eval_filter.bed --strictPrec --plot mcSegment1_eval_filter_acc.pdf --ignore Outside > mcSegment1_filter_comp.txt
+compareBedStates.py ../../../truth/manualChaux_flat.bed  mcSegment1_eval_filter_flat.bed --strictPrec --plot mcSegment1_eval_filter_flat_acc.pdf --ignore Outside > mcSegment1_filter_flat_comp.txt
