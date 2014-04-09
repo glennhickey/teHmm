@@ -1,0 +1,14 @@
+{'LTR|right': [0, 5276, 0], 'DNA': [33735, 7252, 94737], 'DNAt': [0, 33822, 30759], 'non-LTR': [7782, 18065, 42084], 'Unknown': [9692, 0, 0], 'inside': [10957, 37244, 187576], 'TIR|left': [0, 8134, 0], 'TSD|right': [0, 346, 0], 'LTR|left': [0, 8884, 0], 'Outside': [674082, 3836, 1008434], 'Other1': [0, 118900, 0], 'Other2': [0, 472591, 0], 'Other3': [0, 14722, 0], 'TSD|left': [0, 175, 0], 'TIR|right': [0, 7143, 0], 'Simple_repeat': [142, 0, 0]}
+Accuaracy: 355156 / 1150018 = 0.308826
+State-by-state (Precision, Recall):
+{'Simple_repeat': (0.0, 0.0), 'DNA': (0.92889429252174249, 0.7374135998505511), 'DNAt': (0.47628559483439403, 1.0), 'non-LTR': (0.69966250477979686, 0.84394176392732523), 'Unknown': (0.0, 0.0), 'inside': (0.83433858197669242, 0.94481018269003136), 'TIR|left': (0.0, 0.0), 'TSD|right': (0.0, 0.0), 'LTR|left': (0.0, 0.0), 'LTR|right': (0.0, 0.0), 'Other2': (0.0, 0.0), 'Other3': (0.0, 0.0), 'TSD|left': (0.0, 0.0), 'TIR|right': (0.0, 0.0), 'Other1': (0.0, 0.0)}
+
+Interval Accuracy
+{'DNA': (0.8246753246753247, 0.7380952380952381), 'Simple_repeat': (0.0, 0.0), 'non-LTR': (0.6349206349206349, 0.625), 'Unknown': (0.0, 0.0), 'inside': (0.39655172413793105, 0.7666666666666667), 'DNAt': (0.3375, 1.0), 'TIR|left': (0.0, 0.0), 'TSD|right': (0.0, 0.0), 'Overall': (0.6112676056338028, 0.7463126843657817), 'LTR|left': (0.0, 0.0), 'LTR|right': (0.0, 0.0), 'Other2': (0.0, 0.0), 'Other3': (0.0, 0.0), 'TSD|left': (0.0, 0.0), 'TIR|right': (0.0, 0.0), 'Other1': (0.0, 0.0)}
+
+
+Weighted Interval Accuracy
+{'DNA': (0.9882107403585437, 0.8676838886687649), 'Simple_repeat': (0.0, 0.0), 'non-LTR': (0.7147134995958687, 0.8020602549667671), 'Unknown': (0.0, 0.0), 'inside': (0.6396152917837883, 0.9412556527225598), 'DNAt': (0.46713158928051784, 1.0), 'TIR|left': (0.0, 0.0), 'TSD|right': (0.0, 0.0), 'Overall': (0.8191662835849668, 0.8817784222972713), 'LTR|left': (0.0, 0.0), 'LTR|right': (0.0, 0.0), 'Other2': (0.0, 0.0), 'Other3': (0.0, 0.0), 'TSD|left': (0.0, 0.0), 'TIR|right': (0.0, 0.0), 'Other1': (0.0, 0.0)}
+
+totAcc DNA_Prec DNA_Rec DNA_F1 DNAt_Prec DNAt_Rec DNAt_F1 LTR|left_Prec LTR|left_Rec LTR|left_F1 LTR|right_Prec LTR|right_Rec LTR|right_F1 Other1_Prec Other1_Rec Other1_F1 Other2_Prec Other2_Rec Other2_F1 Other3_Prec Other3_Rec Other3_F1 Simple_repeat_Prec Simple_repeat_Rec Simple_repeat_F1 TIR|left_Prec TIR|left_Rec TIR|left_F1 TIR|right_Prec TIR|right_Rec TIR|right_F1 TSD|left_Prec TSD|left_Rec TSD|left_F1 TSD|right_Prec TSD|right_Rec TSD|right_F1 Unknown_Prec Unknown_Rec Unknown_F1 inside_Prec inside_Rec inside_F1 non-LTR_Prec non-LTR_Rec non-LTR_F1
+0.308826470542 0.928894292522 0.737413599851 0.822152121183 0.476285594834 1.0 0.645248584015 0.0 0.0 0 0.0 0.0 0 0.0 0.0 0 0.0 0.0 0 0.0 0.0 0 0.0 0.0 0 0.0 0.0 0 0.0 0.0 0 0.0 0.0 0 0.0 0.0 0 0.0 0.0 0 0.834338581977 0.94481018269 0.886144659421 0.69966250478 0.843941763927 0.765059310094
