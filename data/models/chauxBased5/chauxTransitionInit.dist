@@ -1,10 +1,10 @@
 Outside			 Outside			  0.9
 
-LTR|inside			 LTR|right		  0.5
-LTR|inside			 LTR|inside			  0.4
-LTR|inside			 Outside			  0.1
+inside			 LTR|right		  0.5
+inside			 inside			  0.4
+inside			 Outside			  0.1
 
-LTR|left			 LTR|inside	0.25
+LTR|left			 inside	0.25
 LTR|left			 Outside	0.25
 LTR|left			 LTR|left 0.5
 
