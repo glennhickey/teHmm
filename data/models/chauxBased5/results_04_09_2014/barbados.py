@@ -30,6 +30,11 @@ iPoints.append((0.7647058823529411, 0.625))
 bPoints.append((0.7220428578597835, 0.86557975374002327))
 stateNames.append("HMM NON-LTR")
 
+# from ltrChaux_flat_comp.txt
+iPoints.append((1.0, 0.5666666666666667))
+bPoints.append((0.99981713115353665, 0.68847496385991247))
+stateNames.append("LTRFINDER LTR")
+
 # from allChaux_flat_comp.txt
 iPoints.append((0.07236842105263158, 0.36666666666666664))
 bPoints.append((0.78475077606658028, 0.91806903638186099))
@@ -39,10 +44,14 @@ iPoints.append((0.5454545454545454, 0.5625))
 bPoints.append((0.77846968008912942, 0.78468295030682234))
 stateNames.append("RM-CHAUX NON-LTR")
 
-# from ltrChaux_flat_comp.txt
-iPoints.append((1.0, 0.5666666666666667))
-bPoints.append((0.99981713115353665, 0.68847496385991247))
-stateNames.append("LTRFINDER LTR")
+# from hollister_flat_comp.txt
+iPoints.append((0.0880503144654088, 0.4666666666666667))
+bPoints.append((0.71012296853666157, 0.83568474762382072))
+stateNames.append("RM-HOL LTR")
+
+iPoints.append((0.4803921568627451, 0.765625))
+bPoints.append((0.71192863715047638, 0.91547346889664305))
+stateNames.append("RM-HOL NON-LTR")
 
 
 titles = ["Base-level Accuracy", "Element-level Accuracy (th=0.8)"]
@@ -54,9 +63,9 @@ for i in xrange(len(rgbs)):
     rgbs[i] = list(rgbs[i])
     rgbs[i][3] = 0.7
 
-rgbs = [rgbs[0], rgbs[0], rgbs[2], rgbs[2], rgbs[1]]    
+rgbs = [rgbs[0], rgbs[0], rgbs[5], rgbs[2], rgbs[2], rgbs[3], rgbs[3]]    
 
 plotPoints2d(distList, titles, stateNames, outFile, xRange=(-0.1,1.1),
-                 yRange=(-0.1, 1.4), ptSize=75, xLabel="Precision",
+                 yRange=(-0.1, 1.2), ptSize=75, xLabel="Precision",
                  yLabel="Recall", cols=2, width=10, rowHeight=5,
                  markerList = markerList, rgbs = rgbs)

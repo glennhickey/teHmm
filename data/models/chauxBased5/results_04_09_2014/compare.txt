@@ -10,3 +10,4 @@ compareBedStates.py ../../../truth/manualChaux_flat.bed  mcSegment1_eval_filter_
 compareBedStates.py ../../../truth/manualChaux_flat.bed ../../../truth/ltrfinderChaux_flat.bed --strictPrec --ignore Outside > ltrChaux_flat_comp.txt
 compareBedStates.py ../../../truth/manualChaux_flat.bed ../../../truth/allChaux.bed --strictPrec --ignore Outside > allChaux_flat_comp.txt
 compareBedStates.py ../../../truth/manualChaux_flat.bed ../../../truth/allChaux.bed  --ignore Outside > allChaux_flat_lax_comp.txt
+compareBedStates.py ../../../truth/manualChaux_flat.bed ../../../truth/hollister.bed  --ignore Outside --strictPrec> hollister_flat_comp.txt
