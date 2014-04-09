@@ -129,7 +129,7 @@ colorList = ['#1f77b4', # dark blue
 def plotPoints2d(distList, titles, stateNames, outFile, xRange=None,
                  yRange=None, ptSize=100, xLabel=None, yLabel=None, cols=2,
                  width=10, rowHeight=5, singleLegendPerRow=False,
-                 markerList=["o", "s", "^"]):
+                 markerList=["o", "s", "^"], rgbs = None):
     """ plot some points to a pdf file.  Some other marker sets are
                  matplotlib.markers.MarkerStyle.filled_markers
                  matplotlib.markers.MarkerStyle.markers
@@ -140,12 +140,13 @@ def plotPoints2d(distList, titles, stateNames, outFile, xRange=None,
     alpha = 0.7
 
     # pallettes are here : cm.datad.keys()
-    rgbs = [cm.gist_rainbow_r(float(i) / float(len(stateNames)))
-            for i in xrange(len(stateNames))]
-    for i in xrange(len(rgbs)):
-        rgbs[i] = list(rgbs[i])
-        rgbs[i][3] = alpha
-
+    if rgbs is None:
+        rgbs = [cm.gist_rainbow_r(float(i) / float(len(stateNames)))
+                for i in xrange(len(stateNames))]
+        for i in xrange(len(rgbs)):
+            rgbs[i] = list(rgbs[i])
+            rgbs[i][3] = alpha
+    
     pdf = pltBack.PdfPages(outFile)
     fig = plt.figure(figsize=(width, height))
     plt.clf()
@@ -155,7 +156,8 @@ def plotPoints2d(distList, titles, stateNames, outFile, xRange=None,
         ax = plt.subplot(rows, cols, (i + 1) % len(distList))
         plotList = []
         for j in xrange(len(dist)):
-            plotList.append(plt.scatter(dist[j][0], dist[j][1], c=rgbs[j],
+            plotList.append(plt.scatter(dist[j][0], dist[j][1],
+                                        c=rgbs[j % len(rgbs)],
                                         s=ptSize,
                                         marker=markerList[j%len(markerList)]))
         #plt.axis('equal')
