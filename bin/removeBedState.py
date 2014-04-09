@@ -24,20 +24,22 @@ def main(argv=None):
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
         description="Filter overlapping intervals out")
     parser.add_argument("inputBed", help="Bed file to filter")
-    parser.add_argument("stateName", help="Name of state to filter")
+    parser.add_argument("stateName", help="Name of state to filter "
+                        "(or comma-separted list)")
     parser.add_argument("--valCol", help="column to look for state name",
                         type = int, default = 3)
     
     args = parser.parse_args()
     assert os.path.isfile(args.inputBed)
     assert args.valCol == 3 or args.valCol == 4
+    names = args.stateName.split(",")
                         
     bedIntervals = BedTool(args.inputBed).sort()
     prevInterval = None
 
     for interval in bedIntervals:
-        if not ((args.valCol == 3 and interval.name == args.stateName) or
-                (args.valCol == 4 and interval.score == args.stateName)):
+        if not ((args.valCol == 3 and interval.name in names) or
+                (args.valCol == 4 and interval.score in names)):
             sys.stdout.write(str(interval))
     
 if __name__ == "__main__":
