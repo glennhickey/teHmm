@@ -11,6 +11,8 @@ TSD|right				tsd			R_TSD		0.99
 DNA						chaux			DNA		0.5
 DNAt						chaux			DNAt		0.5
 non-LTR					chaux			non-LTR	0.5
+non-LTR					hollister	LINE		0.25
+non-LTR					hollister	SINE		0.25
 
 Other1					chaux				Unknown				  0.3
 Other2					chaux				Low_complexity		  0.3
@@ -22,3 +24,4 @@ Outside					termini			None					  0.8
 Outside					tsd				None					  0.8
 
 inside					chaux				LTR					  0.5
+inside					hollister		LTR					  0.5
