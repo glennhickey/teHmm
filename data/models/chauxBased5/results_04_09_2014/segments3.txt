@@ -1,1 +1,0 @@
-segmentTracks.py ~/genomes/teHmm/data/mustang_alyrata_tracks_clean.xml segments2.bed --thresh 1 --comp first --cutTracks termini,tir_termini,tsd,chaux,hollister,ltr_finder segments3.bed

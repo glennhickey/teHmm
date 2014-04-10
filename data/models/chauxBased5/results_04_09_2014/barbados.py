@@ -22,12 +22,12 @@ bPoints = []
 stateNames = []
 
 # from mcSegment1_flat_comp.txt
-iPoints.append((0.6666666666666666, 0.9333333333333333))
-bPoints.append((0.86000506551848244, 0.97487571335747714))
+iPoints.append((0.6363636363636364, 0.9333333333333333))
+bPoints.append((0.82905799863794649, 0.97495630449345949))
 stateNames.append("HMM LTR")
 
-iPoints.append((0.7647058823529411, 0.625))
-bPoints.append((0.7220428578597835, 0.86557975374002327))
+iPoints.append((0.8076923076923077, 0.671875))
+bPoints.append((0.86083683162853031, 0.87590743191753906))
 stateNames.append("HMM NON-LTR")
 
 # from ltrChaux_flat_comp.txt
@@ -75,10 +75,10 @@ bPoints = []
 stateNames = []
 
 # from mcSegment1_flat_comp.txt
-iPoints.append((0.6666666666666666, 0.9333333333333333))
+iPoints.append((0.6363636363636364, 0.9333333333333333))
 stateNames.append("HMM LTR")
 
-iPoints.append((0.7647058823529411, 0.625))
+iPoints.append((0.8076923076923077, 0.671875))
 stateNames.append("HMM NON-LTR")
 
 # from combined_flat_comp.txt
