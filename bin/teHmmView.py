@@ -16,7 +16,7 @@ from teHmm.modelIO import loadModel
 try:
     from teHmm.parameterAnalysis import plotHierarchicalClusters
     from teHmm.parameterAnalysis import hierarchicalCluster, rankHierarchies
-    from teHmm.parameterAnalysis import pcaFlatten, plotPoints2d
+    from teHmm.parameterAnalysis import pcaFlatten, plotPoints2d, plotHeatMap
     canPlot = True
 except:
     canPlot = False
@@ -37,6 +37,8 @@ def main(argv=None):
                         " to given file in PDF format", default=None)
     parser.add_argument("--pca", help="Print emission pca scatters"
                         " to given file in PDF format", default=None)
+    parser.add_argument("--hm", help="Print heatmap of emission distribution means"
+                        " for (only) numeric tracks", default=None)
     parser.add_argument("--t", help="Print transition matrix to given"
                         " file in GRAPHVIZ DOT format.  Convert to PDF with "
                         " dot <file> -Tpdf > <outFile>", default=None)
@@ -71,6 +73,12 @@ def main(argv=None):
             raise RuntimeError("Unable to write plots.  Maybe matplotlib is "
                                "not installed?")
         writeEmissionScatters(model, args)
+
+    if args.hm is not None:
+        if canPlot is False:
+            raise RuntimeError("Unable to write plots.  Maybe matplotlib is "
+                               "not installed?")
+        writeEmissionHeatMap(model, args)
 
     if args.t is not None:
         writeTransitionGraph(model, args)
@@ -107,8 +115,8 @@ def writeEmissionClusters(model, args):
 
     # all at once
     hc = hierarchicalCluster(allPoints, normalizeDistances=True)
-    hcList.append(hc)
-    hcNames.append("all_tracks")
+    #hcList.append(hc)
+    #hcNames.append("all_tracks")
     
     # write clusters to pdf (ranked in decreasing order based on total
     # branch length)
@@ -153,7 +161,79 @@ def writeEmissionScatters(model, args):
     if len(scatterList) > 0:
         plotPoints2d([scatterList[i] for i in ranking],
                      [hcNames[i] for i in ranking],
-                     stateNames, args.pca)    
+                     stateNames, args.pca)
+
+def writeEmissionHeatMap(model, args):
+    """ print a heatmap from the emission distributions.  this is of the form of
+    track x state where each value is the man of the distribution for that state
+    for that track"""
+    trackList = model.getTrackList()
+    stateNameMap = model.getStateNameMap()
+    emission = model.getEmissionModel()
+    # [TRACK][STATE][SYMBOL]
+    emissionDist = np.exp(emission.getLogProbs())
+
+    # leaf names of our clusters are the states
+    stateNames = map(stateNameMap.getMapBack, xrange(len(stateNameMap)))
+    N = len(stateNames)
+    emProbs = emission.getLogProbs()
+
+    # output means for each track
+    # TRACK X STATE
+    meanArray = []
+    # keep track of track name for each row of meanArray
+    trackNames = []
+
+    # mean for each track
+    for track in trackList:
+        nonNumeric = False
+        trackNo = track.getNumber()
+        nameMap = track.getValueMap()
+        trackMeans = np.zeros((emission.getNumStates()))
+#        if len([x for x in emission.getTrackSymbols(trackNo)]) is not 2:
+#            continue
+        for state in xrange(emission.getNumStates()):
+            mean = 0.0
+            minVal = float(10e10)
+            maxVal = float(-10e10)
+
+            print state            
+            for symbol in emission.getTrackSymbols(trackNo):
+                # do we need to check for missing value here???
+                val = nameMap.getMapBack(symbol)
+                try:
+                    val = float(val)
+                except:
+                    nonNumeric = True
+                    break        
+                prob = np.exp(emProbs[trackNo][state][symbol])
+                print "%f += %f * %f = %f" % (mean, val, prob, mean + val * prob)
+                mean += val * prob
+                minVal, maxVal = min(val, minVal), max(val, maxVal)
+            if nonNumeric is False:
+                # normalize the mean
+                if maxVal > minVal:
+                    mean = (mean - minVal) / (maxVal - minVal)
+                # hacky cutoff
+                mean = min(0.23, mean)
+                trackMeans[state] = mean
+            else:
+                break
+        if nonNumeric is False:
+            meanArray.append(trackMeans)
+            trackNames.append(track.getName())
+
+    # dumb transpose no time to fix ince
+    tmeans = np.zeros((len(meanArray[0]), len(meanArray)))
+    for i in xrange(len(meanArray)):
+        for j in xrange(len(meanArray[i])):
+            tmeans[j,i] = meanArray[i][j]
+    #meanArray = tmeans
+
+    if len(meanArray) > 0:
+        # note to self http://stackoverflow.com/questions/2455761/reordering-matrix-elements-to-reflect-column-and-row-clustering-in-naiive-python
+        plotHeatMap(meanArray, trackNames, stateNames, args.hm)
+    
 
 def writeTransitionGraph(model, args):
     """ write a graphviz text file """
