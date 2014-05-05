@@ -28,6 +28,8 @@ import matplotlib.mlab as mlab
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 from matplotlib.mlab import PCA
 import matplotlib.cm as cm
+from matplotlib.colors import LogNorm
+
 
 
 
@@ -72,8 +74,8 @@ def plotHierarchicalClusters(hcList, titles, leafNames, outFile):
     hcList is the output of hierarchichalCluster()"""
     cols = 4
     rows = int(np.ceil(float(len(hcList)) / float(cols)))
-    width=10
-    height=5 * rows
+    width=15
+    height= 10
 
     pdf = pltBack.PdfPages(outFile)
     fig = plt.figure(figsize=(width, height))
@@ -81,13 +83,14 @@ def plotHierarchicalClusters(hcList, titles, leafNames, outFile):
     for i, hc in enumerate(hcList):
         # +1 below is to prevent 1st element from being put last
         # (ie sublot seems to behave as if indices are 1-base)
-        plt.subplot(rows, cols, (i + 1) % len(hcList))
+        ax = plt.subplot(rows, cols, (i + 1) % len(hcList))
         dgram = scipy.cluster.hierarchy.dendrogram(
-            hc, color_threshold=None, labels=leafNames, show_leaf_counts=False)
+            hc, color_threshold=100000, labels=leafNames, show_leaf_counts=False)
 #            p=6,
 #            truncate_mode='lastp')
         plt.title(titles[i])
         plt.setp(plt.xticks()[1], rotation=-90, fontsize=10)
+        ax.set_ylim((0.,0.5))
     fig.tight_layout()
     fig.savefig(pdf, format = 'pdf')
     pdf.close()
@@ -183,6 +186,36 @@ def plotPoints2d(distList, titles, stateNames, outFile, xRange=None,
     fig.savefig(pdf, format = 'pdf')
     pdf.close()
 
+def plotHeatMap(array, rowNames, colNames, outFile):
+    """ from here
+    http://stackoverflow.com/questions/2455761/reordering-matrix-elements-to-reflect-column-and-row-clustering-in-naiive-python
+    """
+
+    width=10
+    height= 6
+    pdf = pltBack.PdfPages(outFile)
+    fig = plt.figure(figsize=(width, height))
+    print array
+    print rowNames
+    print colNames
+    
+    axmatrix = fig.add_axes([0.3,0.1,0.6,0.8])
+    im = axmatrix.matshow(array,interpolation='nearest')#, norm=LogNorm())
+    axmatrix.set_xticks([i for i in xrange(-1, len(colNames))])
+    axmatrix.set_yticks([i for i in xrange(-1, len(rowNames))])
+
+    axmatrix.set_xticklabels(['']+colNames)
+    axmatrix.set_yticklabels(['']+rowNames)
+
+    plt.setp(plt.xticks()[1], rotation=90)
+
+
+    axcolor = fig.add_axes([0.91,0.1,0.02,0.8])
+    pylab.colorbar(im, cax=axcolor)
+    
+    fig.savefig(pdf, format = 'pdf')
+    pdf.close()
+    
 
 ### Crappy sandbox for testing ###
 
