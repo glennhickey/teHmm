@@ -440,6 +440,8 @@ class TestCase(TestBase):
                 assert_array_equal(t2[j], t1[t2.segOffsets[j]])
                 coord = t2.segOffsets[j] + t2.getStart()
                 assert coord == segIntervals[icount][1]
+                length = segIntervals[icount][2] - segIntervals[icount][1]
+                assert length == t2.getSegmentLength(j)
                 icount += 1
 
 def main():

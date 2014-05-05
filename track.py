@@ -382,8 +382,16 @@ class TrackTable(object):
 
         self.compressSegments()
         self.shape = (len(self), self.getNumTracks())
-        
 
+    def getSegmentLength(self, i):
+        """ get the length of a segment corresponding to a given index """
+        assert len(self.segOffsets) == len(self)
+        if i == len(self) - 1:
+            return self.end - (self.start + self.segOffsets[-1])
+        elif i < len(self) - 1:
+            return self.segOffsets[i+1] - self.segOffsets[i]
+
+        
 ###########################################################################
 
 """Track Table where every value is an integer"""
