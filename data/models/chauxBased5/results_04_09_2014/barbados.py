@@ -22,11 +22,11 @@ bPoints = []
 stateNames = []
 
 # from mcSegment1_flat_comp.txt
-iPoints.append((0.6363636363636364, 0.9333333333333333))
+iPoints.append((0.6136363636363636, 0.9333333333333333))
 bPoints.append((0.82905799863794649, 0.97495630449345949))
 stateNames.append("HMM LTR")
 
-iPoints.append((0.8076923076923077, 0.671875))
+iPoints.append((0.8269230769230769, 0.671875))
 bPoints.append((0.86083683162853031, 0.87590743191753906))
 stateNames.append("HMM NON-LTR")
 
@@ -36,27 +36,27 @@ bPoints.append((0.99981713115353665, 0.68847496385991247))
 stateNames.append("LTRFINDER LTR")
 
 # from allChaux_flat_comp.txt
-iPoints.append((0.07236842105263158, 0.36666666666666664))
+iPoints.append((0.5263157894736842, 0.36666666666666664))
 bPoints.append((0.78475077606658028, 0.91806903638186099))
-stateNames.append("RM-CHAUX LTR")
+stateNames.append("RM-CHX LTR")
 
-iPoints.append((0.5454545454545454, 0.5625))
+iPoints.append((0.8484848484848485, 0.5625))
 bPoints.append((0.77846968008912942, 0.78468295030682234))
-stateNames.append("RM-CHAUX NON-LTR")
+stateNames.append("RM-CHX NON-LTR")
 
 # from hollister_flat_comp.txt
-iPoints.append((0.0880503144654088, 0.4666666666666667))
+iPoints.append((0.3584905660377358, 0.4666666666666667))
 bPoints.append((0.71012296853666157, 0.83568474762382072))
 stateNames.append("RM-HOL LTR")
 
-iPoints.append((0.4803921568627451, 0.765625))
+iPoints.append((0.6372549019607843, 0.765625))
 bPoints.append((0.71192863715047638, 0.91547346889664305))
 stateNames.append("RM-HOL NON-LTR")
 
 
 titles = ["Base-level Accuracy", "Element-level Accuracy (th=0.8)"]
 distList = [ bPoints, iPoints ]
-markerList = [ "o" , "^" ]
+markerList = [ "o" , "^" , "o", "o", "^", "o", "^" ]
 
 rgbs = [cm.gist_rainbow_r(float(i) / float(len(stateNames))) for i in xrange(len(stateNames))]
 for i in xrange(len(rgbs)):
@@ -66,7 +66,7 @@ for i in xrange(len(rgbs)):
 prgbs = [rgbs[0], rgbs[0], rgbs[5], rgbs[2], rgbs[2], rgbs[3], rgbs[3]]    
 
 plotPoints2d(distList, titles, stateNames, outFile, xRange=(-0.1,1.1),
-                 yRange=(-0.1, 1.2), ptSize=75, xLabel="Precision",
+                 yRange=(-0.1, 1.2), ptSize=125, xLabel="Precision",
                  yLabel="Recall", cols=2, width=10, rowHeight=5,
                  markerList = markerList, rgbs = prgbs)
 
@@ -75,26 +75,27 @@ bPoints = []
 stateNames = []
 
 # from mcSegment1_flat_comp.txt
-iPoints.append((0.6363636363636364, 0.9333333333333333))
+iPoints.append((0.6136363636363636, 0.9333333333333333))
 stateNames.append("HMM LTR")
 
-iPoints.append((0.8076923076923077, 0.671875))
+iPoints.append((0.8269230769230769, 0.671875))
 stateNames.append("HMM NON-LTR")
 
 # from combined_flat_comp.txt
-iPoints.append((0.17105263157894737, 0.8666666666666667))
+iPoints.append((0.23684210526315788, 0.8666666666666667))
 stateNames.append("3way Union LTR")
 
-iPoints.append((0.5048543689320388, 0.828125))
+iPoints.append((0.6213592233009708, 0.828125))
 stateNames.append("3way Union NON-LTR")
 
-prgbs = [rgbs[0], rgbs[0], rgbs[6], rgbs[6]]
+prgbs = [rgbs[0], rgbs[0], rgbs[1], rgbs[1]]
 
 titles = ["Element-level Accuracy (th=0.8)"]
 distList = [ iPoints ]
 assert len(distList[0]) == 4
+markerList = [ "o" , "^" ]
 
 plotPoints2d(distList, titles, stateNames, outFile + "com.pdf", xRange=(-0.1,1.1),
-                 yRange=(-0.1, 1.2), ptSize=75, xLabel="Precision",
+                 yRange=(-0.1, 1.2), ptSize=125, xLabel="Precision",
                  yLabel="Recall", cols=2, width=10, rowHeight=5,
                  markerList = markerList, rgbs = prgbs)

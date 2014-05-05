@@ -2,13 +2,13 @@
 ../../chauxBased4/flattenPrediction.py mcSegment1_eval.bed mcSegment1_eval_flat.bed
 ../../chauxBased4/flattenPrediction.py mcSegment1_eval_filter.bed mcSegment1_eval_filter_flat.bed
 
-compareBedStates.py ../../../truth/manualChaux.bed  mcSegment1_eval.bed --strictPrec --plot mcSegment1_eval_acc.pdf --ignore Outside > mcSegment1_comp.txt
-compareBedStates.py ../../../truth/manualChaux_flat.bed  mcSegment1_eval_flat.bed --strictPrec --plot mcSegment1_eval_flat_acc.pdf --ignore Outside > mcSegment1_flat_comp.txt
-compareBedStates.py ../../../truth/manualChaux.bed  mcSegment1_eval_filter.bed --strictPrec --plot mcSegment1_eval_filter_acc.pdf --ignore Outside > mcSegment1_filter_comp.txt
-compareBedStates.py ../../../truth/manualChaux_flat.bed  mcSegment1_eval_filter_flat.bed --strictPrec --plot mcSegment1_eval_filter_flat_acc.pdf --ignore Outside > mcSegment1_filter_flat_comp.txt
+compareBedStates.py ../../../truth/manualChaux.bed  mcSegment1_eval.bed  --plot mcSegment1_eval_acc.pdf --ignore Outside > mcSegment1_comp.txt
+compareBedStates.py ../../../truth/manualChaux_flat.bed  mcSegment1_eval_flat.bed  --plot mcSegment1_eval_flat_acc.pdf --ignore Outside > mcSegment1_flat_comp.txt
+compareBedStates.py ../../../truth/manualChaux.bed  mcSegment1_eval_filter.bed  --plot mcSegment1_eval_filter_acc.pdf --ignore Outside > mcSegment1_filter_comp.txt
+compareBedStates.py ../../../truth/manualChaux_flat.bed  mcSegment1_eval_filter_flat.bed  --plot mcSegment1_eval_filter_flat_acc.pdf --ignore Outside > mcSegment1_filter_flat_comp.txt
 
-compareBedStates.py ../../../truth/manualChaux_flat.bed ../../../truth/ltrfinderChaux_flat.bed --strictPrec --ignore Outside > ltrChaux_flat_comp.txt
-compareBedStates.py ../../../truth/manualChaux_flat.bed ../../../truth/allChaux.bed --strictPrec --ignore Outside > allChaux_flat_comp.txt
+compareBedStates.py ../../../truth/manualChaux_flat.bed ../../../truth/ltrfinderChaux_flat.bed  --ignore Outside > ltrChaux_flat_comp.txt
+compareBedStates.py ../../../truth/manualChaux_flat.bed ../../../truth/allChaux.bed  --ignore Outside > allChaux_flat_comp.txt
 compareBedStates.py ../../../truth/manualChaux_flat.bed ../../../truth/allChaux.bed  --ignore Outside > allChaux_flat_lax_comp.txt
-compareBedStates.py ../../../truth/manualChaux_flat.bed ../../../truth/hollister.bed  --ignore Outside --strictPrec> hollister_flat_comp.txt
-compareBedStates.py ../../../truth/manualChaux_flat.bed ../../../truth/chauxLtrfinderHollister.bed  --ignore Outside --strictPrec> combined_flat_comp.txt
+compareBedStates.py ../../../truth/manualChaux_flat.bed ../../../truth/hollister.bed  --ignore Outside > hollister_flat_comp.txt
+compareBedStates.py ../../../truth/manualChaux_flat.bed ../../../truth/chauxLtrfinderHollister.bed  --ignore Outside > combined_flat_comp.txt
