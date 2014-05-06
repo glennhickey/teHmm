@@ -208,7 +208,7 @@ def main(argv=None):
     if args.flatEm is True:
         trainFlags += " --flatEm"
     if args.segLen is not None:
-        trainFalgs += " --segLen &d" % args.segLen
+        trainFlags += " --segLen &d" % args.segLen
 
     # write out command line for posteriorty's sake
     if not os.path.exists(args.outputDir):
