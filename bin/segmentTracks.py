@@ -52,7 +52,7 @@ def main(argv=None):
                         "ignore (the FASTA DNA sequence would be a good "
                         "candidate", default=None)
     parser.add_argument("--maxLen", help="Maximum length og a segment",
-                        default=None)
+                        type=int, default=None)
     
     addLoggingOptions(parser)
     args = parser.parse_args()
