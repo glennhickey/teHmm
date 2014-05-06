@@ -217,7 +217,8 @@ def main(argv=None):
         args.numStates,
         numSymbolsPerTrack,
         normalizeFac=args.emFac,
-        randomize=randomize)
+        randomize=randomize,
+        effectiveSegmentLength = args.segLen)
 
     # create the model
     if not args.cfg:
@@ -228,8 +229,7 @@ def main(argv=None):
                               fixEmission = args.fixEm,
                               fixStart = args.fixStart,
                               forceUserEmissions = args.forceEmProbs,
-                              forceUserTrans = args.forceTransProbs,
-                              effectiveSegmentLength = args.segLen)
+                              forceUserTrans = args.forceTransProbs)
     else:
         pairEM = PairEmissionModel(emissionModel, [args.saPrior] *
                                    emissionModel.getNumStates())

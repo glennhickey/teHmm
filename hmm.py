@@ -74,8 +74,7 @@ class MultitrackHmm(BaseHMM):
                  fixStart=True,
                  forceUserTrans=None,
                  forceUserEmissions=None,
-                 forceUserStart=None,
-                 effectiveSegmentLength=None):
+                 forceUserStart=None):
         if emissionModel is not None:
             n_components = emissionModel.getNumStates()
         else:
@@ -129,9 +128,6 @@ class MultitrackHmm(BaseHMM):
         if forceUserStart is not None:
             with open(forceUserStart) as f:
                 self.forceUserStart = f.readlines()
-        # effective segment length is the length we use to normalize all
-        # actual segments to
-        self.effectiveSegmentLength = effectiveSegmentLength
 
     def train(self, trackData):
         """ Use EM to estimate best parameters from scratch (unsupervised)"""
@@ -533,13 +529,6 @@ class MultitrackHmm(BaseHMM):
         self._log_startprob = myLog(np.asarray(startprob).copy())
 
     startprob_ = property(_get_startprob, _set_startprob)
-
-    def __getSegmentRatios(self, obs):
-        if isinstance(obs, TrackTable):
-            if obs.getSegmentOffsets() is not None and\
-               self.effectiveSegmentLength is not None:
-                return obs.getSegmentLengthsAsRatio(self.effectiveSegmentLength)
-        return None   
     
     def _do_viterbi_pass(self, framelogprob, obs = None):
         """ Viterbi dynamic programming.  Overrides the original version

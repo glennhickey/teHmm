@@ -18,7 +18,7 @@ def canFast(obs):
                                          obs.dtype == np.uint8))
         
 @cython.boundscheck(False)
-def fastAllLogProbs(obs, logProbs, outProbs, normalize):
+def fastAllLogProbs(obs, logProbs, outProbs, normalize, segRatios):
     if isinstance(obs, TrackTable):
         obs = obs.getNumPyArray()
     assert isinstance(obs, np.ndarray)
@@ -36,13 +36,13 @@ def fastAllLogProbs(obs, logProbs, outProbs, normalize):
 
     if obs.dtype == np.int32:
         _fastAllLogProbs32(nObs, nTracks, nStates, obs, logProbs, outProbs,
-                           normalize)
+                           normalize, segRatios)
     elif obs.dtype == np.uint16:
         _fastAllLogProbsU16(nObs, nTracks, nStates, obs, logProbs, outProbs,
-                            normalize)
+                            normalize, segRatios)
     elif obs.dtype == np.uint8:
         _fastAllLogProbsU8(nObs, nTracks, nStates, obs, logProbs, outProbs,
-                           normalize)
+                           normalize, segRatios)
     else:
         print obs.dtype
         assert False
@@ -52,15 +52,21 @@ def _fastAllLogProbsU8(itype_t nObs, itype_t nTracks, itype_t nStates,
                       np.ndarray[np.uint8_t, ndim=2] obs,
                       np.ndarray[dtype_t, ndim=3] logProbs,
                       np.ndarray[dtype_t, ndim=2] outProbs,
-                      dtype_t normalize):
+                      dtype_t normalize,
+                      np.ndarray[dtype_t, ndim=1] segRatios):
     cdef itype_t i, j, k
     cdef maxProb = _MINDBL
+    cdef itype_t hasRatio = 0
+    if segRatios is not None:
+        hasRatio = 1    
     for i in xrange(nObs):
        for j in xrange(nStates):
            outProbs[i,j] = 0.0
            for k in xrange(nTracks):
                outProbs[i, j] += logProbs[k, j, obs[i, k]]
            outProbs[i, j] *= normalize
+           if hasRatio == 1:
+               outProbs[i, j] *= segRatios[i]           
            if outProbs[i, j] > maxProb:
                maxProb = outProbs[i, j]
        # no state that can emit symbol so we give every state 0
@@ -75,15 +81,21 @@ def _fastAllLogProbsU16(itype_t nObs, itype_t nTracks, itype_t nStates,
                         np.ndarray[np.uint16_t, ndim=2] obs,
                         np.ndarray[dtype_t, ndim=3] logProbs,
                         np.ndarray[dtype_t, ndim=2] outProbs,
-                        dtype_t normalize):
+                        dtype_t normalize,
+                        np.ndarray[dtype_t, ndim=1] segRatios):
     cdef itype_t i, j, k
     cdef maxProb = _MINDBL
+    cdef itype_t hasRatio = 0
+    if segRatios is not None:
+        hasRatio = 1
     for i in xrange(nObs):
        for j in xrange(nStates):
            outProbs[i,j] = 0.0
            for k in xrange(nTracks):
                outProbs[i, j] += logProbs[k, j, obs[i, k]]
            outProbs[i, j] *= normalize
+           if hasRatio == 1:
+               outProbs[i, j] *= segRatios[i]
            if outProbs[i, j] > maxProb:
                maxProb = outProbs[i, j]
        # no state that can emit symbol so we give every state 0
@@ -98,15 +110,21 @@ def _fastAllLogProbs32(itype_t nObs, itype_t nTracks, itype_t nStates,
                       np.ndarray[np.int32_t, ndim=2] obs,
                       np.ndarray[dtype_t, ndim=3] logProbs,
                       np.ndarray[dtype_t, ndim=2] outProbs,
-                      dtype_t normalize):
+                      dtype_t normalize,
+                      np.ndarray[dtype_t, ndim=1] segRatios):                      
     cdef itype_t i, j, k
     cdef maxProb = _MINDBL
+    cdef itype_t hasRatio = 0    
+    if segRatios is not None:
+        hasRatio = 1    
     for i in xrange(nObs):
        for j in xrange(nStates):
            outProbs[i,j] = 0.0
            for k in xrange(nTracks):
                outProbs[i, j] += logProbs[k, j, obs[i, k]]
            outProbs[i, j] *= normalize
+           if hasRatio == 1:
+               outProbs[i, j] *= segRatios[i]           
            if outProbs[i, j] > maxProb:
                maxProb = outProbs[i, j]
        # no state that can emit symbol so we give every state 0
@@ -177,7 +195,7 @@ def _fastAccumulateStats32(itype_t nObs, itype_t nTracks, itype_t nStates,
                 obsStats[track, state, obsVal] += posteriors[i, state]
 
 @cython.boundscheck(False)
-def fastUpdateCounts(bedInterval, trackTable, obsStats):
+def fastUpdateCounts(bedInterval, trackTable, obsStats, segRatios):
     assert isinstance(trackTable, TrackTable)
     
     obs = trackTable.getNumPyArray()
@@ -195,13 +213,13 @@ def fastUpdateCounts(bedInterval, trackTable, obsStats):
 
     if obs.dtype == np.int32:
         _fastUpdateCounts32(nObs, nTracks, nStates, start, end, symbol,
-                            tableStart, obs, obsStats)
+                            tableStart, obs, obsStats, segRatios)
     elif obs.dtype == np.uint16:
         _fastUpdateCountsU16(nObs, nTracks, nStates, start, end, symbol,
-                             tableStart, obs, obsStats)
+                             tableStart, obs, obsStats, segRatios)
     elif obs.dtype == np.uint8:
         _fastUpdateCountsU8(nObs, nTracks, nStates, start, end, symbol,
-                            tableStart, obs, obsStats)
+                            tableStart, obs, obsStats, segRatios)
     else:
         assert False
 
@@ -210,36 +228,60 @@ def _fastUpdateCounts32(itype_t nObs, itype_t nTracks, itype_t nStates,
                         itype_t start, itype_t end, itype_t symbol,
                         itype_t tableStart, 
                         np.ndarray[np.int32_t, ndim=2] obs,
-                        np.ndarray[dtype_t, ndim=3] obsStats):
+                        np.ndarray[dtype_t, ndim=3] obsStats,
+                        np.ndarray[dtype_t, ndim=1] segRatios):
     cdef itype_t pos, tablePos, track
+    cdef dtype_t val
+    cdef itype_t hasRatio = 0    
+    if segRatios is not None:
+        hasRatio = 1    
     for pos in xrange(start, end):
         # convert to position within track table
         tablePos = pos - tableStart
+        val = 1.0
+        if hasRatio == 1:
+            val = segRatios[pos]
         for track in xrange(nTracks):
-            obsStats[track, symbol, obs[tablePos, track]] += 1.
+            obsStats[track, symbol, obs[tablePos, track]] += val
 
 @cython.boundscheck(False)
 def _fastUpdateCountsU16(itype_t nObs, itype_t nTracks, itype_t nStates,
                         itype_t start, itype_t end, itype_t symbol,
                         itype_t tableStart, 
                         np.ndarray[np.uint16_t, ndim=2] obs,
-                        np.ndarray[dtype_t, ndim=3] obsStats):
+                        np.ndarray[dtype_t, ndim=3] obsStats,
+                        np.ndarray[dtype_t, ndim=1] segRatios):
     cdef itype_t pos, tablePos, track
+    cdef dtype_t val
+    cdef itype_t hasRatio = 0    
+    if segRatios is not None:
+        hasRatio = 1    
     for pos in xrange(start, end):
         # convert to position within track table
         tablePos = pos - tableStart
+        val = 1.0
+        if hasRatio == 1:
+            val = segRatios[pos]
         for track in xrange(nTracks):
-            obsStats[track, symbol, obs[tablePos, track]] += 1.
+            obsStats[track, symbol, obs[tablePos, track]] += val
 
 @cython.boundscheck(False)
 def _fastUpdateCountsU8(itype_t nObs, itype_t nTracks, itype_t nStates,
                         itype_t start, itype_t end, itype_t symbol,
                         itype_t tableStart, 
                         np.ndarray[np.uint8_t, ndim=2] obs,
-                        np.ndarray[dtype_t, ndim=3] obsStats):  
+                        np.ndarray[dtype_t, ndim=3] obsStats,
+                        np.ndarray[dtype_t, ndim=1] segRatios):
     cdef itype_t pos, tablePos, track
+    cdef dtype_t val
+    cdef itype_t hasRatio = 0    
+    if segRatios is not None:
+        hasRatio = 1    
     for pos in xrange(start, end):
         # convert to position within track table
         tablePos = pos - tableStart
+        val = 1.0
+        if hasRatio == 1:
+            val = segRatios[pos]
         for track in xrange(nTracks):
-            obsStats[track, symbol, obs[tablePos, track]] += 1.
+            obsStats[track, symbol, obs[tablePos, track]] += val

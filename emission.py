@@ -28,7 +28,7 @@ independent """
 class IndependentMultinomialEmissionModel(object):
     def __init__(self, numStates, numSymbolsPerTrack, params = None,
                  zeroAsMissingData = True, fudge = 0.0, normalizeFac = 0.0,
-                 randomize=False):
+                 randomize=False, effectiveSegmentLength = None):
         self.numStates = numStates
         self.numTracks = len(numSymbolsPerTrack)
         self.numSymbolsPerTrack = numSymbolsPerTrack
@@ -51,6 +51,9 @@ class IndependentMultinomialEmissionModel(object):
         if normalizeFac > 0:
             self.normalizeFac = float(normalizeFac) / float(self.numTracks)
         self.initParams(params=params, randomize=randomize)
+        # effective segment length is the length we use to normalize all
+        # actual segments to
+        self.effectiveSegmentLength = effectiveSegmentLength
 
     def getLogProbs(self):
         return self.logProbs
@@ -148,13 +151,17 @@ class IndependentMultinomialEmissionModel(object):
         logger.debug("Computing multinomial log prob for %d %d-track "
                       "observations" % (obs.shape[0], self.getNumTracks()))
         obsLogProbs = np.zeros((obs.shape[0], self.numStates), dtype=np.float)
+        segRatios = self.__getSegmentRatios(obs)
         if canFast(obs):
             logger.debug("Cython log prob enabled")
-            fastAllLogProbs(obs, self.logProbs, obsLogProbs, self.normalizeFac)
+            fastAllLogProbs(obs, self.logProbs, obsLogProbs, self.normalizeFac,
+                            segRatios)
         else:
             for i in xrange(len(obs)):
                 for state in xrange(self.numStates):
                     obsLogProbs[i, state] = self.singleLogProb(state, obs[i])
+                    if segRatios is not None:
+                        obsLogProbs[i, state] *= segRatios[i]
         logger.debug("Done computing log prob")
         return obsLogProbs
     
@@ -268,10 +275,11 @@ class IndependentMultinomialEmissionModel(object):
                 if overlap is not None:
                     lastHit = tableIdx
                     hit = True
+                    segRatios = self.__getSegmentRatios(table)
                     if canFast(table) is True:
-                        fastUpdateCounts(overlap, table, obsStats)
+                        fastUpdateCounts(overlap, table, obsStats, segRatios)
                     else:
-                        self.__updateCounts(overlap, table, obsStats)
+                        self.__updateCounts(overlap, table, obsStats, segRatios)
                 elif hit is True:
                     break
         logger.debug("beginning supervised emission max")
@@ -280,7 +288,7 @@ class IndependentMultinomialEmissionModel(object):
         
         self.validate()
 
-    def __updateCounts(self, bedInterval, trackTable, obsStats):
+    def __updateCounts(self, bedInterval, trackTable, obsStats, segRatios):
         """ Update the emission counts in obsStats using statistics from the
         known hidden states in bedInterval"""
         for pos in xrange(bedInterval[1], bedInterval[2]):
@@ -288,8 +296,11 @@ class IndependentMultinomialEmissionModel(object):
             tablePos = pos - trackTable.getStart()
             emissions = trackTable[tablePos]
             state = bedInterval[3]
+            val = 1.
+            if segRatios is not None:
+                val *= segRatios[pos]
             for track in xrange(self.getNumTracks()):
-                obsStats[track, state, emissions[track]] += 1.
+                obsStats[track, state, emissions[track]] += val
 
     def applyUserEmissions(self, userEmLines, stateMap, trackList):
         """ modify a HMM that was constructed using supervisedTrain() so that
@@ -393,7 +404,17 @@ class IndependentMultinomialEmissionModel(object):
         self.logProbs = myLog(probs)
 
         self.validate()
-                
+        
+    def __getSegmentRatios(self, obs):
+        """ return an array, where for each observation its segment length /
+        the effective length is reported... if no segmenting information or
+        no segment length information, than None is returned """
+        if isinstance(obs, TrackTable):
+            if obs.getSegmentOffsets() is not None and\
+               self.effectiveSegmentLength is not None:
+                return obs.getSegmentLengthsAsRatio(self.effectiveSegmentLength)
+        return None   
+
                 
 """ Simple pair emission model that supports emitting 1 or two states
 simultaneousy.  Based on a normal emission but makes a simple distribution
