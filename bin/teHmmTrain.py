@@ -133,7 +133,8 @@ def main(argv=None):
                         " use intersectBed to make sure the overlap is exact",
                         default=None)
     parser.add_argument("--segLen", help="Effective segment length used for"
-                        " normalizing input segments", type=int, default=200)
+                        " normalizing input segments (specifying 0 means no"
+                        " normalization applied)", type=int, default=200)
 
     addLoggingOptions(parser)
     args = parser.parse_args()
@@ -178,6 +179,8 @@ def main(argv=None):
     if args.segment is not None:
         logger.info("loading segment intervals from %s" % args.segment)
         segIntervals = readBedIntervals(args.segment, sort=True)
+        if args.segLen == 0:
+            args.segLen = None
     else:
         raise RuntimeError("--segLen can only be used with --segment")
 
