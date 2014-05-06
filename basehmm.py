@@ -323,9 +323,9 @@ class BaseHMM(object):
 
         score : Compute the log probability under the model
         """
-        obs = np.asarray(obs)
-        framelogprob = self._compute_log_likelihood(obs)
-        viterbi_logprob, state_sequence = self._do_viterbi_pass(framelogprob)
+        framelogprob = self._compute_log_likelihood(np.asarray(obs))
+        viterbi_logprob, state_sequence = self._do_viterbi_pass(framelogprob,
+                                                                obs = obs)
         return viterbi_logprob, state_sequence
 
     def _decode_map(self, obs):
@@ -507,8 +507,8 @@ class BaseHMM(object):
             curr_logprob = 0
             for seq in obs:
                 framelogprob = self._compute_log_likelihood(seq)
-                lpr, fwdlattice = self._do_forward_pass(framelogprob)
-                bwdlattice = self._do_backward_pass(framelogprob)
+                lpr, fwdlattice = self._do_forward_pass(framelogprob, obs = seq)
+                bwdlattice = self._do_backward_pass(framelogprob, obs = seq)
                 logger.debug("Computing posteriors from forward/backward"
                              " tables. (last unoptimized part that needs"
                              " redoing for both time and memory)")
@@ -597,15 +597,14 @@ class BaseHMM(object):
 
     transmat_ = property(_get_transmat, _set_transmat)
 
-    def _do_viterbi_pass(self, framelogprob):
+    def _do_viterbi_pass(self, framelogprob, obs = None):
         n_observations, n_components = framelogprob.shape
         state_sequence, logprob = _basehmm._viterbi(
             n_observations, n_components, self._log_startprob,
             self._log_transmat, framelogprob)
         return logprob, state_sequence
 
-    def _do_forward_pass(self, framelogprob):
-
+    def _do_forward_pass(self, framelogprob, obs = None):
         n_observations, n_components = framelogprob.shape
         fwdlattice = np.zeros((n_observations, n_components))
         _basehmm._forward(n_observations, n_components, self._log_startprob,
@@ -613,7 +612,7 @@ class BaseHMM(object):
         fwdlattice[fwdlattice <= ZEROLOGPROB] = NEGINF
         return logsumexp(fwdlattice[-1]), fwdlattice
 
-    def _do_backward_pass(self, framelogprob):
+    def _do_backward_pass(self, framelogprob, obs = None):
         n_observations, n_components = framelogprob.shape
         bwdlattice = np.zeros((n_observations, n_components))
         _basehmm._backward(n_observations, n_components, self._log_startprob,

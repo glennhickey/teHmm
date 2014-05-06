@@ -391,11 +391,15 @@ class TrackTable(object):
         elif i < len(self) - 1:
             return self.segOffsets[i+1] - self.segOffsets[i]
 
-    def getSegmentLengths(self):
-        """ get array of segment lengths """
-        seglens = np.ndarray((len(self)), dtype=np.int32)
+    def getSegmentLengthsAsRatio(self, effectiveSegmentLength):
+        """ return the segment length / effective segment length as an array"""
+        if self.segOffsets is None:
+            return None
+        seglens = np.ndarray((len(self)), dtype=np.float)
+        effectiveSegmentLength = float(effectiveSegmentLength)
+        assert effectiveSegmentLength >= 1
         for i in xrange(len(self)):
-            seglens[i] = self.getSegmentLength(i)
+            seglens[i] = float(self.getSegmentLength(i)) / effectiveSegmentLength
         return seglens
 
         

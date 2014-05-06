@@ -74,7 +74,8 @@ class MultitrackHmm(BaseHMM):
                  fixStart=True,
                  forceUserTrans=None,
                  forceUserEmissions=None,
-                 forceUserStart=None):
+                 forceUserStart=None,
+                 effectiveSegmentLength=None):
         if emissionModel is not None:
             n_components = emissionModel.getNumStates()
         else:
@@ -128,6 +129,9 @@ class MultitrackHmm(BaseHMM):
         if forceUserStart is not None:
             with open(forceUserStart) as f:
                 self.forceUserStart = f.readlines()
+        # effective segment length is the length we use to normalize all
+        # actual segments to
+        self.effectiveSegmentLength = effectiveSegmentLength
 
     def train(self, trackData):
         """ Use EM to estimate best parameters from scratch (unsupervised)"""
@@ -528,18 +532,25 @@ class MultitrackHmm(BaseHMM):
 
         self._log_startprob = myLog(np.asarray(startprob).copy())
 
-    startprob_ = property(_get_startprob, _set_startprob)        
+    startprob_ = property(_get_startprob, _set_startprob)
+
+    def __getSegmentRatios(self, obs):
+        if isinstance(obs, TrackTable):
+            if obs.getSegmentOffsets() is not None and\
+               self.effectiveSegmentLength is not None:
+                return obs.getSegmentLengthsAsRatio(self.effectiveSegmentLength)
+        return None   
     
-    def _do_viterbi_pass(self, framelogprob):
+    def _do_viterbi_pass(self, framelogprob, obs = None):
         """ Viterbi dynamic programming.  Overrides the original version
         which is still in basehmm.py, to use the faster Cython code """
         n_observations, n_components = framelogprob.shape
         state_sequence, logprob = _hmm._viterbi(
             n_observations, n_components, self._log_startprob,
-            self._log_transmat, framelogprob)
+            self._log_transmat, framelogprob, self.__getSegmentRatios(obs))
         return logprob, state_sequence
 
-    def _do_forward_pass(self, framelogprob):
+    def _do_forward_pass(self, framelogprob, obs = None):
         """ Forward dynamic programming.  Overrides the original version
         which is still in basehmm.py, to use the faster Cython code """
         n_observations, n_components = framelogprob.shape
@@ -547,12 +558,13 @@ class MultitrackHmm(BaseHMM):
             n_observations, n_components))
         fwdlattice = np.zeros((n_observations, n_components))
         _hmm._forward(n_observations, n_components, self._log_startprob,
-                       self._log_transmat, framelogprob, fwdlattice)
+                       self._log_transmat, framelogprob, fwdlattice,
+                       self.__getSegmentRatios(obs))
         lp = logsumexp(fwdlattice[-1])
         logger.debug("Forward log prob %f" % lp)
         return lp, fwdlattice
 
-    def _do_backward_pass(self, framelogprob):
+    def _do_backward_pass(self, framelogprob, obs = None):
         """ Backward dynamic programming.  Overrides the original version
         which is still in basehmm.py, to use the faster Cython code """
         n_observations, n_components = framelogprob.shape
@@ -560,7 +572,8 @@ class MultitrackHmm(BaseHMM):
             n_observations, n_components))
         bwdlattice = np.zeros((n_observations, n_components))
         _hmm._backward(n_observations, n_components, self._log_startprob,
-                        self._log_transmat, framelogprob, bwdlattice)
+                        self._log_transmat, framelogprob, bwdlattice,
+                        self.__getSegmentRatios(obs))
         lp = logsumexp(bwdlattice[0])
         logger.debug("Backward log prob + start %f" % (lp +
                      logsumexp(self._log_startprob)))

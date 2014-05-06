@@ -132,6 +132,8 @@ def main(argv=None):
                         " as both traingBed and --segment argument.  Otherwise"
                         " use intersectBed to make sure the overlap is exact",
                         default=None)
+    parser.add_argument("--segLen", help="Effective segment length used for"
+                        " normalizing input segments", type=int, default=200)
 
     addLoggingOptions(parser)
     args = parser.parse_args()
@@ -176,6 +178,8 @@ def main(argv=None):
     if args.segment is not None:
         logger.info("loading segment intervals from %s" % args.segment)
         segIntervals = readBedIntervals(args.segment, sort=True)
+    else:
+        raise RuntimeError("--segLen can only be used with --segment")
 
     # read the tracks, while intersecting them with the training intervals
     logger.info("loading tracks %s" % args.tracksInfo)
@@ -221,7 +225,8 @@ def main(argv=None):
                               fixEmission = args.fixEm,
                               fixStart = args.fixStart,
                               forceUserEmissions = args.forceEmProbs,
-                              forceUserTrans = args.forceTransProbs)
+                              forceUserTrans = args.forceTransProbs,
+                              effectiveSegmentLength = args.segLen)
     else:
         pairEM = PairEmissionModel(emissionModel, [args.saPrior] *
                                    emissionModel.getNumStates())

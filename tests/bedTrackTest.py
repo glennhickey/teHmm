@@ -436,13 +436,18 @@ class TestCase(TestBase):
             t2 = tlist2[i]
             assert len(t1) == bedIntervals[i][2] - bedIntervals[i][1]
             assert len(t2) == segLens[i]
+            segLenRatios = t2.getSegmentLengthsAsRatio(100)
             for j in xrange(len(t2)):
                 assert_array_equal(t2[j], t1[t2.segOffsets[j]])
                 coord = t2.segOffsets[j] + t2.getStart()
                 assert coord == segIntervals[icount][1]
                 length = segIntervals[icount][2] - segIntervals[icount][1]
                 assert length == t2.getSegmentLength(j)
+                assert float(length) / 100. == segLenRatios[j]
                 icount += 1
+
+
+            
 
 def main():
     sys.argv = sys.argv[:1]
