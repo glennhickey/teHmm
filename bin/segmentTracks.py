@@ -51,8 +51,9 @@ def main(argv=None):
     parser.add_argument("--ignore", help="Comma-separated list of tracks to "
                         "ignore (the FASTA DNA sequence would be a good "
                         "candidate", default=None)
-    parser.add_argument("--maxLen", help="Maximum length og a segment",
-                        type=int, default=None)
+    parser.add_argument("--maxLen", help="Maximum length of a segment (<= 0 means"
+                        " no max length applied"),
+                        type=int, default=200)
     
     addLoggingOptions(parser)
     args = parser.parse_args()
@@ -153,7 +154,7 @@ def isNewSegment(trackTable, pi, i, args):
     assert pi < i
 
     curLength = i - pi
-    if args.maxLen is not None and curLength >= args.maxLen:
+    if args.maxLen > 0 and curLength >= args.maxLen:
         return True
 
     # faster to just call pdist(trackTable[i-1:i], 'hamming')? 

@@ -147,6 +147,10 @@ def main(argv=None):
                         " set to the input file. Not currently working with "
                         " --supervised",
                         action = "store_true", default=False)
+    parser.add_argument("--segLen", help="Effective segment length used for"
+                        " normalizing input segments (specifying 0 means no"
+                        " normalization applied) in training", type=int,
+                        default=None)    
         
     addLoggingOptions(parser)
     args = parser.parse_args()
@@ -203,6 +207,8 @@ def main(argv=None):
         trainFlags += " --forceEmProbs %s" % args.forceEmProbs
     if args.flatEm is True:
         trainFlags += " --flatEm"
+    if args.segLen is not None:
+        trainFalgs += " --segLen &d" % args.segLen
 
     # write out command line for posteriorty's sake
     if not os.path.exists(args.outputDir):
