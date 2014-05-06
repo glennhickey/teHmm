@@ -547,7 +547,7 @@ class MultitrackHmm(BaseHMM):
         n_observations, n_components = framelogprob.shape
         state_sequence, logprob = _hmm._viterbi(
             n_observations, n_components, self._log_startprob,
-            self._log_transmat, framelogprob, self.__getSegmentRatios(obs))
+            self._log_transmat, framelogprob)
         return logprob, state_sequence
 
     def _do_forward_pass(self, framelogprob, obs = None):
@@ -558,8 +558,7 @@ class MultitrackHmm(BaseHMM):
             n_observations, n_components))
         fwdlattice = np.zeros((n_observations, n_components))
         _hmm._forward(n_observations, n_components, self._log_startprob,
-                       self._log_transmat, framelogprob, fwdlattice,
-                       self.__getSegmentRatios(obs))
+                       self._log_transmat, framelogprob, fwdlattice)
         lp = logsumexp(fwdlattice[-1])
         logger.debug("Forward log prob %f" % lp)
         return lp, fwdlattice
@@ -572,8 +571,7 @@ class MultitrackHmm(BaseHMM):
             n_observations, n_components))
         bwdlattice = np.zeros((n_observations, n_components))
         _hmm._backward(n_observations, n_components, self._log_startprob,
-                        self._log_transmat, framelogprob, bwdlattice,
-                        self.__getSegmentRatios(obs))
+                        self._log_transmat, framelogprob, bwdlattice)
         lp = logsumexp(bwdlattice[0])
         logger.debug("Backward log prob + start %f" % (lp +
                      logsumexp(self._log_startprob)))

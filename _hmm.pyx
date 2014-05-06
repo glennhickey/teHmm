@@ -104,8 +104,7 @@ def _forward(int n_observations, int n_components,
         np.ndarray[dtype_t, ndim=1] log_startprob,
         np.ndarray[dtype_t, ndim=2] log_transmat,
         np.ndarray[dtype_t, ndim=2] framelogprob,
-        np.ndarray[dtype_t, ndim=2] fwdlattice,
-        np.ndarray[dtype_t, ndim=1] segLenRatios):
+        np.ndarray[dtype_t, ndim=2] fwdlattice):
 
     cdef int t, i, j
     cdef double logprob
@@ -113,20 +112,9 @@ def _forward(int n_observations, int n_components,
     cdef dtype_t power_sum = 0.0
     cdef double* work_buffer = <double *> \
       malloc(n_components * cython.sizeof(double))
-    cdef dtype_t scaledLogProb
-    cdef int hasRatios = 0
-    if segLenRatios is not None:
-        hasRatios = 1
 
     for i in xrange(n_components):
-        scaledLogProb = framelogprob[0, i]
-        if hasRatios == 1:
-            # correct emission probabilites for seg length
-            scaledLogProb *= segLenRatios[0]
-            # correct transition probabilities for segment length
-            scaledLogProb += log_transmat[i, i] *\
-                (1. - segLenRatios[0])
-        fwdlattice[0, i] = log_startprob[i] + scaledLogProb
+        fwdlattice[0, i] = log_startprob[i] + framelogprob[0, i]
 
     for t in xrange(1, n_observations):
         for j in xrange(n_components):
@@ -137,15 +125,8 @@ def _forward(int n_observations, int n_components,
                     vmax = work_buffer[i]
             power_sum = 0.0
             for i in xrange(n_components):
-                power_sum += exp(work_buffer[i] - vmax)
-            scaledLogProb = framelogprob[t, j]
-            if hasRatios == 1:
-                # correct emission probabilites for seg length
-                scaledLogProb *= segLenRatios[t]
-                # correct transition probabilities for segment length
-                scaledLogProb += log_transmat[j, j] *\
-                    (1. - segLenRatios[t])
-            fwdlattice[t, j] = log(power_sum) + vmax + scaledLogProb
+                power_sum += exp(work_buffer[i] - vmax)                
+            fwdlattice[t, j] = log(power_sum) + vmax + framelogprob[t, j]
             if fwdlattice[t, j] <= ZEROLOGPROB:
                 fwdlattice[t, j] = _NINF
     free(work_buffer)
@@ -155,8 +136,7 @@ def _backward(int n_observations, int n_components,
         np.ndarray[dtype_t, ndim=1] log_startprob,
         np.ndarray[dtype_t, ndim=2] log_transmat,
         np.ndarray[dtype_t, ndim=2] framelogprob,
-        np.ndarray[dtype_t, ndim=2] bwdlattice,
-        np.ndarray[dtype_t, ndim=1] segLenRatios):
+        np.ndarray[dtype_t, ndim=2] bwdlattice):
 
     cdef int t, i, j
     cdef double logprob
@@ -164,10 +144,6 @@ def _backward(int n_observations, int n_components,
     cdef dtype_t power_sum = 0.0
     cdef double* work_buffer = <double *> \
       malloc(n_components * cython.sizeof(double))
-    cdef dtype_t scaledLogProb
-    cdef int hasRatios = 0
-    if segLenRatios is not None:
-        hasRatios = 1
 
     for i in xrange(n_components):
         bwdlattice[n_observations - 1, i] = 0.0
@@ -176,14 +152,7 @@ def _backward(int n_observations, int n_components,
         for i in xrange(n_components):
             vmax = _NINF
             for j in xrange(n_components):
-                scaledLogProb = framelogprob[t + 1, j]
-                if hasRatios == 1:
-                    # correct emission probabilites for seg length
-                    scaledLogProb *= segLenRatios[t + 1]
-                    # correct transition probabilities for segment length
-                    scaledLogProb += log_transmat[i, i] *\
-                       (1. - segLenRatios[t + 1])
-                work_buffer[j] = log_transmat[i, j] + scaledLogProb \
+                work_buffer[j] = log_transmat[i, j] + framelogprob[t + 1, j] \
                     + bwdlattice[t + 1, j]
                 if work_buffer[j] > vmax:
                     vmax = work_buffer[j]
@@ -201,8 +170,7 @@ def _backward(int n_observations, int n_components,
 def _viterbi(int n_observations, int n_components,
         np.ndarray[dtype_t, ndim=1] log_startprob,
         np.ndarray[dtype_t, ndim=2] log_transmat,
-        np.ndarray[dtype_t, ndim=2] framelogprob,
-        np.ndarray[dtype_t, ndim=1] segLenRatios):
+        np.ndarray[dtype_t, ndim=2] framelogprob):
 
     cdef int t, max_pos
     cdef np.ndarray[dtype_t, ndim = 2] viterbi_lattice
@@ -212,10 +180,6 @@ def _viterbi(int n_observations, int n_components,
     cdef dtype_t maxprob
     cdef dtype_t curprob
     cdef np.int16_t maxState
-    cdef dtype_t scaledLogProb
-    cdef int hasRatios = 0
-    if segLenRatios is not None:
-        hasRatios = 1
 
     # Initialization
     state_sequence = np.empty(n_observations, dtype=np.int)
@@ -230,16 +194,9 @@ def _viterbi(int n_observations, int n_components,
               framelogprob[t, toState]
             maxState = 0
             for fromState in xrange(1, n_components):
-                scaledLogProb = framelogprob[t, toState]
-                if hasRatios == 1:
-                    # correct emission probabilites for seg length
-                    scaledLogProb *= segLenRatios[t]
-                    # correct transition probabilities for segment length
-                    scaledLogProb += log_transmat[toState, toState] *\
-                       (1. - segLenRatios[t])
                 curprob = viterbi_lattice[t-1, fromState] + \
                   log_transmat[fromState, toState] +\
-                  scaledLogProb
+                  framelogprob[t, toState]
                 if curprob > maxprob:
                     maxprob = curprob
                     maxState = fromState
