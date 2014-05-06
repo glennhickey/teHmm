@@ -152,7 +152,8 @@ def isNewSegment(trackTable, pi, i, args):
     assert pi >= 0
     assert pi < i
 
-    if args.maxLen is not None and i - pi >= args.maxLen:
+    curLength = i - pi
+    if args.maxLen is not None and curLength >= args.maxLen:
         return True
 
     # faster to just call pdist(trackTable[i-1:i], 'hamming')? 
