@@ -52,6 +52,9 @@ def main(argv=None):
                         " for evaluattion.  Note the model should have been"
                         " trained with the --segment option pointing to this"
                         " same bed file.", action="store_true", default=False)
+    parser.add_argument("--post", help="Use maximum posterior decoding instead"
+                        " of Viterbi for evaluation", action="store_true",
+                        default=False)
     addLoggingOptions(parser)
     args = parser.parse_args()
     setLoggingFromOptions(args)
@@ -66,6 +69,10 @@ def main(argv=None):
     logger.info("loading model %s" % args.inputModel)
     model = loadModel(args.inputModel)
 
+    if isinstance(model, MultitrackCfg):
+        if args.post is True:
+           raise RuntimeErorr("--post not supported on CFG models")
+        
     # read intervals from the bed file
     logger.info("loading target intervals from %s" % args.bedRegions)
     mergedIntervals = getMergedBedIntervals(args.bedRegions, ncol=4)
@@ -94,16 +101,24 @@ def main(argv=None):
 
     # do the viterbi algorithm
     if isinstance(model, MultitrackHmm):
-        logger.info("running viterbi algorithm")
+        algname = "viterbi"
+        if args.post is True:
+            algname = "posterior decoding"
+        logger.info("running %s algorithm" % algname)
     elif isinstance(model, MultitrackCfg):
-        logger.info("running CYK algorithm")        
+        logger.info("running CYK algorithm")
 
     if args.bed is not None:
         vitOutFile = open(args.bed, "w")
     totalScore = 0
     tableIndex = 0
-    for vitLogProb, vitStates in model.viterbi(trackData,
-                                               numThreads=args.numThreads):
+
+    decodeFunction = model.viterbi
+    if args.post is True:
+        decodeFunction = model.posteriorDecode
+
+    for vitLogProb, vitStates in decodeFunction(trackData,
+                                                numThreads=args.numThreads):
         totalScore += vitLogProb
         if args.bed is not None:
             vitOutFile.write("#Viterbi Score: %f\n" % (vitLogProb))

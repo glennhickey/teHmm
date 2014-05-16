@@ -181,7 +181,7 @@ class MultitrackHmm(BaseHMM):
         for trackTable in trackData.getTrackTableList():
             totalLogProb.append(self.score(trackTable))
         return logProbList
-
+    
     def viterbi(self, trackData, numThreads = 1):
         """ Return the output of the Viterbi algorithm on the loaded
         data: a tuple of (log likelihood of best path, and the path itself)
@@ -194,6 +194,21 @@ class MultitrackHmm(BaseHMM):
             logger.debug("Beginning hmm viterbi decode")
             prob, states = self.decode(trackTable)
             logger.debug("Done hmm viterbi decode")
+            if self.stateNameMap is not None:
+                states = map(self.stateNameMap.getMapBack, states)
+            output.append((prob,states))
+        return output
+
+    def posteriorDecode(self, trackData):
+        """ Return the output of the maximum posterior probabilitiy decoding
+        data: a tuple of (log likelihood of best path, and the path itself)
+        (one data point of each interval of track data)
+        """
+        output = []
+        for trackTable in trackData.getTrackTableList():
+            logger.debug("Beginning hmm max posterior decode")
+            prob, states = self.decode(trackTable, algorithm="map")
+            logger.debug("Done hmm max posterior decode")
             if self.stateNameMap is not None:
                 states = map(self.stateNameMap.getMapBack, states)
             output.append((prob,states))
