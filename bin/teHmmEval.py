@@ -205,8 +205,8 @@ def statesToBed(chrom, start, end, segmentOffsets, states, bedFile,
             posteriorsFile.write("%s\t%d\t%d\t%f\n" % (prevPostInterval[0],
                                  prevPostInterval[1], prevPostInterval[2],
                                  np.sum(posteriors[i-1] * posteriorsMask)))
-            prevPostInterval = (prevInterval[0], prevInterval[2],
-                            prevInterval[2] + intLen, state)
+            prevPostInterval = (prevPostInterval[0], prevPostInterval[2],
+                            prevPostInterval[2] + intLen, state)
 
 def slicedIntervals(bedIntervals, chunkSize):
     """slice bed intervals by a given length.  used as a quick way to get
