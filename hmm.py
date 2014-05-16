@@ -213,7 +213,18 @@ class MultitrackHmm(BaseHMM):
                 states = map(self.stateNameMap.getMapBack, states)
             output.append((prob,states))
         return output
-        
+
+    def posteriorDistribution(self, trackData):
+        """ Return the posterior probability (array of probabilities, 1 for each state)
+        distribution for the observations"""
+        output = []
+        for trackTable in trackData.getTrackTableList():
+            logger.debug("Beginning hmm posterior distribution computation")
+            logprob, posteriors = self.score_samples(trackTable)
+            logger.debug("Done hmm posterior distribution")
+            output.append(posteriors)
+        return output
+
     def __str__(self):
         states = [x for x in xrange(self.n_components)]
         if self.stateNameMap is not None:

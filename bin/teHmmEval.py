@@ -52,9 +52,17 @@ def main(argv=None):
                         " for evaluattion.  Note the model should have been"
                         " trained with the --segment option pointing to this"
                         " same bed file.", action="store_true", default=False)
-    parser.add_argument("--post", help="Use maximum posterior decoding instead"
+    parser.add_argument("--maxPost", help="Use maximum posterior decoding instead"
                         " of Viterbi for evaluation", action="store_true",
                         default=False)
+    parser.add_argument("--pd", help="Output BED file for posterior distribution. Must"
+                        " be used in conjunction with --pdStates", default=None)
+    parser.add_argument("--pdStates", help="comma-separated list of state names to use"
+                        " for computing posterior distribution.  For example: "
+                        " --pdStates inside,LTR_left,LTR_right will compute the probability"
+                        ", for each observation, that the hidden state is inside OR LTR_left"
+                        " OR LTR_right.  Must be used with --pd to specify output "
+                        "file.", default=None)
     addLoggingOptions(parser)
     args = parser.parse_args()
     setLoggingFromOptions(args)
@@ -64,13 +72,15 @@ def main(argv=None):
     elif args.segment is True:
         raise RuntimeError("--slice and --segment options are not compatible at "
                            "this time")
+    if (args.pd is not None) ^ (args.pdStates is not None):
+        raise RuntimeError("--pd requires --pdStates and vice versa")
         
     # load model created with teHmmTrain.py
     logger.info("loading model %s" % args.inputModel)
     model = loadModel(args.inputModel)
 
     if isinstance(model, MultitrackCfg):
-        if args.post is True:
+        if args.maxPost is True:
            raise RuntimeErorr("--post not supported on CFG models")
         
     # read intervals from the bed file
@@ -102,7 +112,7 @@ def main(argv=None):
     # do the viterbi algorithm
     if isinstance(model, MultitrackHmm):
         algname = "viterbi"
-        if args.post is True:
+        if args.maxPost is True:
             algname = "posterior decoding"
         logger.info("running %s algorithm" % algname)
     elif isinstance(model, MultitrackCfg):
@@ -113,12 +123,24 @@ def main(argv=None):
     totalScore = 0
     tableIndex = 0
 
+    # Note: in general there's room to save on memory by only computing single
+    # track table at once (just need to add table by table interface to hmm...)
+    
+    posteriors = None
+    posteriorsFile = None
+    posteriorsMask = None
+    if args.pd is not None:
+        posteriors = model.posteriorDistribution(trackData)
+        posteriorsFile = open(args.pd, "w")
+        posteriorsMask = getPosteriorsMask(args, model)
+        assert len(posteriors[0]) == len(posteriorsMask)
+    
     decodeFunction = model.viterbi
-    if args.post is True:
+    if args.maxPost is True:
         decodeFunction = model.posteriorDecode
 
-    for vitLogProb, vitStates in decodeFunction(trackData,
-                                                numThreads=args.numThreads):
+    for i, (vitLogProb, vitStates) in enumerate(decodeFunction(trackData,
+                                                numThreads=args.numThreads)):
         totalScore += vitLogProb
         if args.bed is not None:
             vitOutFile.write("#Viterbi Score: %f\n" % (vitLogProb))
@@ -126,17 +148,21 @@ def main(argv=None):
             tableIndex += 1
             statesToBed(trackTable.getChrom(), trackTable.getStart(),
                         trackTable.getEnd(), trackTable.getSegmentOffsets(),
-                        vitStates, vitOutFile)
+                        vitStates, vitOutFile, posteriors[i], posteriorsMask,
+                        posteriorsFile)
 
     print "Viterbi (log) score: %f" % totalScore
     if isinstance(model, MultitrackHmm) and model.current_iteration is not None:
         print "Number of EM iterations: %d" % model.current_iteration
     if args.bed is not None:
         vitOutFile.close()
+    if posteriorsFile is not None:
+        posteriorsFile.close()
 
     cleanBedTool(tempBedToolPath)
 
-def statesToBed(chrom, start, end, segmentOffsets, states, bedFile):
+def statesToBed(chrom, start, end, segmentOffsets, states, bedFile,
+                posteriors, posteriorsMask, posteriorsFile):
     """write a sequence of states out in bed format where intervals are
     maximum runs of contiguous states."""
     if segmentOffsets is None:
@@ -149,6 +175,7 @@ def statesToBed(chrom, start, end, segmentOffsets, states, bedFile):
         else:
             intLen = end - start
     prevInterval = (chrom, start, start + intLen, states[0])
+    prevPostInterval = prevInterval
     
     for i in xrange(1, len(states) + 1):
         if i < len(states):
@@ -171,6 +198,12 @@ def statesToBed(chrom, start, end, segmentOffsets, states, bedFile):
         else:
             prevInterval = (prevInterval[0], prevInterval[1],
                             prevInterval[2] + intLen, prevInterval[3])
+        if posteriors is not None:
+            bedFile.write("%s\t%d\t%d\t%f\n" % prevPostInterval[0],
+                          prevPostInterval[1], prevPostInterval[2],
+                          np.sum(posteriors[i-1] * posteriorsMask))                          
+            prevPostInterval = (prevInterval[0], prevInterval[2],
+                            prevInterval[2] + intLen, state)
 
 def slicedIntervals(bedIntervals, chunkSize):
     """slice bed intervals by a given length.  used as a quick way to get
@@ -188,6 +221,20 @@ def slicedIntervals(bedIntervals, chunkSize):
                     sInt[2] = sInt[1] + chunkSize
                 assert sInt[2] > sInt[1]
                 yield tuple(sInt)
+
+def getPosteriorsMask(args, hmm):
+    """ returns array mask where mask[i] == 1 iff state i is part of our desired
+    posterior distribution"""
+    stateMap = hmm.getStateNameMap()
+    mask = np.zeros((len(stateMap)), dtype=np.int8)
+    pStates = args.pdStates.split(",")
+    for state in pdStates:
+        if state not in stateMap.values():
+            logger.warning("Posterior Distribution state %s not found in model" % state)
+        else:
+            stateNumber = stateMap.values().index(state)
+            maks[stateNumber] = 1
+    return mask    
          
 if __name__ == "__main__":
     sys.exit(main())
