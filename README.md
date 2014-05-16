@@ -254,6 +254,13 @@ By default, the HMM emits a state for each base of the target genomic region.   
 	teHmmTrain.py tracks.xml ltrfinder_all.bed ltrfinder.hmm --supervised --segments segments.bed
 	teHmmEval.py tracks.xml ltrfinder.hmm segments.bed --bed predictions.bed --segments
 
+### Computing the Posterior Distribution
+
+`teHmmEval.py` contains options to output the posterior probability distribution of a given set of states.  This is the probability, for each observation, that the hidden state is in this set.   The posterior distribution for state1 can be obtained for the above example as follows:
+
+	teHmmEval.py tracks.xml ltrfinder.hmm segments.bed --bed predictions.bed --segments --pd posteriorDist.bed --pdStates state1
+
+	
 Complete List of Tools Included (contents of /bin)
 =====
 
