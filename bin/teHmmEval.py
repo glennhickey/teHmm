@@ -56,7 +56,8 @@ def main(argv=None):
                         " of Viterbi for evaluation", action="store_true",
                         default=False)
     parser.add_argument("--pd", help="Output BED file for posterior distribution. Must"
-                        " be used in conjunction with --pdStates", default=None)
+                        " be used in conjunction with --pdStates (View on the "
+                        "browser via bedGraphToBigWig)", default=None)
     parser.add_argument("--pdStates", help="comma-separated list of state names to use"
                         " for computing posterior distribution.  For example: "
                         " --pdStates inside,LTR_left,LTR_right will compute the probability"
