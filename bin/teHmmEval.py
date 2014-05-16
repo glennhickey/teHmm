@@ -118,6 +118,7 @@ def main(argv=None):
     elif isinstance(model, MultitrackCfg):
         logger.info("running CYK algorithm")
 
+    vitOutFile = None
     if args.bed is not None:
         vitOutFile = open(args.bed, "w")
     totalScore = 0
@@ -133,7 +134,7 @@ def main(argv=None):
         posteriors = model.posteriorDistribution(trackData)
         posteriorsFile = open(args.pd, "w")
         posteriorsMask = getPosteriorsMask(args, model)
-        assert len(posteriors[0]) == len(posteriorsMask)
+        assert len(posteriors[0][0]) == len(posteriorsMask)
     
     decodeFunction = model.viterbi
     if args.maxPost is True:
@@ -142,8 +143,9 @@ def main(argv=None):
     for i, (vitLogProb, vitStates) in enumerate(decodeFunction(trackData,
                                                 numThreads=args.numThreads)):
         totalScore += vitLogProb
-        if args.bed is not None:
-            vitOutFile.write("#Viterbi Score: %f\n" % (vitLogProb))
+        if args.bed is not None or args.pd is not None:
+            if args.bed is not None:
+                vitOutFile.write("#Viterbi Score: %f\n" % (vitLogProb))
             trackTable = trackData.getTrackTableList()[tableIndex]
             tableIndex += 1
             statesToBed(trackTable.getChrom(), trackTable.getStart(),
@@ -188,20 +190,21 @@ def statesToBed(chrom, start, end, segmentOffsets, states, bedFile,
                 intLen = end - (start + segmentOffsets[-1])
             elif i < len(states) - 1:
                 intLen = segmentOffsets[i+1] - segmentOffsets[i]
-                
-        if state != prevInterval[3]:
-            assert prevInterval[3] is not None
-            assert prevInterval[1] >= start and prevInterval[2] <= end
-            bedFile.write("%s\t%d\t%d\t%s\n" % prevInterval)
-            prevInterval = (prevInterval[0], prevInterval[2],
-                            prevInterval[2] + intLen, state)
-        else:
-            prevInterval = (prevInterval[0], prevInterval[1],
-                            prevInterval[2] + intLen, prevInterval[3])
+
+        if bedFile is not None:
+            if state != prevInterval[3]:
+                assert prevInterval[3] is not None
+                assert prevInterval[1] >= start and prevInterval[2] <= end
+                bedFile.write("%s\t%d\t%d\t%s\n" % prevInterval)
+                prevInterval = (prevInterval[0], prevInterval[2],
+                                prevInterval[2] + intLen, state)
+            else:
+                prevInterval = (prevInterval[0], prevInterval[1],
+                                prevInterval[2] + intLen, prevInterval[3])
         if posteriors is not None:
-            bedFile.write("%s\t%d\t%d\t%f\n" % prevPostInterval[0],
-                          prevPostInterval[1], prevPostInterval[2],
-                          np.sum(posteriors[i-1] * posteriorsMask))                          
+            posteriorsFile.write("%s\t%d\t%d\t%f\n" % (prevPostInterval[0],
+                                 prevPostInterval[1], prevPostInterval[2],
+                                 np.sum(posteriors[i-1] * posteriorsMask)))
             prevPostInterval = (prevInterval[0], prevInterval[2],
                             prevInterval[2] + intLen, state)
 
@@ -227,13 +230,12 @@ def getPosteriorsMask(args, hmm):
     posterior distribution"""
     stateMap = hmm.getStateNameMap()
     mask = np.zeros((len(stateMap)), dtype=np.int8)
-    pStates = args.pdStates.split(",")
-    for state in pdStates:
-        if state not in stateMap.values():
+    for state in args.pdStates.split(","):
+        if not stateMap.has(state):
             logger.warning("Posterior Distribution state %s not found in model" % state)
         else:
-            stateNumber = stateMap.values().index(state)
-            maks[stateNumber] = 1
+            stateNumber = stateMap.getMap(state)
+            mask[stateNumber] = 1
     return mask    
          
 if __name__ == "__main__":

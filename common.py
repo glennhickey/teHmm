@@ -151,7 +151,7 @@ def __setDefaultLogger():
     handler = logging.StreamHandler(sys.stderr)
     handler.setFormatter(loggingFormatter)
     l.addHandler(handler) 
-    l.setLevel(logging.CRITICAL)
+    l.setLevel(logging.WARNING)
     return l
 
 logger = __setDefaultLogger()
