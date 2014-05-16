@@ -151,7 +151,7 @@ class IndependentMultinomialEmissionModel(object):
         logger.debug("Computing multinomial log prob for %d %d-track "
                       "observations" % (obs.shape[0], self.getNumTracks()))
         obsLogProbs = np.zeros((obs.shape[0], self.numStates), dtype=np.float)
-        segRatios = self.__getSegmentRatios(obs)
+        segRatios = self.getSegmentRatios(obs)
         if canFast(obs):
             logger.debug("Cython log prob enabled")
             fastAllLogProbs(obs, self.logProbs, obsLogProbs, self.normalizeFac,
@@ -275,7 +275,7 @@ class IndependentMultinomialEmissionModel(object):
                 if overlap is not None:
                     lastHit = tableIdx
                     hit = True
-                    segRatios = self.__getSegmentRatios(table)
+                    segRatios = self.getSegmentRatios(table)
                     if canFast(table) is True:
                         fastUpdateCounts(overlap, table, obsStats, segRatios)
                     else:
@@ -405,7 +405,7 @@ class IndependentMultinomialEmissionModel(object):
 
         self.validate()
         
-    def __getSegmentRatios(self, obs):
+    def getSegmentRatios(self, obs):
         """ return an array, where for each observation its segment length /
         the effective length is reported... if no segmenting information or
         no segment length information, than None is returned """

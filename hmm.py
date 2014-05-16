@@ -458,7 +458,9 @@ class MultitrackHmm(BaseHMM):
                 lnP = logsumexp(fwdlattice[-1])
                 _hmm._log_sum_lneta(n_observations, n_components, fwdlattice,
                                      self._log_transmat, bwdlattice,
-                                     framelogprob, lnP, logsum_lneta)
+                                     framelogprob, lnP,
+                                     self.getSegmentSelfTranFactors(obs),
+                                     logsum_lneta)
 
                 stats["trans"] += np.exp(logsum_lneta)
 
@@ -562,7 +564,9 @@ class MultitrackHmm(BaseHMM):
         n_observations, n_components = framelogprob.shape
         state_sequence, logprob = _hmm._viterbi(
             n_observations, n_components, self._log_startprob,
-            self._log_transmat, framelogprob)
+            self._log_transmat, self.getSegmentSelfTranFactors(obs),
+
+            framelogprob)
         return logprob, state_sequence
 
     def _do_forward_pass(self, framelogprob, obs = None):
@@ -573,7 +577,9 @@ class MultitrackHmm(BaseHMM):
             n_observations, n_components))
         fwdlattice = np.zeros((n_observations, n_components))
         _hmm._forward(n_observations, n_components, self._log_startprob,
-                       self._log_transmat, framelogprob, fwdlattice)
+                       self._log_transmat, framelogprob, 
+                        self.getSegmentSelfTranFactors(obs),
+                       fwdlattice)
         lp = logsumexp(fwdlattice[-1])
         logger.debug("Forward log prob %f" % lp)
         return lp, fwdlattice
@@ -586,9 +592,36 @@ class MultitrackHmm(BaseHMM):
             n_observations, n_components))
         bwdlattice = np.zeros((n_observations, n_components))
         _hmm._backward(n_observations, n_components, self._log_startprob,
-                        self._log_transmat, framelogprob, bwdlattice)
+                        self._log_transmat, framelogprob,
+                        self.getSegmentSelfTranFactors(obs),
+                        bwdlattice)
         lp = logsumexp(bwdlattice[0])
         logger.debug("Backward log prob + start %f" % (lp +
                      logsumexp(self._log_startprob)))
         return bwdlattice
 
+    def getSegmentSelfTranFactors(self, obs):
+        """ compute the Segment-size transition correction factors from the segment ratios.
+        This is L / B - 1 if ratio greater than 1 or 1 - B/ L otherwise (B: effective length
+        L = segment length.  Can return None if no correction is specfied."""
+
+        #hacky little speedup -- just store the ratios into obs
+        try:
+            if obs.hmmTransFacBuffer is not None:
+                return obs.hmmTransFacBuffer
+        except:
+            pass
+
+        ratios = self.emissionModel.getSegmentRatios(obs)
+        if ratios is not None:
+            for i in xrange(len(ratios)):
+                if ratios[i] >= 1:
+                    ratios[i] -= 1.
+                else:
+                    assert ratios[i] != 0
+                    ratios[i] = 1. - np.power(ratios[i], -1)
+                    
+        if isinstance(obs, TrackTable):
+            obs.hmmTransFacBuffer = ratios
+            
+        return ratios
