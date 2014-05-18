@@ -14,7 +14,7 @@ import time
 
 from teHmm.hmm import MultitrackHmm
 from teHmm.common import myLog, EPSILON, initBedTool, cleanBedTool
-from teHmm.basehmm import BaseHMM
+from teHmm.basehmm import BaseHMM, logsumexp
 from teHmm.hmm import MultitrackHmm
 from teHmm.emission import IndependentMultinomialEmissionModel
 
@@ -42,6 +42,8 @@ def main(argv=None):
                         default=False)
     parser.add_argument("--old", help="Only run old hmm", action="store_true",
                         default=False)
+    parser.add_argument("--fb", help="Run a little forward/backward test",
+                        action="store_true", default=False)
     
     args = parser.parse_args()
     alg = args.alg.lower()
@@ -61,13 +63,19 @@ def main(argv=None):
         baseret = runTest(basehmm, frame, alg)
         deltaTime = time.time() - startTime
         print "Elapsed time for OLD %d x %d %s: %s" % (args.N, args.S, args.alg,
-                                                       str(deltaTime))    
+                                                       str(deltaTime))
+        if args.fb:
+            fbTest(basehmm, frame)
+             
     if args.new == args.old or args.new:
         startTime = time.time()
         newret = runTest(mthmm, frame, alg)
         deltaTime = time.time() - startTime
         print "Elapsed time for NEW %d x %d %s: %s" % (args.N, args.S, args.alg,
                                                        str(deltaTime))
+        if args.fb:
+            fbTest(mthmm, frame)
+            
     if baseret is not None and mtret is not None:
         # note comparison doesnt mean much since data is so boring so 
         # hopefully hmmTest will be more meaningful.  that said, this will still
@@ -79,9 +87,14 @@ def main(argv=None):
             assert_array_almost_equal(baseret, mtret)
 
     
-def makeFrame(numStates, numObs, prob=0.5):
-    """ Make a dummy framelogprob matrix that the functions execpt"""
-    return np.log(prob) + np.zeros((numObs, numStates),)
+def makeFrame(numStates, numObs):
+    """ Make a dummy framelogprob matrix that the functions execpt.
+    probability of a states is just the state # / numSates"""
+    frame = np.zeros((numObs, numStates),)
+    for i in xrange(len(frame)):
+        for j in xrange(numStates):
+            frame[i, j] = myLog(float(j) / float(numStates))
+    return frame
 
 def runTest(hmm, frame, alg):
     """ call the basehmms low level dp algorithm """
@@ -93,6 +106,23 @@ def runTest(hmm, frame, alg):
         return hmm._do_backward_pass(frame)
     else:
         assert False
+
+def fbTest(hmm, frame):
+    """ check invariants for forward and backward tables """
+
+    for i in xrange(len(frame)):
+        frame[i,0] = 0.1
+    
+    flp, ftable = hmm._do_forward_pass(frame)
+    btable = hmm._do_backward_pass(frame)
+    bneg = np.zeros((btable.shape[1]))
+    for i in xrange(len(bneg)):
+        bneg[i] = logsumexp(np.asarray(
+            [hmm._log_startprob[j] + frame[0, j] + btable[0, j]\
+                             for j in xrange(len(bneg))]))
+    blp = logsumexp(bneg)
+    print ("FProb = %f  BProb = %f,  delta=%f" % (flp, blp, (flp-blp)))
+    
 
 if __name__ == "__main__":
     sys.exit(main())

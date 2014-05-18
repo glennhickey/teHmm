@@ -165,11 +165,32 @@ class TestCase(TestBase):
         state_sequence = trackHmm3.predict(trackObs3)
         posteriors = trackHmm3.predict_proba(trackObs3)
         assert_array_equal(state_sequence, [1, 0, 0])
-        assert_array_almost_equal(posteriors, [
-            [0.23170303, 0.76829697],
-            [0.62406281, 0.37593719],
-            [0.86397706, 0.13602294],
-        ])
+        
+        #assert_array_almost_equal(posteriors, [
+        #    [0.23170303, 0.76829697],
+        #    [0.62406281, 0.37593719],
+        #    [0.86397706, 0.13602294],
+        #])
+        # above is no longer true since we fixed bacwkardTable[N] to be a dsitrubtion
+        # rather than just all 1s.  instead we do a test to make sure that total
+        # probability from forward is the same as from backward
+        emProbs = emissionModel3.allLogProbs(trackObs3)
+        flp, ftable = trackHmm3._do_forward_pass(emProbs)
+        emProbsOld = h._compute_log_likelihood(np.asarray(observations))
+        flpOld, ftableOld = h._do_forward_pass(emProbsOld)
+        assert_array_almost_equal(ftable, ftableOld)
+        assert_array_almost_equal(flp, flpOld)
+        
+        btable = trackHmm3._do_backward_pass(emProbs)
+        bneg1 = np.zeros((self.n_components))
+        for i in xrange(self.n_components):
+            for j in xrange(self.n_components):
+                bneg1[i] += np.exp(trackHmm3._log_startprob[j] + emProbs[0, j] +\
+                                  btable[0, j])
+
+        assert np.log(np.sum(bneg1)) == flp
+            
+    
 
     def testFit(self):
         h = MultinomialHMM(self.n_components,

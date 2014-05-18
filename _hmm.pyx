@@ -167,7 +167,7 @@ def _backward(int n_observations, int n_components,
         hasRatios = 1
 
     for i in xrange(n_components):
-        bwdlattice[n_observations - 1, i] = 0.0
+        bwdlattice[n_observations - 1, i] = log(1. / float(n_components))
 
     for t in xrange(n_observations - 2, -1, -1):
         for i in xrange(n_components):
