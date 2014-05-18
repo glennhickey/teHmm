@@ -128,7 +128,7 @@ def main(argv=None):
     # Note: in general there's room to save on memory by only computing single
     # track table at once (just need to add table by table interface to hmm...)
     
-    posteriors = None
+    posteriors = [None] * len(trackData)
     posteriorsFile = None
     posteriorsMask = None
     if args.pd is not None:
