@@ -91,7 +91,8 @@ def _log_sum_lneta(int n_observations, int n_components,
                 if hasRatios == 1:
                     x += -segRatios[t + 1] * selftranscomp[j]
                     if i == j and segRatios[t + 1] > 1.:
-                        y = log(1. - 1. / segRatios[t + 1]) - logprob
+                        y = fwdlattice[t + 1, i] + bwdlattice[t + 1, j] + \
+                          log(1. - 1. / segRatios[t + 1]) - logprob
                         if y > maxMatrix[i, j]:
                             maxMatrix = y
                 if x > maxMatrix[i, j]:
@@ -106,7 +107,8 @@ def _log_sum_lneta(int n_observations, int n_components,
                 if hasRatios == 1:
                     x += -segRatios[t + 1] * selftranscomp[j]
                     if i == j and segRatios[t + 1] > 1.:
-                        y = log(1. - 1. / segRatios[t + 1]) - logprob
+                        y = fwdlattice[t + 1, i] + bwdlattice[t + 1, j] + \
+                          log(1. - 1. / segRatios[t + 1]) - logprob
                         if y > maxMatrix[i, j]:
                             logsum_lneta[i, j] += exp(y - maxMatrix[i, j])
                 logsum_lneta[i, j] += exp(x - maxMatrix[i, j])
