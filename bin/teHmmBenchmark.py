@@ -150,7 +150,11 @@ def main(argv=None):
     parser.add_argument("--segLen", help="Effective segment length used for"
                         " normalizing input segments (specifying 0 means no"
                         " normalization applied) in training", type=int,
-                        default=None)    
+                        default=None)
+    parser.add_argument("--truth", help="Use specifed file instead of "
+                        "input file(s) for truth comparison.  Makes sense"
+                        " when --segment is specified and only one input"
+                        " bed specified", default = None) 
         
     addLoggingOptions(parser)
     args = parser.parse_args()
@@ -288,7 +292,10 @@ def main(argv=None):
             # compare
             compPath = os.path.join(outDir,
                                     os.path.splitext(base)[0] + "_comp.txt")
-            command += " && compareBedStates.py %s %s > %s" % (testBed,
+            compTruth = testBed
+            if args.truth is not None:
+                compTruth = args.truth
+            command += " && compareBedStates.py %s %s > %s" % (compTruth,
                                                                evalBed,
                                                                compPath)
 
