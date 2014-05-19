@@ -74,7 +74,7 @@ def _log_sum_lneta(int n_observations, int n_components,
 	# original required O(obs * states * states)).  
     cdef int i, j, t, hasRatios = 0
     cdef np.ndarray[dtype_t, ndim = 2] maxMatrix
-    cdef double x
+    cdef double x, y
     maxMatrix = _NINF + np.zeros((n_components, n_components))
     cdef np.ndarray[dtype_t, ndim=1] selftranscomp = np.zeros((n_components))
     if segRatios is not None:
@@ -91,7 +91,9 @@ def _log_sum_lneta(int n_observations, int n_components,
                 if hasRatios == 1:
                     x += -segRatios[t + 1] * selftranscomp[j]
                     if i == j and segRatios[t + 1] > 1.:
-                        x += 1. - 1. / segRatios[t + 1]
+                        y = log(1. - 1. / segRatios[t + 1]) - logprob
+                        if y > maxMatrix[i, j]:
+                            maxMatrix = y
                 if x > maxMatrix[i, j]:
                     maxMatrix[i, j] = x
 
@@ -104,7 +106,9 @@ def _log_sum_lneta(int n_observations, int n_components,
                 if hasRatios == 1:
                     x += -segRatios[t + 1] * selftranscomp[j]
                     if i == j and segRatios[t + 1] > 1.:
-                        x += 1. - 1. / segRatios[t + 1]
+                        y = log(1. - 1. / segRatios[t + 1]) - logprob
+                        if y > maxMatrix[i, j]:
+                            logsum_lneta[i, j] += exp(y - maxMatrix[i, j])
                 logsum_lneta[i, j] += exp(x - maxMatrix[i, j])
 
     # return log(sum(x-max)) + max
