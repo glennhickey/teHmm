@@ -94,6 +94,7 @@ def makeFrame(numStates, numObs):
     for i in xrange(len(frame)):
         for j in xrange(numStates):
             frame[i, j] = myLog(float(j) / float(numStates))
+            frame[i, j] += myLog((float(i % 9) + 1.) / 10)
     return frame
 
 def runTest(hmm, frame, alg):
@@ -110,8 +111,8 @@ def runTest(hmm, frame, alg):
 def fbTest(hmm, frame):
     """ check invariants for forward and backward tables """
 
-    for i in xrange(len(frame)):
-        frame[i,0] = 0.1
+    #for i in xrange(len(frame)):
+    #    frame[i,0] = 0.1
     
     flp, ftable = hmm._do_forward_pass(frame)
     btable = hmm._do_backward_pass(frame)
@@ -122,6 +123,34 @@ def fbTest(hmm, frame):
                              for j in xrange(len(bneg))]))
     blp = logsumexp(bneg)
     print ("FProb = %f  BProb = %f,  delta=%f" % (flp, blp, (flp-blp)))
+
+    # same as above but with some segmentation
+    minRatio = 0.01
+    maxRatio = 10.
+    segRatios = np.zeros((len(frame)))
+    random.seed(200)
+    for i in xrange(len(segRatios)):
+        segRatios[i] = random.uniform(minRatio, maxRatio)
+
+    # overload this method to break our random ratios through hmm interface
+    def blin(x):
+        return segRatios
+    if isinstance(hmm, MultitrackHmm):
+        hmm.emissionModel.getSegmentRatios = blin
+    
+    flp, ftable = hmm._do_forward_pass(frame)
+    btable = hmm._do_backward_pass(frame)
+    bneg = np.zeros((btable.shape[1]))
+    for i in xrange(len(bneg)):
+        bneg[i] = logsumexp(np.asarray(
+            [hmm._log_startprob[j] + frame[0, j] + btable[0, j] + \
+             -segRatios[0] * (1. - np.exp(hmm._log_transmat[j, j])) \
+                             for j in xrange(len(bneg))]))
+    blp = logsumexp(bneg)
+    print ("SegFProb = %f  SegBProb = %f,  delta=%f" % (flp, blp, (flp-blp)))
+    #print np.exp(ftable)
+    #print np.exp(btable)
+    #print segRatios        
     
 
 if __name__ == "__main__":

@@ -76,8 +76,11 @@ def _log_sum_lneta(int n_observations, int n_components,
     cdef np.ndarray[dtype_t, ndim = 2] maxMatrix
     cdef double x
     maxMatrix = _NINF + np.zeros((n_components, n_components))
+    cdef np.ndarray[dtype_t, ndim=1] selftranscomp = np.zeros((n_components))
     if segRatios is not None:
         hasRatios = 1
+        for i in xrange(n_components):
+            selftranscomp[i] = 1. - exp(log_transmat[i, i])
     
     # find max
     for t in range(n_observations - 1):
@@ -86,9 +89,9 @@ def _log_sum_lneta(int n_observations, int n_components,
                 x = fwdlattice[t, i] + log_transmat[i, j] \
                   + framelogprob[t + 1, j] + bwdlattice[t + 1, j] - logprob
                 if hasRatios == 1:
-                    x += log_transmat[j, j] * segRatios[t + 1]
-                    if i == j:
-                        x += segRatios[t + 1]
+                    x += -segRatios[t + 1] * selftranscomp[j]
+                    if i == j and segRatios[t + 1] > 1.:
+                        x += 1. - 1. / segRatios[t + 1]
                 if x > maxMatrix[i, j]:
                     maxMatrix[i, j] = x
 
@@ -99,9 +102,9 @@ def _log_sum_lneta(int n_observations, int n_components,
                 x = fwdlattice[t, i] + log_transmat[i, j] \
                     + framelogprob[t + 1, j] + bwdlattice[t + 1, j] - logprob
                 if hasRatios == 1:
-                    x += log_transmat[j, j] * segRatios[t + 1]
-                    if i == j:
-                        x += segRatios[t + 1]
+                    x += -segRatios[t + 1] * selftranscomp[j]
+                    if i == j and segRatios[t + 1] > 1.:
+                        x += 1. - 1. / segRatios[t + 1]
                 logsum_lneta[i, j] += exp(x - maxMatrix[i, j])
 
     # return log(sum(x-max)) + max
@@ -124,13 +127,16 @@ def _forward(int n_observations, int n_components,
     cdef dtype_t power_sum = 0.0
     cdef double* work_buffer = <double *> \
       malloc(n_components * cython.sizeof(double))
+    cdef np.ndarray[dtype_t, ndim=1] selftranscomp = np.zeros((n_components))
     if segRatios is not None:
         hasRatios = 1
+        for i in xrange(n_components):
+            selftranscomp[i] = 1. - exp(log_transmat[i, i])
 
     for i in xrange(n_components):
         fwdlattice[0, i] = log_startprob[i] + framelogprob[0, i]
         if hasRatios == 1:
-            fwdlattice[0, i] += log_transmat[i, i] * segRatios[0]
+            fwdlattice[0, i] += -segRatios[0] * selftranscomp[i]
 
     for t in xrange(1, n_observations):
         for j in xrange(n_components):
@@ -144,7 +150,7 @@ def _forward(int n_observations, int n_components,
                 power_sum += exp(work_buffer[i] - vmax)                
             fwdlattice[t, j] = log(power_sum) + vmax + framelogprob[t, j]
             if hasRatios == 1:
-                fwdlattice[t, j] += log_transmat[j, j] * segRatios[j]
+                fwdlattice[t, j] += -segRatios[t] * selftranscomp[j]
             if fwdlattice[t, j] <= ZEROLOGPROB:
                 fwdlattice[t, j] = _NINF
     free(work_buffer)
@@ -163,8 +169,11 @@ def _backward(int n_observations, int n_components,
     cdef dtype_t power_sum = 0.0
     cdef double* work_buffer = <double *> \
       malloc(n_components * cython.sizeof(double))
+    cdef np.ndarray[dtype_t, ndim=1] selftranscomp = np.zeros((n_components))
     if segRatios is not None:
         hasRatios = 1
+        for i in xrange(n_components):
+            selftranscomp[i] = 1. - exp(log_transmat[i, i])
 
     for i in xrange(n_components):
         bwdlattice[n_observations - 1, i] = log(1. / float(n_components))
@@ -176,7 +185,7 @@ def _backward(int n_observations, int n_components,
                 work_buffer[j] = log_transmat[i, j] + framelogprob[t + 1, j] \
                     + bwdlattice[t + 1, j]
                 if hasRatios == 1:
-                    work_buffer[j] += log_transmat[j, j] * segRatios[t + 1]
+                    work_buffer[j] += -segRatios[t+1] * selftranscomp[j]
                 if work_buffer[j] > vmax:
                     vmax = work_buffer[j]
             power_sum = 0.0
@@ -204,8 +213,11 @@ def _viterbi(int n_observations, int n_components,
     cdef dtype_t maxprob
     cdef dtype_t curprob
     cdef np.int16_t maxState
+    cdef np.ndarray[dtype_t, ndim=1] selftranscomp = np.zeros((n_components))
     if segRatios is not None:
         hasRatios = 1
+        for i in xrange(n_components):
+            selftranscomp[i] = 1. - exp(log_transmat[i, i])
 
     # Initialization
     state_sequence = np.empty(n_observations, dtype=np.int)
@@ -213,7 +225,7 @@ def _viterbi(int n_observations, int n_components,
     viterbi_lattice[0] = log_startprob + framelogprob[0]
     if hasRatios == 1:
         for toState in xrange(0, n_components):
-            viterbi_lattice[toState] += log_transmat[toState, toState] * segRatios[0]
+            viterbi_lattice[toState] += -segRatios[0] * selftranscomp[toState]
 
     trace_back = np.empty((n_observations, n_components), dtype=np.int16)
 
@@ -223,14 +235,14 @@ def _viterbi(int n_observations, int n_components,
             maxprob = viterbi_lattice[t-1, 0] + log_transmat[0, toState] +\
               framelogprob[t, toState]
             if hasRatios == 1:
-                maxprob += log_transmat[toState, toState] * segRatios[t]
+                maxprob += -segRatios[t] * selftranscomp[toState]
             maxState = 0
             for fromState in xrange(1, n_components):
                 curprob = viterbi_lattice[t-1, fromState] + \
                   log_transmat[fromState, toState] +\
                   framelogprob[t, toState]
                 if hasRatios == 1:
-                    curprob += log_transmat[toState, toState] * segRatios[t]
+                    curprob += -segRatios[t] * selftranscomp[toState]
                 if curprob > maxprob:
                     maxprob = curprob
                     maxState = fromState
