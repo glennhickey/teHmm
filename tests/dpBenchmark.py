@@ -132,6 +132,7 @@ def fbTest(hmm, frame):
     for i in xrange(len(segRatios)):
         segRatios[i] = random.uniform(minRatio, maxRatio)
 
+    #segRatios = np.asarray( [0.] * len(segRatios))
     # overload this method to break our random ratios through hmm interface
     def blin(x):
         return segRatios
@@ -144,7 +145,7 @@ def fbTest(hmm, frame):
     for i in xrange(len(bneg)):
         bneg[i] = logsumexp(np.asarray(
             [hmm._log_startprob[j] + frame[0, j] + btable[0, j] + \
-             -segRatios[0] * (1. - np.exp(hmm._log_transmat[j, j])) \
+             hmm._log_transmat[j, j] * segRatios[0] \
                              for j in xrange(len(bneg))]))
     blp = logsumexp(bneg)
     print ("SegFProb = %f  SegBProb = %f,  delta=%f" % (flp, blp, (flp-blp)))
