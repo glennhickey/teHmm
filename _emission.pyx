@@ -135,7 +135,7 @@ def _fastAllLogProbs32(itype_t nObs, itype_t nTracks, itype_t nStates,
                outProbs[i, j] = 0.0
 
 @cython.boundscheck(False)
-def fastAccumulateStats(obs, obsStats, posteriors):
+def fastAccumulateStats(obs, obsStats, posteriors, segRatios):
     if isinstance(obs, TrackTable):
         obs = obs.getNumPyArray()
     assert isinstance(obs, np.ndarray)
@@ -148,13 +148,13 @@ def fastAccumulateStats(obs, obsStats, posteriors):
 
     if obs.dtype == np.int32:
         _fastAccumulateStats32(nObs, nTracks, nStates, obs, obsStats,
-                               posteriors)
+                               posteriors, segRatios)
     elif obs.dtype == np.uint16:
         _fastAccumulateStatsU16(nObs, nTracks, nStates, obs, obsStats,
-                               posteriors)
+                               posteriors, segRatios)
     elif obs.dtype == np.uint8:
         _fastAccumulateStatsU8(nObs, nTracks, nStates, obs, obsStats,
-                               posteriors)
+                               posteriors, segRatios)
     else:
         assert False
 
@@ -162,37 +162,61 @@ def fastAccumulateStats(obs, obsStats, posteriors):
 def _fastAccumulateStatsU8(itype_t nObs, itype_t nTracks, itype_t nStates,
                            np.ndarray[np.uint8_t, ndim=2] obs, 
                            np.ndarray[dtype_t, ndim=3] obsStats,
-                           np.ndarray[dtype_t, ndim=2] posteriors):
-    cdef itype_t i, track, state, obsVal    
+                           np.ndarray[dtype_t, ndim=2] posteriors,
+                           np.ndarray[dtype_t, ndim=1] segRatios):
+    cdef itype_t i, track, state, obsVal
+    cdef dtype_t segProb
+    cdef itype_t hasRatio = 0
+    if segRatios is not None:
+        hasRatio = 1
     for i in xrange(nObs):
         for track in xrange(nTracks):
             obsVal = obs[i,track]
             for state in xrange(nStates):
-                obsStats[track, state, obsVal] += posteriors[i, state]
+                segProb = posteriors[i, state]
+                if hasRatio == 1:
+                    segProb *= segRatios[i]
+                obsStats[track, state, obsVal] += segProb
 
 @cython.boundscheck(False)
 def _fastAccumulateStatsU16(itype_t nObs, itype_t nTracks, itype_t nStates,
                            np.ndarray[np.uint16_t, ndim=2] obs, 
                            np.ndarray[dtype_t, ndim=3] obsStats,
-                           np.ndarray[dtype_t, ndim=2] posteriors):
+                           np.ndarray[dtype_t, ndim=2] posteriors,
+                           np.ndarray[dtype_t, ndim=1] segRatios):
     cdef itype_t i, track, state, obsVal
+    cdef dtype_t segProb
+    cdef itype_t hasRatio = 0
+    if segRatios is not None:
+        hasRatio = 1
     for i in xrange(nObs):
         for track in xrange(nTracks):
             obsVal = obs[i,track]
             for state in xrange(nStates):
-                obsStats[track, state, obsVal] += posteriors[i, state]
+                segProb = posteriors[i, state]
+                if hasRatio == 1:
+                    segProb *= segRatios[i]
+                obsStats[track, state, obsVal] += segProb
 
 @cython.boundscheck(False)
 def _fastAccumulateStats32(itype_t nObs, itype_t nTracks, itype_t nStates,
                             np.ndarray[np.int32_t, ndim=2] obs, 
                             np.ndarray[dtype_t, ndim=3] obsStats,
-                            np.ndarray[dtype_t, ndim=2] posteriors):
+                            np.ndarray[dtype_t, ndim=2] posteriors,
+                            np.ndarray[dtype_t, ndim=1] segRatios):
     cdef itype_t i, track, state, obsVal
+    cdef dtype_t segProb
+    cdef itype_t hasRatio = 0
+    if segRatios is not None:
+        hasRatio = 1
     for i in xrange(nObs):
         for track in xrange(nTracks):
             obsVal = obs[i,track]
             for state in xrange(nStates):
-                obsStats[track, state, obsVal] += posteriors[i, state]
+                segProb = posteriors[i, state]
+                if hasRatio == 1:
+                    segProb *= segRatios[i]
+                obsStats[track, state, obsVal] += segProb
 
 @cython.boundscheck(False)
 def fastUpdateCounts(bedInterval, trackTable, obsStats, segRatios):

@@ -193,15 +193,19 @@ class IndependentMultinomialEmissionModel(object):
         treated completely independently here"""
         assert obs.shape[1] == self.numTracks
         logger.debug("Begin emission.accumulateStast for %d obs" % len(obs))
+        segRatios = self.getSegmentRatios(obs)
         if canFast(obs):
             logger.debug("Cython emission.accumulateStats enabled")
-            fastAccumulateStats(obs, obsStats, posteriors)
+            fastAccumulateStats(obs, obsStats, posteriors, segRatios)
         else:
             for i in xrange(len(obs)):
                 for track in xrange(self.numTracks):
                     obsVal = obs[i,track]                    
                     for state in xrange(self.numStates):
-                        obsStats[track, state, int(obsVal)] += posteriors[i, state]
+                        segProb = posteriors[i, state]
+                        if segRatios is not None:
+                            segProb *= segRatios[i]
+                        obsStats[track, state, int(obsVal)] += segProb
         logger.debug("Done emission.accumulateStast for %d obs" % len(obs))
         return obsStats
         
