@@ -76,6 +76,7 @@ def main(argv=None):
             track.getLogScale() is not None or\
             track.getShift() is not None or\
             track.getDelta() is True:
+            logger.info("Writing scaled track %s" % track.getName())  
             writeScaledTrack(trackData, track, args)
 
     cleanBedTool(tempBedToolPath)
@@ -85,7 +86,7 @@ def writeScaledTrack(trackData, track, args):
     fname, fext = os.path.splitext(os.path.basename(track.getPath()))
     outBed = os.path.join(args.outputDir, fname + "_scale" + ".bed")
     outBigWig = os.path.join(args.outputDir, fname + "_scale" + ".bw")
-    outFile.open(outBed, "w")
+    outFile = open(outBed, "w")
     
     trackNo = track.getNumber()
     valMap = track.getValueMap()
@@ -97,7 +98,7 @@ def writeScaledTrack(trackData, track, args):
             binnedVal = trackTable[i][trackNo]
             unbinnedVal = valMap.getMapBack(binnedVal)
             
-            outBed.write("%s\t%d\t\%d\t\%f\n" % (
+            outFile.write("%s\t%d\t%d\t%f\n" % (
                 chrom,
                 start + i,
                 start + i + 1,
@@ -106,15 +107,11 @@ def writeScaledTrack(trackData, track, args):
     outFile.close()
 
     #make a .bw copy
-    hasBedGraphToBigWig = False
     try:
-        runShellCommand("bedGraphToBigWig")
-        hasBedGraphToBigWig = True
+        runShellCommand("bedGraphToBigWig %s %s %s" % (outBed, args.chromSizes,
+                        outBigWig))
     except:
-        pass
-    if hasBedGraphToBigWig is True:
-        runShellCommand("bedGraphToBigWig %s %s %s" % outBed, args.chromSizes,
-                        outBigWig)
+        logger.warning("Unable to big bigwig from %s" % outBed)
             
 if __name__ == "__main__":
     sys.exit(main())

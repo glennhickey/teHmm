@@ -179,7 +179,7 @@ def main(argv=None):
     if args.segment is not None:
         logger.info("loading segment intervals from %s" % args.segment)
         segIntervals = readBedIntervals(args.segment, sort=True)
-    elif args.segLen >= 0:
+    elif args.segLen > 0:
         raise RuntimeError("--segLen can only be used with --segment")
     if args.segLen <= 0:
         args.segLen = None
