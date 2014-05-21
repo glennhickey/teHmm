@@ -96,7 +96,7 @@ def main(argv=None):
 
     # read segment intervals
     segIntervals = None
-    if args.segment is not None:
+    if args.segment is True:
         logger.info("loading segment intervals from %s" % args.bedRegions)
         segIntervals = readBedIntervals(args.bedRegions, sort=True)
 

@@ -52,8 +52,12 @@ def main(argv=None):
                         "ignore (the FASTA DNA sequence would be a good "
                         "candidate", default=None)
     parser.add_argument("--maxLen", help="Maximum length of a segment (<= 0 means"
-                        " no max length applied"),
-                        type=int, default=200)
+                        " no max length applied",
+                        type=int, default=0)
+    parser.add_argument("--fixLen", help="Just make segments of specifed fixed "
+                        "length ignoring other parameters and logic (<= 0 means"
+                        " no fixed length applied",
+                        type=int, default=0)
     
     addLoggingOptions(parser)
     args = parser.parse_args()
@@ -62,7 +66,11 @@ def main(argv=None):
 
     if args.comp != "first" and args.comp != "prev":
         raise RuntimeError("--comp must be either first or prev")
-
+    if args.fixLen > 0:
+        if args.ignore is not None or args.maxLen > 0 \
+           or args.thresh != 0 or args.cutTracks is not None:
+            raise RuntimeError("--fixLen not compatible with other options")
+        
     # read query intervals from the bed file
     logger.info("loading training intervals from %s" % args.allBed)
     mergedIntervals = getMergedBedIntervals(args.allBed, ncol=4)
@@ -128,14 +136,17 @@ def segmentTracks(trackData, args):
         # if necessary (ie too much change in track values)
         count = 0
         pi = 0
+        curLen = 0
         for i in xrange(1, intervalLen):
-            if isNewSegment(trackTable, pi, i, args) is True:
+            curLen += 1
+            if isNewSegment(trackTable, pi, i, curLen, args) is True:
                 oFile.write("%s\t%d\t%d\t%d\n" % (chrom, interval[1], start + i,
                                                   count % 2))
                 interval[1] = start + i
                 interval[2] = interval[1] + 1
                 count += 1
                 pi = i
+                curLen = 0
             if prevMode is True:
                 pi = i
         # write last segment
@@ -146,15 +157,16 @@ def segmentTracks(trackData, args):
     
     oFile.close()
 
-def isNewSegment(trackTable, pi, i, args):
+def isNewSegment(trackTable, pi, i, curLen, args):
     """ may be necessary to cythonize this down the road """
     assert i > 0
     assert i < len(trackTable)
     assert pi >= 0
     assert pi < i
 
-    curLength = i - pi
-    if args.maxLen > 0 and curLength >= args.maxLen:
+    if args.fixLen > 0:
+        return curLen >= args.fixLen
+    if args.maxLen > 0 and curLen >= args.maxLen:
         return True
 
     # faster to just call pdist(trackTable[i-1:i], 'hamming')? 

@@ -270,7 +270,7 @@ def main(argv=None):
                                                             modPath,
                                                             logOps,
                                                             trainFlags)
-                if args.segment is not None:
+                if args.segment is True:
                     command += " --segment %s" % truthBed
 
             # view
@@ -286,7 +286,7 @@ def main(argv=None):
                                                                   testBed,
                                                                   evalBed,
                                                                   logOps)
-            if args.segment is not None:
+            if args.segment is True:
                 command += " --segment"
                 
             # compare
