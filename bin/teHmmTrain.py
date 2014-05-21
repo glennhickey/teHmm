@@ -135,6 +135,10 @@ def main(argv=None):
     parser.add_argument("--segLen", help="Effective segment length used for"
                         " normalizing input segments (specifying 0 means no"
                         " normalization applied)", type=int, default=0)
+    parser.add_argument("--seed", help="Seed for random number generator"
+                        " which will be used to initialize emissions "
+                        "(if --flatEM and --supervised not specified)",
+                        default=0, type=int)
 
     addLoggingOptions(parser)
     args = parser.parse_args()
@@ -166,6 +170,7 @@ def main(argv=None):
 
     setLoggingFromOptions(args)
     tempBedToolPath = initBedTool()
+    random.seed(args.seed)
 
     # read training intervals from the bed file
     logger.info("loading training intervals from %s" % args.trainingBed)

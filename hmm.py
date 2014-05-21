@@ -113,6 +113,8 @@ class MultitrackHmm(BaseHMM):
         self.fixStart = fixStart
         # keep track of number of EM iterations performed
         self.current_iteration = None
+        # keep tack of last probability from forward algo
+        self.last_forward_log_prob = None
         # userTransition file (as line list) to apply after each iteration
         self.forceUserTrans = forceUserTrans
         if forceUserTrans is not None:
@@ -580,6 +582,7 @@ class MultitrackHmm(BaseHMM):
                         self.emissionModel.getSegmentRatios(obs), fwdlattice)
         lp = logsumexp(fwdlattice[-1])
         logger.debug("Forward log prob %f" % lp)
+        self.last_forward_logprob = lp
         return lp, fwdlattice
 
     def _do_backward_pass(self, framelogprob, obs = None):
