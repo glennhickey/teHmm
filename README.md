@@ -295,8 +295,8 @@ In general, running any executable with `--help` will print a brief description 
 
 * **setTrackScaling.py** : Compute the best scaling factor (between linear and log) for each track in the XML file for a given number of bases, and annotate the XML file accordingly.  Only applies to numeric tracks.
 * **scaleVals.py** : Scale each value of a BED or WIG file.  (Above function better as it automatically computes parameters, and doesn't create any new data files)
-* **segmentTracks.py** : Segment the track data into chunks of consistent columns.  These chunks
-can then be considered atomic units (as opposed to bases) by the model using the --segment option.
+* **segmentTracks.py** : Segment the track data into chunks of consistent columns.  These chunks can then be considered atomic units (as opposed to bases) by the model using the --segment option.
+* **applyTrackScaling.py** : Write scaled versions of tracks in an XML file using the parameters therein (such as those computed by setTrackScaling.py)
 
 **Alignment**
 
