@@ -78,47 +78,48 @@ def _log_sum_lneta(int n_observations, int n_components,
     maxMatrix = _NINF + np.zeros((n_components, n_components))
     if segRatios is not None:
         hasRatios = 1
-    
-    # find max
-    for t in range(n_observations - 1):
-        for i in range(n_components):
-            for j in range(n_components):
-                x = fwdlattice[t, i] + log_transmat[i, j] \
-                  + framelogprob[t + 1, j] + bwdlattice[t + 1, j] - logprob
-                if hasRatios == 1:
-                    x += log_transmat[j, j] * segRatios[t + 1]
-                    if i == j:
-                        x -= log_transmat[i, j]
-                        # to check if this check needed
-                        if segRatios[t + 1] > 1.: 
-                            y = fwdlattice[t + 1, i] + bwdlattice[t + 1, j] + \
-                              log(1 - 1. / segRatios[t + 1]) - logprob
-                            if y > maxMatrix[i, j]:
-                                maxMatrix[i, j] = y
-                if x > maxMatrix[i, j]:
-                    maxMatrix[i, j] = x
+        
+    with nogil:    
+        # find max
+        for t in range(n_observations - 1):
+            for i in range(n_components):
+                for j in range(n_components):
+                    x = fwdlattice[t, i] + log_transmat[i, j] \
+                      + framelogprob[t + 1, j] + bwdlattice[t + 1, j] - logprob
+                    if hasRatios == 1:
+                        x += log_transmat[j, j] * segRatios[t + 1]
+                        if i == j:
+                            x -= log_transmat[i, j]
+                            # to check if this check needed
+                            if segRatios[t + 1] > 1.: 
+                                y = fwdlattice[t + 1, i] + bwdlattice[t + 1, j] + \
+                                  log(1 - 1. / segRatios[t + 1]) - logprob
+                                if y > maxMatrix[i, j]:
+                                    maxMatrix[i, j] = y
+                    if x > maxMatrix[i, j]:
+                        maxMatrix[i, j] = x
 
-    # sum exp(x - max)
-    for t in xrange(0, n_observations - 1):
+        # sum exp(x - max)
+        for t in xrange(0, n_observations - 1):
+            for i in xrange(0, n_components):
+                for j in xrange(0, n_components):
+                    x = fwdlattice[t, i] + log_transmat[i, j] \
+                        + framelogprob[t + 1, j] + bwdlattice[t + 1, j] - logprob
+                    if hasRatios == 1:
+                        x += log_transmat[j, j] * segRatios[t + 1]
+                        if i == j:
+                            x -= log_transmat[i, j]
+                            if segRatios[t + 1] > 1.:
+                                y = fwdlattice[t + 1, i] + bwdlattice[t + 1, j] + \
+                                  log(1. - 1. / segRatios[t + 1]) - logprob
+                                if y > maxMatrix[i, j]:
+                                    logsum_lneta[i, j] += exp(y - maxMatrix[i, j])
+                    logsum_lneta[i, j] += exp(x - maxMatrix[i, j])
+
+        # return log(sum(x-max)) + max
         for i in xrange(0, n_components):
             for j in xrange(0, n_components):
-                x = fwdlattice[t, i] + log_transmat[i, j] \
-                    + framelogprob[t + 1, j] + bwdlattice[t + 1, j] - logprob
-                if hasRatios == 1:
-                    x += log_transmat[j, j] * segRatios[t + 1]
-                    if i == j:
-                        x -= log_transmat[i, j]
-                        if segRatios[t + 1] > 1.:
-                            y = fwdlattice[t + 1, i] + bwdlattice[t + 1, j] + \
-                              log(1. - 1. / segRatios[t + 1]) - logprob
-                            if y > maxMatrix[i, j]:
-                                logsum_lneta[i, j] += exp(y - maxMatrix[i, j])
-                logsum_lneta[i, j] += exp(x - maxMatrix[i, j])
-
-    # return log(sum(x-max)) + max
-    for i in xrange(0, n_components):
-        for j in xrange(0, n_components):
-            logsum_lneta[i, j] = log(logsum_lneta[i, j]) + maxMatrix[i, j]
+                logsum_lneta[i, j] = log(logsum_lneta[i, j]) + maxMatrix[i, j]
 
             
 @cython.boundscheck(False)
@@ -137,30 +138,31 @@ def _forward(int n_observations, int n_components,
       malloc(n_components * cython.sizeof(double))
     if segRatios is not None:
         hasRatios = 1
+        
+    with nogil:
+        for i in xrange(n_components):
+            fwdlattice[0, i] = log_startprob[i] + framelogprob[0, i]
+            if hasRatios == 1:
+                fwdlattice[0, i] += log_transmat[i, i] * segRatios[0]
 
-    for i in xrange(n_components):
-        fwdlattice[0, i] = log_startprob[i] + framelogprob[0, i]
-        if hasRatios == 1:
-            fwdlattice[0, i] += log_transmat[i, i] * segRatios[0]
-
-    for t in xrange(1, n_observations):
-        for j in xrange(n_components):
-            vmax = _NINF
-            for i in xrange(n_components):
-                work_buffer[i] = fwdlattice[t - 1, i] + log_transmat[i, j]
-                if hasRatios == 1:
-                    work_buffer[i] += log_transmat[j, j] * segRatios[t]
-                    if i == j:
-                        work_buffer[i] -= log_transmat[j, j]
-                if work_buffer[i] > vmax:
-                    vmax = work_buffer[i]
-            power_sum = 0.0
-            for i in xrange(n_components):
-                power_sum += exp(work_buffer[i] - vmax)                
-            fwdlattice[t, j] = log(power_sum) + vmax + framelogprob[t, j]
-            if fwdlattice[t, j] <= ZEROLOGPROB:
-                fwdlattice[t, j] = _NINF
-    free(work_buffer)
+        for t in xrange(1, n_observations):
+            for j in xrange(n_components):
+                vmax = _NINF
+                for i in xrange(n_components):
+                    work_buffer[i] = fwdlattice[t - 1, i] + log_transmat[i, j]
+                    if hasRatios == 1:
+                        work_buffer[i] += log_transmat[j, j] * segRatios[t]
+                        if i == j:
+                            work_buffer[i] -= log_transmat[j, j]
+                    if work_buffer[i] > vmax:
+                        vmax = work_buffer[i]
+                power_sum = 0.0
+                for i in xrange(n_components):
+                    power_sum += exp(work_buffer[i] - vmax)                
+                fwdlattice[t, j] = log(power_sum) + vmax + framelogprob[t, j]
+                if fwdlattice[t, j] <= ZEROLOGPROB:
+                    fwdlattice[t, j] = _NINF
+        free(work_buffer)
 
 @cython.boundscheck(False)
 def _backward(int n_observations, int n_components,
@@ -178,30 +180,31 @@ def _backward(int n_observations, int n_components,
       malloc(n_components * cython.sizeof(double))
     if segRatios is not None:
         hasRatios = 1
-
-    for i in xrange(n_components):
-        bwdlattice[n_observations - 1, i] = log(1. / float(n_components))
-
-    for t in xrange(n_observations - 2, -1, -1):
+        
+    with nogil:
         for i in xrange(n_components):
-            vmax = _NINF
-            for j in xrange(n_components):
-                work_buffer[j] = log_transmat[i, j] + framelogprob[t + 1, j] \
-                    + bwdlattice[t + 1, j]
-                if hasRatios == 1:
-                    work_buffer[j] += log_transmat[j, j] * segRatios[t+1]
-                    if i == j:
-                        work_buffer[j] -= log_transmat[i, j]
-                if work_buffer[j] > vmax:
-                    vmax = work_buffer[j]
-            power_sum = 0.0
-            for j in xrange(n_components):
-                power_sum += exp(work_buffer[j] - vmax)
-            bwdlattice[t, i] = log(power_sum) + vmax
-            if bwdlattice[t, i] <= ZEROLOGPROB:
-                bwdlattice[t, i] = _NINF
+            bwdlattice[n_observations - 1, i] = log(1. / float(n_components))
 
-    free(work_buffer)
+        for t in xrange(n_observations - 2, -1, -1):
+            for i in xrange(n_components):
+                vmax = _NINF
+                for j in xrange(n_components):
+                    work_buffer[j] = log_transmat[i, j] + framelogprob[t + 1, j] \
+                        + bwdlattice[t + 1, j]
+                    if hasRatios == 1:
+                        work_buffer[j] += log_transmat[j, j] * segRatios[t+1]
+                        if i == j:
+                            work_buffer[j] -= log_transmat[i, j]
+                    if work_buffer[j] > vmax:
+                        vmax = work_buffer[j]
+                power_sum = 0.0
+                for j in xrange(n_components):
+                    power_sum += exp(work_buffer[j] - vmax)
+                bwdlattice[t, i] = log(power_sum) + vmax
+                if bwdlattice[t, i] <= ZEROLOGPROB:
+                    bwdlattice[t, i] = _NINF
+
+        free(work_buffer)
 
 
 @cython.boundscheck(False)

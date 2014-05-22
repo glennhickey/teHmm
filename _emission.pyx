@@ -55,26 +55,29 @@ def _fastAllLogProbsU8(itype_t nObs, itype_t nTracks, itype_t nStates,
                       dtype_t normalize,
                       np.ndarray[dtype_t, ndim=1] segRatios):
     cdef itype_t i, j, k
-    cdef maxProb = _MINDBL
+    cdef dtype_t minDbl = _MINDBL
+    cdef dtype_t maxProb = _MINDBL
     cdef itype_t hasRatio = 0
     if segRatios is not None:
-        hasRatio = 1    
-    for i in xrange(nObs):
-       for j in xrange(nStates):
-           outProbs[i,j] = 0.0
-           for k in xrange(nTracks):
-               outProbs[i, j] += logProbs[k, j, obs[i, k]]
-           outProbs[i, j] *= normalize
-           if hasRatio == 1:
-               outProbs[i, j] *= segRatios[i]           
-           if outProbs[i, j] > maxProb:
-               maxProb = outProbs[i, j]
-       # no state that can emit symbol so we give every state 0
-       # NOTE: should print a warning message since this implies
-       # that data impossible with model.
-       if maxProb == _MINDBL:
+        hasRatio = 1
+        
+    with nogil:
+        for i in xrange(nObs):
            for j in xrange(nStates):
-               outProbs[i, j] = 0.0
+               outProbs[i,j] = 0.0
+               for k in xrange(nTracks):
+                   outProbs[i, j] += logProbs[k, j, obs[i, k]]
+               outProbs[i, j] *= normalize
+               if hasRatio == 1:
+                   outProbs[i, j] *= segRatios[i]           
+               if outProbs[i, j] > maxProb:
+                   maxProb = outProbs[i, j]
+           # no state that can emit symbol so we give every state 0
+           # NOTE: should print a warning message since this implies
+           # that data impossible with model.
+           if maxProb == minDbl:
+               for j in xrange(nStates):
+                   outProbs[i, j] = 0.0
        
 @cython.boundscheck(False)
 def _fastAllLogProbsU16(itype_t nObs, itype_t nTracks, itype_t nStates,
@@ -84,26 +87,29 @@ def _fastAllLogProbsU16(itype_t nObs, itype_t nTracks, itype_t nStates,
                         dtype_t normalize,
                         np.ndarray[dtype_t, ndim=1] segRatios):
     cdef itype_t i, j, k
-    cdef maxProb = _MINDBL
+    cdef dtype_t minDbl = _MINDBL
+    cdef dtype_t maxProb = _MINDBL
     cdef itype_t hasRatio = 0
     if segRatios is not None:
         hasRatio = 1
-    for i in xrange(nObs):
-       for j in xrange(nStates):
-           outProbs[i,j] = 0.0
-           for k in xrange(nTracks):
-               outProbs[i, j] += logProbs[k, j, obs[i, k]]
-           outProbs[i, j] *= normalize
-           if hasRatio == 1:
-               outProbs[i, j] *= segRatios[i]
-           if outProbs[i, j] > maxProb:
-               maxProb = outProbs[i, j]
-       # no state that can emit symbol so we give every state 0
-       # NOTE: should print a warning message since this implies
-       # that data impossible with model.
-       if maxProb == _MINDBL:
+        
+    with nogil:
+        for i in xrange(nObs):
            for j in xrange(nStates):
-               outProbs[i, j] = 0.0
+               outProbs[i,j] = 0.0
+               for k in xrange(nTracks):
+                   outProbs[i, j] += logProbs[k, j, obs[i, k]]
+               outProbs[i, j] *= normalize
+               if hasRatio == 1:
+                   outProbs[i, j] *= segRatios[i]           
+               if outProbs[i, j] > maxProb:
+                   maxProb = outProbs[i, j]
+           # no state that can emit symbol so we give every state 0
+           # NOTE: should print a warning message since this implies
+           # that data impossible with model.
+           if maxProb == minDbl:
+               for j in xrange(nStates):
+                   outProbs[i, j] = 0.0
 
 @cython.boundscheck(False)
 def _fastAllLogProbs32(itype_t nObs, itype_t nTracks, itype_t nStates,
@@ -113,26 +119,29 @@ def _fastAllLogProbs32(itype_t nObs, itype_t nTracks, itype_t nStates,
                       dtype_t normalize,
                       np.ndarray[dtype_t, ndim=1] segRatios):                      
     cdef itype_t i, j, k
-    cdef maxProb = _MINDBL
-    cdef itype_t hasRatio = 0    
+    cdef dtype_t minDbl = _MINDBL
+    cdef dtype_t maxProb = _MINDBL
+    cdef itype_t hasRatio = 0
     if segRatios is not None:
-        hasRatio = 1    
-    for i in xrange(nObs):
-       for j in xrange(nStates):
-           outProbs[i,j] = 0.0
-           for k in xrange(nTracks):
-               outProbs[i, j] += logProbs[k, j, obs[i, k]]
-           outProbs[i, j] *= normalize
-           if hasRatio == 1:
-               outProbs[i, j] *= segRatios[i]           
-           if outProbs[i, j] > maxProb:
-               maxProb = outProbs[i, j]
-       # no state that can emit symbol so we give every state 0
-       # NOTE: should print a warning message since this implies
-       # that data impossible with model.
-       if maxProb == _MINDBL:
+        hasRatio = 1
+        
+    with nogil:
+        for i in xrange(nObs):
            for j in xrange(nStates):
-               outProbs[i, j] = 0.0
+               outProbs[i,j] = 0.0
+               for k in xrange(nTracks):
+                   outProbs[i, j] += logProbs[k, j, obs[i, k]]
+               outProbs[i, j] *= normalize
+               if hasRatio == 1:
+                   outProbs[i, j] *= segRatios[i]           
+               if outProbs[i, j] > maxProb:
+                   maxProb = outProbs[i, j]
+           # no state that can emit symbol so we give every state 0
+           # NOTE: should print a warning message since this implies
+           # that data impossible with model.
+           if maxProb == minDbl:
+               for j in xrange(nStates):
+                   outProbs[i, j] = 0.0
 
 @cython.boundscheck(False)
 def fastAccumulateStats(obs, obsStats, posteriors, segRatios):
@@ -169,14 +178,16 @@ def _fastAccumulateStatsU8(itype_t nObs, itype_t nTracks, itype_t nStates,
     cdef itype_t hasRatio = 0
     if segRatios is not None:
         hasRatio = 1
-    for i in xrange(nObs):
-        for track in xrange(nTracks):
-            obsVal = obs[i,track]
-            for state in xrange(nStates):
-                segProb = posteriors[i, state]
-                if hasRatio == 1:
-                    segProb *= segRatios[i]
-                obsStats[track, state, obsVal] += segProb
+
+    with nogil:
+        for i in xrange(nObs):
+            for track in xrange(nTracks):
+                obsVal = obs[i,track]
+                for state in xrange(nStates):
+                    segProb = posteriors[i, state]
+                    if hasRatio == 1:
+                        segProb *= segRatios[i]
+                    obsStats[track, state, obsVal] += segProb
 
 @cython.boundscheck(False)
 def _fastAccumulateStatsU16(itype_t nObs, itype_t nTracks, itype_t nStates,
@@ -189,34 +200,38 @@ def _fastAccumulateStatsU16(itype_t nObs, itype_t nTracks, itype_t nStates,
     cdef itype_t hasRatio = 0
     if segRatios is not None:
         hasRatio = 1
-    for i in xrange(nObs):
-        for track in xrange(nTracks):
-            obsVal = obs[i,track]
-            for state in xrange(nStates):
-                segProb = posteriors[i, state]
-                if hasRatio == 1:
-                    segProb *= segRatios[i]
-                obsStats[track, state, obsVal] += segProb
+
+    with nogil:
+        for i in xrange(nObs):
+            for track in xrange(nTracks):
+                obsVal = obs[i,track]
+                for state in xrange(nStates):
+                    segProb = posteriors[i, state]
+                    if hasRatio == 1:
+                        segProb *= segRatios[i]
+                    obsStats[track, state, obsVal] += segProb
 
 @cython.boundscheck(False)
 def _fastAccumulateStats32(itype_t nObs, itype_t nTracks, itype_t nStates,
                             np.ndarray[np.int32_t, ndim=2] obs, 
                             np.ndarray[dtype_t, ndim=3] obsStats,
                             np.ndarray[dtype_t, ndim=2] posteriors,
-                            np.ndarray[dtype_t, ndim=1] segRatios):
+                            np.ndarray[dtype_t, ndim=1] segRatios):                            
     cdef itype_t i, track, state, obsVal
     cdef dtype_t segProb
     cdef itype_t hasRatio = 0
     if segRatios is not None:
         hasRatio = 1
-    for i in xrange(nObs):
-        for track in xrange(nTracks):
-            obsVal = obs[i,track]
-            for state in xrange(nStates):
-                segProb = posteriors[i, state]
-                if hasRatio == 1:
-                    segProb *= segRatios[i]
-                obsStats[track, state, obsVal] += segProb
+
+    with nogil:
+        for i in xrange(nObs):
+            for track in xrange(nTracks):
+                obsVal = obs[i,track]
+                for state in xrange(nStates):
+                    segProb = posteriors[i, state]
+                    if hasRatio == 1:
+                        segProb *= segRatios[i]
+                    obsStats[track, state, obsVal] += segProb
 
 @cython.boundscheck(False)
 def fastUpdateCounts(bedInterval, trackTable, obsStats, segRatios):
@@ -258,15 +273,17 @@ def _fastUpdateCounts32(itype_t nObs, itype_t nTracks, itype_t nStates,
     cdef dtype_t val
     cdef itype_t hasRatio = 0    
     if segRatios is not None:
-        hasRatio = 1    
-    for pos in xrange(start, end):
-        # convert to position within track table
-        tablePos = pos - tableStart
-        val = 1.0
-        if hasRatio == 1:
-            val = segRatios[pos]
-        for track in xrange(nTracks):
-            obsStats[track, symbol, obs[tablePos, track]] += val
+        hasRatio = 1
+        
+    with nogil:
+        for pos in xrange(start, end):
+            # convert to position within track table
+            tablePos = pos - tableStart
+            val = 1.0
+            if hasRatio == 1:
+                val = segRatios[pos]
+            for track in xrange(nTracks):
+                obsStats[track, symbol, obs[tablePos, track]] += val
 
 @cython.boundscheck(False)
 def _fastUpdateCountsU16(itype_t nObs, itype_t nTracks, itype_t nStates,
@@ -279,14 +296,17 @@ def _fastUpdateCountsU16(itype_t nObs, itype_t nTracks, itype_t nStates,
     cdef dtype_t val
     cdef itype_t hasRatio = 0    
     if segRatios is not None:
-        hasRatio = 1    
-    for pos in xrange(start, end):
-        # convert to position within track table
-        tablePos = pos - tableStart
-        val = 1.0
-        if hasRatio == 1:
-            val = segRatios[pos]
-        for track in xrange(nTracks):
+        hasRatio = 1
+        
+    with nogil:
+        for pos in xrange(start, end):
+            # convert to position within track table
+            tablePos = pos - tableStart
+            val = 1.0
+            if hasRatio == 1:
+                val = segRatios[pos]
+            for track in xrange(nTracks):
+                obsStats[track, symbol, obs[tablePos, track]] += val
             obsStats[track, symbol, obs[tablePos, track]] += val
 
 @cython.boundscheck(False)
@@ -300,12 +320,14 @@ def _fastUpdateCountsU8(itype_t nObs, itype_t nTracks, itype_t nStates,
     cdef dtype_t val
     cdef itype_t hasRatio = 0    
     if segRatios is not None:
-        hasRatio = 1    
-    for pos in xrange(start, end):
-        # convert to position within track table
-        tablePos = pos - tableStart
-        val = 1.0
-        if hasRatio == 1:
-            val = segRatios[pos]
-        for track in xrange(nTracks):
-            obsStats[track, symbol, obs[tablePos, track]] += val
+        hasRatio = 1
+        
+    with nogil:
+        for pos in xrange(start, end):
+            # convert to position within track table
+            tablePos = pos - tableStart
+            val = 1.0
+            if hasRatio == 1:
+                val = segRatios[pos]
+            for track in xrange(nTracks):
+                obsStats[track, symbol, obs[tablePos, track]] += val
