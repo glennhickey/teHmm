@@ -28,10 +28,15 @@ independent """
 class IndependentMultinomialEmissionModel(object):
     def __init__(self, numStates, numSymbolsPerTrack, params = None,
                  zeroAsMissingData = True, fudge = 0.0, normalizeFac = 0.0,
-                 randomize=False, effectiveSegmentLength = None):
+                 randomize=False, effectiveSegmentLength = None,
+                 random_state = None):
         self.numStates = numStates
         self.numTracks = len(numSymbolsPerTrack)
         self.numSymbolsPerTrack = numSymbolsPerTrack
+        # allow input of random generator
+        self.random_state = random_state
+        if self.random_state is None:
+            self.random_state = np.random.mtrand._rand
         # [TRACK, STATE, SYMBOL]
         self.logProbs = None
         self.zeroAsMissingData = zeroAsMissingData
@@ -54,7 +59,7 @@ class IndependentMultinomialEmissionModel(object):
         # effective segment length is the length we use to normalize all
         # actual segments to
         self.effectiveSegmentLength = effectiveSegmentLength
-
+            
     def getLogProbs(self):
         return self.logProbs
 
@@ -116,7 +121,7 @@ class IndependentMultinomialEmissionModel(object):
                         dist = normalize(1. + np.zeros(
                         self.numSymbolsPerTrack[i], dtype=np.float))
                     else:
-                        dist = normalize(np.random.random_sample(
+                        dist = normalize(self.random_state.random_sample(
                             self.numSymbolsPerTrack[i]))
                 else:
                     dist = np.array(params[i][j], dtype=np.float)
@@ -169,8 +174,7 @@ class IndependentMultinomialEmissionModel(object):
         return None
         ##TODO adapt below code for multidimensional input
         cdf = np.cumsum(self.emissionprob_[state, :])
-        random_state = check_random_state(random_state)
-        rand = random_state.rand()
+        rand = self.random_state.rand()
         symbol = (cdf > rand).argmax()
         return symbol
 

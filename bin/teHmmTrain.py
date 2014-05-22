@@ -19,8 +19,9 @@ from teHmm.emission import PairEmissionModel
 from teHmm.track import CategoryMap, BinaryMap
 from teHmm.cfg import MultitrackCfg
 from teHmm.modelIO import saveModel
-from teHmm.common import myLog, EPSILON, initBedTool, cleanBedTool
+from teHmm.common import myLog, EPSILON, initBedTool, cleanBedTool, LOGZERO
 from teHmm.common import addLoggingOptions, setLoggingFromOptions, logger
+from teHmm.common import runParallelShellCommands
 
 def main(argv=None):
     if argv is None:
@@ -138,7 +139,14 @@ def main(argv=None):
     parser.add_argument("--seed", help="Seed for random number generator"
                         " which will be used to initialize emissions "
                         "(if --flatEM and --supervised not specified)",
-                        default=0, type=int)
+                        default=None, type=int)
+    parser.add_argument("--reps", help="Number of replicates (with different"
+                         " random initializations) to run. The replicate"
+                         " with the highest likelihood will be chosen for the"
+                         " output", default=1, type=int)
+    parser.add_argument("--numThreads", help="Number of threads to use when"
+                        " running replicates (see --rep) in parallel.",
+                        type=int, default=1)
 
     addLoggingOptions(parser)
     args = parser.parse_args()
@@ -170,7 +178,6 @@ def main(argv=None):
 
     setLoggingFromOptions(args)
     tempBedToolPath = initBedTool()
-    random.seed(args.seed)
 
     # read training intervals from the bed file
     logger.info("loading training intervals from %s" % args.trainingBed)
@@ -212,6 +219,50 @@ def main(argv=None):
         catMap = mapStateNames(truthIntervals)
         args.numStates = len(catMap)
 
+    # train the model
+    seeds = [random.randint(0, sys.maxint)]
+    if args.seed is not None:
+        seeds = [args.seed]
+        random.seed(args.seed)
+    seeds += [random.randint(0, sys.maxint) for x in xrange(1, args.reps)]
+
+    def trainClosure(randomSeed):
+        return trainModel(randomSeed, trackData=trackData, catMap=catMap,
+                          userTrans=userTrans, truthIntervals=truthIntervals,
+                          args=args)
+    
+    modelList = runParallelShellCommands(argList=seeds, numProc = args.numThreads,
+                                         execFunction = trainClosure,
+                                         useThreads = True)
+
+    # select best model
+    logmsg = ""
+    bestModel = (-1, LOGZERO)
+    for i in xrange(len(modelList)):
+        curModel = (i, modelList[i].getLastLogProb())
+        if curModel[1] > bestModel[1]:
+            bestModel = curModel
+        logmsg += "Rep %i: TotalProb: %f\n" % curModel
+    if len(modelList) > 1:
+        logging.info("Training Replicates Statistics:\n%s" % logmsg)
+        logging.info("Selecting best replicate (%d, %f)" % bestModel)
+    model = modelList[bestModel[0]]
+        
+    # write the model to a pickle
+    logger.info("saving trained model to %s" % args.outputModel)
+    saveModel(args.outputModel, model)
+
+    cleanBedTool(tempBedToolPath)
+
+###########################################################################
+
+def trainModel(randomSeed, trackData, catMap, userTrans, truthIntervals,
+               args):
+    """ Run the whole training pipeline
+    """
+    # activate the random seed
+    randGen = np.random.RandomState(randomSeed)
+
     # create the independent emission model
     logger.info("creating emission model")
     numSymbolsPerTrack = trackData.getNumSymbolsPerTrack()
@@ -223,7 +274,8 @@ def main(argv=None):
         numSymbolsPerTrack,
         normalizeFac=args.emFac,
         randomize=randomize,
-        effectiveSegmentLength = args.segLen)
+        effectiveSegmentLength = args.segLen,
+        random_state = randGen)
 
     # create the model
     if not args.cfg:
@@ -234,7 +286,8 @@ def main(argv=None):
                               fixEmission = args.fixEm,
                               fixStart = args.fixStart,
                               forceUserEmissions = args.forceEmProbs,
-                              forceUserTrans = args.forceTransProbs)
+                              forceUserTrans = args.forceTransProbs,
+                              random_state = randGen)
     else:
         pairEM = PairEmissionModel(emissionModel, [args.saPrior] *
                                    emissionModel.getNumStates())
@@ -285,14 +338,10 @@ def main(argv=None):
         with open(args.forceEmProbs) as f:
             model.applyUserEmissions(f.readlines())
 
-    # write the model to a pickle
-    logger.info("saving trained model to %s" % args.outputModel)
-    saveModel(args.outputModel, model)
-
-    cleanBedTool(tempBedToolPath)
+    return model
 
 ###########################################################################
-    
+                
 def stateNamesFromUserTrans(userTransPath):
     """ Scan the user transitions to determine all state names.  """
     catMap = CategoryMap(reserved=0)

@@ -45,6 +45,7 @@ import string
 import copy
 import logging
 import time
+import random
 from collections import Iterable
 from numpy.testing import assert_array_equal, assert_array_almost_equal
 
@@ -233,7 +234,9 @@ class MultitrackHmm(BaseHMM):
             states = map(self.stateNameMap.getMapBack, states)
         s = "\nNumStates = %d:\n%s\n" % (self.n_components, str(states))
         sp = [(states[i], self.startprob_[i])
-              for i in xrange(self.n_components)] 
+              for i in xrange(self.n_components)]
+        if self.random_state is not None:
+            s += "\nseed = %s\n" % str(self.random_state)
         s += "\nStart probs =\n%s\n" % str(sp)
         s += "\nTransitions =\n%s\n" % str(self.transmat_)
         s += "\nlogTransitions = \n%s\n" % str(myLog(self.transmat_))
@@ -275,6 +278,9 @@ class MultitrackHmm(BaseHMM):
 
     def getEmissionModel(self):
         return self.emissionModel
+
+    def getLastLogProb(self):
+        return self.last_forward_log_prob
 
     def validate(self):
         assert len(self.startprob_) == self.emissionModel.getNumStates()
@@ -582,7 +588,7 @@ class MultitrackHmm(BaseHMM):
                         self.emissionModel.getSegmentRatios(obs), fwdlattice)
         lp = logsumexp(fwdlattice[-1])
         logger.debug("Forward log prob %f" % lp)
-        self.last_forward_logprob = lp
+        self.last_forward_log_prob = lp
         return lp, fwdlattice
 
     def _do_backward_pass(self, framelogprob, obs = None):

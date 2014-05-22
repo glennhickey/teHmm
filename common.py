@@ -8,6 +8,7 @@ import os
 import argparse
 import subprocess
 from multiprocessing import Pool
+from multiprocessing.pool import ThreadPool
 import logging
 import resource
 import logging.handlers
@@ -44,21 +45,32 @@ def runShellCommand(command):
     except KeyboardInterrupt:
         raise RuntimeError("Aborting %s" % command)
 
-def runParallelShellCommands(cmdList, numProc):
-    if numProc == 1 or len(cmdList) == 1:
-        map(runShellCommand, cmdList)
-    elif len(cmdList) > 0:
-        mpPool = Pool(processes=min(numProc, len(cmdList)))
-        result = mpPool.map_async(runShellCommand, cmdList)
+def runParallelShellCommands(argList, numProc, execFunction=runShellCommand,
+                             useThreads = False):
+    """ run some commands in parallel, either as processes or threads.
+        argList should be a list of arguments, one for each instance of
+        execFunction (ie this function should take a single parameter
+        """
+    if useThreads is False:
+        poolType = Pool
+    else:
+        poolType = ThreadPool
+    output = None
+    if numProc == 1 or len(argList) == 1:
+        output = map(execFunction, argList)
+    elif len(argList) > 0:
+        mpPool = poolType(processes=min(numProc, len(argList)))
+        result = mpPool.map_async(execFunction, argList)
         # specifying a timeout allows keyboard interrupts to work?!
         # http://stackoverflow.com/questions/1408356/keyboard-interrupts-with-pythons-multiprocessing-pool
         try:
-            result.get(sys.maxint)
+            output = result.get(sys.maxint)
         except KeyboardInterrupt:
             mpPool.terminate()
             raise RuntimeError("Keyboard interrupt")
         if not result.successful():
-            raise "One or more of commands %s failed" % str(cmdList)
+            raise "One or more of commands %s failed" % str(argList)
+    return output
 
 def getLocalTempPath(prefix="", extension="", tagLen=5):
     S = string.ascii_uppercase + string.digits
