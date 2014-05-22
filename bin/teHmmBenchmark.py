@@ -154,7 +154,20 @@ def main(argv=None):
     parser.add_argument("--truth", help="Use specifed file instead of "
                         "input file(s) for truth comparison.  Makes sense"
                         " when --segment is specified and only one input"
-                        " bed specified", default = None) 
+                        " bed specified", default = None)
+    parser.add_argument("--seed", help="Seed for random number generator"
+                        " which will be used to initialize emissions "
+                        "(if --flatEM and --supervised not specified)",
+                        default=None, type=int)
+    parser.add_argument("--reps", help="Number of training replicates (with "
+                        " different"
+                         " random initializations) to run. The replicate"
+                         " with the highest likelihood will be chosen for the"
+                         " output", default=None, type=int)
+    parser.add_argument("--numThreads", help="Number of threads to use when"
+                        " running training replicates (see --rep) in parallel.",
+                        type=int, default=None)
+
         
     addLoggingOptions(parser)
     args = parser.parse_args()
@@ -213,6 +226,12 @@ def main(argv=None):
         trainFlags += " --flatEm"
     if args.segLen is not None:
         trainFlags += " --segLen %d" % args.segLen
+    if args.seed is not None:
+        trainFlags += " --seed %d" % args.seed
+    if args.reps is not None:
+        trainFlags += " --reps %d" % args.reps
+    if args.numThreads is not None:
+        trainFlags += " --numThreads %d" % args.numThreads
 
     # write out command line for posteriorty's sake
     if not os.path.exists(args.outputDir):

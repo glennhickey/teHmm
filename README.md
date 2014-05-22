@@ -107,7 +107,7 @@ The model can be trained from unnanotated (ie true states not known) data using 
 
 * `--flatEm`  Initialize emissions to flat distribution (they are randomized by default)
 
-* `--rep`  Perform given number of independent training replicates, then save the model with the highest lieklihood.  This is a strategy to help overcome local minima, ands only makes sense when at least some emission probabilities are randomly initialized (`--fixEm`, `--flatEm` not used, and `--initEmProbs` does not specify every parameter if present)
+* `--reps`  Perform given number of independent training replicates, then save the model with the highest lieklihood.  This is a strategy to help overcome local minima, ands only makes sense when at least some emission probabilities are randomly initialized (`--fixEm`, `--flatEm` not used, and `--initEmProbs` does not specify every parameter if present)
 
 * `--numThreads`  Used to perform independent replicates in parallel using a pool of a given number of threads.  
 
