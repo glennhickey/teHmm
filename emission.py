@@ -29,7 +29,8 @@ class IndependentMultinomialEmissionModel(object):
     def __init__(self, numStates, numSymbolsPerTrack, params = None,
                  zeroAsMissingData = True, fudge = 0.0, normalizeFac = 0.0,
                  randomize=False, effectiveSegmentLength = None,
-                 random_state = None):
+                 random_state = None,
+                 randRange = (0.35, 0.65)):
         self.numStates = numStates
         self.numTracks = len(numSymbolsPerTrack)
         self.numSymbolsPerTrack = numSymbolsPerTrack
@@ -55,10 +56,16 @@ class IndependentMultinomialEmissionModel(object):
         self.normalizeFac = 1.
         if normalizeFac > 0:
             self.normalizeFac = float(normalizeFac) / float(self.numTracks)
-        self.initParams(params=params, randomize=randomize)
         # effective segment length is the length we use to normalize all
         # actual segments to
         self.effectiveSegmentLength = effectiveSegmentLength
+        # when initializing the random distribution, using extreme values
+        # seems to hijack any signals we hint at with the custom initialized
+        # values.  So we allow constraining into a certain range.  Note
+        # everthing normalized at the end
+        self.randRange = float(randRange[0]), float(randRange[1])
+
+        self.initParams(params=params, randomize=randomize)
             
     def getLogProbs(self):
         return self.logProbs
@@ -94,6 +101,15 @@ class IndependentMultinomialEmissionModel(object):
                     valArrays.append([0])
             for val in itertools.product(*valArrays):
                 yield val
+
+    def __randDist(self, numPoints):
+        """ generate some random numbers to initialize a distribution """
+        samples = self.random_state.random_sample(numPoints)
+        for i in xrange(len(samples)):
+            samples[i] = self.randRange[0] + samples[i] * \
+              (self.randRange[1] - self.randRange[0])
+        print normalize(samples)
+        return normalize(samples)        
     
     def initParams(self, params = None, randomize=False):
         """ initalize emission parameters such that all values are
@@ -121,7 +137,7 @@ class IndependentMultinomialEmissionModel(object):
                         dist = normalize(1. + np.zeros(
                         self.numSymbolsPerTrack[i], dtype=np.float))
                     else:
-                        dist = normalize(self.random_state.random_sample(
+                        dist = normalize(self.__randDist(
                             self.numSymbolsPerTrack[i]))
                 else:
                     dist = np.array(params[i][j], dtype=np.float)
