@@ -108,9 +108,11 @@ def removeOverlaps(inBed, outBed):
     for i, interval in enumerate(bedIntervals):
         id = getLtrID(interval.name)
         size = sizes[id]
+        if id in dead:
+            continue
         for j in xrange(i-1, -1, -1):
             if intersectSize((interval.chrom, interval.start, interval.end),
-                             (bedIntervals[j].chrom, bedIntervals[i].start,
+                             (bedIntervals[j].chrom, bedIntervals[j].start,
                              bedIntervals[j].end)) <= 0:
                 break
             otherId = getLtrID(bedIntervals[j].name)
@@ -120,9 +122,11 @@ def removeOverlaps(inBed, outBed):
                    sizes[otherId] > size)):
                 dead.add(id)
                 break
+        if id in dead:
+            continue
         for j in xrange(i+1, 1, len(bedIntervals)):
             if intersectSize((interval.chrom, interval.start, interval.end),
-                             (bedIntervals[j].chrom, bedIntervals[i].start,
+                             (bedIntervals[j].chrom, bedIntervals[j].start,
                              bedIntervals[j].end)) <= 0:
                 break
             otherId = getLtrID(bedIntervals[j].name)
@@ -131,6 +135,7 @@ def removeOverlaps(inBed, outBed):
                     (bedIntervals[j].score == interval.score and
                    sizes[otherId] > size)):
                 dead.add(id)
+                print "kill %d because+ %d" % (id, otherId)
                 break
 
     # pass 3: write non-killed
