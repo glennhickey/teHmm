@@ -141,7 +141,11 @@ def compareBaseLevel(intervals1, intervals2, col):
                 p2 += 1
                 i2back = i2
                 i2 = intervals2[p2]
-                assert i2[0] == chrom and coord >= i2[1] and coord < i2[2]
+                if not (i2[0] == chrom and coord >= i2[1] and coord < i2[2]):
+                    raise RuntimeError("Error comparing %s and %s: Perhaps input"
+                                       " files are not sorted or do not exactly"
+                                       " overlap?" % (
+                        str(intervals1[p1]), str(intervals2[p2])))
             state1 = i1[col]
             state2 = i2[col]
             if state1 not in stats:
