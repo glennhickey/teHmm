@@ -194,7 +194,7 @@ def readBedIntervals(bedPath, ncol = 3,
     
     if not os.path.isfile(bedPath):
         raise RuntimeError("Bed interval file %s not found" % bedPath)
-    assert ncol == 3 or ncol == 4
+    assert ncol == 3 or ncol == 4 or ncol == 5
     outIntervals = []
     logger.debug("readBedIntervals(%s)" % bedPath)
     bedTool = BedTool(bedPath)

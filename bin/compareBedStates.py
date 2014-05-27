@@ -41,11 +41,7 @@ def main(argv=None):
                         " (currently only support 4(name) or 5(score))",
                         default = 4, type = int)
     parser.add_argument("--thresh", help="Threshold to consider interval from"
-                        " bed1 covered by bed2.  NOTE: this analysis does not"
-                        " presently care how many individual intervals cover "
-                        "a given interval.  IE 10 bed lines of length 1 in bed1"
-                        " that overlap a single line of length 10 in bed2 will"
-                        "still be considered a perfect match.",
+                        " bed1 covered by bed2.",
                         type=float, default=0.8)
     parser.add_argument("--plot", help="Path of file to write Precision/Recall"
                         " graphs to in PDF format", default=None)
@@ -61,6 +57,8 @@ def main(argv=None):
                         " element, as opposed to only needing 80pct of itself"
                         " overlapping with the true element. ",
                         action="store_true", default = False)
+    parser.add_argument("--hm", help="Write confusion matrix as heatmap in PDF"
+                        " format to specified file", default = None)
 
     args = parser.parse_args()
     tempBedToolPath = initBedTool()
@@ -70,7 +68,10 @@ def main(argv=None):
     else:
         args.ignore = set()
 
-    assert args.col == 3 or args.col ==4
+    assert args.col == 4 or args.col == 5
+
+    if args.hm is not None:
+        raise RuntimeError("TODO")
 
     intervals1 = readBedIntervals(args.bed1, ncol = args.col)
     intervals2 = readBedIntervals(args.bed2, ncol = args.col)
