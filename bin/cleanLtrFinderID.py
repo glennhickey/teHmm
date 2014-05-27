@@ -90,13 +90,13 @@ def removeOverlaps(inBed, outBed):
     bedIntervals = [x for x in BedTool(inBed).sort()]
     outFile = open(outBed, "w")
 
-    def getLtrID(tok):
-        return int(tok[tok.rfind("|") + 1:])
+    def getLtrID(interval):
+        return interval.chrom + interval.name[interval.name.rfind("|") + 1:]
     
     # pass 1: element sizes
     sizes = dict()
     for interval in bedIntervals:
-        id = getLtrID(interval.name)
+        id = getLtrID(interval)
         length = int(interval.end) - int(interval.start)
         if id in sizes:
             sizes[id] += length
@@ -106,7 +106,7 @@ def removeOverlaps(inBed, outBed):
     # pass 2: greedy kill (not optimal for all transitive cases)
     dead = set()
     for i, interval in enumerate(bedIntervals):
-        id = getLtrID(interval.name)
+        id = getLtrID(interval)
         size = sizes[id]
         if id in dead:
             continue
@@ -115,7 +115,7 @@ def removeOverlaps(inBed, outBed):
                              (bedIntervals[j].chrom, bedIntervals[j].start,
                              bedIntervals[j].end)) <= 0:
                 break
-            otherId = getLtrID(bedIntervals[j].name)
+            otherId = getLtrID(bedIntervals[j])
             if otherId not in dead and (
                     bedIntervals[j].score > interval.score or
                     (bedIntervals[j].score == interval.score and
@@ -124,24 +124,25 @@ def removeOverlaps(inBed, outBed):
                 break
         if id in dead:
             continue
-        for j in xrange(i+1, 1, len(bedIntervals)):
+        for j in xrange(i+1, len(bedIntervals), 1):
             if intersectSize((interval.chrom, interval.start, interval.end),
                              (bedIntervals[j].chrom, bedIntervals[j].start,
                              bedIntervals[j].end)) <= 0:
                 break
-            otherId = getLtrID(bedIntervals[j].name)
+            otherId = getLtrID(bedIntervals[j])
             if otherId not in dead and (
                     bedIntervals[j].score > interval.score or
                     (bedIntervals[j].score == interval.score and
                    sizes[otherId] > size)):
                 dead.add(id)
-                print "kill %d because+ %d" % (id, otherId)
                 break
 
     # pass 3: write non-killed
     for interval in bedIntervals:
-        id = getLtrID(interval.name)
+        id = getLtrID(interval)
         if id not in dead:
+            if interval.strand == "?":
+                interval.strand = "."
             outFile.write(str(interval))
             
         
