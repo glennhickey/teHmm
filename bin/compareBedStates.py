@@ -41,11 +41,7 @@ def main(argv=None):
                         " (currently only support 4(name) or 5(score))",
                         default = 4, type = int)
     parser.add_argument("--thresh", help="Threshold to consider interval from"
-                        " bed1 covered by bed2.  NOTE: this analysis does not"
-                        " presently care how many individual intervals cover "
-                        "a given interval.  IE 10 bed lines of length 1 in bed1"
-                        " that overlap a single line of length 10 in bed2 will"
-                        "still be considered a perfect match.",
+                        " bed1 covered by bed2.",
                         type=float, default=0.8)
     parser.add_argument("--plot", help="Path of file to write Precision/Recall"
                         " graphs to in PDF format", default=None)
@@ -61,6 +57,8 @@ def main(argv=None):
                         " element, as opposed to only needing 80pct of itself"
                         " overlapping with the true element. ",
                         action="store_true", default = False)
+    parser.add_argument("--hm", help="Write confusion matrix as heatmap in PDF"
+                        " format to specified file", default = None)
 
     args = parser.parse_args()
     tempBedToolPath = initBedTool()
@@ -70,11 +68,14 @@ def main(argv=None):
     else:
         args.ignore = set()
 
-    assert args.col == 3 or args.col ==4
+    assert args.col == 4 or args.col == 5
+
+    if args.hm is not None:
+        raise RuntimeError("TODO")
 
     intervals1 = readBedIntervals(args.bed1, ncol = args.col)
     intervals2 = readBedIntervals(args.bed2, ncol = args.col)
-    stats = compareBaseLevel(intervals1, intervals2, args.col - 1)
+    stats = compareBaseLevel(intervals1, intervals2, args.col - 1)[0]
 
     totalRight, totalWrong, accMap = summarizeBaseComparision(stats, args.ignore)
     print stats
@@ -85,9 +86,9 @@ def main(argv=None):
     print accMap
 
     trueStats = compareIntervalsOneSided(intervals1, intervals2, args.col -1,
-                                         args.thresh, False)
+                                         args.thresh, False)[0]
     predStats = compareIntervalsOneSided(intervals2, intervals1, args.col -1,
-                                         args.thresh, args.strictPrec)
+                                         args.thresh, args.strictPrec)[0]
     intAccMap = summarizeIntervalComparison(trueStats, predStats, False,
                                             args.ignore)
     intAccMapWeighted = summarizeIntervalComparison(trueStats, predStats, True,
@@ -118,8 +119,8 @@ def main(argv=None):
 
 def compareBaseLevel(intervals1, intervals2, col):
     """ return dictionary that maps each state to (i1 but not i2, i2 but not i1,
-    both) for base level stats, and also a similar dictionary for interval
-    stats. """
+    both) for base level stats.  Update: now returns a tuple of accuracy stats
+    and confusionf matrix. """
 
     assert intervals1[0][0] == intervals2[0][0]
     assert intervals1[0][1] == intervals2[0][1]
@@ -127,6 +128,8 @@ def compareBaseLevel(intervals1, intervals2, col):
 
     # base level dictionary
     stats = dict()
+    # confusion matrix
+    confMat = dict()
     # yuck:
     p2 = 0
     for p1 in xrange(len(intervals1)):
@@ -157,8 +160,9 @@ def compareBaseLevel(intervals1, intervals2, col):
             else:
                 stats[state1][0] += 1
                 stats[state2][1] += 1
+            updateConfMatrix(confMat, state2, state1)
 
-    return stats
+    return stats, confMat
 
 def compareIntervalsOneSided(trueIntervals, predIntervals, col, threshold,
                              usePredLenForThreshold):
@@ -196,6 +200,7 @@ def compareIntervalsOneSided(trueIntervals, predIntervals, col, threshold,
     LT = len(trueIntervals)
 
     stats = dict()
+    confMat = dict()
     
     pi = 0
     for ti in xrange(LT):
@@ -217,11 +222,16 @@ def compareIntervalsOneSided(trueIntervals, predIntervals, col, threshold,
         for i in xrange(pi, LP):
             overlapSize = intersectSize(trueInterval, predIntervals[i])
             if overlapSize > 0:
+                denom = trueLen
+                if usePredLenForThreshold is True:
+                    denom = float(predIntervals[i][2] - predIntervals[i][1])
+                frac = float(overlapSize) / denom
+                # look for biggest true overlap when computing accuracy
                 if predIntervals[i][col] == trueState:
-                    denom = trueLen
-                    if usePredLenForThreshold is True:
-                        denom = float(predIntervals[i][2] - predIntervals[i][1])
-                    bestFrac = max(bestFrac, float(overlapSize) / denom)
+                    bestFrac = max(bestFrac, frac)
+                # count all overlaps >= thresh when computing confusion matrix
+                if frac >= threshold:
+                    updateConfMatrix(confMat, predIntervals[i][col], trueState)
             else:
                 break
 
@@ -238,7 +248,7 @@ def compareIntervalsOneSided(trueIntervals, predIntervals, col, threshold,
             stats[trueState][2] += 1
             stats[trueState][3] += trueLen
 
-    return stats
+    return stats, confMat
     
 def summarizeBaseComparision(stats, ignore):
     totalRight = 0
@@ -389,6 +399,39 @@ def writeAccPlots(accuracy, baseAccMap, intAccMap, intAccMapWeighted,
     plotPoints2d(distList, titles, stateNames, outFile, xRange=(-0.1,1.1),
                  yRange=(-0.1, 1.4), ptSize=75, xLabel="Precision",
                  yLabel="Recall", cols=2, width=10, rowHeight=5)
+
+def updateConfMatrix(matrix, predState, trueState):
+    """ update a confusion matrix which is just represented as a 2-d dictionary
+    of state names as strings.  matrix[predState][trueState] stores a count of
+    how many times a prediction overlaps a true state.  Taking the maximum
+    value across all trueStates here can be used to assign state names to
+    unsupervised predictions
+     """
+    if predState not in matrix:
+        matrix[predState] = dict()
+    pred = matrix[predState]
+    if trueState not in pred:
+        pred[trueState] = 0
+    pred[trueState] += 1
+    return matrix
+
+def getStateMapFromConfMatrix(matrix):
+    """ return a dictionary mapping predicted state names to true state names
+    using the confusion matrix that was generated using the above function...
+    in addition to the name, the number of overlaps and total overlaps are
+    returned to give an indication of the fit...
+    """
+    stateMap = dict()
+    for predName, predDict in matrix.items():
+        maxName, maxCount = None, -1
+        total = 0
+        for trueName, count in predDict.items():
+            total += count
+            if count > maxCount:
+                maxName, maxCount = trueName, count
+        stateMap[predName] = maxName, maxCount, total
+    return stateMap
+            
             
 if __name__ == "__main__":
     sys.exit(main())

@@ -14,6 +14,8 @@ import ast
 
 from teHmm.common import intersectSize
 from teHmm.bin.compareBedStates import compareIntervalsOneSided
+from teHmm.bin.compareBedStates import compareBaseLevel
+from teHmm.bin.compareBedStates import getStateMapFromConfMatrix
 from teHmm.tests.common import getTestDirPath
 from teHmm.tests.common import TestBase
 
@@ -97,7 +99,7 @@ class TestCase(TestBase):
         bed2.append(("chr2", 10, 20, 'D'))
         bed2.append(("chr2", 20, 30, 'C'))
 
-        stats = compareIntervalsOneSided(bed1, bed2, 3, 0.8, False)
+        stats = compareIntervalsOneSided(bed1, bed2, 3, 0.8, False)[0]
 
         trueA, falseA = stats['A'][0], stats['A'][2]
         assert trueA == 2
@@ -113,7 +115,7 @@ class TestCase(TestBase):
 
         assert 'D' not in stats
 
-        stats = compareIntervalsOneSided(bed1, bed2, 3, 0.51, False)
+        stats = compareIntervalsOneSided(bed1, bed2, 3, 0.51, False)[0]
 
         trueA, falseA = stats['A'][0], stats['A'][2]
         assert trueA == 2
@@ -130,7 +132,7 @@ class TestCase(TestBase):
         assert 'D' not in stats
 
     
-        stats = compareIntervalsOneSided(bed1, bed2, 3, 0.5, False)
+        stats = compareIntervalsOneSided(bed1, bed2, 3, 0.5, False)[0]
 
         trueA, falseA = stats['A'][0], stats['A'][2]
         assert trueA == 2
@@ -146,7 +148,7 @@ class TestCase(TestBase):
 
         assert 'D' not in stats
 
-        stats = compareIntervalsOneSided(bed2, bed1, 3, 0.8, False)
+        stats = compareIntervalsOneSided(bed2, bed1, 3, 0.8, False)[0]
 
         trueA, falseA = stats['A'][0], stats['A'][2]
         assert trueA == 1
@@ -163,8 +165,38 @@ class TestCase(TestBase):
         trueD, falseD = stats['D'][0], stats['D'][2]
         assert trueD == 0
         assert falseD == 1
-        
-        
+
+    def testConfusion(self):
+        bed1 = []
+        bed1.append(("chr1", 0, 10, 'A'))
+        bed1.append(("chr1", 10, 20, 'B'))
+        bed1.append(("chr1", 30, 40, 'A'))
+        bed1.append(("chr2", 10, 30, 'C'))
+
+        bed2 = []
+        bed2.append(("chr1", 0, 15, 'X'))
+        bed2.append(("chr1", 15, 20, 'Y'))
+        bed2.append(("chr1", 30, 40, 'X'))
+        bed2.append(("chr2", 10, 20, 'Z'))
+        bed2.append(("chr2", 20, 30, 'C'))
+
+        confMat = compareBaseLevel(bed1, bed2, 3)[1]
+        stateMap = getStateMapFromConfMatrix(confMat)
+        assert confMat['X']['A'] == 20
+        assert confMat['X']['B'] == 5
+        assert stateMap['X'] == ('A', 20, 25)
+        assert stateMap['Y'] == ('B', 5, 5)
+        assert stateMap['Z'] == ('C', 10, 10)
+        assert stateMap['C'] == ('C', 10, 10)
+
+        confMat =  compareIntervalsOneSided(bed1, bed2, 3, 0.5, False)[1]
+        stateMap = getStateMapFromConfMatrix(confMat)
+        assert confMat['X']['A'] == 2
+        assert confMat['X']['B'] == 1
+        assert stateMap['X'] == ('A', 2, 3)
+        assert stateMap['Y'] == ('B', 1, 1)
+        assert stateMap['Z'] == ('C', 1, 1)
+        assert stateMap['C'] == ('C', 1, 1)        
         
         
 def main():

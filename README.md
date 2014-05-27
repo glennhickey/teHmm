@@ -180,7 +180,7 @@ Because the outgoing probabilities of each state above sum to 1, all other trans
 	Outside  ltrFinder  LTR|left|LTR_TE  0.001
 	Outside  ltrFinder   inside|-|LTR_TE 0.001
 
-This is essentially saying that we start training under the assumption that the ltrFinder and chaux tracks have 90% sensitivity and 99.9% specificity.  It is important to note that the Baum-Welch algorithm is still free to change any of these probabilities in any direction.  
+This is essentially saying that we start training under the assumption that the ltrFinder and chaux tracks have 90% sensitivity and 99.9% specificity.  It is important to note that the Baum-Welch algorithm is still free to change any of these probabilities in any direction.   Note: the script `fitStateNames.py` can be used to rename the OtherX states in the model's prediction to more meaningul names by comparing them to a different annotation.  
 
 ### Automatic Generation of Initial Distributions
 
@@ -314,10 +314,11 @@ In general, running any executable with `--help` will print a brief description 
 * **valStats.py** : Compute simple statistics of numeric track data
 * **countBedStates.py** : Print number of unique IDs
 
-**Validation**
+**Validation and Comparison**
 
 * **teHmmBenchmark.py** : Wrapper to train, evaluate, and compare model on given data
 * **compareBedStates.py** : Compute base and interval-level precision and recall of one bed file vis-a-vis another.  Both files must cover exactly the same region.
+* **fitStateNames.py** : Assign predicted states names according to how well they match a given annotation.  Useful for generating meaningful names for states that were learned in a completely unsupervised manner. 
 
 
 
