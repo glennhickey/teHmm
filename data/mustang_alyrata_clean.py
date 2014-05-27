@@ -166,10 +166,8 @@ def runCleaning(args, tempTracksInfo):
     if ltrfinderTrack is not None:
         inFile = ltrfinderTrack.getPath()
         outFile = cleanPath(args, ltrfinderTrack)
-        tempBed = getLocalTempPath("Temp_ltrfinder", ".bed")
-        runShellCommand("removeBedOverlaps.py %s > %s" % (inFile, tempBed))
-        runShellCommand("cleanLtrFinderID.py %s %s" % (tempBed, outFile))
-        runShellCommand("rm -f %s" % tempBed)
+        # note: overlaps now removed in cleanLtrFinderID script
+        runShellCommand("cleanLtrFinderID.py %s %s" % (inFile, outFile))
         ltrfinderTrack.setPath(outFile)
     else:
         logger.warning("Could not find ltrfinder track")
