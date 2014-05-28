@@ -38,6 +38,8 @@ def main(argv=None):
                         "overlap, the one with the highest score (length "
                         "in event of tie) is kept. This option disables"
                         " this logic.", action="store_true", default=False)
+    parser.add_argument("--all", help="write _sym, _tsd_as_gap, etc. versions"
+                        " of output", action="store_true", default=False)
     
     args = parser.parse_args()
     tempBedToolPath = initBedTool()
@@ -55,25 +57,26 @@ def main(argv=None):
     os.system("sed -e \"s/|LTR_TE|[0-9]*//g\" -e \"s/|-//g\" %s > %s" % (
         inBed, args.outBed))
 
-    symBed = baseOut + "_sym" + ext
-    os.system("sed -e \"s/|left//g\" -e \"s/|right//g\" %s > %s" % (args.outBed,
-                                                                    symBed))
+    if args.all:
+        symBed = baseOut + "_sym" + ext
+        os.system("sed -e \"s/|left//g\" -e \"s/|right//g\" %s > %s" % (args.outBed,
+                                                                        symBed))
 
-    tsd_as_gapsBed = baseOut + "_tsd_as_gap" + ext
-    os.system("grep -v TSD %s > %s" % (args.outBed, tsd_as_gapsBed))
+        tsd_as_gapsBed = baseOut + "_tsd_as_gap" + ext
+        os.system("grep -v TSD %s > %s" % (args.outBed, tsd_as_gapsBed))
 
-    sym_tsd_as_gapsBed = baseOut + "_sym_tsd_as_gap" + ext
-    os.system("grep -v TSD %s > %s" % (symBed, sym_tsd_as_gapsBed))
+        sym_tsd_as_gapsBed = baseOut + "_sym_tsd_as_gap" + ext
+        os.system("grep -v TSD %s > %s" % (symBed, sym_tsd_as_gapsBed))
 
-    tsd_as_ltrBed = baseOut + "_tsd_as_ltr" + ext
-    os.system("sed -e \"s/TSD/LTR/g\" %s > %s" % (args.outBed, tsd_as_ltrBed))
+        tsd_as_ltrBed = baseOut + "_tsd_as_ltr" + ext
+        os.system("sed -e \"s/TSD/LTR/g\" %s > %s" % (args.outBed, tsd_as_ltrBed))
 
-    sym_tsd_as_ltrBed = baseOut + "_sym_tsd_as_ltr" + ext
-    os.system("sed -e \"s/TSD/LTR/g\" %s > %s" % (symBed, sym_tsd_as_ltrBed))
+        sym_tsd_as_ltrBed = baseOut + "_sym_tsd_as_ltr" + ext
+        os.system("sed -e \"s/TSD/LTR/g\" %s > %s" % (symBed, sym_tsd_as_ltrBed))
 
-    singleBed = baseOut + "_single" + ext
-    os.system("sed -e \"s/LTR/inside/g\" %s > %s" % (sym_tsd_as_ltrBed,
-                                                     singleBed))
+        singleBed = baseOut + "_single" + ext
+        os.system("sed -e \"s/LTR/inside/g\" %s > %s" % (sym_tsd_as_ltrBed,
+                                                         singleBed))
 
     for path in toRm:
         runShellCommand("rm -f %s" % path)
@@ -104,6 +107,9 @@ def removeOverlaps(inBed, outBed):
             sizes[id] = length
 
     # pass 2: greedy kill (not optimal for all transitive cases)
+    # strategy: any pairwise overlap will be detected in either
+    # the left or right scan of at least one of the overlapping
+    # elements. 
     dead = set()
     for i, interval in enumerate(bedIntervals):
         id = getLtrID(interval)
@@ -116,12 +122,15 @@ def removeOverlaps(inBed, outBed):
                              bedIntervals[j].end)) <= 0:
                 break
             otherId = getLtrID(bedIntervals[j])
-            if otherId not in dead and (
-                    bedIntervals[j].score > interval.score or
-                    (bedIntervals[j].score == interval.score and
-                   sizes[otherId] > size)):
+            if otherId in dead:
+                continue
+            if (bedIntervals[j].score > interval.score or
+                (bedIntervals[j].score == interval.score and
+                 sizes[otherId] > size)):
                 dead.add(id)
                 break
+            else:
+                dead.add(otherId)
         if id in dead:
             continue
         for j in xrange(i+1, len(bedIntervals), 1):
@@ -130,12 +139,17 @@ def removeOverlaps(inBed, outBed):
                              bedIntervals[j].end)) <= 0:
                 break
             otherId = getLtrID(bedIntervals[j])
-            if otherId not in dead and (
-                    bedIntervals[j].score > interval.score or
-                    (bedIntervals[j].score == interval.score and
-                   sizes[otherId] > size)):
+            if otherId in dead:
+                continue
+            if (bedIntervals[j].score > interval.score or
+                (bedIntervals[j].score == interval.score and
+                 sizes[otherId] > size)):
                 dead.add(id)
                 break
+            else:
+                dead.add(otherId)
+        if id in dead:
+            continue
 
     # pass 3: write non-killed
     for interval in bedIntervals:
