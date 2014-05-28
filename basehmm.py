@@ -520,7 +520,10 @@ class BaseHMM(object):
                     stats, seq, framelogprob, posteriors, fwdlattice,
                     bwdlattice, self.params)
             logprob.append(curr_logprob)
-            logger.info("BW Iteration %d: LogProb %f" % (i, curr_logprob))
+            logMsgString = "BW Iteration %d: LogProb %f" % (i, curr_logprob)
+            if i > 0:
+                logMsgString += " (delta %f)" % (logprob[-1] - logprob[-2])
+            logger.info(logMsgString)
 
             # Check for convergence.
             if i > 0 and abs(logprob[-1] - logprob[-2]) < self.thresh:
