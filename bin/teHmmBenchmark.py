@@ -167,7 +167,11 @@ def main(argv=None):
     parser.add_argument("--numThreads", help="Number of threads to use when"
                         " running training replicates (see --rep) in parallel.",
                         type=int, default=None)
-
+    parser.add_argument("--emThresh", help="Threshold used for convergence"
+                        " in baum welch training.  IE delta log likelihood"
+                        " must be bigger than this number (which should be"
+                        " positive) for convergence", type=float,
+                        default=None)    
         
     addLoggingOptions(parser)
     args = parser.parse_args()
@@ -232,6 +236,8 @@ def main(argv=None):
         trainFlags += " --reps %d" % args.reps
     if args.numThreads is not None:
         trainFlags += " --numThreads %d" % args.numThreads
+    if args.emThresh is not None:
+        trainFlags += " --emThresh %f" % args.emThresh
 
     # write out command line for posteriorty's sake
     if not os.path.exists(args.outputDir):
