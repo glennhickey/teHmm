@@ -108,7 +108,6 @@ class IndependentMultinomialEmissionModel(object):
         for i in xrange(len(samples)):
             samples[i] = self.randRange[0] + samples[i] * \
               (self.randRange[1] - self.randRange[0])
-        print normalize(samples)
         return normalize(samples)        
     
     def initParams(self, params = None, randomize=False):
