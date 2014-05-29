@@ -83,6 +83,7 @@ def main(argv=None):
     accuracy = float(totalRight) / float(totalBoth)
     print "Accuaracy: %d / %d = %f" % (totalRight, totalBoth, accuracy)
     print "State-by-state (Precision, Recall):"
+    print "Base-by-base Accuracy"    
     print accMap
 
     trueStats = compareIntervalsOneSided(intervals1, intervals2, args.col -1,

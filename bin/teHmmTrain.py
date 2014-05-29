@@ -152,6 +152,10 @@ def main(argv=None):
                         " must be bigger than this number (which should be"
                         " positive) for convergence", type=float,
                         default=0.001)
+    parser.add_argument("--saveAllReps", help="Save all replicates (--reps)"
+                        " models to disk, instead of just the best one"
+                        ". Format is <outputModel>.repN",
+                        action="store_true", default=False)
 
     addLoggingOptions(parser)
     args = parser.parse_args()
@@ -256,6 +260,14 @@ def main(argv=None):
     # write the model to a pickle
     logger.info("saving trained model to %s" % args.outputModel)
     saveModel(args.outputModel, model)
+
+    # write all replicates
+    if args.saveAllReps is True:
+        for i, repModel in enumerate(modelList):
+            if i != bestModel[0]:
+                repPath = "%s.rep%d" % (args.outputModel, i)
+                logger.info("saving replicate model to %s" % repPath)                
+                saveModel(repPath, repModel)
 
     cleanBedTool(tempBedToolPath)
 
