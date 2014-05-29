@@ -30,7 +30,7 @@ class IndependentMultinomialEmissionModel(object):
                  zeroAsMissingData = True, fudge = 0.0, normalizeFac = 0.0,
                  randomize=False, effectiveSegmentLength = None,
                  random_state = None,
-                 randRange = (0.25, 0.75)):
+                 randRange = (0.1, 0.9)):
         self.numStates = numStates
         self.numTracks = len(numSymbolsPerTrack)
         self.numSymbolsPerTrack = numSymbolsPerTrack
