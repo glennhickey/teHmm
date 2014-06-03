@@ -164,7 +164,7 @@ def writeFittedBed(intervals, stateMap, outBed, col, noMerge):
     for interval in intervals:
         outInterval = list(interval)
         outInterval[col] = stateMap[outInterval[col]][0]
-        if not args.noMerge and\
+        if not noMerge and\
           prevInterval is not None and\
           outInterval[col] == prevInterval[col] and\
           outInterval[0] == prevInterval[0] and\
