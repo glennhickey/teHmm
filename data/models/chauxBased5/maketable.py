@@ -44,7 +44,7 @@ def stringify(row):
         try:
             if isinstance(i, int):
                 raise 0
-            outRow.append("%.2f" % float(i))
+            outRow.append("%.3f" % float(i))
         except:
             outRow.append(str(i))
     return "\t".join(outRow)
