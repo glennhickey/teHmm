@@ -1,0 +1,31 @@
+# barbados style
+# 
+teHmmTrain.py ./tracks.xml scaffold3.bed models/fix_s1_b0.mod --initTransProbs chauxTransitionInit.dist --initEmProbs chauxEmissionInit.dist --initStartProbs chauxStartInit.dist --fixStart --forceEmProbs chauxEmissionForce.dist --flatEm --segment segments3_1.bed --segLen 0 --iter 300 --logInfo
+
+teHmmTrain.py ./tracks.xml scaffold3.bed models/fix_s0_b0.mod --initTransProbs chauxTransitionInit.dist --initEmProbs chauxEmissionInit.dist --initStartProbs chauxStartInit.dist --fixStart --forceEmProbs chauxEmissionForce.dist --flatEm --segment segments3_0.bed --segLen 0 --iter 300 --logInfo
+
+teHmmTrain.py ./tracks.xml scaffold3.bed models/fix_s1_b200.mod --initTransProbs chauxTransitionInit.dist --initEmProbs chauxEmissionInit.dist --initStartProbs chauxStartInit.dist --fixStart --forceEmProbs chauxEmissionForce.dist --flatEm --segment segments3_1.bed --segLen 200 --iter 300 --logInfo
+
+teHmmTrain.py ./tracks.xml scaffold3.bed models/fix_s0_b200.mod --initTransProbs chauxTransitionInit.dist --initEmProbs chauxEmissionInit.dist --initStartProbs chauxStartInit.dist --fixStart --forceEmProbs chauxEmissionForce.dist --flatEm --segment segments3_0.bed --segLen 200 --iter 300 --logInfo
+
+
+# barbados style but no fixing
+#
+teHmmTrain.py ./tracks.xml scaffold3.bed models/semi_s1_b0.mod --initTransProbs chauxTransitionInit.dist --initEmProbs chauxEmissionInit.dist  --segment segments3_1.bed --segLen 0 --iter 300 --logInfo --reps 20 --numThreads 10 --saveAllReps --seed 3 --emThresh 0.1
+
+teHmmTrain.py ./tracks.xml scaffold3.bed models/semi_s0_b0.mod --initTransProbs chauxTransitionInit.dist --initEmProbs chauxEmissionInit.dist  --segment segments3_0.bed --segLen 0 --iter 300 --logInfo --reps 20 --numThreads 10 --saveAllReps --seed 3 --emThresh 0.1
+
+teHmmTrain.py ./tracks.xml scaffold3.bed models/semi_s1_b200.mod --initTransProbs chauxTransitionInit.dist --initEmProbs chauxEmissionInit.dist  --segment segments3_1.bed --segLen 200 --iter 300 --logInfo --reps 20 --numThreads 10 --saveAllReps --seed 3 --emThresh 0.1
+
+teHmmTrain.py ./tracks.xml scaffold3.bed models/semi_s0_b200.mod --initTransProbs chauxTransitionInit.dist --initEmProbs chauxEmissionInit.dist  --segment segments3_0.bed --segLen 200 --iter 300 --logInfo --reps 20 --numThreads 10 --saveAllReps --seed 3 --emThresh 0.1
+
+# total unsupervized
+#
+teHmmTrain.py ./tracks.xml scaffold3.bed models/unsup_s1_b0.mod --numStates 20 --segment segments3_1.bed --segLen 0 --iter 300 --logInfo --reps 40 --numThreads 10 --saveAllReps --seed 3 --emThresh 0.5
+
+teHmmTrain.py ./tracks.xml scaffold3.bed models/unsup_s0_b0.mod --numStates 20  --segment segments3_0.bed --segLen 0 --iter 300 --logInfo --reps 40 --numThreads 10 --saveAllReps --seed 3 --emThresh 0.5
+
+teHmmTrain.py ./tracks.xml scaffold3.bed models/unsup_s1_b200.mod --numStates 20  --segment segments3_1.bed --segLen 200 --iter 300 --logInfo --reps 40 --numThreads 10 --saveAllReps --seed 3 --emThresh 0.5
+
+teHmmTrain.py ./tracks.xml scaffold3.bed models/unsup_s0_b200.mod --numStates 20  --segment segments3_0.bed --segLen 200 --iter 300 --logInfo --reps 40 --numThreads 10 --saveAllReps --seed 3 --emThresh 0.5
+

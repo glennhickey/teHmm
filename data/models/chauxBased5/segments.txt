@@ -1,0 +1,7 @@
+# Same segmenting as used in barbados
+
+segmentTracks.py ~/genomes/teHmm/data/mustang_alyrata_tracks_clean.xml scaffold3.bed --thresh 1 --comp first --cutTracks termini,tir_termini,tsd segments3_1.bed --logInfo
+segmentTracks.py ~/genomes/teHmm/data/mustang_alyrata_tracks_clean.xml ../../tracks/manual/allManual_clean.bed --thresh 1 --comp first --cutTracks termini,tir_termini,tsd segmentsm_1.bed --logInfo
+
+segmentTracks.py ~/genomes/teHmm/data/mustang_alyrata_tracks_clean.xml scaffold3.bed --thresh 0 --comp first --cutTracks termini,tir_termini,tsd segments3_0.bed --logInfo
+segmentTracks.py ~/genomes/teHmm/data/mustang_alyrata_tracks_clean.xml ../../tracks/manual/allManual_clean.bed --thresh 0 --comp first --cutTracks termini,tir_termini,tsd segmentsm_0.bed --logInfo

@@ -1,0 +1,56 @@
+# barbados style
+#
+
+teHmmEval.py tracks.xml models/fix_s1_b0.mod segmentsm_1.bed --segment --bed predictions/fix_s1_b0_segmentsm.bed
+teHmmEval.py tracks.xml models/fix_s0_b0.mod segmentsm_0.bed --segment --bed predictions/fix_s0_b0_segmentsm.bed
+teHmmEval.py tracks.xml models/fix_s1_b200.mod segmentsm_1.bed --segment --bed predictions/fix_s1_b200_segmentsm.bed
+teHmmEval.py tracks.xml models/fix_s0_b200.mod segmentsm_0.bed --segment --bed predictions/fix_s0_b200_segmentsm.bed
+
+teHmmEval.py tracks.xml models/fix_s1_b0.mod segments3_1.bed --segment --bed predictions/fix_s1_b0_segments3.bed
+teHmmEval.py tracks.xml models/fix_s0_b0.mod segments3_0.bed --segment --bed predictions/fix_s0_b0_segments3.bed
+teHmmEval.py tracks.xml models/fix_s1_b200.mod segments3_1.bed --segment --bed predictions/fix_s1_b200_segments3.bed
+teHmmEval.py tracks.xml models/fix_s0_b200.mod segments3_0.bed --segment --bed predictions/fix_s0_b200_segments3.bed
+
+
+# barbados style but no fixing
+#
+
+teHmmEval.py tracks.xml models/semi_s1_b0.mod segmentsm_1.bed --segment --bed predictions/semi_s1_b0_segmentsm.bed
+teHmmEval.py tracks.xml models/semi_s0_b0.mod segmentsm_0.bed --segment --bed predictions/semi_s0_b0_segmentsm.bed
+teHmmEval.py tracks.xml models/semi_s1_b200.mod segmentsm_1.bed --segment --bed predictions/semi_s1_b200_segmentsm.bed
+teHmmEval.py tracks.xml models/semi_s0_b200.mod segmentsm_0.bed --segment --bed predictions/semi_s0_b200_segmentsm.bed
+pushd models
+for i in semi_s1_b*.mod.rep*; do teHmmEval.py ../tracks.xml $i ../segmentsm_1.bed --segment --bed ../predictions/${i}_segmentsm.bed; done
+for i in semi_s0_b*.mod.rep*; do teHmmEval.py ../tracks.xml $i ../segmentsm_0.bed --segment --bed ../predictions/${i}_segmentsm.bed; done
+popd
+
+
+teHmmEval.py tracks.xml models/semi_s1_b0.mod segments3_1.bed --segment --bed predictions/semi_s1_b0_segments3.bed
+teHmmEval.py tracks.xml models/semi_s0_b0.mod segments3_0.bed --segment --bed predictions/semi_s0_b0_segments3.bed
+teHmmEval.py tracks.xml models/semi_s1_b200.mod segments3_1.bed --segment --bed predictions/semi_s1_b200_segments3.bed
+teHmmEval.py tracks.xml models/semi_s0_b200.mod segments3_0.bed --segment --bed predictions/semi_s0_b200_segments3.bed
+pushd models
+for i in semi_s1_b*.mod.rep*; do teHmmEval.py ../tracks.xml $i ../segments3_1.bed --segment --bed ../predictions/${i}_segments3.bed; done
+for i in semi_s0_b*.mod.rep*; do teHmmEval.py ../tracks.xml $i ../segments3_0.bed --segment --bed ../predictions/${i}_segments3.bed; done
+popd
+
+# total unsupervized
+#
+
+teHmmEval.py tracks.xml models/unsup_s1_b0.mod segmentsm_1.bed --segment --bed predictions/unsup_s1_b0_segmentsm.bed
+teHmmEval.py tracks.xml models/unsup_s0_b0.mod segmentsm_0.bed --segment --bed predictions/unsup_s0_b0_segmentsm.bed
+teHmmEval.py tracks.xml models/unsup_s1_b200.mod segmentsm_1.bed --segment --bed predictions/unsup_s1_b200_segmentsm.bed
+teHmmEval.py tracks.xml models/unsup_s0_b200.mod segmentsm_0.bed --segment --bed predictions/unsup_s0_b200_segmentsm.bed
+pushd models
+for i in unsup_s1_b*.mod.rep*; do teHmmEval.py ../tracks.xml $i ../segmentsm_1.bed --segment --bed ../predictions/${i}_segmentsm.bed; done
+for i in unsup_s0_b*.mod.rep*; do teHmmEval.py ../tracks.xml $i ../segmentsm_0.bed --segment --bed ../predictions/${i}_segmentsm.bed; done
+popd
+
+teHmmEval.py tracks.xml models/unsup_s1_b0.mod segments3_1.bed --segment --bed predictions/unsup_s1_b0_segments3.bed
+teHmmEval.py tracks.xml models/unsup_s0_b0.mod segments3_0.bed --segment --bed predictions/unsup_s0_b0_segments3.bed
+teHmmEval.py tracks.xml models/unsup_s1_b200.mod segments3_1.bed --segment --bed predictions/unsup_s1_b200_segments3.bed
+teHmmEval.py tracks.xml models/unsup_s0_b200.mod segments3_0.bed --segment --bed predictions/unsup_s0_b200_segments3.bed
+pushd models
+for i in unsup_s1_b*.mod.rep*; do teHmmEval.py ../tracks.xml $i ../segments3_1.bed --segment --bed ../predictions/${i}_segments3.bed; done
+for i in unsup_s0_b*.mod.rep*; do teHmmEval.py ../tracks.xml $i ../segments3_0.bed --segment --bed ../predictions/${i}_segments3.bed; done
+popd
