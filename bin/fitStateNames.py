@@ -61,6 +61,11 @@ def main(argv=None):
     parser.add_argument("--model", help="Apply state name mapping to the model"
                         " in the specified path (it is strongly advised to"
                         " make a backup of the model first)", default=None)
+    parser.add_argument("--noMerge", help="By default, adjacent intervals"
+                        " with the same state name in the output are "
+                        "automatically merged into a single interval.  This"
+                        " flag disables this.", action="store_true",
+                        default=False)
 
     addLoggingOptions(parser)
     args = parser.parse_args()
@@ -103,7 +108,7 @@ def main(argv=None):
         applyNamesToModel(stateMap, args.model)
     
     # generate the output bed using the statemap
-    writeFittedBed(intervals2, stateMap, args.outBed, args.col-1)
+    writeFittedBed(intervals2, stateMap, args.outBed, args.col-1, args.noMerge)
 
     cleanBedTool(tempBedToolPath)
 
@@ -150,16 +155,31 @@ def applyNamesToModel(stateMap, modelPath):
     modelMap = model.getStateNameMap()
     raise RuntimeError("Not Implemented")
                 
-def writeFittedBed(intervals, stateMap, outBed, col):
+def writeFittedBed(intervals, stateMap, outBed, col, noMerge):
     """ write the mapped bed file by applying stateMap to the intervals
     from args.predBed"""
     outFile = open(outBed, "w")
 
+    prevInterval = None
     for interval in intervals:
         outInterval = list(interval)
         outInterval[col] = stateMap[outInterval[col]][0]
-        outFile.write("\t".join([str(x) for x in outInterval]) + "\n")
-                                    
+        if not args.noMerge and\
+          prevInterval is not None and\
+          outInterval[col] == prevInterval[col] and\
+          outInterval[0] == prevInterval[0] and\
+          outInterval[1] == prevInterval[2]:
+            # glue onto prev interval
+            prevInterval[2] = outInterval[2]
+        else:
+            # write and update prev
+            if prevInterval is not None:
+                outFile.write("\t".join([str(x) for x in prevInterval]) + "\n")
+            prevInterval = outInterval
+            
+    if prevInterval is not None:
+        outFile.write("\t".join([str(x) for x in prevInterval]) + "\n")
+                                            
     outFile.close()
 
 if __name__ == "__main__":
