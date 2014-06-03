@@ -12,9 +12,11 @@ from teHmm.common import intersectSize, getLocalTempPath, runShellCommand
 from teHmm.common import initBedTool, cleanBedTool
 
 """
-Take the Bed output of ltr_finder, and make some different bed files that we can use for the model by changing the ids
+Clean up bed output of LTR_FINDER (via bed extraction script), to remove unique ids and overlaps so it can be used for HMM. 
 
-output.bed : Uniuqe id's removed
+output.bed : Uniuqe id's removed.  Overlaps are also removed (giving priority to higher scores (length in case of tied score)
+
+(if --all used:)
 output_sym.bed : and right and left removed
 output_tsd_as_gap.bed : tsd states removed
 output_sym_tsd_as_gap.bed : tsd states removed and right and left removed
@@ -40,18 +42,29 @@ def main(argv=None):
                         " this logic.", action="store_true", default=False)
     parser.add_argument("--all", help="write _sym, _tsd_as_gap, etc. versions"
                         " of output", action="store_true", default=False)
+    parser.add_argument("--weak", help="score threshold such that any elemetns"
+                        " with a score lower or equal to will be assigned the"
+                        " prefix WEAK_ to their names.", type=float,
+                        default=-1)
+    parser.add_argument("--weakIgnore", help="dont apply --weak to state names"
+                        " that contain given keywords (defined as comma-separated"
+                        " list", default=None)
     
     args = parser.parse_args()
     tempBedToolPath = initBedTool()
     assert os.path.exists(args.inBed)
     baseOut, ext = os.path.splitext(args.outBed)
+    if args.weakIgnore is not None:
+        args.weakIgnore = args.weakIgnore.split(",")
+    else:
+        args.weakIgnore = []
 
     inBed = args.inBed
 
     toRm = []
     if not args.keepOl:
         inBed = getLocalTempPath("Temp", ".bed")
-        removeOverlaps(args.inBed, inBed)
+        removeOverlaps(args.inBed, inBed, args)
         toRm.append(inBed)
 
     os.system("sed -e \"s/|LTR_TE|[0-9]*//g\" -e \"s/|-//g\" %s > %s" % (
@@ -84,7 +97,7 @@ def main(argv=None):
     cleanBedTool(tempBedToolPath)
         
 
-def removeOverlaps(inBed, outBed):
+def removeOverlaps(inBed, outBed, args):
     """ Little hack to get this script workign with different settings of ltr_finder
     where annotations can overlap.  To resolve overlaps, we choose the best element
     (by score, then length), and delete anything it touches.  TODO: incorporate Dougs
@@ -157,8 +170,18 @@ def removeOverlaps(inBed, outBed):
         if id not in dead:
             if interval.strand == "?":
                 interval.strand = "."
+            applyWeak(interval, args)
             outFile.write(str(interval))
             
+def applyWeak(interval, args):
+    # YOU ARE WEAK
+    if float(interval.score) <= args.weak:
+        for keyIg in args.weakIgnore:
+            if keyIg in interval.name:
+                return
+        interval.name = "WEAK_" + interval.name
         
+
+    
 if __name__ == "__main__":
     sys.exit(main())
