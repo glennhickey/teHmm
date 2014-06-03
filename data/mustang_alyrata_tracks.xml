@@ -18,4 +18,5 @@
 <track name="hollister"     path="/data/douglas.hoen/sharebrowser/tracks/alyrata/bed/te_hollister_2011.bed"/>
 <track name="sequence" path="/data/douglas.hoen/data/genomes/a_lyrata/unmasked_renamed/scaffolds1-8.trf_softmasked.fas"/>
 <track name="fgenesh"       path="/data/douglas.hoen/sharebrowser/tracks/alyrata/custom/fgh_relabelled.bed"/>  
+<track name="gcpct"         path="/data/glenn.hickey/genomes/alyrata/tracks/gc/gcPercentWin100.bw"/>
 </currentTracks>
