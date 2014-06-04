@@ -58,6 +58,12 @@ def main(argv=None):
                         "length ignoring other parameters and logic (<= 0 means"
                         " no fixed length applied",
                         type=int, default=0)
+    parser.add_argument("--stats", help="Write some statistics to specified "
+                        "file. Of the form <trackName> <Diff> <DiffPct> "
+                        " where <Diff> is the number of times a track differs"
+                        " between two consecutive segments, and <DiffPct> "
+                        " is the average perecentage of all such differences "
+                        "accounted for by the track", default=None)
     
     addLoggingOptions(parser)
     args = parser.parse_args()
@@ -114,11 +120,13 @@ def main(argv=None):
     args.ignoreList = ignoreList
 
     # segment the tracks
-    segmentTracks(trackData, args)
+    stats = dict()
+    segmentTracks(trackData, args, stats)
+    writeStats(trackData, args, stats)
 
     cleanBedTool(tempBedToolPath)
 
-def segmentTracks(trackData, args):
+def segmentTracks(trackData, args, stats):
     """ produce a segmentation of the data based on the track values. start with
     a hacky prototype..."""
     oFile = open(args.outBed, "w")
@@ -139,7 +147,7 @@ def segmentTracks(trackData, args):
         curLen = 0
         for i in xrange(1, intervalLen):
             curLen += 1
-            if isNewSegment(trackTable, pi, i, curLen, args) is True:
+            if isNewSegment(trackTable, pi, i, curLen, args, stats) is True:
                 oFile.write("%s\t%d\t%d\t%d\n" % (chrom, interval[1], start + i,
                                                   count % 2))
                 interval[1] = start + i
@@ -157,7 +165,7 @@ def segmentTracks(trackData, args):
     
     oFile.close()
 
-def isNewSegment(trackTable, pi, i, curLen, args):
+def isNewSegment(trackTable, pi, i, curLen, args, stats):
     """ may be necessary to cythonize this down the road """
     assert i > 0
     assert i < len(trackTable)
@@ -173,14 +181,41 @@ def isNewSegment(trackTable, pi, i, curLen, args):
     col = trackTable[i]
     prev = trackTable[pi]
     difCount = 0
+    cutTrackFound = False
     for j in xrange(len(col)):
         if args.ignoreList[j] == 0 and col[j] != prev[j]:
             difCount += 1
             # cutList track is different
             if args.cutList[j] == 1:
-                return True
+                cutTrackFound = True
+                if args.stats is None:
+                    return True
 
-    return difCount > args.thresh
+    retVal = cutTrackFound is True or difCount > args.thresh
+    
+    # second pass (with difCount in hand) for stats if wanted
+    if args.stats is not None and retVal is True:
+        for j in xrange(len(col)):
+            if args.ignoreList[j] == 0 and col[j] != prev[j]:
+                if j not in stats:
+                    stats[j] = (0, 0)
+                stats[j] = (stats[j][0] + 1, stats[j][1] + 1. / float(difCount))
+                 
+
+    return retVal
+
+def writeStats(trackData, args, stats):
+    """ write the cutting statistics if wanted"""
+    if args.stats is not None:
+        trackList = trackData.getTrackList()
+        statFile = open(args.stats, "w")
+        for trackNo, stat in stats.items():
+            trackName = trackList.getTrackByNumber(trackNo).getName()
+            difCount = stat[0]
+            avgDifPct = float(stat[1]) / float(stat[0])
+            statFile.write("%s\t%d\t%f\n" % (trackName, difCount, avgDifPct))
+        statFile.close()
+        
                 
 if __name__ == "__main__":
     sys.exit(main())
