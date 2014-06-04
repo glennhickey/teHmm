@@ -1,6 +1,6 @@
 <?xml version="1.0" ?>
 <teModelConfig>
-	<track distribution="multinomial" name="ltr_finder" path="/data/glenn.hickey/genomes/alyrata/tracks/clean/a_lyrata-ltr_finder_clean.bed" valCol="3"/>
+	<track distribution="multinomial" name="ltr_finder" path="/data/glenn.hickey/genomes/alyrata/tracks/clean/a_lyrata-ltr_finder_with_harvest_both_default_clean.bed" valCol="3"/>
 	<track distribution="multinomial" name="chaux" path="/data/glenn.hickey/genomes/alyrata/tracks/clean/chaux_sorted_clean.bed" valCol="3"/>
 	<track distribution="multinomial" name="te_domains" path="/data/douglas.hoen/sharebrowser/tracks/alyrata/permanent/domains/TE_domains.bed" valCol="3"/>
 	<track default="0.0" distribution="multinomial" logScale="2.833" name="copy" path="/data/douglas.hoen/sharebrowser/tracks/alyrata/permanent/mathieu/AL_v_AL_100_nonSelf.hits.bw" shift="1.0" valCol="3"/>
@@ -16,4 +16,6 @@
 	<track distribution="binary" name="polyA" path="/data/douglas.hoen/sharebrowser/tracks/alyrata/permanent/misc/polyA.bb" valCol="0"/>
 	<track distribution="multinomial" name="hollister" path="/data/glenn.hickey/genomes/alyrata/tracks/clean/te_hollister_2011_clean.bed" valCol="3"/>
 	<track distribution="multinomial" name="tsd" path="/data/glenn.hickey/genomes/alyrata/tracks/clean/termini_tsd.bed" valCol="3"/>
+	<track distribution="multinomial" name="fgenesh" path="/data/douglas.hoen/sharebrowser/tracks/alyrata/custom/fgh_relabelled.bed" valCol="3"/>  
+	<track default="0.0" distribution="multinomial" name="gcpct" path="/data/glenn.hickey/genomes/alyrata/tracks/gc/gcPercentWin100.bw" scale="0.1"/>
 </teModelConfig>

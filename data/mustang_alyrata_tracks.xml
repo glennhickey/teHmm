@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <currentTracks>
-<track name="ltr_finder"    path="/data/douglas.hoen/sharebrowser/tracks/alyrata/permanent/te_search_programs/a_lyrata-ltr_finder.bed"/>
+<track name="ltr_finder"    path="/data/glenn.hickey/genomes/alyrata/tracks/ltrfinder/a_lyrata-ltr_finder_with_harvest_both_default.bed"/>
 <track name="chaux"         path="/data/douglas.hoen/sharebrowser/tracks/alyrata/permanent/repeatmasker/chaux_sorted.bed"/>
 <track name="te_domains"    path="/data/douglas.hoen/sharebrowser/tracks/alyrata/permanent/domains/TE_domains.bed"/>
 <track name="copy"          path="/data/douglas.hoen/sharebrowser/tracks/alyrata/permanent/mathieu/AL_v_AL_100_nonSelf.hits.bw" default="0.0"/>
