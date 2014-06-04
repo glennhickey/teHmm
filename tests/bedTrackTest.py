@@ -7,6 +7,7 @@ import unittest
 import sys
 import os
 from numpy.testing import assert_array_equal, assert_array_almost_equal
+import scipy
 
 from teHmm.trackIO import *
 from teHmm.track import *
@@ -422,18 +423,26 @@ class TestCase(TestBase):
 
         segTrackData = TrackData()
         segTrackData.loadTrackData(getTracksInfoPath(), bedIntervals,
-                                   segmentIntervals=segIntervals)
+                                   segmentIntervals=segIntervals,
+                                   interpolateSegments=False)
+        segTrackData2 = TrackData()
+        segTrackData2.loadTrackData(getTracksInfoPath(), bedIntervals,
+                                   segmentIntervals=segIntervals,
+                                   interpolateSegments=True)
 
         tlist1 = trackData.getTrackTableList()
         tlist2 = segTrackData.getTrackTableList()
         assert len(tlist1) == len(tlist2)
         assert len(tlist1) == 5
+        tlist3 = segTrackData2.getTrackTableList()
+        assert len(tlist3) == len(tlist2)
 
         icount = 0
         segLens = [2, 1, 3, 2, 2]
         for i in xrange(5):
             t1 = tlist1[i]
             t2 = tlist2[i]
+            t3 = tlist3[i]
             assert len(t1) == bedIntervals[i][2] - bedIntervals[i][1]
             assert len(t2) == segLens[i]
             segLenRatios = t2.getSegmentLengthsAsRatio(100)
@@ -444,11 +453,11 @@ class TestCase(TestBase):
                 length = segIntervals[icount][2] - segIntervals[icount][1]
                 assert length == t2.getSegmentLength(j)
                 assert float(length) / 100. == segLenRatios[j]
+                originalData = t1[t2.segOffsets[j]:t2.segOffsets[j] + length]
+                originalMode = scipy.stats.mode(originalData)[0][0]
+                assert_array_equal(originalMode, t3[j])
                 icount += 1
-
-
-            
-
+        
 def main():
     sys.argv = sys.argv[:1]
     unittest.main()

@@ -9,6 +9,7 @@ import os
 import sys
 import logging
 import numpy as np
+from scipy.stats import mode
 import xml.etree.ElementTree as ET
 import xml.dom.minidom
 from numpy.testing import assert_array_equal, assert_array_almost_equal
@@ -364,10 +365,9 @@ class TrackTable(object):
     def getSegmentOffsets(self):
         return self.segOffsets
 
-    def segment(self, segIntervals):
+    def segment(self, segIntervals, interpolate=True):
         """ completely transform table to contain only one coordinate per
-        segment interval (compression).  For now we just use the first column
-        of each such interval """
+        segment interval (compression).  """
         firstIdx = binSearch(segIntervals, (self.chrom, self.start), [0,1])
         lastIdx = binSearch(segIntervals, (self.chrom, self.end), [0,2])
 
@@ -380,15 +380,16 @@ class TrackTable(object):
             self.segOffsets[j] = int(segIntervals[i][1]) - self.start
             j += 1
 
+        if interpolate is True:
+            self.interpolateSegments()
         self.compressSegments()
         self.shape = (len(self), self.getNumTracks())
 
     def getSegmentLength(self, i):
         """ get the length of a segment corresponding to a given index """
-        assert len(self.segOffsets) == len(self)
-        if i == len(self) - 1:
+        if i == len(self.segOffsets) - 1:
             return self.end - (self.start + self.segOffsets[-1])
-        elif i < len(self) - 1:
+        elif i < len(self.segOffsets) - 1:
             return self.segOffsets[i+1] - self.segOffsets[i]
 
     def getSegmentLengthsAsRatio(self, effectiveSegmentLength):
@@ -402,6 +403,16 @@ class TrackTable(object):
             seglens[i] = float(self.getSegmentLength(i)) / effectiveSegmentLength
         return seglens
 
+    def interpolateSegments(self):
+        """ A segment interval (i, j) in the original data, A,  is mapped to just
+        A[i] in the segmented data.  Here we scan over the entire segment and put
+        an average value into the first entriy (A[i]).  We use mode as it can
+        apply to both numerical and categorical data"""                
+        for so in xrange(len(self.segOffsets)):
+            segLen = self.getSegmentLength(so)
+            start = self.segOffsets[so]
+            end = start + segLen
+            self.setMode(start, start, end)
         
 ###########################################################################
 
@@ -461,6 +472,10 @@ class IntegerTrackTable(TrackTable):
         newShape = self.data.shape
         assert newShape[0] == len(self.segOffsets)
         assert_array_equal(oldShape[1:], newShape[1:])
+
+    def setMode(self, pos, start, end):
+        """ set position pos to mode of range from [start, end) """
+        self.data[pos] = mode(self.data[start:end])[0][0]
             
 ###########################################################################
             
@@ -658,7 +673,7 @@ class TrackData(object):
         return nspt
     
     def loadTrackData(self, trackListPath, intervals, trackList = None,
-                      segmentIntervals = None):
+                      segmentIntervals = None, interpolateSegments=True):
         """ load track data for list of given intervals.  tracks is either
         a TrackList object loaded from a saved pickle, or None in
         which case they will be generated from the data.  each interval
@@ -683,7 +698,8 @@ class TrackData(object):
                                          interval[1], interval[2], initTracks)
             if segmentIntervals is not None:
                 oldShape = self.trackTableList[-1].getNumPyArray().shape
-                self.trackTableList[-1].segment(segmentIntervals)
+                self.trackTableList[-1].segment(segmentIntervals,
+                                                interpolate=interpolateSegments)
                 newShape = self.trackTableList[-1].getNumPyArray().shape
                 logger.info("Compressed track table from %s to %s" % (
                     str(oldShape), str(newShape)))
