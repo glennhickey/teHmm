@@ -100,7 +100,7 @@ def main(argv=None):
                         "states specified in this file must appear in the file"
                         " specified with --initTransProbs (but not vice versa).",
                         default = None)
-    parser.add_argument("--fixStart", help="Do not learn emission parameters"
+    parser.add_argument("--fixStart", help="Do not learn start parameters"
                         " (best used with --initStartProbs)",
                         action="store_true", default=False)
     parser.add_argument("--forceTransProbs",
