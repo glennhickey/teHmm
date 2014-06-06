@@ -231,7 +231,7 @@ def _viterbi(int n_observations, int n_components,
     viterbi_lattice[0] = log_startprob + framelogprob[0]
     if hasRatios == 1:
         for toState in xrange(0, n_components):
-            viterbi_lattice[toState] += log_transmat[toState, toState] * segRatios[0]
+            viterbi_lattice[0, toState] += log_transmat[toState, toState] * segRatios[0]
 
     trace_back = np.empty((n_observations, n_components), dtype=np.int16)
 
