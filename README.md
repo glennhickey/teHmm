@@ -282,7 +282,7 @@ In general, running any executable with `--help` will print a brief description 
 **Track Name Munging**
 
 * **cleanChaux.py** : Remove BED ID suffixes (ex. after pipe or slash) to attempt to map IDs to repeat families
-* **cleanLTRFinderID.py**:  Similar to above, but designed to only delete the numeric ID at end of token.  Also produces mappings for symmetric and TSD free state names.
+* **cleanLTRFinderID.py**:  Similar to above, but designed to only delete the numeric ID at end of token.  Also produces mappings for symmetric and TSD free state names, as well as removes overlaps using score and length for priority. 
 * **cleanTermini.py**:  Transform a bed file representing alignments (where aligned regions share same id) into a bed file where, for each aligned pair, the leftmost region is named LTerm and the rightmost region is named RTerm.
 * **setBedCol.py**: Set the entire column of a BED file to a given value.
 
@@ -319,6 +319,7 @@ In general, running any executable with `--help` will print a brief description 
 * **teHmmBenchmark.py** : Wrapper to train, evaluate, and compare model on given data
 * **compareBedStates.py** : Compute base and interval-level precision and recall of one bed file vis-a-vis another.  Both files must cover exactly the same region.
 * **fitStateNames.py** : Assign predicted states names according to how well they match a given annotation.  Useful for generating meaningful names for states that were learned in a completely unsupervised manner. 
+* **trackRanking.py** : Iteratively call teHmmBenchmark to rank tracks based on their impact on accuracy
 
 
 

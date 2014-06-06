@@ -123,7 +123,9 @@ def runTrial(tracksList, iteration, newTrackName, args):
     # hardcoded segment parameters
     segStrat = "first"
     segThresh = 1
-
+    if len(tracksList) < 5:
+        segThresh = 0
+   
     # segment training
     segTrainingPath = os.path.join(benchDir,
                                    os.path.splitext(
