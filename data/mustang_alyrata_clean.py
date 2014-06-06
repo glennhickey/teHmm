@@ -57,8 +57,8 @@ def main(argv=None):
     parser.add_argument("--skipScale", help="Comma-separated list of tracks to "
                         "skip for scaling.", default=None)
     parser.add_argument("--chaux", help="Name of chaux track", default="chaux")
-    parser.add_argument("--ltrfinder", help="Name of ltrfinder track",
-                        default="ltr_finder")
+    parser.add_argument("--ltrfinder", help="comma-sep Name(s) of ltrfinder track(s)",
+                        default="ltr_finder,ltr_harvest")
     parser.add_argument("--termini", help="Name of termini track",
                         default="termini")
     parser.add_argument("--sequence", help="Name of fasta sequence track",
@@ -162,15 +162,16 @@ def runCleaning(args, tempTracksInfo):
             logger.warning("Could not find termini track")
 
     # run cleanLtrFinder.py
-    ltrfinderTrack = trackList.getTrackByName(args.ltrfinder)
-    if ltrfinderTrack is not None:
-        inFile = ltrfinderTrack.getPath()
-        outFile = cleanPath(args, ltrfinderTrack)
-        # note: overlaps now removed in cleanLtrFinderID script
-        runShellCommand("cleanLtrFinderID.py %s %s --weak 5.5" % (inFile, outFile))
-        ltrfinderTrack.setPath(outFile)
-    else:
-        logger.warning("Could not find ltrfinder track")
+    for lfTrackName in args.ltrfinder.split(","): 
+        ltrfinderTrack = trackList.getTrackByName(lfTrackName)
+        if ltrfinderTrack is not None:
+            inFile = ltrfinderTrack.getPath()
+            outFile = cleanPath(args, ltrfinderTrack)
+            # note: overlaps now removed in cleanLtrFinderID script
+            runShellCommand("cleanLtrFinderID.py %s %s" % (inFile, outFile))
+            ltrfinderTrack.setPath(outFile)
+        else:
+            logger.warning("Could not find ltrfinder track %s" % lfTrackName)
 
     # save a temporary xml
     trackList.saveXML(tempTracksInfo)

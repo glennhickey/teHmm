@@ -1,12 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <currentTracks>
-<track name="ltr_finder"    path="/data/glenn.hickey/genomes/alyrata/tracks/ltrfinder/a_lyrata-ltr_finder_with_harvest_both_default.bed"/>
+<track name="ltr_finder"    path="/data/douglas.hoen/piatea/tools/ltr_finder/a_lyrata/a_lyrata-ltr_finder.bed"/>
+<track name="ltr_harvest"   path="/data/douglas.hoen/sharebrowser/tracks/alyrata/permanent/te_search_programs/structural/ltrharvest_v2.bed"/>
 <track name="chaux"         path="/data/douglas.hoen/sharebrowser/tracks/alyrata/permanent/repeatmasker/chaux_sorted.bed"/>
 <track name="te_domains"    path="/data/douglas.hoen/sharebrowser/tracks/alyrata/permanent/domains/TE_domains.bed"/>
-<track name="copy"          path="/data/douglas.hoen/sharebrowser/tracks/alyrata/permanent/mathieu/AL_v_AL_100_nonSelf.hits.bw" default="0.0"/>
+<track name="copy"          path="/data/douglas.hoen/sharebrowser/tracks/alyrata/permanent/self-alignments/mathieu_new/scaffolds1-8.trf_softmasked.fas.cov.bw" default="0.0"/>
 <track name="copy_cv"       path="/data/douglas.hoen/sharebrowser/tracks/alyrata/permanent/mathieu/variation/AL_v_AL_100_nonSelf.cv100.bw" default="0.0"/>
-<track name="left_peak"     path="/data/douglas.hoen/sharebrowser/tracks/alyrata/permanent/mathieu/AL_v_AL_100_nonSelf.left.bw" default="0.0"/>
-<track name="right_peak"    path="/data/douglas.hoen/sharebrowser/tracks/alyrata/permanent/mathieu/AL_v_AL_100_nonSelf.right.bw" default="0.0"/>
+<track name="left_peak"     path="/data/douglas.hoen/sharebrowser/tracks/alyrata/permanent/self-alignments/mathieu_new/scaffolds1-8.trf_softmasked.fas.left.bw" default="0.0"/>
+<track name="right_peak"    path="/data/douglas.hoen/sharebrowser/tracks/alyrata/permanent/self-alignments/mathieu_new/scaffolds1-8.trf_softmasked.fas.right.bw" default="0.0"/>
 <track name="termini"       path="/data/douglas.hoen/sharebrowser/tracks/alyrata/permanent/termini/all_scaffolds.termini_search.filter_2.ltr.sorted.bed"/>
 <track name="tir_termini"       path="/data/douglas.hoen/sharebrowser/tracks/alyrata/permanent/termini/all_scaffolds.termini_search.filter_2.tir.sorted.bed"/>
 <track name="ortho_depth"   path="/data/douglas.hoen/sharebrowser/tracks/alyrata/permanent/misc/All_Al_depth_fixed.bw" default="0.0"/>
@@ -18,5 +19,5 @@
 <track name="hollister"     path="/data/douglas.hoen/sharebrowser/tracks/alyrata/bed/te_hollister_2011.bed"/>
 <track name="sequence" path="/data/douglas.hoen/data/genomes/a_lyrata/unmasked_renamed/scaffolds1-8.trf_softmasked.fas"/>
 <track name="fgenesh"       path="/data/douglas.hoen/sharebrowser/tracks/alyrata/custom/fgh_relabelled.bed"/>  
-<track name="gcpct"         path="/data/glenn.hickey/genomes/alyrata/tracks/gc/gcPercentWin100.bw"/>
+<track name="gcpct"         path="/data/glenn.hickey/genomes/alyrata/tracks/gc/gcPercentWin1000.bw"/>
 </currentTracks>
