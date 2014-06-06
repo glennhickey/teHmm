@@ -180,6 +180,10 @@ def main(argv=None):
     parser.add_argument("--fit", help="Run fitStateNames.py to automap names"
                         " before running comparison", action="store_true",
                         default=False)
+    parser.add_argument("--saveAllReps", help="Save all replicates (--reps)"
+                        " models to disk, instead of just the best one"
+                        "when training. Format is <outputModel>.repN",                        
+                        action="store_true", default=False)
         
     addLoggingOptions(parser)
     args = parser.parse_args()
@@ -248,6 +252,8 @@ def main(argv=None):
         trainFlags += " --numThreads %d" % args.numThreads
     if args.emThresh is not None:
         trainFlags += " --emThresh %f" % args.emThresh
+    if args.saveAllReps is True:
+        trainFlags += " --saveAllReps"
 
     # write out command line for posteriorty's sake
     if not os.path.exists(args.outputDir):
