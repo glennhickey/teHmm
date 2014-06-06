@@ -125,17 +125,21 @@ def runTrial(tracksList, iteration, newTrackName, args):
     segThresh = 1
     if len(tracksList) < 5:
         segThresh = 0
+    segMaxLen = 1000
    
     # segment training
     segTrainingPath = os.path.join(benchDir,
                                    os.path.splitext(
                                        os.path.basename(trainingPath))[0]+
                                    "_trainSeg.bed")    
-    segmentCmd = "segmentTracks.py %s %s %s --comp %s --thresh %d" % (tracksPath,
-                                                                    trainingPath,
-                                                                   segTrainingPath,
-                                                                   segStrat,
-                                                                   segThresh)
+    segmentCmd = "segmentTracks.py %s %s %s --comp %s --thresh %d --maxLen %d" % (
+        tracksPath,
+        trainingPath,
+        segTrainingPath,
+        segStrat,
+        segThresh,
+        segMaxLen)
+
     runShellCommand(segmentCmd)
     segLog.write(segmentCmd + "\n")
 
@@ -143,11 +147,14 @@ def runTrial(tracksList, iteration, newTrackName, args):
     segEvalPath = os.path.join(benchDir,
                                 os.path.splitext(os.path.basename(truthPath))[0]+
                                 "_evalSeg.bed")    
-    segmentCmd = "segmentTracks.py %s %s %s --comp %s --thresh %d" % (tracksPath,
-                                                                   truthPath,
-                                                                   segEvalPath,
-                                                                   segStrat,
-                                                                   segThresh)
+    segmentCmd = "segmentTracks.py %s %s %s --comp %s --thresh %d --maxLen %d" % (
+        tracksPath,
+        truthPath,
+        segEvalPath,
+        segStrat,
+        segThresh,
+        segMaxLen)
+    
     runShellCommand(segmentCmd)
     segLog.write(segmentCmd + "\n")
     
