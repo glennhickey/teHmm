@@ -17,7 +17,6 @@
 	<track distribution="binary" name="polyA" path="/data/douglas.hoen/sharebrowser/tracks/alyrata/permanent/misc/polyA.bb" valCol="0"/>
 	<track distribution="binary" name="polyN" path="/data/douglas.hoen/sharebrowser/tracks/alyrata/bed/Ns_sites.bed" valCol="0"/>
 	<track distribution="multinomial" name="hollister" path="/data/glenn.hickey/genomes/alyrata/tracks/clean2/te_hollister_2011_clean.bed" valCol="3"/>
-	<track distribution="multinomial" name="sequence" path="/data/douglas.hoen/data/genomes/a_lyrata/unmasked_renamed/scaffolds1-8.trf_softmasked.fas" valCol="3"/>
 	<track distribution="multinomial" name="fgenesh" path="/data/douglas.hoen/sharebrowser/tracks/alyrata/custom/fgh_relabelled.bed" valCol="3"/>
 	<track distribution="multinomial" name="gcpct" path="/data/glenn.hickey/genomes/alyrata/tracks/gc/gcPercentWin1000.bw" scale="0.1132" shift="0.0" valCol="3"/>
 	<track distribution="multinomial" name="tsd" path="/data/glenn.hickey/genomes/alyrata/tracks/clean2/termini_tsd.bed" valCol="3"/>
