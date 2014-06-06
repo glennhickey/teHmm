@@ -36,7 +36,7 @@ def main(argv=None):
     parser.add_argument("--thresh", help="Number of tracks that can change "
                         "before a new segment formed.  Increasing this value"
                         " increases the expected lengths of output segments",
-                        type=int, default=0)
+                        type=int, default=1)
     parser.add_argument("--cutTracks", help="Create a new segment if something"
                         " changes in one of these tracks (as specified by "
                         "comman-separated list), overriding --thresh options"
@@ -47,7 +47,7 @@ def main(argv=None):
                         "threshold cutoff.  Options are [first, prev], where"
                         " first compares with first column of segment and "
                         "prev compares with column immediately left",
-                        default="prev")
+                        default="first")
     parser.add_argument("--ignore", help="Comma-separated list of tracks to "
                         "ignore (the FASTA DNA sequence would be a good "
                         "candidate", default=None)

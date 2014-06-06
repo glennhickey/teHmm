@@ -38,11 +38,12 @@ def main(argv=None):
     parser.add_argument("trainingTracksInfo", help="Path of Tracks Info file "
                         "containing paths to genome annotation tracks used "
                         "for training")
-    parser.add_argument("evalTracksInfo", help="Path of Tracks Info file "
-                        "containing paths to genome annotation tracks used"
-                        " for evaluation")
     parser.add_argument("outputDir", help="directory to write output")
     parser.add_argument("inBeds", nargs="*", help="list of training beds")
+    parser.add_argument("--evalTracksInfo", help="Path of Tracks Info file "
+                        "containing paths to genome annotation tracks used"
+                        " for evaluation (only need if different from"
+                        " trainingTracksInfo", default=None)
     parser.add_argument("--numProc", help="Max number of processors to use",
                         type=int, default=1)
     parser.add_argument("--allTrackCombinations", help="Rerun with all"
@@ -155,6 +156,10 @@ def main(argv=None):
                         "input file(s) for truth comparison.  Makes sense"
                         " when --segment is specified and only one input"
                         " bed specified", default = None)
+    parser.add_argument("--eval", help="Bed file used for evaluation.  It should"
+                        " cover same region in same order as --truth.  Option "
+                        "exists mostly to specify segmentation of --truth",
+                        default=None)
     parser.add_argument("--seed", help="Seed for random number generator"
                         " which will be used to initialize emissions "
                         "(if --flatEM and --supervised not specified)",
@@ -171,7 +176,10 @@ def main(argv=None):
                         " in baum welch training.  IE delta log likelihood"
                         " must be bigger than this number (which should be"
                         " positive) for convergence", type=float,
-                        default=None)    
+                        default=None)
+    parser.add_argument("--fit", help="Run fitStateNames.py to automap names"
+                        " before running comparison", action="store_true",
+                        default=False)
         
     addLoggingOptions(parser)
     args = parser.parse_args()
@@ -182,6 +190,8 @@ def main(argv=None):
 
     if not os.path.exists(args.outputDir):
         os.makedirs(args.outputDir)
+    if args.evalTracksInfo is None:
+        args.evalTracksInfo = args.trainingTracksInfo
 
     trainingTrackList = TrackList(args.trainingTracksInfo)
     evalTrackList = TrackList(args.evalTracksInfo)
@@ -306,22 +316,36 @@ def main(argv=None):
             # evaluate
             evalBed = os.path.join(outDir,
                                    os.path.splitext(base)[0] + "_eval.bed")
+            hmmEvalInputBed = testBed
+            if args.eval is not None:
+                hmmEvalInputBed = args.eval
+                
             command += " && teHmmEval.py %s %s %s --bed %s %s" % (evalTrackPath,
                                                                   modPath,
-                                                                  testBed,
+                                                                  hmmEvalInputBed,
                                                                   evalBed,
                                                                   logOps)
             if args.segment is True:
                 command += " --segment"
-                
-            # compare
-            compPath = os.path.join(outDir,
-                                    os.path.splitext(base)[0] + "_comp.txt")
+
+            # fit
             compTruth = testBed
             if args.truth is not None:
                 compTruth = args.truth
+            compareInputBed = evalBed
+            if args.fit is True:
+                fitBed = os.path.join(outDir,
+                                      os.path.splitext(base)[0] + "_eval_fit.bed")
+                command += " && fitStateNames.py %s %s %s" % (compTruth,
+                                                              evalBed,
+                                                              fitBed)
+                compareInputBed = fitBed
+                                
+            # compare
+            compPath = os.path.join(outDir,
+                                    os.path.splitext(base)[0] + "_comp.txt")
             command += " && compareBedStates.py %s %s > %s" % (compTruth,
-                                                               evalBed,
+                                                               compareInputBed,
                                                                compPath)
 
 

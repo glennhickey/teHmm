@@ -10,6 +10,7 @@ import argparse
 import logging
 import numpy as np
 import copy
+import ast
 
 from teHmm.trackIO import readBedIntervals
 from teHmm.common import intersectSize, initBedTool, cleanBedTool
@@ -433,6 +434,35 @@ def getStateMapFromConfMatrix(matrix):
         stateMap[predName] = maxName, maxCount, total
     return stateMap
             
-            
+def extractCompStatsFromFile(dumpPath):
+    """ I've developed a habit of dumping the output of this program to
+    variuous text files (ie in teHmmBenchmark).  This function can recover
+    the three maps (base, interval, weighted) from such a file,
+    for use in another script (as regenerating comparison can be slow)"""
+    dumpFile = open(dumpPath, "r")
+    baseStats, intervalStats, weightedStats = None, None, None
+    mode = None
+    for line in dumpFile:
+        if "Base-by-base Accuracy" in line:
+            mode = "base"
+        elif "Interval Accuracy" in line:
+            mode = "interval"
+        elif "Weighted Interval Accuracy" in line:
+            mode = "weighted"
+        elif mode is not None:
+            stats = ast.literal_eval(line)
+            if mode == "base":
+                baseStats = stats
+            elif mode == "interval":
+                intervalStats = stats
+            elif mode == "weighted":
+                weightedStats = stats
+            mode = None
+        if baseStats is not None and intervalStats is not None and\
+          weightedStats is not None:
+          break
+    return baseStats, intervalStats, weightedStats
+    dumpFile.close()
+                
 if __name__ == "__main__":
     sys.exit(main())
