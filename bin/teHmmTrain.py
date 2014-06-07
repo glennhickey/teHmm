@@ -125,6 +125,14 @@ def main(argv=None):
                         " different emission or transition probability to begin"
                         " with, they will never learn to be different.",
                         action="store_true", default=False)
+    parser.add_argument("--emRandRange", help="When randomly initialzing a"
+                        " multinomial emission distribution, constrain"
+                        " the values to the given range (pair of "
+                        "comma-separated numbers).  Overridden by "
+                        "--initEmProbs and --forceEmProbs when applicable."
+                        " Completely overridden by --flatEm (which is equivalent"
+                        " to --emRandRange .5,.5.). Actual values used will"
+                        " always be normalized.", default="0.2,0.8")
     parser.add_argument("--segment", help="Bed file of segments to treat as "
                         "single columns for HMM (ie as created with "
                         "segmentTracks.py).  IMPORTANT: this file must cover "
@@ -184,6 +192,14 @@ def main(argv=None):
     if args.initEmProbs is not None and args.initTransProbs is None:
         raise RuntimeError("--initEmProbs can only be used in conjunction with"
                            " --initTransProbs")
+    if args.emRandRange is not None:
+        args.emRandRange = args.emRandRange.split(",")
+        try:
+            assert len(args.emRandRange) == 2
+            args.emRandRange = (float(args.emRandRange[0]),
+                                float(args.emRandRange[1]))
+        except:
+            raise RuntimeError("Invalid --emRandRange specified")
 
     setLoggingFromOptions(args)
     tempBedToolPath = initBedTool()
@@ -292,7 +308,8 @@ def trainModel(randomSeed, trackData, catMap, userTrans, truthIntervals,
         normalizeFac=args.emFac,
         randomize=randomize,
         effectiveSegmentLength = args.segLen,
-        random_state = randGen)
+        random_state = randGen,
+        randRange = args.emRandRange)
 
     # create the model
     if not args.cfg:
@@ -305,7 +322,10 @@ def trainModel(randomSeed, trackData, catMap, userTrans, truthIntervals,
                               forceUserEmissions = args.forceEmProbs,
                               forceUserTrans = args.forceTransProbs,
                               random_state = randGen,
-                              thresh = args.emThresh)
+                              thresh = args.emThresh,
+                              transMatEpsilons = (args.supervised is False and
+                                                  args.initTransProbs is None and
+                                                  args.forceTransProbs is None))
     else:
         pairEM = PairEmissionModel(emissionModel, [args.saPrior] *
                                    emissionModel.getNumStates())

@@ -43,6 +43,9 @@ def main(argv=None):
                         " if necessary.  For example, --cutTracks tsd,chaux"
                         " would invoke a new segment everytime the value at"
                         "either of these tracks changed", default=None)
+    parser.add_argument("--cutUnscaled", help="Cut on all unscaled (used as "
+                        "a proxy for non-numeric) tracks", default=False,
+                        action="store_true")
     parser.add_argument("--comp", help="Strategy for comparing columns for the "
                         "threshold cutoff.  Options are [first, prev], where"
                         " first compares with first column of segment and "
@@ -102,6 +105,15 @@ def main(argv=None):
             assert trackNo < len(cutList)
             cutList[trackNo] = 1
     args.cutList = cutList
+
+    #process the --cutUnscaled option
+    if args.cutUnscaled is True:
+        for track in trackList:
+            if track.scale is None and track.shift is None and\
+              track.logScale is None:
+              trackNo = track.getNumber()
+              assert trackNo < len(cutList)
+              cutList[trackNo] = 1
 
     # process the --ignore option
     ignoreList = np.zeros((len(trackList)), np.int)

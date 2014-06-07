@@ -45,6 +45,9 @@ def main(argv=None):
                         default="")
     parser.add_argument("--startTracks", help="comma-separated list of "
                         "tracks to start off with", default = None)
+    parser.add_argument("--segOpts", help="Options to pass to "
+                        "segmentTracks.py (wrap in double quotes)",
+                        default="--comp first --thresh 1 --cutUnscaled")
     addLoggingOptions(parser)
     args = parser.parse_args()
     setLoggingFromOptions(args)
@@ -126,25 +129,16 @@ def runTrial(tracksList, iteration, newTrackName, args):
 
     segLogPath = os.path.join(benchDir, "segment_cmd.txt")
     segLog = open(segLogPath, "w")
-    # hardcoded segment parameters
-    segStrat = "first"
-    segThresh = 1
-    if len(tracksList) < 5:
-        segThresh = 0
-    segMaxLen = 1000
    
     # segment training
     segTrainingPath = os.path.join(benchDir,
                                    os.path.splitext(
                                        os.path.basename(trainingPath))[0]+
                                    "_trainSeg.bed")    
-    segmentCmd = "segmentTracks.py %s %s %s --comp %s --thresh %d --maxLen %d" % (
-        tracksPath,
-        trainingPath,
-        segTrainingPath,
-        segStrat,
-        segThresh,
-        segMaxLen)
+    segmentCmd = "segmentTracks.py %s %s %s %s" % (tracksPath,
+                                                   trainingPath,
+                                                   segTrainingPath,
+                                                   args.segOpts)
 
     runShellCommand(segmentCmd)
     segLog.write(segmentCmd + "\n")
@@ -153,13 +147,10 @@ def runTrial(tracksList, iteration, newTrackName, args):
     segEvalPath = os.path.join(benchDir,
                                 os.path.splitext(os.path.basename(truthPath))[0]+
                                 "_evalSeg.bed")    
-    segmentCmd = "segmentTracks.py %s %s %s --comp %s --thresh %d --maxLen %d" % (
-        tracksPath,
-        truthPath,
-        segEvalPath,
-        segStrat,
-        segThresh,
-        segMaxLen)
+    segmentCmd = "segmentTracks.py %s %s %s %s" % (tracksPath,
+                                                   truthPath,
+                                                   segEvalPath,
+                                                   args.segOpts)
     
     runShellCommand(segmentCmd)
     segLog.write(segmentCmd + "\n")
@@ -190,7 +181,11 @@ def extractScore(benchDir, benchInputBedPath, args):
     baseStats, intStats, weightedStats = extractCompStatsFromFile(compPath)
     f1List = []
     for state in args.states:
-        assert state in intStats
+        if state not in intStats:
+            logger.warning("State %s not found in intstats %s. giving 0" % (
+                state, str(intStats)))
+            f1List.append(0)
+            continue
         
         prec = intStats[state][0]
         rec = intStats[state][1]

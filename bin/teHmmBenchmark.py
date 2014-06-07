@@ -129,6 +129,14 @@ def main(argv=None):
                         " different emission or transition probability to begin"
                         " with, they will never learn to be different.",
                         action="store_true", default=False)
+    parser.add_argument("--emRandRange", help="When randomly initialzing a"
+                        " multinomial emission distribution, constrain"
+                        " the values to the given range (pair of "
+                        "comma-separated numbers).  Overridden by "
+                        "--initEmProbs and --forceEmProbs when applicable."
+                        " Completely overridden by --flatEm (which is equivalent"
+                        " to --emRandRange .5,.5.). Actual values used will"
+                        " always be normalized.", default=None)    
     parser.add_argument("--mandTracks", help="Mandatory track names for use "
                         "with --allTrackCombinations in comma-separated list",
                         default=None)
@@ -242,6 +250,8 @@ def main(argv=None):
         trainFlags += " --forceEmProbs %s" % args.forceEmProbs
     if args.flatEm is True:
         trainFlags += " --flatEm"
+    if args.emRandRange is not None:
+        trainFlags += " --emRandRange %s" % args.emRandRange
     if args.segLen is not None:
         trainFlags += " --segLen %d" % args.segLen
     if args.seed is not None:
