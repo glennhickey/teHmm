@@ -85,7 +85,18 @@ def greedyRank(args):
     numTracks = len(inputTrackList) - len(rankedTrackList)
     currentScore = 0.0
 
-    for iteration in xrange(numTracks):
+    # baseline score if we not starting from scratch
+    baseIt = 0
+    if args.startTracks is not None:
+        curTrackList = copy.deepcopy(rankedTrackList)
+        score = runTrial(curTrackList, baseIt, "baseline_test", args)
+        rankFile = open(os.path.join(args.outDir, "ranking.txt"), "w")
+        rankFile.write("%d\t%s\t%s\n" % (baseIt, args.startTracks,
+                                        score))
+        rankFile.close()
+        baseIt += 1
+        
+    for iteration in xrange(baseIt, baseIt + numTracks):
         bestItScore = -sys.maxint
         bestNextTrack = None
         for nextTrack in inputTrackList:
