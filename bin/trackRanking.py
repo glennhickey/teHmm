@@ -38,7 +38,7 @@ def main(argv=None):
                         "teHmmTrain.py")
     parser.add_argument("truth", help="BED Truth used for scoring")
     parser.add_argument("states", help="States (in truth) to use for"
-                        " average F1 score")
+                        " average F1 score (comma-separated")
     parser.add_argument("outDir", help="Directory to place all results")
     parser.add_argument("--benchOpts", help="Options to pass to "
                         "teHmmBenchmark.py (wrap in double quotes)",
@@ -180,7 +180,7 @@ def extractScore(benchDir, benchInputBedPath, args):
                                 "_comp.txt") 
     baseStats, intStats, weightedStats = extractCompStatsFromFile(compPath)
     f1List = []
-    for state in args.states:
+    for state in args.states.split(","):
         if state not in intStats:
             logger.warning("State %s not found in intstats %s. giving 0" % (
                 state, str(intStats)))
