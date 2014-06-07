@@ -25,23 +25,29 @@ from teHmm.track import TrackList
 some measure of HMM accuracy, by wrapping teHmmBenchmark.py
 """
 
-def parseArgs(argv):
-    """ dont use argparse since we just want to dump everything into 
-    teHmmBenchmark.py  (probably smarter ways to do this later...) """
-    if len(argv) < 6 or "--help" in argv:
-        sys.stderr.write("usage: trackRanking.py [any options supported by "
-                         "teHmmBenchmark.py] tracks.xml training.bed truth.bed "
-                         "comma-separated-states outputDir\n")
-        sys.exit(len(argv) < 6)
-    class X(object):
-        pass
-    args = X()
-    setattr(args, 'tracks', argv[1])
-    setattr(args, 'training', argv[2])
-    setattr(args, 'truth', argv[3])
-    setattr(args, 'states',argv[4].split(","))
-    setattr(args, 'outDir', argv[5])
-    setattr(args, 'benchOpts', " ".join(argv[6:]))
+def main(argv=None):
+    parser = argparse.ArgumentParser(
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+        description="Helper script to rank a list of tracks based on how well "
+        "they improve some measure of HMM accuracy, by wrapping "
+         "teHmmBenchmark.py")
+
+    parser.add_argument("tracks", help="Path of Tracks Info file "
+                        "containing paths to genome annotation tracks")
+    parser.add_argument("training", help="BED Training regions"
+                        "teHmmTrain.py")
+    parser.add_argument("truth", help="BED Truth used for scoring")
+    parser.add_argument("states", help="States (in truth) to use for"
+                        " average F1 score")
+    parser.add_argument("outDir", help="Directory to place all results")
+    parser.add_argument("--benchOpts", help="Options to pass to "
+                        "teHmmBenchmark.py (wrap in double quotes)",
+                        default="")
+    parser.add_argument("--startTracks", help="comma-separated list of "
+                        "tracks to start off with", default = None)
+    addLoggingOptions(parser)
+    args = parser.parse_args()
+    setLoggingFromOptions(args)
 
     # make sure no no-no options in benchOpts
     if "--eval" in args.benchOpts or "--truth" in args.benchOpts:
@@ -52,19 +58,10 @@ def parseArgs(argv):
     # don't want to keep track of extra logic required for not segmenting
     if "--segment" not in args.benchOpts:
         args.benchOpts += " --segment"
-        sys.stderr.write("Adding --segment to teHmmBenchmark.py options\n")
+        logger.warning("Adding --segment to teHmmBenchmark.py options")
         
-    return args
-
-def main(argv=None):
-    if argv is None:
-        argv = sys.argv
-    args = parseArgs(argv)
-
     if not os.path.exists(args.outDir):
         os.makedirs(args.outDir)
-
-    setLogLevel("INFO")
 
     greedyRank(args)
 
@@ -72,8 +69,17 @@ def greedyRank(args):
     """ Iteratively add best track to a (initially empty) tracklist according
     to some metric"""
     inputTrackList = TrackList(args.tracks)
-    numTracks = len(inputTrackList)
     rankedTrackList = TrackList()
+    if args.startTracks is not None:
+        for startTrack in args.startTracks.split(","):
+            track = inputTrackList.getTrackByName(startTrack)
+            if track is None:
+                logger.warning("Start track %s not found in tracks XML" %
+                               startTrack)
+            else:
+                rankedTrackList.addTrack(copy.deepcopy(track))
+            
+    numTracks = len(inputTrackList) - len(rankedTrackList)
     currentScore = 0.0
 
     for iteration in xrange(numTracks):
