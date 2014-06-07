@@ -443,11 +443,11 @@ def extractCompStatsFromFile(dumpPath):
     baseStats, intervalStats, weightedStats = None, None, None
     mode = None
     for line in dumpFile:
-        if "Base-by-base Accuracy" in line:
+        if line.find("Base-by-base Accuracy") == 0:
             mode = "base"
-        elif "Interval Accuracy" in line:
+        elif line.find("Interval Accuracy") == 0:
             mode = "interval"
-        elif "Weighted Interval Accuracy" in line:
+        elif line.find("Weighted Interval Accuracy") == 0:
             mode = "weighted"
         elif mode is not None:
             stats = ast.literal_eval(line)
