@@ -75,7 +75,8 @@ class MultitrackHmm(BaseHMM):
                  fixStart=True,
                  forceUserTrans=None,
                  forceUserEmissions=None,
-                 forceUserStart=None):
+                 forceUserStart=None,
+                 transMatEpsilons=False):
         if emissionModel is not None:
             n_components = emissionModel.getNumStates()
         else:
@@ -131,6 +132,13 @@ class MultitrackHmm(BaseHMM):
         if forceUserStart is not None:
             with open(forceUserStart) as f:
                 self.forceUserStart = f.readlines()
+        # toggle whether we add epsilons to all transition probabilites.
+        # Off by default (good for semisupervised where we want to keep
+        # transition edges that were not initialized as 0).
+        # On the other hand, for a fully connected unsupervised run,
+        # it's probably best to turn on to not get caught in weird local
+        # maxima
+        self.transMatEpsilons = transMatEpsilons
 
     def train(self, trackData):
         """ Use EM to estimate best parameters from scratch (unsupervised)"""
@@ -535,6 +543,10 @@ class MultitrackHmm(BaseHMM):
         if transmat is None:
             transmat = np.tile(1.0 / self.n_components,
                                (self.n_components, self.n_components))
+
+        # (optionally add the epsilons)
+        if not np.alltrue(transmat) and self.transMatEpsilons is True:
+            normalize(transmat, axis=1)
 
         if (np.asarray(transmat).shape
                 != (self.n_components, self.n_components)):
