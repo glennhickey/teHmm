@@ -258,7 +258,7 @@ class IndependentMultinomialEmissionModel(object):
         """ make sure everything sums to 1 """
         numSymbols = reduce(lambda x,y : max(x,1) * max(y,1),
                             self.numSymbolsPerTrack, 1)
-        if numSymbols >= 50000:
+        if numSymbols >= 1000:
             logger.debug("Warning-Unable to validate emission model because"
                             " there are too many (%d) symbols" % numSymbols)
             return
