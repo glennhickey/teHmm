@@ -112,8 +112,7 @@ def _log_sum_lneta(int n_observations, int n_components,
                             if segRatios[t + 1] > 1.:
                                 y = fwdlattice[t + 1, i] + bwdlattice[t + 1, j] + \
                                   log(1. - 1. / segRatios[t + 1]) - logprob
-                                if y > maxMatrix[i, j]:
-                                    logsum_lneta[i, j] += exp(y - maxMatrix[i, j])
+                                logsum_lneta[i, j] += exp(y - maxMatrix[i, j])
                     logsum_lneta[i, j] += exp(x - maxMatrix[i, j])
 
         # return log(sum(x-max)) + max
