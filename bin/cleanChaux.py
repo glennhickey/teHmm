@@ -41,15 +41,19 @@ def main(argv=None):
                         "--maxPrefix DNA/ASINE.", action="append")
     parser.add_argument("--minScore", help="Minimum score value to not filter"
                         " out", default=100, type=float)
+    parser.add_argument("--maxScore", help="Maximum score value to not filter"
+                        " out", default=sys.maxint, type=float)
 
     args = parser.parse_args()
     assert os.path.exists(args.inBed)
+    assert args.minScore <= args.maxScore
 
     for interval in BedTool(args.inBed).sort():
         # filter score if exists
         try:
             if interval.score is not None and\
-                float(interval.score) < args.minScore:
+                (float(interval.score) < args.minScore or
+                 float(interval.score) > args.maxScore):
                 continue
         except:
             pass

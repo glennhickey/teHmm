@@ -69,6 +69,8 @@ def main(argv=None):
                         default="tir_termini")
     parser.add_argument("--hollister", help="Name of hollister track",
                         default="hollister")
+    parser.add_argument("--repbase", help="Name of repbase track",
+                        default="repbase")
     parser.add_argument("--noScale", help="Dont do any scaling", default=False,
                         action="store_true")
     parser.add_argument("--noTsd", help="Dont generate TSD track.  NOTE:"
@@ -121,9 +123,9 @@ def runCleaning(args, tempTracksInfo):
         inFile = chauxTrack.getPath()
         outFile = cleanPath(args, chauxTrack)
         tempBed = getLocalTempPath("Temp_chaux", ".bed")
-        runShellCommand("removeBedOverlaps.py %s > %s" % (inFile, tempBed))
-        runShellCommand("cleanChaux.py --keepUnderscore %s > %s" % (tempBed,
-                                                                    outFile))
+        runShellCommand("cleanChaux.py --keepUnderscore %s > %s" % (inFile,
+                                                                    tempBed))
+        runShellCommand("removeBedOverlaps.py %s > %s" % (tempBed, outFile))
         runShellCommand("rm -f %s" % tempBed)
         chauxTrack.setPath(outFile)
     else:
@@ -135,12 +137,25 @@ def runCleaning(args, tempTracksInfo):
         inFile = hollisterTrack.getPath()
         outFile = cleanPath(args, hollisterTrack)
         tempBed = getLocalTempPath("Temp_hollister", ".bed")
-        runShellCommand("removeBedOverlaps.py %s > %s" % (inFile, tempBed))
-        runShellCommand("cleanChaux.py %s > %s" % (tempBed, outFile))
+        runShellCommand("cleanChaux.py %s > %s" % (inFile, tempBed))
+        runShellCommand("removeBedOverlaps.py %s > %s" % (tempBed, outFile)) 
         runShellCommand("rm -f %s" % tempBed)
         hollisterTrack.setPath(outFile)
     else:
         logger.warning("Could not find hollister track")
+
+    # run cleanChaux.py on repbase track
+    repbaseTrack = trackList.getTrackByName(args.repbase)
+    if repbaseTrack is not None:
+        inFile = repbaseTrack.getPath()
+        outFile = cleanPath(args, repbaseTrack)
+        tempBed = getLocalTempPath("Temp_repbase", ".bed")
+        runShellCommand("cleanChaux.py %s --minScore 0 --maxScore 50> %s" % (inFile, tempBed))
+        runShellCommand("removeBedOverlaps.py %s > %s" % (tempBed, outFile)) 
+        runShellCommand("rm -f %s" % tempBed)
+        repbaseTrack.setPath(outFile)
+    else:
+        logger.warning("Could not find repbase track")
                 
     # run cleanTermini.py
     lastzTracks = [trackList.getTrackByName(args.termini),
