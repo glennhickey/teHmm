@@ -150,7 +150,7 @@ def runCleaning(args, tempTracksInfo):
         inFile = repbaseTrack.getPath()
         outFile = cleanPath(args, repbaseTrack)
         tempBed = getLocalTempPath("Temp_repbase", ".bed")
-        runShellCommand("cleanChaux.py %s --minScore 0 --maxScore 50> %s" % (inFile, tempBed))
+        runShellCommand("cleanChaux.py %s --minScore 0 --maxScore 50 > %s" % (inFile, tempBed))
         runShellCommand("removeBedOverlaps.py %s > %s" % (tempBed, outFile)) 
         runShellCommand("rm -f %s" % tempBed)
         repbaseTrack.setPath(outFile)

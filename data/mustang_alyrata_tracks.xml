@@ -20,5 +20,5 @@
 <track name="sequence" path="/data/douglas.hoen/data/genomes/a_lyrata/unmasked_renamed/scaffolds1-8.trf_softmasked.fas"/>
 <track name="fgenesh"       path="/data/douglas.hoen/sharebrowser/tracks/alyrata/custom/fgh_relabelled.bed"/>  
 <track name="gcpct"         path="/data/glenn.hickey/genomes/alyrata/tracks/gc/gcPercentWin1000.bw"/>
-<track name="repbase"       path="/data/douglas.hoen/piatea/repeat_masker/alyrata/repbase/scaffolds1to8.bed"
+<track name="repbase"       path="/data/douglas.hoen/piatea/repeat_masker/alyrata/repbase/scaffolds1to8.bed"/>
 </currentTracks>
