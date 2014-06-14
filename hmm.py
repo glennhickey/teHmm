@@ -513,7 +513,7 @@ class MultitrackHmm(BaseHMM):
             self.transmat_ = transmat_
 
         if 'e' in params:
-            self.emissionModel.maximize(stats['obs'])
+            self.emissionModel.maximize(stats['obs'], self.trackList)
         logger.debug("%d: ending MultitrackHMM M-step" %
                       self.current_iteration)
         self.current_iteration += 1

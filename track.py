@@ -60,10 +60,14 @@ class Track(object):
         self._init()
 
     def _init(self):
-        if self.dist == "multinomial":
+        if self.dist == "multinomial" or self.dist == "gaussian":
             reserved = 2
             if self.defaultVal is not None:
                 reserved = 1
+            elif self.dist == "gaussian":
+                raise RuntimeError("\"default\" attribute must be specified for"
+                                   " gaussian distribution (track %s)" %\
+                                   self.name)
             self.valMap = CategoryMap(reserved=reserved,
                                       defaultVal=self.defaultVal,
                                       scale=self.scale, logScale=self.logScale,
@@ -78,7 +82,7 @@ class Track(object):
         elif self.dist == "alignment":
             self.valMap = CategoryMap(reserved=1)
         assert self.dist == "multinomial" or self.dist == "binary" \
-               or self.dist == "alignment"
+               or self.dist == "alignment" or self.dist == "gaussian"
         if self.logScale is not None:
             if self.scale is not None:
                 logger.warning("logScale overriding scale for track %s" %(
@@ -94,7 +98,7 @@ class Track(object):
         if "distribution" in elem.attrib:
             self.dist = elem.attrib["distribution"]
             assert self.dist in ["binary", "multinomial", "sparse_multinomial",
-                                 "alignment"]
+                                 "alignment", "gaussian"]
         if "valCol" in elem.attrib:
             self.valCol = int(elem.attrib["valCol"])
         if "scale" in elem.attrib:

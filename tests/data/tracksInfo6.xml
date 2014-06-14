@@ -1,0 +1,8 @@
+<?xml version="1.0" ?>
+<teModelConfig>
+  <track name="cb" path="tests/data/alyrata_chromBand.bed" distribution="multinomial" valCol="4"/>
+  <track name="kmer" path="tests/data/alyrata_kmer14.bed" distribution="gaussian" valCol="3" default="0"/>
+  <trackx name="kmerScaled" path="tests/data/alyrata_kmer14.bed" distribution="gaussian" valCol="3" default="0" scale="0.1"/>
+  <track name="te2" path="tests/data/alyrata_scaffold1_teii3.7.bed" distribution="multinomial" valCol="4"/>
+<track name="hack" path="tests/data/alyrata_scaffold1_teii3.7.bed" distribution="alignment"  valCol="4"/>
+</teModelConfig>

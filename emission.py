@@ -14,6 +14,7 @@ import itertools
 import logging
 import time
 from numpy.testing import assert_array_equal, assert_array_almost_equal
+from scipy import stats
 from operator import mul
 from ._emission import canFast, fastAllLogProbs, fastAccumulateStats, fastUpdateCounts
 from .track import TrackTable, BinaryMap
@@ -228,7 +229,7 @@ class IndependentMultinomialEmissionModel(object):
         logger.debug("Done emission.accumulateStast for %d obs" % len(obs))
         return obsStats
         
-    def maximize(self, obsStats):
+    def maximize(self, obsStats, trackList = None):
         for track in xrange(self.numTracks):
             for state in xrange(self.numStates):
                 totalSymbol = 0.0
@@ -306,7 +307,7 @@ class IndependentMultinomialEmissionModel(object):
                 elif hit is True:
                     break
         logger.debug("beginning supervised emission max")
-        self.maximize(obsStats)
+        self.maximize(obsStats, trackData.getTrackList())
         logger.debug("done supervised emission")
         
         self.validate()
@@ -437,6 +438,106 @@ class IndependentMultinomialEmissionModel(object):
                self.effectiveSegmentLength is not None:
                 return obs.getSegmentLengthsAsRatio(self.effectiveSegmentLength)
         return None   
+
+class IndependentMultinomialAndGaussianEmissionModel(
+        IndependentMultinomialEmissionModel):
+    """ Generalize the IndependentMultinomialEmissionModel class to support a
+    Gaussian distribution for a subset of tracks """
+    def __init__(self, numStates, numSymbolsPerTrack, trackList, params = None,
+                 zeroAsMissingData = True, fudge = 0.0, normalizeFac = 0.0,
+                 randomize=False, effectiveSegmentLength = None,
+                 random_state = None,
+                 randRange = (0.1, 0.9)):
+        super(IndependentMultinomialAndGaussianEmissionModel, self).__init__(
+            numStates, numSymbolsPerTrack, params, zeroAsMissingData,
+            fudge, normalizeFac, randomize, effectiveSegmentLength,
+            random_state, randRange)
+        # gaussian parameters
+        # [TRACK, STATE, MU, SIGMA]
+        self.gaussParams = None
+        
+        self.makeGaussian(trackList)
+
+    def makeGaussian(self, trackList):
+        """ fit a Multinomial distribution to a Gaussian using estimation.
+        Whether a track is Gaussian or not is specified within it's distribution
+        field (Track class...)
+        (note -- need to investigate more direct way of doing this within EM
+        though not sure it amounts to much difference)"""
+
+        # array spans non-gaussian tracks which get left as 0s.
+        self.gaussParams = np.zeros((self.numTracks, self.numStates, 2),
+                                    dtype=np.float)
+        assert self.numTracks == len(trackList)
+        assert self.gaussParams.shape[0] == self.logProbs.shape[0]
+        assert self.gaussParams.shape[1] == self.logProbs.shape[1]
+
+        for track in trackList:
+            if track.getDist() == "gaussian":
+                logger.debug("Applying gaussian to track %s" % track.getName())
+                for state in xrange(self.numStates):
+                    # estimate the parameters for gaussian track
+                    mu, sigma = self.computeMuSigma(track, state)
+                    self.gaussParams[track.getNumber(), state, 0] = mu
+                    self.gaussParams[track.getNumber(), state, 1] = sigma
+
+                    # reapply parameters to probability distribution to
+                    # make it gaussian
+                    self.applyGaussian(track, state)
+                
+
+    def computeMuSigma(self, track, state):
+        """ estimate parameters for gaussian distribution from the
+        multinomial distribution paramers for a given track"""
+        catMap = track.getValueMap()
+        trackNo = track.getNumber()
+
+        # calculate mean
+        mu = 0.
+        for symbol in self.getTrackSymbols(trackNo):
+            actualValue = float(catMap.getMapBack(symbol))
+            mu += actualValue * np.exp(self.logProbs[trackNo][state][symbol])
+                    
+        # calculate standard deviation
+        sigma = 0.
+        for symbol in self.getTrackSymbols(trackNo):
+            actualValue = float(catMap.getMapBack(symbol))
+            prob = np.exp(self.logProbs[trackNo][state][symbol])
+            sigma += np.square(actualValue - mu) * prob
+        sigma = np.sqrt(sigma)
+
+        return mu, max(sigma, EPSILON)
+
+    def applyGaussian(self, track, state):
+        """ feed gaussian parameters back into log probability matrix to
+        turn the emission model into a guassian. (ie this is the only time
+        the gaussian probabilities are computed. afterword, it behaves
+        identically to the pure multinomial since all probabilitis come from
+        this matrix without being recomputed)"""
+        catMap = track.getValueMap()
+        trackNo = track.getNumber()
+        for symbol in self.getTrackSymbols(trackNo):
+            actualValue = float(catMap.getMapBack(symbol))
+            prob = stats.norm.pdf(actualValue,
+                                  loc=self.gaussParams[trackNo, state, 0],
+                                  scale=self.gaussParams[trackNo, state, 1])
+                
+            self.logProbs[trackNo][state][symbol] = myLog(prob)
+
+        # normalize
+        probs = np.exp(self.logProbs[trackNo][state])
+        tot = 0.
+        for symbol in self.getTrackSymbols(trackNo):
+            tot += probs[symbol]
+        assert tot > 0.
+        for symbol in self.getTrackSymbols(trackNo):
+            self.logProbs[trackNo][state][symbol] = myLog(probs[symbol] / tot)
+
+    ### Overloaded functions -- just tack on a makeGaussian at end###
+    def maximize(self, obsStats, trackList):
+        super(IndependentMultinomialAndGaussianEmissionModel, self).maximize(
+            obsStats)
+        self.makeGaussian(trackList)
 
                 
 """ Simple pair emission model that supports emitting 1 or two states
