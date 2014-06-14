@@ -533,6 +533,9 @@ class IndependentMultinomialAndGaussianEmissionModel(
         for symbol in self.getTrackSymbols(trackNo):
             self.logProbs[trackNo][state][symbol] = myLog(probs[symbol] / tot)
 
+    def getGaussianParams(self, trackNo, state):
+        return self.gausParams[trackNo ,state]
+    
     ### Overloaded functions -- just tack on a makeGaussian at end###
     def maximize(self, obsStats, trackList):
         super(IndependentMultinomialAndGaussianEmissionModel, self).maximize(

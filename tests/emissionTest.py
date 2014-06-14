@@ -58,7 +58,7 @@ class TestCase(TestBase):
         em.initParams([track1, track2])
         return em
         
-    def atestSingleObs(self):
+    def testSingleObs(self):
         em = self.createSimpleModel1()
         assert em.singleLogProb(0, [1]) == math.log(0.2)
         assert em.singleLogProb(0, [2]) == math.log(0.8)
@@ -72,7 +72,7 @@ class TestCase(TestBase):
         assert em.singleLogProb(1, [2, 3]) == math.log(0.5) + math.log(0.2)
 
 
-    def atestAllObs(self):
+    def testAllObs(self):
         em = self.createSimpleModel1()
         
         truth = np.array([[math.log(0.2), math.log(0.5)],
@@ -81,7 +81,7 @@ class TestCase(TestBase):
         obs = np.array([[1], [1], [2]])
         assert np.array_equal(em.allLogProbs(obs), truth)
 
-    def atestInitStats(self):
+    def testInitStats(self):
         em = self.createSimpleModel1()
         obsStats = em.initStats()
         assert len(obsStats) == 1
@@ -93,7 +93,7 @@ class TestCase(TestBase):
         assert obsStats[0].shape == (2, 3+1)
         assert obsStats[1].shape == (2, 3+1)
 
-    def atestAccumultestats(self):
+    def testAccumultestats(self):
         em = self.createSimpleModel1()
         obsStats = em.initStats()
         obs = np.array([[0], [0], [1]])
@@ -104,7 +104,7 @@ class TestCase(TestBase):
         assert obsStats[0][0][1] == 0.3
         assert obsStats[0][1][1] == 0.4
 
-    def atestSupervisedTrain(self):
+    def testSupervisedTrain(self):
         bedIntervals = getBedStates()
         trackData = TrackData()
         trackData.loadTrackData(getTracksInfoPath(), bedIntervals)

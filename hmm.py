@@ -49,7 +49,7 @@ import random
 from collections import Iterable
 from numpy.testing import assert_array_equal, assert_array_almost_equal
 
-from .emission import IndependentMultinomialEmissionModel
+from .emission import IndependentMultinomialAndGaussianEmissionModel
 from .track import TrackList, TrackTable, Track
 from .common import EPSILON, myLog, logger
 from .basehmm import BaseHMM, check_random_state, NEGINF, ZEROLOGPROB, logsumexp
@@ -260,16 +260,21 @@ class MultitrackHmm(BaseHMM):
                 s += "  Track %d %s (%s):\n" % (track.getNumber(),
                                                 track.getName(),
                                                 track.getDist())
-                numSymbolsPerTrack =  em.getNumSymbolsPerTrack()
-                for idx, symbol in enumerate(em.getTrackSymbols(trackNo)):
-                    symbolName = track.getValueMap().getMapBack(symbol)
-                    prob = np.exp(emProbs[trackNo][state][symbol])
-                    if prob > 0.0000005:
-                        logval = str(myLog(prob))
-                        if prob == 0.0:
-                            logval = "-inf"
-                        s += "    %s) %s: %f (log=%s)\n" % (symbol, symbolName,
-                                                            prob, logval)
+                if track.getDist() == "gaussian":
+                    s += "mu: %f  sigma: %f:\n" % em.getGaussianParams(trackNo,
+                                                                       state)
+                else:
+                    numSymbolsPerTrack =  em.getNumSymbolsPerTrack()
+                    for idx, symbol in enumerate(em.getTrackSymbols(trackNo)):
+                        symbolName = track.getValueMap().getMapBack(symbol)
+                        prob = np.exp(emProbs[trackNo][state][symbol])
+                        if prob > 0.0000005:
+                            logval = str(myLog(prob))
+                            if prob == 0.0:
+                                logval = "-inf"
+                            s += "    %s) %s: %f (log=%s)\n" % (symbol,
+                                                                symbolName,
+                                                                prob, logval)
         return s
 
     def getTrackList(self):
