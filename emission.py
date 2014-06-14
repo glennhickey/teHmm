@@ -406,9 +406,17 @@ class IndependentMultinomialEmissionModel(object):
                 additive = False
                 if curTotal == 0. and tgtTotal < 1.:
                     additive = True
-                    numUnmasked = len(mask[track, state]) - \
+                    numUnmasked = self.numSymbolsPerTrack[track] - \
                       np.sum(mask[track,state])
-                    assert numUnmasked > 0
+                    if numUnmasked == 0:
+                        raise RuntimeError("User defined emission prob for"
+                                           " state %s track %s total less"
+                                           " than 1 and there are no remaining "
+                                           "symbols to assign leftover "
+                                           "probability to" %
+                                           (stateMap.getMapBack(state),
+                                            trackList.getTrackByNumber(
+                                                track).getName()))
                     addAmt = (1. - tgtTotal) / float(numUnmasked)
                 else:
                     assert curTotal > 0.
