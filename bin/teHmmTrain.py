@@ -14,7 +14,7 @@ import numpy as np
 from teHmm.track import TrackData
 from teHmm.trackIO import readBedIntervals, getMergedBedIntervals
 from teHmm.hmm import MultitrackHmm
-from teHmm.emission import IndependentMultinomialEmissionModel
+from teHmm.emission import IndependentMultinomialAndGaussianEmissionModel
 from teHmm.emission import PairEmissionModel
 from teHmm.track import CategoryMap, BinaryMap
 from teHmm.cfg import MultitrackCfg
@@ -125,8 +125,8 @@ def main(argv=None):
                         " different emission or transition probability to begin"
                         " with, they will never learn to be different.",
                         action="store_true", default=False)
-    parser.add_argument("--emRandRange", help="When randomly initialzing a"
-                        " multinomial emission distribution, constrain"
+    parser.add_argument("--emRandRange", help="When randomly initialzing an"
+                        " emission distribution, constrain"
                         " the values to the given range (pair of "
                         "comma-separated numbers).  Overridden by "
                         "--initEmProbs and --forceEmProbs when applicable."
@@ -302,9 +302,10 @@ def trainModel(randomSeed, trackData, catMap, userTrans, truthIntervals,
     logger.debug("numSymbolsPerTrack=%s" % numSymbolsPerTrack)
     # only randomize model if using Baum-Welch 
     randomize = args.supervised is False and args.flatEm is False
-    emissionModel = IndependentMultinomialEmissionModel(
+    emissionModel = IndependentMultinomialAndGaussianEmissionModel(
         args.numStates,
         numSymbolsPerTrack,
+        trackData.getTrackList(),
         normalizeFac=args.emFac,
         randomize=randomize,
         effectiveSegmentLength = args.segLen,

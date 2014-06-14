@@ -38,8 +38,8 @@ def main(argv=None):
                         "to process. If not set, all"
                         " tracks listed as having a multinomial distribution"
                         " (since this is the default value, this includes "
-                        "tracks with no distribution attribute) will be"
-                        " processed.", default=None)
+                        "tracks with no distribution attribute) or gaussian"
+                        " distribution will be processed.", default=None)
     parser.add_argument("--skip", help="Comma-separated list of tracks to "
                         "skip.", default=None)
     
@@ -66,7 +66,8 @@ def main(argv=None):
         if track.getName() not in skipNames and\
           (track.getName() in trackNames or len(trackNames) == 0) and\
           (track.getDist() == "multinomial" or
-           track.getDist() == "sparse_multinomial") and\
+           track.getDist() == "sparse_multinomial" or
+          track.getDist() == "gaussian") and\
           not isFasta:
           try:
               setTrackScale(track, args.numBins, allIntervals)

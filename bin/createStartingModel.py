@@ -78,9 +78,9 @@ def main(argv=None):
     if track is None:
         raise RuntimeError("Track %s not found in tracksInfo" % args.trackName)
     trackPath = track.getPath()
-    if track.getDist() != "multinomial":
-        raise RuntimeError("Track %s does not have multinomial distribution" %
-                           args.trackName)
+    if track.getDist() != "multinomial" and track.getDist() != "gaussian":
+        raise RuntimeError("Track %s does not have multinomial or "
+                           "gaussian distribution" % args.trackName)
     if track.getScale() is not None or track.getLogScale() is not None:
         raise RuntimeError("Track %s must not have scale" % args.trackName)
     
