@@ -342,8 +342,6 @@ class IndependentMultinomialEmissionModel(object):
                 assert len(toks) == 4
                 stateName = toks[0]
                 trackName = toks[1]
-                symbolName = toks[2]
-                prob = float(toks[3])
                 if not stateMap.has(stateName):
                     raise RuntimeError("User Emission: State %s not found" %
                                        stateName)
@@ -352,30 +350,7 @@ class IndependentMultinomialEmissionModel(object):
                 if track is None:
                     raise RuntimeError("Track %s (in user emissions) not found" %
                                        trackName)
-                symbolMap = track.getValueMap()
-                track = track.getNumber()
-                if isinstance(symbolMap, BinaryMap):
-                    # hack in conversion for binary data, where map expects
-                    # either None or non-None
-                    if symbolName == "0" or symbolName == "None":
-                        symbolName = None
-                    symbol = symbolMap.getMap(symbolName)
-                else:
-                    # be careful to catch excpetion when scaling non-numeric value
-                    try:
-                        hasSymbol = symbolMap.has(symbolName)
-                        symbol = symbolMap.getMap(symbolName)
-                    except:
-                        hasSymbol = False
-                        symbol = symbolMap.getMissingVal()
-                    if not hasSymbol:
-                        logger.warning("Track %s Symbol %s not found in"
-                                       "data (setting as null value)" %
-                                       (trackName, symbolName))
-                        
-                assert symbol in self.getTrackSymbols(track)
-                logProbs[track, state, symbol] = myLog(prob)
-                mask[track, state, symbol] = 1
+                self.applyUserEmissionLine(track, state, toks, logProbs, mask)
 
         # easier to work outside log space
         probs = np.exp(logProbs)
@@ -383,6 +358,8 @@ class IndependentMultinomialEmissionModel(object):
         # normalize all other probabilities (ie that are unmaksed) so that they
         # add up.
         for track in xrange(self.getNumTracks()):
+            if trackList.getTrackByNumber(track).getDist() == "gaussian":
+                continue
             for state in xrange(self.getNumStates()):
                 # total probability of learned states
                 curTotal = 0.0
@@ -394,6 +371,8 @@ class IndependentMultinomialEmissionModel(object):
                     else:
                         curTotal += probs[track, state, symbol]
                     if tgtTotal < 0.:
+                        symbolMap = trackList.getTrackByNumber(
+                            track).getValueMap()
                         raise RuntimeError("User defined prob from state %s"
                                            " for track %s exceeds 1" %
                                            (stateMap.getMapBack(state),
@@ -437,6 +416,39 @@ class IndependentMultinomialEmissionModel(object):
 
         self.validate()
         
+    def applyUserEmissionLine(self, track, state, toks, logProbs, mask):
+        """ Expecting line of form TRACK STATE SYMBOL PROB, and updates the
+        logprobs , mask structures accordingly """
+        symbolMap = track.getValueMap()
+        trackName = track.getName()        
+        track = track.getNumber()
+        symbolName = toks[2]
+        prob = float(toks[3])
+
+        if isinstance(symbolMap, BinaryMap):
+            # hack in conversion for binary data, where map expects
+            # either None or non-None
+            if symbolName == "0" or symbolName == "None":
+                symbolName = None
+            symbol = symbolMap.getMap(symbolName)
+        else:
+            # be careful to catch excpetion when scaling non-numeric value
+            try:
+                hasSymbol = symbolMap.has(symbolName)
+                symbol = symbolMap.getMap(symbolName)
+            except:
+                hasSymbol = False
+                symbol = symbolMap.getMissingVal()
+            if not hasSymbol:
+                logger.warning("Track %s Symbol %s not found in"
+                               "data (setting as null value)" %
+                               (trackName, symbolName))
+
+        assert symbol in self.getTrackSymbols(track)
+        logProbs[track, state, symbol] = myLog(prob)
+        mask[track, state, symbol] = 1
+        
+                
     def getSegmentRatios(self, obs):
         """ return an array, where for each observation its segment length /
         the effective length is reported... if no segmenting information or
@@ -516,7 +528,7 @@ class IndependentMultinomialAndGaussianEmissionModel(
 
         return mu, max(sigma, EPSILON)
 
-    def applyGaussian(self, track, state):
+    def applyGaussian(self, track, state, logProbs = None):
         """ feed gaussian parameters back into log probability matrix to
         turn the emission model into a guassian. (ie this is the only time
         the gaussian probabilities are computed. afterword, it behaves
@@ -524,31 +536,56 @@ class IndependentMultinomialAndGaussianEmissionModel(
         this matrix without being recomputed)"""
         catMap = track.getValueMap()
         trackNo = track.getNumber()
+        if logProbs is None:
+            logProbs = self.logProbs
         for symbol in self.getTrackSymbols(trackNo):
             actualValue = float(catMap.getMapBack(symbol))
             prob = stats.norm.pdf(actualValue,
                                   loc=self.gaussParams[trackNo, state, 0],
                                   scale=self.gaussParams[trackNo, state, 1])
+            prob = max(prob, EPSILON)
                 
-            self.logProbs[trackNo][state][symbol] = myLog(prob)
+            logProbs[trackNo][state][symbol] = myLog(prob)
 
         # normalize
-        probs = np.exp(self.logProbs[trackNo][state])
+        probs = np.exp(logProbs[trackNo][state])
         tot = 0.
         for symbol in self.getTrackSymbols(trackNo):
             tot += probs[symbol]
         assert tot > 0.
         for symbol in self.getTrackSymbols(trackNo):
-            self.logProbs[trackNo][state][symbol] = myLog(probs[symbol] / tot)
-
+            logProbs[trackNo][state][symbol] = myLog(probs[symbol] / tot)
+ 
     def getGaussianParams(self, trackNo, state):
-        return self.gausParams[trackNo ,state]
+        return self.gaussParams[trackNo ,state]
     
     ### Overloaded functions -- just tack on a makeGaussian at end###
     def maximize(self, obsStats, trackList):
         super(IndependentMultinomialAndGaussianEmissionModel, self).maximize(
             obsStats)
         self.makeGaussian(trackList)
+
+    def applyUserEmissionLine(self, track, state, toks, logProbs, mask):
+        """ Expecting line of form TRACK STATE MEAN STDEV, and updates the
+        logprobs , mask structures accordingly """
+       
+        # only override for gaussian distribution
+        if track.getDist() != "gaussian":
+            return super(IndependentMultinomialAndGaussianEmissionModel,
+                         self).applyUserEmissionLine(track, state, toks,
+                                                     logProbs, mask)
+
+        mu = float(toks[2])
+        sigma = float(toks[3])
+        self.gaussParams[track.getNumber(), state, 0] = mu
+        self.gaussParams[track.getNumber(), state, 1] = sigma
+        # tho we set self's guassparams, we only apply them to the logProbs
+        # buffer, understanding that calling function will take care of
+        # inserting them into self
+        self.applyGaussian(track, state, logProbs)
+
+        for i in xrange(len(mask[track.getNumber(), state])):
+            mask[track.getNumber(), state, i] = 1
 
                 
 """ Simple pair emission model that supports emitting 1 or two states

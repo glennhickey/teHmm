@@ -267,7 +267,8 @@ def main(argv=None):
         curModel = (i, modelList[i].getLastLogProb())
         if curModel[1] > bestModel[1]:
             bestModel = curModel
-        logmsg += "Rep %i: TotalProb: %f\n" % curModel
+        if curModel[1] is not None:
+            logmsg += "Rep %i: TotalProb: %f\n" % curModel
     if len(modelList) > 1:
         logging.info("Training Replicates Statistics:\n%s" % logmsg)
         logging.info("Selecting best replicate (%d, %f)" % bestModel)

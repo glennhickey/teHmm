@@ -261,8 +261,8 @@ class MultitrackHmm(BaseHMM):
                                                 track.getName(),
                                                 track.getDist())
                 if track.getDist() == "gaussian":
-                    s += "mean: %f  stddev: %f:\n" % em.getGaussianParams(
-                        trackNo, state)
+                    s += "    mean: %f  stddev: %f:\n" % tuple(
+                        em.getGaussianParams(trackNo, state))
                 else:
                     numSymbolsPerTrack =  em.getNumSymbolsPerTrack()
                     for idx, symbol in enumerate(em.getTrackSymbols(trackNo)):

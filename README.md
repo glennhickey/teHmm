@@ -181,7 +181,14 @@ Because the outgoing probabilities of each state above sum to 1, all other trans
 	Outside  ltrFinder  LTR|left|LTR_TE  0.001
 	Outside  ltrFinder   inside|-|LTR_TE 0.001
 
-This is essentially saying that we start training under the assumption that the ltrFinder and chaux tracks have 90% sensitivity and 99.9% specificity.  It is important to note that the Baum-Welch algorithm is still free to change any of these probabilities in any direction.   Note: the script `fitStateNames.py` can be used to rename the OtherX states in the model's prediction to more meaningul names by comparing them to a different annotation.  
+This is essentially saying that we start training under the assumption that the ltrFinder and chaux tracks have 90% sensitivity and 99.9% specificity.  It is important to note that the Baum-Welch algorithm is still free to change any of these probabilities in any direction.   Note: the script `fitStateNames.py` can be used to rename the OtherX states in the model's prediction to more meaningul names by comparing them to a different annotation.
+
+*Note* Tracks whose distribution is set to gaussian require a different format when specifying emission parameters.  Ex
+
+	Outside  copyNumber  2.5 1.1
+
+Where 2.5 is the mean of the distribution and 1.1 is the standard deviation.
+
 
 ### Automatic Generation of Initial Distributions
 
