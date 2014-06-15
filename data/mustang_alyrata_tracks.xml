@@ -4,15 +4,15 @@
 <track name="ltr_harvest"   path="/data/douglas.hoen/sharebrowser/tracks/alyrata/permanent/te_search_programs/structural/ltrharvest_v2.bed"/>
 <track name="chaux"         path="/data/douglas.hoen/sharebrowser/tracks/alyrata/permanent/repeatmasker/chaux_sorted.bed"/>
 <track name="te_domains"    path="/data/douglas.hoen/sharebrowser/tracks/alyrata/permanent/domains/TE_domains.bed"/>
-<track name="copy"          path="/data/douglas.hoen/sharebrowser/tracks/alyrata/permanent/self-alignments/mathieu_new/scaffolds1-8.trf_softmasked.fas.cov.bw" default="0.0"/>
-<track name="copy_cv"       path="/data/douglas.hoen/sharebrowser/tracks/alyrata/permanent/mathieu/variation/AL_v_AL_100_nonSelf.cv100.bw" default="0.0"/>
-<track name="left_peak"     path="/data/douglas.hoen/sharebrowser/tracks/alyrata/permanent/self-alignments/mathieu_new/scaffolds1-8.trf_softmasked.fas.left.bw" default="0.0"/>
-<track name="right_peak"    path="/data/douglas.hoen/sharebrowser/tracks/alyrata/permanent/self-alignments/mathieu_new/scaffolds1-8.trf_softmasked.fas.right.bw" default="0.0"/>
+<track name="copy"          path="/data/douglas.hoen/sharebrowser/tracks/alyrata/permanent/self-alignments/mathieu_new/scaffolds1-8.trf_softmasked.fas.cov.bw" default="0.0" distribution="gaussian"/>
+<track name="copy_cv"       path="/data/douglas.hoen/sharebrowser/tracks/alyrata/permanent/mathieu/variation/AL_v_AL_100_nonSelf.cv100.bw" default="0.0" distribution="gaussian"/>
+<track name="left_peak"     path="/data/douglas.hoen/sharebrowser/tracks/alyrata/permanent/self-alignments/mathieu_new/scaffolds1-8.trf_softmasked.fas.left.bw" default="0.0" distribution="gaussian"/>
+<track name="right_peak"    path="/data/douglas.hoen/sharebrowser/tracks/alyrata/permanent/self-alignments/mathieu_new/scaffolds1-8.trf_softmasked.fas.right.bw" default="0.0" distribution="gaussian"/>
 <track name="termini"       path="/data/douglas.hoen/sharebrowser/tracks/alyrata/permanent/termini/all_scaffolds.termini_search.filter_2.ltr.sorted.bed"/>
 <track name="tir_termini"       path="/data/douglas.hoen/sharebrowser/tracks/alyrata/permanent/termini/all_scaffolds.termini_search.filter_2.tir.sorted.bed"/>
-<track name="ortho_depth"   path="/data/douglas.hoen/sharebrowser/tracks/alyrata/permanent/misc/All_Al_depth_fixed.bw" default="0.0"/>
-<track name="mrna"          path="/gbdb/alyrata/wib/splicemap.bw" default="0.0"/>
-<track name="srna"          path="/data/douglas.hoen/sharebrowser/tracks/alyrata/permanent/misc/AlsmallCS_fixed.bw" default="0.0"/>
+<track name="ortho_depth"   path="/data/douglas.hoen/sharebrowser/tracks/alyrata/permanent/misc/All_Al_depth_fixed.bw" default="0.0" distribution="gaussian"/>
+<track name="mrna"          path="/gbdb/alyrata/wib/splicemap.bw" default="0.0" distribution="gaussian"/>
+<track name="srna"          path="/data/douglas.hoen/sharebrowser/tracks/alyrata/permanent/misc/AlsmallCS_fixed.bw" default="0.0" distribution="gaussian"/>
 <track name="trf"           path="/data/douglas.hoen/sharebrowser/tracks/alyrata/permanent/misc/trf_8_scaffolds.bed" distribution="binary"/>
 <track name="polyA"         path="/data/douglas.hoen/sharebrowser/tracks/alyrata/permanent/misc/polyA.bb" distribution="binary"/>
 <track name="polyN"         path="/data/douglas.hoen/sharebrowser/tracks/alyrata/bed/Ns_sites.bed" distribution="binary"/>
