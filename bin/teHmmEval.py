@@ -170,7 +170,12 @@ def main(argv=None):
         bicFile = open(args.bic, "w")
         # http://en.wikipedia.org/wiki/Bayesian_information_criterion
         lnL = float(totalScore)
-        k = float(model.getNumFreeParameters())
+        try:
+            k = float(model.getNumFreeParameters())
+        except:
+            # numFreeParameters still not done for semi-supervised
+            # just pass through a 0 instead of crashing for now
+            k = 0.0 
         n = float(totalDatapoints)
         bic = -2.0 * lnL + k * (np.log(n) + np.log(2 * np.pi))
         bicFile.write("%f\n" % bic)
