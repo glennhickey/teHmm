@@ -442,10 +442,10 @@ class MultitrackHmm(BaseHMM):
         if self.forceUserTrans is not None or\
           self.forceUserStart is not None or\
           self.forceUserEmissions is not None:
-          raise RuntimeException("hmm.getNumFreeParamaters() does not yet "
-                                 "support forceUsers{Trans,Start,Emissions}"
-                                 " functionality.  ie only works for "
-                                 "completely unsupervised learining")
+          raise RuntimeError("hmm.getNumFreeParamaters() does not yet "
+                             "support forceUsers{Trans,Start,Emissions}"
+                             " functionality.  ie only works for "
+                             "completely unsupervised learining")
 
         numParams = 0
         numStates = self.emissionModel.getNumStates()

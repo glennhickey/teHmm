@@ -208,7 +208,20 @@ def extractScore(benchDir, benchInputBedPath, args):
     avgF1 = np.mean(f1List)
     return avgF1
 
-    
+def extractBIC(benchDir, benchInputBedPath, args):
+    """ Get the BIC score fro mthe teHmmBenchmark output mess """
+        
+    bicPath = os.path.join(benchDir,
+                             os.path.splitext(
+                                 os.path.basename(benchInputBedPath))[0]+
+                                "_bic.txt")
+    bicFile = open(bicPath, "r")
+    for line in bicFile:
+        bic = float(line.split()[0])
+        break
+    bicFile.close()
+    return bic
+
 
 if __name__ == "__main__":
     sys.exit(main())
