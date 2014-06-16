@@ -64,6 +64,8 @@ def main(argv=None):
                         ", for each observation, that the hidden state is inside OR LTR_left"
                         " OR LTR_right.  Must be used with --pd to specify output "
                         "file.", default=None)
+    parser.add_argument("--bic", help="save Bayesian Information Criterion (BIC) score"
+                        " in given file", default=None)
     addLoggingOptions(parser)
     args = parser.parse_args()
     setLoggingFromOptions(args)
@@ -124,6 +126,7 @@ def main(argv=None):
         vitOutFile = open(args.bed, "w")
     totalScore = 0
     tableIndex = 0
+    totalDatapoints = 0
 
     # Note: in general there's room to save on memory by only computing single
     # track table at once (just need to add table by table interface to hmm...)
@@ -153,6 +156,7 @@ def main(argv=None):
                         trackTable.getEnd(), trackTable.getSegmentOffsets(),
                         vitStates, vitOutFile, posteriors[i], posteriorsMask,
                         posteriorsFile)
+            totalDatapoints += len(trackTable) * trackTable.getNumTracks()
 
     print "Viterbi (log) score: %f" % totalScore
     if isinstance(model, MultitrackHmm) and model.current_iteration is not None:
@@ -161,6 +165,16 @@ def main(argv=None):
         vitOutFile.close()
     if posteriorsFile is not None:
         posteriorsFile.close()
+
+    if args.bic is not None:
+        bicFile = open(args.bic, "w")
+        # http://en.wikipedia.org/wiki/Bayesian_information_criterion
+        lnL = float(totalScore)
+        k = float(model.getNumFreeParameters())
+        n = float(totalDatapoints)
+        bic = -2.0 * lnL + k * (np.log(n) + np.log(2 * np.pi))
+        bicFile.write("%f\n" % bic)
+        bicFile.close()
 
     cleanBedTool(tempBedToolPath)
 

@@ -204,7 +204,7 @@ def extractScore(benchDir, benchInputBedPath, args):
         if prec + rec > 0:
             f1 = 2. * ((prec * rec) / (prec + rec))
         f1List.append(f1)
-        
+
     avgF1 = np.mean(f1List)
     return avgF1
 

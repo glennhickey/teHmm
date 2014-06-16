@@ -335,12 +335,17 @@ def main(argv=None):
             hmmEvalInputBed = testBed
             if args.eval is not None:
                 hmmEvalInputBed = args.eval
+            bicPath = os.path.join(outDir,
+                                   os.path.splitext(base)[0] + "_bic.txt")
                 
-            command += " && teHmmEval.py %s %s %s --bed %s %s" % (evalTrackPath,
-                                                                  modPath,
-                                                                  hmmEvalInputBed,
-                                                                  evalBed,
-                                                                  logOps)
+            command += " && teHmmEval.py %s %s %s --bed %s %s --bic %s" % (
+                evalTrackPath,
+                modPath,
+                hmmEvalInputBed,
+                evalBed,
+                logOps,
+                bicPath)
+            
             if args.segment is True:
                 command += " --segment"
 

@@ -208,6 +208,7 @@ class MultitrackHmm(BaseHMM):
             if self.stateNameMap is not None:
                 states = map(self.stateNameMap.getMapBack, states)
             output.append((prob,states))
+
         return output
 
     def posteriorDecode(self, trackData):
@@ -434,6 +435,35 @@ class MultitrackHmm(BaseHMM):
 
         self.startprob_ = startProbs
 
+    def getNumFreeParameters(self):
+        """ Return number of free, learnable parameters.   """
+
+        # laziness
+        if self.forceUserTrans is not None or\
+          self.forceUserStart is not None or\
+          self.forceUserEmissions is not None:
+          raise RuntimeException("hmm.getNumFreeParamaters() does not yet "
+                                 "support forceUsers{Trans,Start,Emissions}"
+                                 " functionality.  ie only works for "
+                                 "completely unsupervised learining")
+
+        numParams = 0
+        numStates = self.emissionModel.getNumStates()
+        if self.fixTrans is False:
+            numParams += numStates * numStates - 1
+        if self.fixStart is False:
+            numParams += numStates - 1
+        if self.fixEmission is False:
+            for track in self.trackList:
+                trackNo = track.getNumber()
+                if track.getDist() == "gaussian":
+                    numTrackParams = 2
+                else:
+                    numTrackParams = \
+                      self.emissionModel.getNumSymbolsPerTrack()[trackNo] - 1
+                numParams += numStates * numTrackParams
+
+        return numParams                              
                 
     ###########################################################################
     #       SCIKIT LEARN BASEHMM OVERRIDES BELOW 
