@@ -48,6 +48,10 @@ def main(argv=None):
     parser.add_argument("--segOpts", help="Options to pass to "
                         "segmentTracks.py (wrap in double quotes)",
                         default="--comp first --thresh 1 --cutUnscaled")
+    parser.add_argument("--bic", help="rank by BIC instead of score "
+                        " (both always present in output table though)",
+                        action="store_true", default=False)
+    
     addLoggingOptions(parser)
     args = parser.parse_args()
     setLoggingFromOptions(args)
@@ -83,13 +87,13 @@ def greedyRank(args):
                 rankedTrackList.addTrack(copy.deepcopy(track))
             
     numTracks = len(inputTrackList) - len(rankedTrackList)
-    currentScore = 0.0
+    currentScore, currentBIC = 0.0, sys.maxint
 
     # baseline score if we not starting from scratch
     baseIt = 0
     if args.startTracks is not None:
         curTrackList = copy.deepcopy(rankedTrackList)
-        score = runTrial(curTrackList, baseIt, "baseline_test", args)
+        score,bic = runTrial(curTrackList, baseIt, "baseline_test", args)
         rankFile = open(os.path.join(args.outDir, "ranking.txt"), "w")
         rankFile.write("%d\t%s\t%s\n" % (baseIt, args.startTracks,
                                         score))
@@ -98,30 +102,36 @@ def greedyRank(args):
         
     for iteration in xrange(baseIt, baseIt + numTracks):
         bestItScore = -sys.maxint
+        bestItBic = sys.maxint
         bestNextTrack = None
         for nextTrack in inputTrackList:
             if rankedTrackList.getTrackByName(nextTrack.getName()) is not None:
                 continue
             curTrackList = copy.deepcopy(rankedTrackList)
             curTrackList.addTrack(nextTrack)
-            score = runTrial(curTrackList, iteration, nextTrack.getName(),
-                             args)
-            if score > bestItScore:
-                bestItScore, bestNextTrack = score, nextTrack
+            score,bic = runTrial(curTrackList, iteration, nextTrack.getName(),
+                                args)
+            if args.bic is False:
+                if score > bestItScore or (score == bestItScore and bic < bestItBic):
+                    bestItScore, bestItBic, bestNextTrack = score, bic, nextTrack
+            else:
+                if bic < bestItBic or (bic == bestItBic and score > bestItScore):
+                    bestItScore, bestItBic, bestNextTrack = score, bic, nextTrack
+                    
             flags = "a"
             if iteration == 0:
                 flags = "w"
             trackLogFile = open(os.path.join(args.outDir, nextTrack.getName() +
                                              ".txt"), flags)
-            trackLogFile.write("%d\t%f\n" % (iteration, score))
+            trackLogFile.write("%d\t%f\t%f\n" % (iteration, score, bic))
             trackLogFile.close()
         rankedTrackList.addTrack(copy.deepcopy(bestNextTrack))
         rankedTrackList.saveXML(os.path.join(args.outDir, "iter%d" % iteration,
                                 "tracks.xml"))
         
         rankFile = open(os.path.join(args.outDir, "ranking.txt"), flags)
-        rankFile.write("%d\t%s\t%s\n" % (iteration, bestNextTrack.getName(),
-                                        bestItScore))
+        rankFile.write("%d\t%s\t%s\t%s\n" % (iteration, bestNextTrack.getName(),
+                                            bestItScore, bestItBic))
         rankFile.close()
 
 
@@ -177,10 +187,11 @@ def runTrial(tracksList, iteration, newTrackName, args):
     runShellCommand(benchCmd)
 
     score = extractScore(benchDir, segTrainingPath, args)
+    bic = extractBIC(benchDir, segTrainingPath, args)
 
     # clean up big files?
 
-    return score
+    return score, bic
 
 def extractScore(benchDir, benchInputBedPath, args):
     """ Reduce entire benchmark output into a single score value """
