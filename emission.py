@@ -32,7 +32,7 @@ class IndependentMultinomialEmissionModel(object):
                  randomize=False, effectiveSegmentLength = None,
                  random_state = None,
                  randRange = (0.1, 0.9),
-                 minGaussianTail = 1e-6):
+                 uniformMixProb = 0.1):
         self.numStates = numStates
         self.numTracks = len(numSymbolsPerTrack)
         self.numSymbolsPerTrack = numSymbolsPerTrack
@@ -71,10 +71,11 @@ class IndependentMultinomialEmissionModel(object):
         # can leave outliers with 0-probabillity (due to rounding).
         # This is therefore an easy recipe to get data points that
         # *cannot be emitted by any state*, leading to 0-probabilites
-        # in the DP algorithms and horrible crashes as a result.  We
-        # therefore artificially extend the thils of all gaussians
-        # infinitely, with a minimum value of this:
-        self.minGaussianTail = minGaussianTail
+        # in the DP algorithms and horrible crashes as a result. We
+        # therefore mix all gaussian emission distributions with a
+        # uniform distribution according to this factor X
+        # P = P_Uniform * X + P_Gaussian * (1-X)
+        self.uniformMixProb = float(uniformMixProb)
 
         self.initParams(params=params, randomize=randomize)
             
@@ -548,12 +549,18 @@ class IndependentMultinomialAndGaussianEmissionModel(
         trackNo = track.getNumber()
         if logProbs is None:
             logProbs = self.logProbs
+        uniformProb = 1. / float(self.numSymbolsPerTrack[trackNo])
+        uniformProb *= self.uniformMixProb
         for symbol in self.getTrackSymbols(trackNo):
             actualValue = float(catMap.getMapBack(symbol))
             prob = stats.norm.pdf(actualValue,
                                   loc=self.gaussParams[trackNo, state, 0],
                                   scale=self.gaussParams[trackNo, state, 1])
-            prob = max(prob, self.minGaussianTail)
+
+            # correct for zero values (probabilites too far from mean)
+            # by mixing in a uniform distribution
+            prob = uniformProb + (1. - self.uniformMixProb) * prob
+            assert prob > EPSILON
                 
             logProbs[trackNo][state][symbol] = myLog(prob)
 
