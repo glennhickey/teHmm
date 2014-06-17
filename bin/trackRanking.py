@@ -51,6 +51,8 @@ def main(argv=None):
     parser.add_argument("--bic", help="rank by BIC instead of score "
                         " (both always present in output table though)",
                         action="store_true", default=False)
+    parser.add_argument("--base", help="use base-level F1 instead of "
+                        "interval-level", default=False, action="store_true")
     
     addLoggingOptions(parser)
     args = parser.parse_args()
@@ -201,16 +203,19 @@ def extractScore(benchDir, benchInputBedPath, args):
                                  os.path.basename(benchInputBedPath))[0]+
                                 "_comp.txt") 
     baseStats, intStats, weightedStats = extractCompStatsFromFile(compPath)
+    stats = intStats
+    if args.base is True:
+        stats = baseStats
     f1List = []
     for state in args.states.split(","):
-        if state not in intStats:
+        if state not in stats:
             logger.warning("State %s not found in intstats %s. giving 0" % (
-                state, str(intStats)))
+                state, str(stats)))
             f1List.append(0)
             continue
         
-        prec = intStats[state][0]
-        rec = intStats[state][1]
+        prec = stats[state][0]
+        rec = stats[state][1]
         f1 = 0
         if prec + rec > 0:
             f1 = 2. * ((prec * rec) / (prec + rec))
