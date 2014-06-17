@@ -31,7 +31,8 @@ class IndependentMultinomialEmissionModel(object):
                  zeroAsMissingData = True, fudge = 0.0, normalizeFac = 0.0,
                  randomize=False, effectiveSegmentLength = None,
                  random_state = None,
-                 randRange = (0.1, 0.9)):
+                 randRange = (0.1, 0.9),
+                 minGaussianTail = 1e-6):
         self.numStates = numStates
         self.numTracks = len(numSymbolsPerTrack)
         self.numSymbolsPerTrack = numSymbolsPerTrack
@@ -65,6 +66,15 @@ class IndependentMultinomialEmissionModel(object):
         # values.  So we allow constraining into a certain range.  Note
         # everthing normalized at the end
         self.randRange = float(randRange[0]), float(randRange[1])
+        # gaussian distributions can be learned
+        # to be pointy (small stdevs) to fit clusters of points.  This
+        # can leave outliers with 0-probabillity (due to rounding).
+        # This is therefore an easy recipe to get data points that
+        # *cannot be emitted by any state*, leading to 0-probabilites
+        # in the DP algorithms and horrible crashes as a result.  We
+        # therefore artificially extend the thils of all gaussians
+        # infinitely, with a minimum value of this:
+        self.minGaussianTail = minGaussianTail
 
         self.initParams(params=params, randomize=randomize)
             
@@ -543,7 +553,7 @@ class IndependentMultinomialAndGaussianEmissionModel(
             prob = stats.norm.pdf(actualValue,
                                   loc=self.gaussParams[trackNo, state, 0],
                                   scale=self.gaussParams[trackNo, state, 1])
-            prob = max(prob, EPSILON)
+            prob = max(prob, self.minGaussianTail)
                 
             logProbs[trackNo][state][symbol] = myLog(prob)
 
