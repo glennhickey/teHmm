@@ -328,6 +328,8 @@ In general, running any executable with `--help` will print a brief description 
 * **compareBedStates.py** : Compute base and interval-level precision and recall of one bed file vis-a-vis another.  Both files must cover exactly the same region.
 * **fitStateNames.py** : Assign predicted states names according to how well they match a given annotation.  Useful for generating meaningful names for states that were learned in a completely unsupervised manner. 
 * **trackRanking.py** : Iteratively call teHmmBenchmark to rank tracks based on their impact on accuracy
+* **numStatesRanking.py** : Iteratively call teHmmBenchmark with different numbers of (unsupervised) states, computing the BIC score and an accuracy score for each.  This information can be used to choose the best number of states.
+
 
 
 
