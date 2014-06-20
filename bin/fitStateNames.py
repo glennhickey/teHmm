@@ -54,6 +54,8 @@ def main(argv=None):
                         type=float, default=0.5)
     parser.add_argument("--ignore", help="Comma-separated list of stateNames to"
                         " ignore (in prediction)", default=None)
+    parser.add_argument("--ignoreTgt", help="Comma-separated list of stateNames to"
+                        " ignore (int target)", default=None)
     parser.add_argument("--unique", help="If more than one predicted state maps"
                         " to the same target state, add a unique id (numeric "
                         "suffix) to the output so that they can be distinguished",
@@ -76,6 +78,10 @@ def main(argv=None):
         args.ignore = set(args.ignore.split(","))
     else:
         args.ignore = set()
+    if args.ignoreTgt is not None:
+        args.ignoreTgt = set(args.ignoreTgt.split(","))
+    else:
+        args.ignoreTgt = set()
 
     assert args.col == 4 or args.col == 5
     
@@ -98,7 +104,7 @@ def main(argv=None):
     stateMap = getStateMapFromConfMatrix(confMat)
 
     # filter the stateMap to take into account the command-line options
-    # notably --ignore, --qualThresh, and --unique
+    # notably --ignore, --ignoreTgt, --qualThresh, and --unique
     filterStateMap(stateMap, args)
 
     logger.info("State Map:\n%s", str(stateMap))
@@ -108,7 +114,8 @@ def main(argv=None):
         applyNamesToModel(stateMap, args.model)
     
     # generate the output bed using the statemap
-    writeFittedBed(intervals2, stateMap, args.outBed, args.col-1, args.noMerge)
+    writeFittedBed(intervals2, stateMap, args.outBed, args.col-1, args.noMerge,
+                   args.ignoreTgt)
 
     cleanBedTool(tempBedToolPath)
 
@@ -155,7 +162,7 @@ def applyNamesToModel(stateMap, modelPath):
     modelMap = model.getStateNameMap()
     raise RuntimeError("Not Implemented")
                 
-def writeFittedBed(intervals, stateMap, outBed, col, noMerge):
+def writeFittedBed(intervals, stateMap, outBed, col, noMerge, ignoreTgt):
     """ write the mapped bed file by applying stateMap to the intervals
     from args.predBed"""
     outFile = open(outBed, "w")
@@ -163,7 +170,8 @@ def writeFittedBed(intervals, stateMap, outBed, col, noMerge):
     prevInterval = None
     for interval in intervals:
         outInterval = list(interval)
-        outInterval[col] = stateMap[outInterval[col]][0]
+        if stateMap[outInterval[col]][0] not in ignoreTgt:
+            outInterval[col] = stateMap[outInterval[col]][0]
         if not noMerge and\
           prevInterval is not None and\
           outInterval[col] == prevInterval[col] and\
