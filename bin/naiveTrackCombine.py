@@ -92,6 +92,14 @@ def main(argv=None):
             combineTrack(track, tempOutPath, tempRegionPath, iter, args)
             iter += 1
 
+    # nothing got written, make everything outside
+    if iter == 0:
+        tempOutFile = open(tempOutPath, "w")
+        for interval in regionIntervals:
+            tempOutFile.write("%s\t%s\t%s\t%s\n" % (interval[0], interval[1],
+                                                   interval[2], args.outside))
+        tempOutFile.close()
+
     runShellCommand("mv %s %s" % (tempOutPath, args.outBed))
                 
     cleanBedTool(tempBedToolPath)

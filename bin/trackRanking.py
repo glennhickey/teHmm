@@ -53,6 +53,8 @@ def main(argv=None):
                         action="store_true", default=False)
     parser.add_argument("--base", help="use base-level F1 instead of "
                         "interval-level", default=False, action="store_true")
+    parser.add_argument("--naive", help="rank by \"naive\" score",
+                         action="store_true", default=False)
     
     addLoggingOptions(parser)
     args = parser.parse_args()
@@ -68,6 +70,9 @@ def main(argv=None):
     if "--segment" not in args.benchOpts:
         args.benchOpts += " --segment"
         logger.warning("Adding --segment to teHmmBenchmark.py options")
+
+    if args.bic is True and args.naive is True:
+        raise RuntimeError("--bic and --naive are mutually incompatible")
         
     if not os.path.exists(args.outDir):
         os.makedirs(args.outDir)
@@ -95,45 +100,52 @@ def greedyRank(args):
     baseIt = 0
     if args.startTracks is not None:
         curTrackList = copy.deepcopy(rankedTrackList)
-        score,bic = runTrial(curTrackList, baseIt, "baseline_test", args)
+        score,bic,naive = runTrial(curTrackList, baseIt, "baseline_test", args)
         rankFile = open(os.path.join(args.outDir, "ranking.txt"), "w")
-        rankFile.write("%d\t%s\t%s\n" % (baseIt, args.startTracks,
-                                        score))
+        rankFile.write("%d\t%s\t%s\t%s\t%s\n" % (baseIt, args.startTracks,
+                                        score, bic, naive))
         rankFile.close()
         baseIt += 1
         
     for iteration in xrange(baseIt, baseIt + numTracks):
         bestItScore = -sys.maxint
         bestItBic = sys.maxint
+        bestItNaive = -sys.maxint
         bestNextTrack = None
         for nextTrack in inputTrackList:
             if rankedTrackList.getTrackByName(nextTrack.getName()) is not None:
                 continue
             curTrackList = copy.deepcopy(rankedTrackList)
             curTrackList.addTrack(nextTrack)
-            score,bic = runTrial(curTrackList, iteration, nextTrack.getName(),
+            score,bic,naive = runTrial(curTrackList, iteration, nextTrack.getName(),
                                 args)
-            if args.bic is False:
-                if score > bestItScore or (score == bestItScore and bic < bestItBic):
-                    bestItScore, bestItBic, bestNextTrack = score, bic, nextTrack
-            else:
+            best = False
+            if args.bic is True:
                 if bic < bestItBic or (bic == bestItBic and score > bestItScore):
-                    bestItScore, bestItBic, bestNextTrack = score, bic, nextTrack
+                    best = True
+            elif args.naive is True:
+                if naive > bestItNaive or (naive == bestItNaive and score > bestItScore):
+                    best = True
+            elif score > bestItScore or (score == bestItScore and bic < bestItBic):
+                    best = True
+            if best is True:
+                bestItScore, bestItBic, bestItNaive, bestNextTrack =\
+                       score, bic, naive, nextTrack
                     
             flags = "a"
             if iteration == 0:
                 flags = "w"
             trackLogFile = open(os.path.join(args.outDir, nextTrack.getName() +
                                              ".txt"), flags)
-            trackLogFile.write("%d\t%f\t%f\n" % (iteration, score, bic))
+            trackLogFile.write("%d\t%f\t%f\t%f\n" % (iteration, score, bic, naive))
             trackLogFile.close()
         rankedTrackList.addTrack(copy.deepcopy(bestNextTrack))
         rankedTrackList.saveXML(os.path.join(args.outDir, "iter%d" % iteration,
                                 "tracks.xml"))
         
         rankFile = open(os.path.join(args.outDir, "ranking.txt"), flags)
-        rankFile.write("%d\t%s\t%s\t%s\n" % (iteration, bestNextTrack.getName(),
-                                            bestItScore, bestItBic))
+        rankFile.write("%d\t%s\t%s\t%s\t%s\n" % (iteration, bestNextTrack.getName(),
+                                            bestItScore, bestItBic, bestItNaive))
         rankFile.close()
 
 
@@ -152,7 +164,7 @@ def runTrial(tracksList, iteration, newTrackName, args):
 
     segLogPath = os.path.join(benchDir, "segment_cmd.txt")
     segLog = open(segLogPath, "w")
-   
+    
     # segment training
     segTrainingPath = os.path.join(benchDir,
                                    os.path.splitext(
@@ -190,10 +202,11 @@ def runTrial(tracksList, iteration, newTrackName, args):
 
     score = extractScore(benchDir, segTrainingPath, args)
     bic = extractBIC(benchDir, segTrainingPath, args)
+    naive = extractNaive(tracksPath, benchDir, segTrainingPath, args)
 
     # clean up big files?
 
-    return score, bic
+    return score, bic, naive
 
 def extractScore(benchDir, benchInputBedPath, args):
     """ Reduce entire benchmark output into a single score value """
@@ -237,6 +250,34 @@ def extractBIC(benchDir, benchInputBedPath, args):
         break
     bicFile.close()
     return bic
+
+def extractNaive(tracksPath, benchDir, benchInputBedPath, args):
+    """ use naiveTrackCombine.py to get a score instead of teHmmBenchmark.py """
+
+    naiveEvalPath = os.path.join(benchDir,
+                             os.path.splitext(
+                                 os.path.basename(benchInputBedPath))[0]+
+                                "_naiveEval.bed")
+    naiveFitPath = os.path.join(benchDir,
+                             os.path.splitext(
+                                 os.path.basename(benchInputBedPath))[0]+
+                                "_naiveEval_Fit.bed")
+    naiveCompPath = os.path.join(benchDir,
+                             os.path.splitext(
+                                 os.path.basename(benchInputBedPath))[0]+
+                                "_naive_comp.txt")
+
+
+    runShellCommand("naiveTrackCombine.py %s %s %s" % (tracksPath, args.truth,
+                                                        naiveEvalPath))
+    runShellCommand("fitStateNames.py %s %s %s" % (args.truth, naiveEvalPath,
+                                                   naiveFitPath))
+    runShellCommand("compareBedStates.py %s %s > %s" % (args.truth, naiveFitPath,
+                                                        naiveCompPath))
+    score = extractScore(benchDir,
+                        naiveCompPath.replace("_naive_comp.txt", "_naive.bed"),
+                        args)
+    return score
 
 
 if __name__ == "__main__":
