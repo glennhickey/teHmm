@@ -19,6 +19,12 @@ from teHmm.bin.compareBedStates import compareIntervalsOneSided
 from teHmm.bin.compareBedStates import compareBaseLevel
 from teHmm.bin.compareBedStates import getStateMapFromConfMatrix
 
+try:
+    from teHmm.parameterAnalysis import plotHeatMap
+    canPlot = True
+except:
+    canPlot = False
+
 
 """ Given two bed files: a prediction and a true (or target) annotation,
     re-label the prediction's state names so that they best match the
@@ -68,6 +74,8 @@ def main(argv=None):
                         "automatically merged into a single interval.  This"
                         " flag disables this.", action="store_true",
                         default=False)
+    parser.add_argument("--hm", help="Write confusion matrix as heatmap in PDF"
+                        " format to specified file", default = None)
 
     addLoggingOptions(parser)
     args = parser.parse_args()
@@ -116,6 +124,13 @@ def main(argv=None):
     # generate the output bed using the statemap
     writeFittedBed(intervals2, stateMap, args.outBed, args.col-1, args.noMerge,
                    args.ignoreTgt)
+
+    # write the confusiont matrix as heatmap
+    if args.hm is not None:
+        if canPlot is False:
+            raise RuntimeError("Unable to write heatmap.  Maybe matplotlib is "
+                               "not installed?")
+        writeHeatMap(confMat, args.hm)
 
     cleanBedTool(tempBedToolPath)
 
@@ -189,6 +204,38 @@ def writeFittedBed(intervals, stateMap, outBed, col, noMerge, ignoreTgt):
         outFile.write("\t".join([str(x) for x in prevInterval]) + "\n")
                                             
     outFile.close()
+
+def writeHeatMap(confMat, outPath):
+    """ make a heatmap PDF out of a confusion matrix using """
+
+    # need to transform our dict[dict] confusion matrix into an array
+    fromStates = set()
+    toStates = set()
+    fromTotals = dict()
+    for fromState, fsDict in confMat.items():
+        fromStates.add(fromState)
+        if fromState not in fromTotals:
+            fromTotals[fromState] = 0
+        for toState, count in fsDict.items():
+            toStates.add(toState)
+            fromTotals[fromState] += count
+    fromStates = list(fromStates)
+    toStates = list(toStates)
+    matrix = np.zeros((len(fromStates), len(toStates)))
+    for fromIdx in xrange(len(fromStates)):
+        for toIdx in xrange(len(toStates)):
+            fromState = fromStates[fromIdx]
+            toState = toStates[toIdx]
+            count = 0.
+            # dumb we need if -- should add zero-entries into confMat
+            # (or at least change to defaultDict...)
+            if fromState in confMat and toState in confMat[fromState]:
+                count = float(confMat[fromState][toState])
+                # normalize
+                count /= float(fromTotals[fromState])
+            matrix[fromIdx, toIdx] = count
+
+    plotHeatMap(matrix, fromStates, toStates, outPath)
 
 if __name__ == "__main__":
     sys.exit(main())

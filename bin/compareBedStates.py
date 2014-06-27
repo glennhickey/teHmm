@@ -58,8 +58,6 @@ def main(argv=None):
                         " element, as opposed to only needing 80pct of itself"
                         " overlapping with the true element. ",
                         action="store_true", default = False)
-    parser.add_argument("--hm", help="Write confusion matrix as heatmap in PDF"
-                        " format to specified file", default = None)
 
     args = parser.parse_args()
     tempBedToolPath = initBedTool()
@@ -70,9 +68,6 @@ def main(argv=None):
         args.ignore = set()
 
     assert args.col == 4 or args.col == 5
-
-    if args.hm is not None:
-        raise RuntimeError("TODO")
 
     intervals1 = readBedIntervals(args.bed1, ncol = args.col)
     intervals2 = readBedIntervals(args.bed2, ncol = args.col)
