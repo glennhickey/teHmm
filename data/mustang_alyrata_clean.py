@@ -71,6 +71,8 @@ def main(argv=None):
                         default="hollister")
     parser.add_argument("--repbase", help="Name of repbase track",
                         default="repbase")
+    parser.add_argument("--repeat_modeller", help="Name of repeat_modeller track",
+                        default="repeat_modeller")
     parser.add_argument("--noScale", help="Dont do any scaling", default=False,
                         action="store_true")
     parser.add_argument("--noTsd", help="Dont generate TSD track.  NOTE:"
@@ -156,6 +158,24 @@ def runCleaning(args, tempTracksInfo):
         repbaseTrack.setPath(outFile)
     else:
         logger.warning("Could not find repbase track")
+
+    # run cleanChaux.py on repeat_modeller track
+    repeat_modellerTrack = trackList.getTrackByName(args.repeat_modeller)
+    if repeat_modellerTrack is not None:
+        inFile = repeat_modellerTrack.getPath()
+        outFile = cleanPath(args, repeat_modellerTrack)
+        tempBed1 = None
+        if inFile[-3:] == ".bb":
+            tempBed1 = getLocalTempPath("Temp_modeller", ".bed")
+            runShellCommand("bigBedToBed %s %s" % (inFile, tempBed1))
+            inFile = tempBed1
+        tempBed = getLocalTempPath("Temp_repeat_modeller", ".bed")
+        runShellCommand("cleanChaux.py %s  > %s" % (inFile, tempBed))
+        runShellCommand("removeBedOverlaps.py %s > %s" % (tempBed, outFile)) 
+        runShellCommand("rm -f %s" % tempBed)
+        repeat_modellerTrack.setPath(outFile)
+    else:
+        logger.warning("Could not find repeat_modeller track")
                 
     # run cleanTermini.py
     lastzTracks = [trackList.getTrackByName(args.termini),
