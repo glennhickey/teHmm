@@ -20,7 +20,8 @@ from teHmm.common import addLoggingOptions, setLoggingFromOptions, logger
 from teHmm.common import getLogLevelString, setLogLevel
 from teHmm.bin.compareBedStates import extractCompStatsFromFile
 from teHmm.track import TrackList
-
+from teHmm.modelIO import loadModel
+from scipy.stats import linregress
 """ Helper script to rank a list of tracks based on how well they improve
 some measure of HMM accuracy, by wrapping teHmmBenchmark.py
 """
@@ -118,14 +119,19 @@ def greedyRank(args):
                                                        args.segOpts)
         runShellCommand(segmentCmd)
 
+    #header
+    rankFile = open(os.path.join(args.outDir, "ranking.txt"), "w")
+    rankFile.write("It.\tTrack\tF1\tBIC\tNaiveF1\tAccProbSlop\tAccProbR2\n")
+    rankFile.close()
+    
     # baseline score if we not starting from scratch
     baseIt = 0
     if args.startTracks is not None:
         curTrackList = copy.deepcopy(rankedTrackList)
-        score,bic,naive = runTrial(curTrackList, baseIt, "baseline_test", args)
-        rankFile = open(os.path.join(args.outDir, "ranking.txt"), "w")
-        rankFile.write("%d\t%s\t%s\t%s\t%s\n" % (baseIt, args.startTracks,
-                                        score, bic, naive))
+        score,bic,naive,slope,rsq = runTrial(curTrackList, baseIt, "baseline_test", args)
+        rankFile = open(os.path.join(args.outDir, "ranking.txt"), "a")
+        rankFile.write("%d\t%s\t%s\t%s\t%s\t%s\t%s\n" % (baseIt, args.startTracks,
+                                        score, bic, naive,slope,rsq))
         rankFile.close()
         baseIt += 1
         
@@ -134,12 +140,14 @@ def greedyRank(args):
         bestItBic = sys.maxint
         bestItNaive = -sys.maxint
         bestNextTrack = None
+        bestSlope = None
+        bestR = None
         for nextTrack in inputTrackList:
             if rankedTrackList.getTrackByName(nextTrack.getName()) is not None:
                 continue
             curTrackList = copy.deepcopy(rankedTrackList)
             curTrackList.addTrack(nextTrack)
-            score,bic,naive = runTrial(curTrackList, iteration, nextTrack.getName(),
+            score,bic,naive,slope,rsq = runTrial(curTrackList, iteration, nextTrack.getName(),
                                 args)
             best = False
             if args.bic is True:
@@ -151,23 +159,24 @@ def greedyRank(args):
             elif score > bestItScore or (score == bestItScore and bic < bestItBic):
                     best = True
             if best is True:
-                bestItScore, bestItBic, bestItNaive, bestNextTrack =\
-                       score, bic, naive, nextTrack
-                    
+                bestItScore, bestItBic, bestItNaive, bestSlope, bestR, bestNextTrack =\
+                       score, bic, naive, slope, rsq, nextTrack
             flags = "a"
-            if iteration == 0:
-                flags = "w"
+            if iteration == baseIt:
+                flags = "w"      
             trackLogFile = open(os.path.join(args.outDir, nextTrack.getName() +
                                              ".txt"), flags)
-            trackLogFile.write("%d\t%f\t%f\t%f\n" % (iteration, score, bic, naive))
+            trackLogFile.write("%d\t%f\t%f\t%f\t%f\t%f\n" % (iteration, score, bic, naive,
+                                                             slope, rsq))
             trackLogFile.close()
         rankedTrackList.addTrack(copy.deepcopy(bestNextTrack))
         rankedTrackList.saveXML(os.path.join(args.outDir, "iter%d" % iteration,
                                 "tracks.xml"))
         
         rankFile = open(os.path.join(args.outDir, "ranking.txt"), flags)
-        rankFile.write("%d\t%s\t%s\t%s\t%s\n" % (iteration, bestNextTrack.getName(),
-                                            bestItScore, bestItBic, bestItNaive))
+        rankFile.write("%d\t%s\t%s\t%s\t%s\t%s\t%s\n" % (iteration, bestNextTrack.getName(),
+                                            bestItScore, bestItBic, bestItNaive,
+                                            bestSlope, bestR))
         rankFile.close()
 
 
@@ -230,18 +239,19 @@ def runTrial(tracksList, iteration, newTrackName, args):
     score = extractScore(benchDir, segTrainingPath, args)
     bic = extractBIC(benchDir, segTrainingPath, args)
     naive = extractNaive(tracksPath, benchDir, segTrainingPath, args)
+    slope, rsq = extractF1ProbSlope(benchDir, segTrainingPath, args)
 
     # clean up big files?
 
-    return score, bic, naive
+    return score, bic, naive, slope, rsq
 
-def extractScore(benchDir, benchInputBedPath, args):
+def extractScore(benchDir, benchInputBedPath, args, repSuffix = ""):
     """ Reduce entire benchmark output into a single score value """
 
     compPath = os.path.join(benchDir,
                              os.path.splitext(
                                  os.path.basename(benchInputBedPath))[0]+
-                                "_comp.txt") 
+                                "_comp.txt" + repSuffix) 
     baseStats, intStats, weightedStats = extractCompStatsFromFile(compPath)
     stats = intStats
     if args.base is True:
@@ -277,6 +287,72 @@ def extractBIC(benchDir, benchInputBedPath, args):
         break
     bicFile.close()
     return bic
+
+def extractTotalProb(benchDir, benchInputBedPath, args, repSuffix=""):
+    """ Get the total log probability from the model """
+    modPath = os.path.join(benchDir,
+                             os.path.splitext(
+                                 os.path.basename(benchInputBedPath))[0]+
+                                ".mod" + repSuffix)
+    model = loadModel(modPath)
+    totalProb = model.getLastLogProb()
+    return totalProb
+
+def extractF1ProbSlope(benchDir, benchInputBedPath, args):
+    """ Get the slope of the line that fits the graph of total log prob Vs Score.
+    (where x-axis = prob, y-axis = score)
+    Each point here is a training replicate
+    RETURNS :  Slope, R-square
+    """
+
+    defRetVal = -1000000, 1000000
+    if "--saveAllReps" not in args.benchOpts and "--reps" not in args.benchOpts:
+        return defRetVal
+    modPath = os.path.join(benchDir,
+                             os.path.splitext(
+                                 os.path.basename(benchInputBedPath))[0]+
+                                ".mod")
+    compPath = os.path.join(benchDir,
+                             os.path.splitext(
+                                 os.path.basename(benchInputBedPath))[0]+
+                                "_comp.txt")
+    probs = []
+    scores = []
+    for i in xrange(-1, 1000):
+        repSuffix = ""
+        if i >= 0:
+            repSuffix = ".rep%d" % i
+        if os.path.isfile(modPath + repSuffix) and \
+          os.path.isfile(compPath + repSuffix):
+          score = extractScore(benchDir, benchInputBedPath, args, repSuffix)
+          prob = extractTotalProb(benchDir, benchInputBedPath, args, repSuffix)
+          probs.append(prob)
+          scores.append(score)
+    if len(probs) < 2:
+        return defRetVal
+
+    # scale down probs to ratios to correct for differences
+    # between numbers of tracks (i hope)
+    maxProb = np.max(probs)
+    scaleProbs = [x / maxProb for x in probs]
+
+    # fit to line (since prob is log, we probably want to transform, but for
+    # these purposes, a postive slope should be a positive slope...
+    slope, intercept, r_value, p_value, std_err = linregress(scaleProbs, scores)
+    if np.isnan(slope) or slope is None:
+        return defRetVal
+
+    plotPath =  os.path.join(benchDir,
+                             os.path.splitext(
+                                 os.path.basename(benchInputBedPath))[0]+
+                                "_f1VsProbReps.txt")
+    plotFile = open(plotPath, "w")
+    for p, s in zip(probs, scores):
+        plotFile.write("%s\t%s\n" % (p, s))
+    plotFile.close()
+
+    return slope, r_value ** 2
+    
 
 def extractNaive(tracksPath, benchDir, benchInputBedPath, args):
     """ use naiveTrackCombine.py to get a score instead of teHmmBenchmark.py """

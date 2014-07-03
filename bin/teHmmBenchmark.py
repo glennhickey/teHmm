@@ -190,7 +190,10 @@ def main(argv=None):
                         default=False)
     parser.add_argument("--saveAllReps", help="Save all replicates (--reps)"
                         " models to disk, instead of just the best one"
-                        "when training. Format is <outputModel>.repN",                        
+                        ". Format is <outputModel>.repN.  There will be "
+                        " --reps -1 such models saved as the best output"
+                        " counts as a replicate.  Comparison statistics"
+                        " will be generated for each rep.",
                         action="store_true", default=False)
         
     addLoggingOptions(parser)
@@ -330,59 +333,76 @@ def main(argv=None):
             command += " && teHmmView.py %s > %s" % (modPath, viewPath)
 
             # evaluate
-            evalBed = os.path.join(outDir,
-                                   os.path.splitext(base)[0] + "_eval.bed")
-            hmmEvalInputBed = testBed
-            if args.eval is not None:
-                hmmEvalInputBed = args.eval
-            bicPath = os.path.join(outDir,
-                                   os.path.splitext(base)[0] + "_bic.txt")
-                
-            command += " && teHmmEval.py %s %s %s --bed %s %s --bic %s" % (
-                evalTrackPath,
-                modPath,
-                hmmEvalInputBed,
-                evalBed,
-                logOps,
-                bicPath)
+            numReps = 1
+            if args.reps is not None and args.saveAllReps is True:
+                numReps = args.reps
+                assert numReps > 0
+            missed = 0
+            # little hack to repeat evaluation for each training replicate
+            for repNum in xrange(-1, numReps-1):
+                if repNum == -1:
+                    repSuffix = ""
+                else:
+                    repSuffix = ".rep%d" % repNum                
+                evalBed = os.path.join(outDir,
+                                       os.path.splitext(base)[0] + "_eval.bed" +
+                                       repSuffix)
+                hmmEvalInputBed = testBed
+                if args.eval is not None:
+                    hmmEvalInputBed = args.eval
+                bicPath = os.path.join(outDir,
+                                       os.path.splitext(base)[0] + "_bic.txt" +
+                                       repSuffix)
+
+                command += " && teHmmEval.py %s %s %s --bed %s %s --bic %s" % (
+                    evalTrackPath,
+                    modPath + repSuffix,
+                    hmmEvalInputBed,
+                    evalBed,
+                    logOps,
+                    bicPath)
+                zin = True
+
+                if args.segment is True:
+                    command += " --segment"
+
+                # fit
+                compTruth = testBed
+                if args.truth is not None:
+                    compTruth = args.truth
+                compareInputBed = evalBed
+                if args.fit is True:
+                    fitBed = os.path.join(outDir,
+                                          os.path.splitext(base)[0] + "_eval_fit.bed" +
+                                          repSuffix)
+                    command += " && fitStateNames.py %s %s %s" % (compTruth,
+                                                                  evalBed,
+                                                                  fitBed)
+                    compareInputBed = fitBed
+
+                # compare
+                compPath = os.path.join(outDir,
+                                        os.path.splitext(base)[0] + "_comp.txt" +
+                                        repSuffix)
+                command += " && compareBedStates.py %s %s > %s" % (compTruth,
+                                                                   compareInputBed,
+                                                                   compPath)
             
-            if args.segment is True:
-                command += " --segment"
 
-            # fit
-            compTruth = testBed
-            if args.truth is not None:
-                compTruth = args.truth
-            compareInputBed = evalBed
-            if args.fit is True:
-                fitBed = os.path.join(outDir,
-                                      os.path.splitext(base)[0] + "_eval_fit.bed")
-                command += " && fitStateNames.py %s %s %s" % (compTruth,
-                                                              evalBed,
-                                                              fitBed)
-                compareInputBed = fitBed
-                                
-            # compare
-            compPath = os.path.join(outDir,
-                                    os.path.splitext(base)[0] + "_comp.txt")
-            command += " && compareBedStates.py %s %s > %s" % (compTruth,
-                                                               compareInputBed,
-                                                               compPath)
-
-
-            # make table row
-            rowPath = os.path.join(outDir,
-                                   os.path.splitext(base)[0] + "_row.txt")
-            if inBed in rows:
-                rows[inBed].append(rowPath)
-            else:
-                rows[inBed] = [rowPath]
-            command += " && scrapeBenchmarkRow.py %s %s %s %s %s" % (
-                args.trainingTracksInfo,
-                trainingTrackPath,
-                evalBed,
-                compPath,
-                rowPath)
+                # make table row
+                if repSuffix == "":
+                    rowPath = os.path.join(outDir,
+                                           os.path.splitext(base)[0] + "_row.txt")
+                    if inBed in rows:
+                        rows[inBed].append(rowPath)
+                    else:
+                        rows[inBed] = [rowPath]
+                    command += " && scrapeBenchmarkRow.py %s %s %s %s %s" % (
+                        args.trainingTracksInfo,
+                        trainingTrackPath,
+                        evalBed,
+                        compPath,
+                        rowPath)
 
             # remember command
             inCmdPath = os.path.join(outDir,
@@ -390,7 +410,6 @@ def main(argv=None):
             inCmdFile = open(inCmdPath, "w")
             inCmdFile.write(command + "\n")
             inCmdFile.close()
-
             commands.append(command)
             
     runParallelShellCommands(commands, args.numProc)

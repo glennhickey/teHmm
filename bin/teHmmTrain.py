@@ -162,7 +162,9 @@ def main(argv=None):
                         default=0.001)
     parser.add_argument("--saveAllReps", help="Save all replicates (--reps)"
                         " models to disk, instead of just the best one"
-                        ". Format is <outputModel>.repN",
+                        ". Format is <outputModel>.repN.  There will be "
+                        " --reps -1 such models saved as the best output"
+                        " counts as a replicate",
                         action="store_true", default=False)
 
     addLoggingOptions(parser)
@@ -279,12 +281,14 @@ def main(argv=None):
     saveModel(args.outputModel, model)
 
     # write all replicates
+    writtenCount = 0
     if args.saveAllReps is True:
         for i, repModel in enumerate(modelList):
             if i != bestModel[0]:
-                repPath = "%s.rep%d" % (args.outputModel, i)
+                repPath = "%s.rep%d" % (args.outputModel, writtenCount)
                 logger.info("saving replicate model to %s" % repPath)                
                 saveModel(repPath, repModel)
+                writtenCount += 1
 
     cleanBedTool(tempBedToolPath)
 
