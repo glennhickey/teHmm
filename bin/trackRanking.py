@@ -333,8 +333,11 @@ def extractF1ProbSlope(benchDir, benchInputBedPath, args):
 
     # scale down probs to ratios to correct for differences
     # between numbers of tracks (i hope)
-    maxProb = np.max(probs)
-    scaleProbs = [x / maxProb for x in probs]
+    minProb = np.min(probs)
+    scaleProbs = [x + minProb for x in probs]
+    maxProb = np.max(scaleProbs)
+    if maxProb > 0:
+        scaleProbs = [x / maxProb for x in scaleProbs]
 
     # fit to line (since prob is log, we probably want to transform, but for
     # these purposes, a postive slope should be a positive slope...
