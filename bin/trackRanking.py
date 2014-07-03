@@ -48,6 +48,11 @@ def main(argv=None):
     parser.add_argument("--segOpts", help="Options to pass to "
                         "segmentTracks.py (wrap in double quotes)",
                         default="--comp first --thresh 1 --cutUnscaled")
+    parser.add_argument("--fullSegment", help="Only use segmentation"
+                        " based on entire track list for each iteration"
+                        " rather than compute segmentation each time (as"
+                        " done by default)", action="store_true",
+                        default=False)
     parser.add_argument("--bic", help="rank by BIC instead of score "
                         " (both always present in output table though)",
                         action="store_true", default=False)
@@ -95,6 +100,23 @@ def greedyRank(args):
             
     numTracks = len(inputTrackList) - len(rankedTrackList)
     currentScore, currentBIC = 0.0, sys.maxint
+
+    # compute full segmentation if --fullSegment is True
+    if args.fullSegment is True:
+        args.fullSegTrainPath = os.path.abspath(os.path.join(args.outDir,
+                                                             "fullSegTrain.bed"))
+        segmentCmd = "segmentTracks.py %s %s %s %s" % (args.tracks,
+                                                       args.training,
+                                                       args.fullSegTrainPath,
+                                                       args.segOpts)
+        runShellCommand(segmentCmd)
+        args.fullSegEvalPath = os.path.abspath(os.path.join(args.outDir,
+                                                            "fullSegEval.bed"))
+        segmentCmd = "segmentTracks.py %s %s %s %s" % (args.tracks,
+                                                       args.truth,
+                                                       args.fullSegEvalPath,
+                                                       args.segOpts)
+        runShellCommand(segmentCmd)
 
     # baseline score if we not starting from scratch
     baseIt = 0
@@ -175,8 +197,11 @@ def runTrial(tracksList, iteration, newTrackName, args):
                                                    segTrainingPath,
                                                    args.segOpts)
 
-    runShellCommand(segmentCmd)
-    segLog.write(segmentCmd + "\n")
+    if args.fullSegment is False:
+        runShellCommand(segmentCmd)
+        segLog.write(segmentCmd + "\n")
+    else:
+        runShellCommand("ln -F -s %s %s" % (args.fullSegTrainPath, segTrainingPath))
 
     # segment eval
     segEvalPath = os.path.join(benchDir,
@@ -186,9 +211,11 @@ def runTrial(tracksList, iteration, newTrackName, args):
                                                    truthPath,
                                                    segEvalPath,
                                                    args.segOpts)
-    
-    runShellCommand(segmentCmd)
-    segLog.write(segmentCmd + "\n")
+    if args.fullSegment is False:
+        runShellCommand(segmentCmd)
+        segLog.write(segmentCmd + "\n")
+    else:
+        runShellCommand("ln -F -s %s %s" % (args.fullSegEvalPath, segEvalPath))
     
     segLog.close()
 
