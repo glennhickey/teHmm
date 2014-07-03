@@ -376,8 +376,9 @@ def extractNaive(tracksPath, benchDir, benchInputBedPath, args):
 
     runShellCommand("naiveTrackCombine.py %s %s %s" % (tracksPath, args.truth,
                                                         naiveEvalPath))
-    runShellCommand("fitStateNames.py %s %s %s" % (args.truth, naiveEvalPath,
-                                                   naiveFitPath))
+    runShellCommand("fitStateNames.py %s %s %s --qualThresh 0.01" % (args.truth,
+                                                                     naiveEvalPath,
+                                                                     naiveFitPath))
     runShellCommand("compareBedStates.py %s %s > %s" % (args.truth, naiveFitPath,
                                                         naiveCompPath))
     score = extractScore(benchDir,
