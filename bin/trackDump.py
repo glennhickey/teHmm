@@ -33,7 +33,7 @@ def main(argv=None):
         "Column j corresponds to the jth track in the XML file. --map option"
         " used to write internal integer format used by HMM.  Unobserved values"
         " written as \"None\" if default attribute not specified or track not"
-        " binary.")
+        " binary.  Rounding can occur if scaling parameters present")
 
     parser.add_argument("tracks", help="Path of Tracks Info file "
                         "containing paths to genome annotation tracks")
