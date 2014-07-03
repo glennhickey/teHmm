@@ -331,6 +331,8 @@ In general, running any executable with `--help` will print a brief description 
 * **numStatesRanking.py** : Iteratively call teHmmBenchmark with different numbers of (unsupervised) states, computing the BIC score and an accuracy score for each.  This information can be used to choose the best number of states.
 
 
+**Misc**
+* **trackDump.py** : Write an ASCII matrix of track data given an XML track listing and query BED. 
 
 
 
