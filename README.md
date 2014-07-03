@@ -32,11 +32,11 @@ The following software needs to be installed first.  They can usually be install
 
 teHmm can then be downloaded and installed as follows:
 
-     git clone git@github.com:glennhickey/teHmm.git
+     git clone https://github.com/glennhickey/teHmm.git
      cd teHmm
      ./setup.sh
 
-It some cases, a firewall or other network issue can prevent cloning via ssh.   The address above can be changed to https://github.com/glennhickey/teHmm.git to access GitHub via HTTPS instead.  
+It some cases, a firewall or other network issue can prevent cloning via https.   The address above can be changed to git@github.com:glennhickey/teHmm.git to access GitHub via ssh instead. 
 
 It's also a good idea to add teHmm to your PATH and PYTHON path.  If you cloned it in /home/tools, then you would run the following:
 
