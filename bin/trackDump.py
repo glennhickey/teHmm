@@ -33,7 +33,9 @@ def main(argv=None):
         "Column j corresponds to the jth track in the XML file. --map option"
         " used to write internal integer format used by HMM.  Unobserved values"
         " written as \"None\" if default attribute not specified or track not"
-        " binary.  Rounding can occur if scaling parameters present")
+        " binary.  Rounding can occur if scaling parameters present.\n\n"
+        "IMPORTANT: values stored in 8bit integers internally.  Any track with"
+        " more than 256 different values will get clamped (with a warning)")
 
     parser.add_argument("tracks", help="Path of Tracks Info file "
                         "containing paths to genome annotation tracks")
@@ -82,6 +84,7 @@ def main(argv=None):
 
     # dump the data to output
     dumpTrackData(trackData, outFile, args.map)
+    logger.warning("blinblin")
     outFile.close()
 
 

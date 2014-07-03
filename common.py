@@ -199,7 +199,7 @@ def addLoggingFileHandler(fileName, rotatingLogging=False):
     
 def setLogLevel(logLevel):
     logLevel = logLevel.upper()
-    assert logLevel in [ "OFF", "CRITICAL", "INFO", "DEBUG" ] #Log level must be one of these strings.
+    assert logLevel in [ "OFF", "CRITICAL", "WARNING", "INFO", "DEBUG" ] #Log level must be one of these strings.
     global logLevelString
     logLevelString = logLevel
     if logLevel == "OFF":
@@ -208,6 +208,8 @@ def setLogLevel(logLevel):
         logger.setLevel(logging.INFO)
     elif logLevel == "DEBUG":
         logger.setLevel(logging.DEBUG)
+    elif logLevel == "WARNING":
+        logger.setLevel(logging.WARNING)
     elif logLevel == "CRITICAL":
         logger.setLevel(logging.CRITICAL)
 
@@ -236,7 +238,7 @@ def addLoggingOptions(parser):
                      help="Turn on logging at INFO level. (default is CRITICAL)")
     parser.add_argument("--logDebug", action="store_true", default=False,
                      help="Turn on logging at DEBUG level. (default is CRITICAL)")
-    parser.add_argument("--logLevel", default='CRITICAL',
+    parser.add_argument("--logLevel", default='WARNING',
                       help="Log at level (may be either OFF/INFO/DEBUG/CRITICAL). default=CRITICAL")
     parser.add_argument("--logFile", help="File to log in")
     parser.add_argument("--rotatingLogging", action="store_true", default=False,
@@ -247,7 +249,7 @@ def setLoggingFromOptions(options):
     """
     #We can now set up the logging info.
     if options.logLevel is not None:
-        setLogLevel(options.logLevel) #Use log level, unless flags are set..   
+        setLogLevel(options.logLevel) #Use log level, unless flags are set..
     
     if options.logOff:
         setLogLevel("OFF")
