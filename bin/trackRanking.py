@@ -210,7 +210,7 @@ def runTrial(tracksList, iteration, newTrackName, args):
         runShellCommand(segmentCmd)
         segLog.write(segmentCmd + "\n")
     else:
-        runShellCommand("ln -F -s %s %s" % (args.fullSegTrainPath, segTrainingPath))
+        runShellCommand("ln -f -s %s %s" % (args.fullSegTrainPath, segTrainingPath))
 
     # segment eval
     segEvalPath = os.path.join(benchDir,
@@ -224,7 +224,7 @@ def runTrial(tracksList, iteration, newTrackName, args):
         runShellCommand(segmentCmd)
         segLog.write(segmentCmd + "\n")
     else:
-        runShellCommand("ln -F -s %s %s" % (args.fullSegEvalPath, segEvalPath))
+        runShellCommand("ln -f -s %s %s" % (args.fullSegEvalPath, segEvalPath))
     
     segLog.close()
 
