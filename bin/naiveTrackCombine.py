@@ -101,6 +101,7 @@ def main(argv=None):
         tempOutFile.close()
 
     runShellCommand("mv %s %s" % (tempOutPath, args.outBed))
+    runShellCommand("rm -f %s" % (tempRegionPath))
                 
     cleanBedTool(tempBedToolPath)
 
