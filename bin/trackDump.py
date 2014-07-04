@@ -100,6 +100,7 @@ def dumpTrackData(trackData, outFile, doMapping, doPosition):
         
     # scan column by column
     for trackTable in trackData.getTrackTableList():
+        segmentOffsets = trackTable.getSegmentOffsets()
         for pos in xrange(len(trackTable)):
             column = trackTable[pos]
             if doMapping is False:
@@ -110,8 +111,11 @@ def dumpTrackData(trackData, outFile, doMapping, doPosition):
                 column = mappedCol
             column = [str(x) for x in column]
             if doPosition is True:
+                currentPos = pos
+                if segmentOffsets != None:
+                    currentPos = segmentOffsets[pos]
                 outFile.write("%s,%d," % (trackTable.getChrom(),
-                              trackTable.getStart() + pos))
+                              trackTable.getStart() + currentPos))
             outFile.write(",".join(column))
             outFile.write("\n")
 
