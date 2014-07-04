@@ -55,6 +55,9 @@ def main(argv=None):
                         " generated with segmentTracks.py",
                         action="store_true",
                         default=False)
+    parser.add_argument("--noPos", help="Do not print genomic position"
+                        " (first 2 columnts)", action="store_true",
+                        default=False)
     
     addLoggingOptions(parser)
     args = parser.parse_args()
@@ -83,12 +86,12 @@ def main(argv=None):
                             segmentIntervals=segIntervals)
 
     # dump the data to output
-    dumpTrackData(trackData, outFile, args.map)
+    dumpTrackData(trackData, outFile, args.map, not args.noPos)
     logger.warning("blinblin")
     outFile.close()
 
 
-def dumpTrackData(trackData, outFile, doMapping):
+def dumpTrackData(trackData, outFile, doMapping, doPosition):
     """ do the dump"""
     
     # make a list to category maps for convenience
@@ -107,6 +110,9 @@ def dumpTrackData(trackData, outFile, doMapping):
                              xrange(len(column))]
                 column = mappedCol
             column = [str(x) for x in column]
+            if doPosition is True:
+                outFile.write("%s,%d," % trackTable.getChrom(),
+                              trackTable.getStart() + pos)
             outFile.write(",".join(column))
             outFile.write("\n")
 
