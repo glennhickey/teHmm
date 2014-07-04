@@ -87,7 +87,6 @@ def main(argv=None):
 
     # dump the data to output
     dumpTrackData(trackData, outFile, args.map, not args.noPos)
-    logger.warning("blinblin")
     outFile.close()
 
 
@@ -111,8 +110,8 @@ def dumpTrackData(trackData, outFile, doMapping, doPosition):
                 column = mappedCol
             column = [str(x) for x in column]
             if doPosition is True:
-                outFile.write("%s,%d," % trackTable.getChrom(),
-                              trackTable.getStart() + pos)
+                outFile.write("%s,%d," % (trackTable.getChrom(),
+                              trackTable.getStart() + pos))
             outFile.write(",".join(column))
             outFile.write("\n")
 
