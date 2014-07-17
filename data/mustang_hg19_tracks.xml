@@ -3,9 +3,9 @@
 <!--
 (RUNNING)
 <track name="ltr_finder"    path="/data/glenn.hickey/genomes/hg19/tracks/ltr_finder/hg19.ltr_finder.bed"/>
+LTR_HARVEST
 (TODO)
 RepeatModeller
-LTR_HARVEST
 Regulation track(s)?
 -->
 
