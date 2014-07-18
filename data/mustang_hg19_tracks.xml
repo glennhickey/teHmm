@@ -7,7 +7,7 @@ Regulation track(s)?
 -->
 
 <track name="repbase"       path="/data/glenn.hickey/genomes/hg19/tracks/repbase/hg19.repbase.bed"/>
-<track name="repeat_modeler" path="/data/glenn.hickey/genomes/hg19/tracks/repeatmodeler/hg19_repeatmodeler_lo38.bed"/>
+<track name="repeat_modeler" path="/data/glenn.hickey/genomes/hg19/tracks/repeatmodeler/hg19.repeatmodeler_lo38.bed"/>
 <track name="ltr_finder"    path="/data/glenn.hickey/genomes/hg19/tracks/ltr_finder/chr22.ltr_finder.bed"/>
 <track name="ltr_harvest"   path="/data/glenn.hickey/genomes/hg19/tracks/ltr_harvest/hg19.ltrharvest.bed"/>
 <track name="trf"           path="/data/glenn.hickey/genomes/hg19/tracks/trf/hg19.trf.bed" distribution="binary"/>

@@ -102,7 +102,8 @@ def readBedData(bedPath, chrom, start, end, **kwargs):
     if kwargs is not None and "outputBuf" in kwargs:
         outputBuf = kwargs["outputBuf"]
         npi = np.iinfo
-        if outputBuf.dtype == np.float:
+        if outputBuf.dtype == np.float or outputBuf.dtype == np.float32 \
+               or outputBuf.dtype == np.float16:
            npi = np.finfo
         maxVal = npi(outputBuf.dtype).max
         minVal = npi(outputBuf.dtype).min
