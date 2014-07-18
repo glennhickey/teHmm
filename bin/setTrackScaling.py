@@ -106,18 +106,20 @@ def readTrackIntoFloatArray(track, allIntervals):
     will be kept"""
     defaultVal = track.getDefaultVal()
     hasDefault = defaultVal != None
+    floatType = np.float32
     if not hasDefault:
-        defaultVal = np.finfo(float).max
+        defaultVal = np.finfo(floatType).max
     else:
         # sanity check : we assume that no one ever actually uses this value
-        defaultVal = float(defaultVal)
-        assert defaultVal != np.finfo(float).max
+        defaultVal = floatType(defaultVal)
+        assert defaultVal != np.finfo(floatType).max
+        assert not np.isinf(defaultVal)
     readBuffers = []
     totalLen = 0
     for interval in allIntervals:
         logger.debug("Allocating track array of size %d" % (
              interval[2] - interval[1]))
-        buf = defaultVal + np.zeros((interval[2] - interval[1]), dtype=np.float)
+        buf = defaultVal + np.zeros((interval[2] - interval[1]), dtype=floatType)
         buf = readTrackData(track.getPath(), interval[0], interval[1],
                             interval[2], outputBuf=buf,
                             valCol=track.getValCol(),
@@ -133,7 +135,7 @@ def readTrackIntoFloatArray(track, allIntervals):
         # strip out all the float_max values we put in there since there is
         # no default value for unannotated regions, and we just ignore them
         # (ie as original implementation)
-        stripData = np.ndarray((totalLen), dtype=np.float)
+        stripData = np.ndarray((totalLen), dtype=floatType)
         basesRead = 0
         for i in xrange(totalLen):
             if data[i] != defaultVal:
