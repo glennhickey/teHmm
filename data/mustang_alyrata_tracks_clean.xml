@@ -20,6 +20,6 @@
 	<track distribution="multinomial" name="fgenesh" path="/data/douglas.hoen/sharebrowser/tracks/alyrata/custom/fgh_relabelled.bed" valCol="3"/>
 	<track distribution="multinomial" name="gcpct" path="/data/glenn.hickey/genomes/alyrata/tracks/gc/gcPercentWin1000.bw" scale="0.1132" shift="0.0" valCol="3"/>
 	<track distribution="multinomial" name="repbase" path="/data/glenn.hickey/genomes/alyrata/tracks/clean4/scaffolds1to8_clean.bed" valCol="3"/>
-	<track distribution="multinomial" name="repeat_modeller" path="/data/glenn.hickey/genomes/alyrata/tracks/clean4/AL_renamed_scaffolds1to8.bed" valCol="3"/>
+	<track distribution="multinomial" name="repeat_modeler" path="/data/glenn.hickey/genomes/alyrata/tracks/clean4/AL_renamed_scaffolds1to8.bed" valCol="3"/>
 	<track distribution="multinomial" name="tsd" path="/data/glenn.hickey/genomes/alyrata/tracks/clean4/termini_tsd.bed" valCol="3"/>
 </teModelConfig>
