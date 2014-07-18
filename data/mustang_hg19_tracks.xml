@@ -1,16 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <currentTracks>
 <!--
-(RUNNING -- using only chr22 below for now)
-<track name="ltr_finder"    path="/data/glenn.hickey/genomes/hg19/tracks/ltr_finder/hg19.ltr_finder.bed"/>
+(RUNNING)  using only chr22 below for now)
 (TODO)
 Regulation track(s)?
 -->
 
-<track name="repbase"       path="/data/glenn.hickey/genomes/hg19/tracks/repbase/hg19.repeatmasker.repbase.bed"/>
+<track name="repbase"       path="/data/glenn.hickey/genomes/hg19/tracks/repbase/hg19.repbase.bed"/>
 <track name="repeat_modeler" path="/data/glenn.hickey/genomes/hg19/tracks/repeatmodeler/hg19_repeatmodeler_lo38.bed"/>
 <track name="ltr_finder"    path="/data/glenn.hickey/genomes/hg19/tracks/ltr_finder/chr22.ltr_finder.bed"/>
-<track name="ltr_harvest"   path="/data/glenn.hickey/genomes/hg19/tracks/ltr_harvest/hg19.ltr_harvest.bed"/>
+<track name="ltr_harvest"   path="/data/glenn.hickey/genomes/hg19/tracks/ltr_harvest/hg19.ltrharvest.bed"/>
 <track name="trf"           path="/data/glenn.hickey/genomes/hg19/tracks/trf/hg19.trf.bed" distribution="binary"/>
 <track name="gcpct"         path="/data/glenn.hickey/genomes/hg19/tracks/gcpct/hg19.gc5Base.bw" distribution="gaussian" default="0"/>
 <track name="mrna"          path="/data/glenn.hickey/genomes/hg19/tracks/mrna/hg19.mrna.bed" distribution="binary"/>
