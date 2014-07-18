@@ -77,6 +77,7 @@ def readBedData(bedPath, chrom, start, end, **kwargs):
     with outBuffer argument"""
     valCol = None
     sort = False
+    ignoreBed12 = True
     needIntersect = True
     if kwargs is not None and "valCol" in kwargs:
         valCol = int(kwargs["valCol"])
@@ -91,6 +92,8 @@ def readBedData(bedPath, chrom, start, end, **kwargs):
         updateMap = kwargs["updateValMap"]
     if kwargs is not None and "sort" in kwargs:
         sort = kwargs["sort"] == True
+    if kwargs is not None and "ignoreBed12" in kwargs:
+        ignoreBed12 = kwargs["ignoreBed12"] == True
     if kwargs is not None and "needIntersect" in kwargs:
         needIntersect = kwargs["needIntersect"]
     useDelta = False
@@ -124,6 +127,9 @@ def readBedData(bedPath, chrom, start, end, **kwargs):
     if sort is True:
         logger.debug("sortBed(%s)" % bedPath)
         bedTool = bedTool.sort()
+    if ignoreBed12 is False:
+        logger.debug("bed6(%s)" % bedPath)
+        bedTool = bedTool.bed6()
 
     # todo: check how efficient this is
     if needIntersect is True:
@@ -189,7 +195,7 @@ def readBedData(bedPath, chrom, start, end, **kwargs):
 
 def readBedIntervals(bedPath, ncol = 3, 
                      chrom = None, start = None, end = None,
-                     sort = False):
+                     sort = False, ignoreBed12 = True):
     """ Read bed intervals from a bed file (or a specifeid range therein).
     NOTE: intervals are sorted by their coordinates"""
     
@@ -202,6 +208,9 @@ def readBedIntervals(bedPath, ncol = 3,
     if sort is True:
         bedTool = bedTool.sort()
         logger.debug("sortBed(%s)" % bedPath)
+    if ignoreBed12 is False:
+        bedTool = bedTool.bed6()
+        logger.debug("bed6(%s)" % bedPath)
     if chrom is None:
         bedIntervals = bedTool
     else:
@@ -231,7 +240,7 @@ def readBedIntervals(bedPath, ncol = 3,
 
 ###########################################################################
 
-def getMergedBedIntervals(bedPath, ncol=3, sort = False):
+def getMergedBedIntervals(bedPath, ncol=3, sort = False, ignoreBed12 = True):
     """ Merge all contiguous and overlapping intervals""" 
 
     if not os.path.isfile(bedPath):
@@ -242,6 +251,9 @@ def getMergedBedIntervals(bedPath, ncol=3, sort = False):
     if sort is True:
         bedTool = bedTool.sort()
         logger.debug("sortBed(%s)" % bedPath)
+    if ignoreBed12 is False:
+        logger.debug("bed6(%s)" % bedPath)
+        bedTool = bedTool.bed6()
     for feat in bedTool.merge():
         outInterval = (feat.chrom, feat.start, feat.end)
         if ncol >= 4:

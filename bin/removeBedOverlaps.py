@@ -26,11 +26,17 @@ def main(argv=None):
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
         description="Filter overlapping intervals out")
     parser.add_argument("inputBed", help="Bed file to filter")
+    parser.add_argument("--bed12", help="Use bed12 exons instead of start/end"
+                        " if present (equivalent to running bed12ToBed6 on"
+                        " input first).", action="store_true", default=False)
     
     args = parser.parse_args()
     assert os.path.isfile(args.inputBed)
 
     bedIntervals = BedTool(args.inputBed).sort()
+    if args.bed12 is True:
+        bedIntervals = bedIntervals.bed6()
+        
     prevInterval = None
 
     # this code has been way to buggy for something so simple
