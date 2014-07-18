@@ -303,7 +303,8 @@ In general, running any executable with `--help` will print a brief description 
 * **fillTermini.py** : Add intervals to cover gaps between left and right termini pairs (ie as generated with cleanTermini.py)
 * **chopBedStates.py**: Slice up given intervals in BED according to their ID and some other parameters.
 * **addTrackHeader.py** : Set or modify track header of BED file in order to display on Genome Browser.
-* **filterPredictions.py** : Simple script to remove some obvious artifacts (ex orphaned ltr and tsds) or tiny predictions out of a BED file. 
+* **filterPredictions.py** : Simple script to remove some obvious artifacts (ex orphaned ltr and tsds) or tiny predictions out of a BED file.
+* **cleanGenes.py**: Convert a BED-12 format gene prediction into suitable input for HMM by explicitly splitting block intervals into introns and exons
 
 **Scaling, Binning and Segmentation**
 
