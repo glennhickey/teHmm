@@ -9,6 +9,7 @@ import argparse
 import re
 
 from pybedtools import BedTool, Interval
+from teHmm.common import myLog, EPSILON, initBedTool, cleanBedTool
 
 """
 Remove everything past the first occurence of | / ? _ in the name column
@@ -47,6 +48,7 @@ def main(argv=None):
     args = parser.parse_args()
     assert os.path.exists(args.inBed)
     assert args.minScore <= args.maxScore
+    tempBedToolPath = initBedTool()
 
     for interval in BedTool(args.inBed).sort():
         # filter score if exists
@@ -81,7 +83,7 @@ def main(argv=None):
                     interval.name = interval.name[:m.start()]
         
         sys.stdout.write(str(interval))
-
+    cleanBedTool(tempBedToolPath)
 
 # should be a prefix tree...
 def findPrefix(name, plist):

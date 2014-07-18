@@ -9,7 +9,7 @@ import argparse
 import copy
 
 from pybedtools import BedTool, Interval
-
+from teHmm.common import myLog, EPSILON, initBedTool, cleanBedTool
 
 """
 Filter out bed intervals that overlap other intervals.
@@ -32,6 +32,7 @@ def main(argv=None):
     
     args = parser.parse_args()
     assert os.path.isfile(args.inputBed)
+    tempBedToolPath = initBedTool()
 
     bedIntervals = BedTool(args.inputBed).sort()
     if args.bed12 is True:
@@ -58,6 +59,7 @@ def main(argv=None):
     for i in xrange(len(sanity) - 1):
         if sanity[i].chrom == sanity[i+1].chrom:
             assert sanity[i+1].start >= sanity[i].end
-    
+    cleanBedTool(tempBedToolPath)
+
 if __name__ == "__main__":
     sys.exit(main())
