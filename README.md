@@ -72,6 +72,8 @@ operation is performed before scaling.  Note, since deltas can be negative this 
 * *shift*. Add constant to track data value, and is applied before scaling. Useful in conjunction with *logScale* to process values less than or equal to 0.
 * *default*. Default value for regions of genome that are not annotated by track (only applies to *multinomial* distribution).  If not specified, unannotated bases are assigned a special NULL symbol.  For numeric tracks, such as those specified in BigWig format, it will probably most often make sense to set default="0.0" (Warning: if default=0 is used in conjunction with logScale, shift must be set to at least 1)
 
+*Note on BED-12 format* By default, only the start and end coordinate (2nd and 3rd BED) column are used.  This may not be desired behaviour for files in BED-12 format, such as gene annotations with the exons in blocks (columns 10-12).   In this case, please see the `cleanGenes.py` script as a potential preprocessing step to convert a gene annotation into a flattened BED file more suitable for the HMM.
+
 Testing
 -
 
