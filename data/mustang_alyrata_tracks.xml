@@ -22,4 +22,5 @@
 <track name="gcpct"         path="/data/glenn.hickey/genomes/alyrata/tracks/gc/gcPercentWin1000.bw"/>
 <track name="repbase"       path="/data/douglas.hoen/piatea/repeat_masker/alyrata/repbase/scaffolds1to8.bed"/>
 <track name="repeat_modeler"       path="/data/douglas.hoen/piatea/tools/repeatmodeler/alyrata/AL_renamed_scaffolds1to8.bb"/>
+<track name="p_clouds"      path="/data/douglas.hoen/piatea/tools/pclouds/alyrata/c200/alyrata.bed distribution="binary"/>
 </currentTracks>
