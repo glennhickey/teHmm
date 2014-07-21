@@ -277,13 +277,13 @@ def _fastUpdateCounts32(itype_t nObs, itype_t nTracks, itype_t nStates,
         
     with nogil:
         for pos in xrange(start, end):
-            # convert to position within track table
-            tablePos = pos - tableStart
+            # note that pos must be in table-relative coordinates
+            # (ie as from getOverlapinTableCoords())
             val = 1.0
             if hasRatio == 1:
                 val = segRatios[pos]
             for track in xrange(nTracks):
-                obsStats[track, symbol, obs[tablePos, track]] += val
+                obsStats[track, symbol, obs[pos, track]] += val
 
 @cython.boundscheck(False)
 def _fastUpdateCountsU16(itype_t nObs, itype_t nTracks, itype_t nStates,
@@ -300,14 +300,13 @@ def _fastUpdateCountsU16(itype_t nObs, itype_t nTracks, itype_t nStates,
         
     with nogil:
         for pos in xrange(start, end):
-            # convert to position within track table
-            tablePos = pos - tableStart
+            # note that pos must be in table-relative coordinates
+            # (ie as from getOverlapinTableCoords())
             val = 1.0
             if hasRatio == 1:
                 val = segRatios[pos]
             for track in xrange(nTracks):
-                obsStats[track, symbol, obs[tablePos, track]] += val
-            obsStats[track, symbol, obs[tablePos, track]] += val
+                obsStats[track, symbol, obs[pos, track]] += val
 
 @cython.boundscheck(False)
 def _fastUpdateCountsU8(itype_t nObs, itype_t nTracks, itype_t nStates,
@@ -324,10 +323,10 @@ def _fastUpdateCountsU8(itype_t nObs, itype_t nTracks, itype_t nStates,
         
     with nogil:
         for pos in xrange(start, end):
-            # convert to position within track table
-            tablePos = pos - tableStart
+            # note that pos must be in table-relative coordinates
+            # (ie as from getOverlapinTableCoords())
             val = 1.0
             if hasRatio == 1:
                 val = segRatios[pos]
             for track in xrange(nTracks):
-                obsStats[track, symbol, obs[tablePos, track]] += val
+                obsStats[track, symbol, obs[pos, track]] += val

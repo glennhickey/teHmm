@@ -342,16 +342,42 @@ class TrackTable(object):
         """ Write a row of data """
         raise RuntimeError("Not implemented")
 
-    def getOverlap(self, bedInterval):
+    def getOverlapInTableCoords(self, bedInterval):
         """ Compute overlap with a bed coordinate. return None if do not
-        intersect"""
+        intersect. Note that output coordinates are relative to the table,
+        accounting for segmentation if present, and not genome coordinates.
+        The input is a regular bed region in genome coordinates....
+        """
         assert len(bedInterval) > 2
         overlap = None
         chrom, start, end = bedInterval[0], bedInterval[1], bedInterval[2]
         if self.chrom == chrom and self.start < end and self.end > start:
-            overlap = self.chrom, max(self.start, start), min(self.end, end)
+            overlap = [self.chrom, max(self.start, start), min(self.end, end)]
             for i in xrange(3, len(bedInterval)):
-                overlap += (bedInterval[i],)
+                overlap.append(bedInterval[i])
+
+            # do segment correction if necessary
+            if self.segOffsets is not None:
+                genStart = overlap[1]
+                genEnd = overlap[2]
+                overlap[1] = None
+                overlap[2] = None
+                for i, so in enumerate(self.segOffsets):
+                    if overlap[1] is None and\
+                      genStart <= so + self.start:
+                      overlap[1] = i
+                    if overlap[1] is not None and\
+                      (genEnd >= so + self.start or
+                       i == len(self.segOffsets) - 1):
+                        overlap[2] = i + 1
+                    else:
+                        assert overlap[1] is not None and overla[2] is not None
+                        break                      
+            else:
+                # map to table coordintes
+                overlap[1] -= self.start
+                overlap[2] -= self.start
+            
         return overlap
 
     def getChrom(self):

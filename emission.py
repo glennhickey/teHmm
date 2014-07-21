@@ -306,7 +306,7 @@ class IndependentMultinomialEmissionModel(object):
             hit = False
             for tableIdx in xrange(lastHit, numTables):
                 table = trackTableList[tableIdx]
-                overlap = table.getOverlap(interval)
+                overlap = table.getOverlapInTableCoords(interval)
                 if overlap is not None:
                     lastHit = tableIdx
                     hit = True
@@ -327,9 +327,9 @@ class IndependentMultinomialEmissionModel(object):
         """ Update the emission counts in obsStats using statistics from the
         known hidden states in bedInterval"""
         for pos in xrange(bedInterval[1], bedInterval[2]):
-            # convert to position within track table
-            tablePos = pos - trackTable.getStart()
-            emissions = trackTable[tablePos]
+            # note that pos must be in table-relative coordinates
+            # (ie as from getOverlapinTableCoords())
+            emissions = trackTable[pos]
             state = bedInterval[3]
             val = 1.
             if segRatios is not None:
