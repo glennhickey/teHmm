@@ -19,7 +19,7 @@
 <track name="hollister"     path="/data/douglas.hoen/sharebrowser/tracks/alyrata/bed/te_hollister_2011.bed"/>
 <track name="sequence" path="/data/douglas.hoen/data/genomes/a_lyrata/unmasked_renamed/scaffolds1-8.trf_softmasked.fas"/>
 <track name="fgenesh"       path="/data/douglas.hoen/sharebrowser/tracks/alyrata/custom/fgh_relabelled.bed"/>  
-<track name="gcpct"         path="/data/glenn.hickey/genomes/alyrata/tracks/gc/gcPercentWin1000.bw"/>
+<track name="gcpct"         path="/data/glenn.hickey/genomes/alyrata/tracks/gc/gcPercentWin1000.bw" distribution="gaussian"/>
 <track name="repbase"       path="/data/douglas.hoen/piatea/repeat_masker/alyrata/repbase/scaffolds1to8.bed"/>
 <track name="repeat_modeler"       path="/data/douglas.hoen/piatea/tools/repeatmodeler/alyrata/AL_renamed_scaffolds1to8.bb"/>
 <track name="p_clouds"      path="/data/douglas.hoen/piatea/tools/pclouds/alyrata/c200/alyrata.bed" distribution="binary"/>
