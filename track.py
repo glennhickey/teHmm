@@ -370,9 +370,9 @@ class TrackTable(object):
                       (genEnd >= so + self.start or
                        i == len(self.segOffsets) - 1):
                         overlap[2] = i + 1
-                    else:
-                        assert overlap[1] is not None and overla[2] is not None
-                        break                      
+                    if genEnd < so + self.start:
+                        break
+                assert overlap[1] is not None and overlap[2] is not None
             else:
                 # map to table coordintes
                 overlap[1] -= self.start
