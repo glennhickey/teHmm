@@ -12,7 +12,7 @@ import numpy as np
 import math
 import copy
 
-from teHmm.track import TrackData
+from teHmm.track import TrackData, CategoryMap
 from teHmm.hmm import MultitrackHmm
 from teHmm.cfg import MultitrackCfg
 from teHmm.trackIO import getMergedBedIntervals, readBedIntervals
@@ -66,6 +66,16 @@ def main(argv=None):
                         "file.", default=None)
     parser.add_argument("--bic", help="save Bayesian Information Criterion (BIC) score"
                         " in given file", default=None)
+    parser.add_argument("--ed", help="Output BED file for emission distribution. Must"
+                        " be used in conjunction with --edStates (View on the "
+                        "browser via bedGraphToBigWig)", default=None)
+    parser.add_argument("--edStates", help="comma-separated list of state names to use"
+                        " for computing emission distribution.  For example: "
+                        " --edStates inside,LTR_left for each obsercation the probability "
+                        " that inside emitted that observaiton plus the probabillity that"
+                        " LTR_left emitted it. If more than one state is selected, this "
+                        " is not a distribution, but a sum of distributions (and values"
+                        " can exceed 1).  Mostly for debugging purposes.", default=None)
     addLoggingOptions(parser)
     args = parser.parse_args()
     setLoggingFromOptions(args)
@@ -77,6 +87,12 @@ def main(argv=None):
                            "this time")
     if (args.pd is not None) ^ (args.pdStates is not None):
         raise RuntimeError("--pd requires --pdStates and vice versa")
+    if (args.ed is not None) ^ (args.edStates is not None):
+        raise RuntimeError("--ed requires --edStates and vice versa")
+    if args.bed is None and (args.pd is not None or args.ed is not None):
+        raise RuntimeError("Both --ed and --pd only usable in conjunction with"
+                           " --bed")
+
         
     # load model created with teHmmTrain.py
     logger.info("loading model %s" % args.inputModel)
@@ -137,8 +153,17 @@ def main(argv=None):
     if args.pd is not None:
         posteriors = model.posteriorDistribution(trackData)
         posteriorsFile = open(args.pd, "w")
-        posteriorsMask = getPosteriorsMask(args, model)
+        posteriorsMask = getPosteriorsMask(args.pdStates, model)
         assert len(posteriors[0][0]) == len(posteriorsMask)
+    emProbs = [None] * trackData.getNumTrackTables()
+    emissionsFile = None
+    emissionsMask = None
+    if args.ed is not None:
+        emProbs = model.emissionDistribution(trackData)
+        emissionsFile = open(args.ed, "w")
+        emissionsMask = getPosteriorsMask(args.edStates, model)
+        assert len(emProbs[0][0]) == len(emissionsMask)
+
     
     decodeFunction = model.viterbi
     if args.maxPost is True:
@@ -155,7 +180,7 @@ def main(argv=None):
             statesToBed(trackTable.getChrom(), trackTable.getStart(),
                         trackTable.getEnd(), trackTable.getSegmentOffsets(),
                         vitStates, vitOutFile, posteriors[i], posteriorsMask,
-                        posteriorsFile)
+                        posteriorsFile, emProbs[i], emissionsMask, emissionsFile)
             totalDatapoints += len(trackTable) * trackTable.getNumTracks()
 
     print "Viterbi (log) score: %f" % totalScore
@@ -165,6 +190,8 @@ def main(argv=None):
         vitOutFile.close()
     if posteriorsFile is not None:
         posteriorsFile.close()
+    if emissionsFile is not None:
+        emissionsFile.close()
 
     if args.bic is not None:
         bicFile = open(args.bic, "w")
@@ -184,7 +211,8 @@ def main(argv=None):
     cleanBedTool(tempBedToolPath)
 
 def statesToBed(chrom, start, end, segmentOffsets, states, bedFile,
-                posteriors, posteriorsMask, posteriorsFile):
+                posteriors, posteriorsMask, posteriorsFile,
+                emProbs, emissionsMask, emissionsFile):
     """write a sequence of states out in bed format where intervals are
     maximum runs of contiguous states."""
     if segmentOffsets is None:
@@ -198,7 +226,7 @@ def statesToBed(chrom, start, end, segmentOffsets, states, bedFile,
             intLen = end - start
     prevInterval = (chrom, start, start + intLen, states[0])
     prevPostInterval = prevInterval
-    
+
     for i in xrange(1, len(states) + 1):
         if i < len(states):
             state = states[i]
@@ -225,6 +253,11 @@ def statesToBed(chrom, start, end, segmentOffsets, states, bedFile,
             posteriorsFile.write("%s\t%d\t%d\t%f\n" % (prevPostInterval[0],
                                  prevPostInterval[1], prevPostInterval[2],
                                  np.sum(posteriors[i-1] * posteriorsMask)))
+        if emProbs is not None:
+            emissionsFile.write("%s\t%d\t%d\t%f\n" % (prevPostInterval[0],
+                                 prevPostInterval[1], prevPostInterval[2],
+                                 np.sum(emProbs[i-1] * emissionsMask)))
+        if emProbs is not None or posteriors is not None:
             prevPostInterval = (prevPostInterval[0], prevPostInterval[2],
                             prevPostInterval[2] + intLen, state)
 
@@ -245,14 +278,19 @@ def slicedIntervals(bedIntervals, chunkSize):
                 assert sInt[2] > sInt[1]
                 yield tuple(sInt)
 
-def getPosteriorsMask(args, hmm):
+def getPosteriorsMask(pdStates, hmm):
     """ returns array mask where mask[i] == 1 iff state i is part of our desired
     posterior distribution"""
     stateMap = hmm.getStateNameMap()
+    if stateMap is None:
+        stateMap = CategoryMap(reserved = 0)
+        for i in xrange(hmm.getEmissionModel().getNumStates()):
+            stateMap.update(str(i))
     mask = np.zeros((len(stateMap)), dtype=np.int8)
-    for state in args.pdStates.split(","):
+    for state in pdStates.split(","):
         if not stateMap.has(state):
-            logger.warning("Posterior Distribution state %s not found in model" % state)
+            logger.warning("Posterior (or Emission) Distribution state %s"
+                           " not found in model" % state)
         else:
             stateNumber = stateMap.getMap(state)
             mask[stateNumber] = 1
