@@ -238,6 +238,20 @@ class MultitrackHmm(BaseHMM):
             output.append(posteriors)
         return output
 
+    def emissionDistribution(self, trackData):
+        """ Return the emission probability (array of probabilities, 1 for each state)
+        distribution for the observations.  In general the posterior distribution
+        (see above) is more meaningful, this method is mostly for debugging.."""
+        output = []
+        logger.debug("Beginning hmm emission distribution computation")
+        for trackTable in trackData.getTrackTableList():
+            # note : there's a good chance these were already computed
+            # and thrown away by, say, a preivous call to viterbi, but
+            # not worth breaking modularity to reuse for this debug function...
+            output.append(np.exp(self._compute_log_likelihood(trackTable)))
+        logger.debug("Dome hmm emission distribution computation")
+        return output
+
     def __str__(self):
         states = [x for x in xrange(self.n_components)]
         if self.stateNameMap is not None:
