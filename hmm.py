@@ -212,7 +212,7 @@ class MultitrackHmm(BaseHMM):
 
         return output
 
-    def posteriorDecode(self, trackData):
+    def posteriorDecode(self, trackData, numThreads = 1):
         """ Return the output of the maximum posterior probabilitiy decoding
         data: a tuple of (log likelihood of best path, and the path itself)
         (one data point of each interval of track data)
