@@ -248,7 +248,7 @@ class MultitrackHmm(BaseHMM):
             # note : there's a good chance these were already computed
             # and thrown away by, say, a preivous call to viterbi, but
             # not worth breaking modularity to reuse for this debug function...
-            output.append(np.exp(self._compute_log_likelihood(trackTable)))
+            output.append(self._compute_log_likelihood(trackTable))
         logger.debug("Dome hmm emission distribution computation")
         return output
 

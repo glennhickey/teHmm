@@ -75,7 +75,8 @@ def main(argv=None):
                         " that inside emitted that observaiton plus the probabillity that"
                         " LTR_left emitted it. If more than one state is selected, this "
                         " is not a distribution, but a sum of distributions (and values"
-                        " can exceed 1).  Mostly for debugging purposes.", default=None)
+                        " can exceed 1).  Mostly for debugging purposes. Note output in LOG",
+                         default=None)
     addLoggingOptions(parser)
     args = parser.parse_args()
     setLoggingFromOptions(args)
@@ -256,7 +257,7 @@ def statesToBed(chrom, start, end, segmentOffsets, states, bedFile,
         if emProbs is not None:
             emissionsFile.write("%s\t%d\t%d\t%f\n" % (prevPostInterval[0],
                                  prevPostInterval[1], prevPostInterval[2],
-                                 np.sum(emProbs[i-1] * emissionsMask)))
+                                 np.log(np.sum(np.exp(emProbs[i-1]) * emissionsMask))))
         if emProbs is not None or posteriors is not None:
             prevPostInterval = (prevPostInterval[0], prevPostInterval[2],
                             prevPostInterval[2] + intLen, state)
