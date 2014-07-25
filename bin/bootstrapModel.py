@@ -112,7 +112,7 @@ def writeTransitions(hmm, stateMap, args):
     if args.numTotal > count:
         numAdd = args.numTotal - count
     for i in xrange(numAdd):
-        name = "unlabled%d" % i
+        name = "Unlabeled%d" % i
         if stateMap.has(name) is True:
             S = string.ascii_uppercase + string.digits
             tag = ''.join(random.choice(S) for x in range(5))
