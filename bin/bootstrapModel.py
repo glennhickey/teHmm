@@ -137,31 +137,33 @@ def writeEmissions(hmm, stateMap, args):
 
     for stateNo in xrange(numStates):
         stateName = stateMap.getMapBack(stateNo)
+        if stateName in args.ignore:
+            continue
         for track in trackList:
             trackName = track.getName()
             trackNo = track.getNumber()
-            # GAUSSIAN : TRACK STATE MEAN STDEV
+            # GAUSSIAN : STATE TRACK MEAN STDEV
             if track.getDist() == "gaussian":
                 mean, stdev = em.getGaussianParams(trackNo, stateNo)
-                efile.write("%s\t%s\t%e\t%e\n" % (trackName, stateName,
+                efile.write("%s\t%s\t%e\t%e\n" % (stateName, trackName,
                                                   mean, stdev))
 
-            # BINARY : TRACK STATE 1 Pr[not None]
+            # BINARY : STATE TRACK 1 Pr[not None]
             elif track.getDist() == "binary":
-                efile.write("%s\t%s\t%s\t%e\n" % (trackName, stateName,"0",
+                efile.write("%s\t%s\t%s\t%e\n" % (stateName, trackName,"0",
                                                   emProbs[trackNo][stateNo][1]))
-                efile.write("%s\t%s\t%s\t%e\n" % (trackName, stateName,"1",
+                efile.write("%s\t%s\t%s\t%e\n" % (stateName, trackName,"1",
                                                   emProbs[trackNo][stateNo][2]))
 
-            # ANYTHING ELSE : TRACK STATE SYMBOL PR[SYMBOL]
+            # ANYTHING ELSE : STATE TRACK SYMBOL PR[SYMBOL]
             else:
                 catMap = track.getValueMap()
                 if catMap.getReserved() == 2:
-                    efile.write("%s\t%s\t%s\t%e\n" % (trackName, stateName,
+                    efile.write("%s\t%s\t%s\t%e\n" % (stateName, trackName,
                                                       "None",
                                                       emProbs[trackNo][stateNo][1]))
                 for symbolName, symbolId in catMap.catMap.items():
-                    efile.write("%s\t%s\t%s\t%e\n" % (trackName, stateName,
+                    efile.write("%s\t%s\t%s\t%e\n" % (stateName, trackName,
                                                       symbolName,
                                                       emProbs[trackNo][stateNo][symbolId]))
                                                   
