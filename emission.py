@@ -302,14 +302,16 @@ class IndependentMultinomialEmissionModel(object):
         obsStats = self.initStats()
         
         lastHit = 0
+        lastOverlapStart = None
         for interval in bedIntervals:
             hit = False
             for tableIdx in xrange(lastHit, numTables):
                 table = trackTableList[tableIdx]
-                overlap = table.getOverlapInTableCoords(interval)
+                overlap = table.getOverlapInTableCoords(interval, lastOverlapStart)
                 if overlap is not None:
                     lastHit = tableIdx
                     hit = True
+                    lastOverlapStart = overlap[1]
                     segRatios = self.getSegmentRatios(table)
                     if canFast(table) is True:
                         fastUpdateCounts(overlap, table, obsStats, segRatios)

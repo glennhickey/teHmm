@@ -342,7 +342,7 @@ class TrackTable(object):
         """ Write a row of data """
         raise RuntimeError("Not implemented")
 
-    def getOverlapInTableCoords(self, bedInterval):
+    def getOverlapInTableCoords(self, bedInterval, startHint = None):
         """ Compute overlap with a bed coordinate. return None if do not
         intersect. Note that output coordinates are relative to the table,
         accounting for segmentation if present, and not genome coordinates.
@@ -356,21 +356,26 @@ class TrackTable(object):
             for i in xrange(3, len(bedInterval)):
                 overlap.append(bedInterval[i])
 
-            # do segment correction if necessary
             if self.segOffsets is not None:
                 genStart = overlap[1]
                 genEnd = overlap[2]
                 overlap[1] = None
                 overlap[2] = None
-                for i, so in enumerate(self.segOffsets):
+                if startHint is None:
+                    firstLook = 0
+                elif genStart >= self.start + self.segOffsets[startHint]:
+                    firstLook = startHint
+                for j, so in enumerate(self.segOffsets[firstLook:]):
+                    i = j + firstLook
                     if overlap[1] is None and\
-                      genStart <= so + self.start:
-                      overlap[1] = i
+                       genStart >= self.start + so and\
+                       genStart < self.start + so + self.getSegmentLength(i):
+                        overlap[1] = i
                     if overlap[1] is not None and\
-                      (genEnd >= so + self.start or
-                       i == len(self.segOffsets) - 1):
+                       genEnd > self.start + so and\
+                       genEnd <= self.start + so + self.getSegmentLength(i):
                         overlap[2] = i + 1
-                    if genEnd < so + self.start:
+                    if overlap[1] is not None and overlap[2] is not None:
                         break
                 assert overlap[1] is not None and overlap[2] is not None
             else:
