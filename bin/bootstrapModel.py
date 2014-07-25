@@ -148,6 +148,8 @@ def writeEmissions(hmm, stateMap, args):
 
             # BINARY : TRACK STATE 1 Pr[not None]
             elif track.getDist() == "binary":
+                efile.write("%s\t%s\t%s\t%e\n" % (trackName, stateName,"0",
+                                                  emProbs[trackNo][stateNo][1]))
                 efile.write("%s\t%s\t%s\t%e\n" % (trackName, stateName,"1",
                                                   emProbs[trackNo][stateNo][2]))
 
