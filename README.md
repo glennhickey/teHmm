@@ -196,6 +196,8 @@ Where 2.5 is the mean of the distribution and 1.1 is the standard deviation.
 
 Constructing intitial transition and emission distributions by hand, as in the example above, is tedious and error-prone and, from my experience, not likely to result in a model that it inutitively meaningful after training.   An alternative is to use one or more *initial annotation tracks as guides*.   To this end, the `createStartingModel.py` script is provided.   It takes as input a track (chaux, for example), and can automatically generate some simple initial distributions (`createStartingModel.py --help` for more info).
 
+A similar script, `bootstrapModel`, is provided to generate starting distributions from an existing model.  For instance, a model can be created from a gold standard using supervised learning.  It's parameters, or a subset thereof, can be extracted using `bootstrapModel` to use as a baselines for a second round of unsupervised training. 
+
 ### Constructing a Gold Standard for Supervised Training
 
 The Gold Standard BED file for supervised training must satisfy the following constraints:
@@ -288,6 +290,7 @@ In general, running any executable with `--help` will print a brief description 
 * **teHmmEval.py** : Predict most likely sequence of states of input data given a model
 * **teHmmView.py**: Print all parameters of a given model.  Options to generate some figures. 
 * **createStartingModel.py** :  Given an input track and a prior confidence value, create transition and probability matrix files (which can be tuned by hand) to pass to teHmmTrain.py
+* **bootstrapModel.py** : Create transition and probability matrix files (like above) from an existing model.  Facilliates use of multiple rounds of training (say supervised then unsupervised).
 
 **Track Name Munging**
 

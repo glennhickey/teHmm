@@ -568,6 +568,9 @@ class CategoryMap(object):
     def getMissingVal(self):
         return self.missingVal
 
+    def getReserved(self):
+        return self.reserved
+
     def __len__(self):
         return len(self.catMap) + max(0, self.reserved - 1)
 
