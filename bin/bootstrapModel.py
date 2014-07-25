@@ -95,12 +95,12 @@ def writeTransitions(hmm, stateMap, args):
     count = 0
     
     for fromStateNo in xrange(numStates):
-        fromName = stateMap.getMap(str(fromStateNo))
+        fromName = stateMap.getMapBack(fromStateNo)
         assert fromName is not None
         if fromName not in args.ignore:
             count += 1
             for toStateNo in xrange(numStates):
-                toName = stateMap.getMap(str(toStateNo))
+                toName = stateMap.getMapBack(toStateNo)
                 assert toName is not None
                 if toName not in args.ignore:
                     tfile.write("%s\t%s\t%e\n" % (fromName, toName,
@@ -113,11 +113,11 @@ def writeTransitions(hmm, stateMap, args):
         numAdd = args.numTotal - count
     for i in xrange(numAdd):
         name = "unlabled%d" % i
-        if name in stateMap:
+        if stateMap.has(name) is True:
             S = string.ascii_uppercase + string.digits
             tag = ''.join(random.choice(S) for x in range(5))
             name += "_%s" % tag
-        assert name not in stateMap
+        assert stateMap.has(name) is False
         tfile.write("%s\t%s\t%e\n" % (name, name, args.stp))
 
     tfile.close()
@@ -136,13 +136,13 @@ def writeEmissions(hmm, stateMap, args):
     assert len(trackList) == len(emProbs)
 
     for stateNo in xrange(numStates):
-        stateName = stateMap.getMap(str(stateNo))
+        stateName = stateMap.getMapBack(stateNo)
         for track in trackList:
             trackName = track.getName()
             trackNo = track.getNumber()
             # GAUSSIAN : TRACK STATE MEAN STDEV
             if track.getDist() == "gaussian":
-                mean, stdev = em.getGetGaussianParams(trackNo, stateNo)
+                mean, stdev = em.getGaussianParams(trackNo, stateNo)
                 efile.write("%s\t%s\t%e\t%e\n" % (trackName, stateName,
                                                   mean, stdev))
 
