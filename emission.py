@@ -384,12 +384,14 @@ class IndependentMultinomialEmissionModel(object):
                     else:
                         curTotal += probs[track, state, symbol]
                     if tgtTotal < 0.:
+                        delta = 0. - tgtTotal
                         symbolMap = trackList.getTrackByNumber(
                             track).getValueMap()
                         raise RuntimeError("User defined prob from state %s"
-                                           " for track %s exceeds 1" %
+                                           " for track %s exceeds 1 by %e" %
                                            (stateMap.getMapBack(state),
-                                            symbolMap.getMapBack(symbol)))
+                                            trackList.getTrackByNumber(
+                                            track).getName(), delta))
 
                 # special case:
                 # we have set probabilities that total < 1 and no remaining
@@ -403,12 +405,13 @@ class IndependentMultinomialEmissionModel(object):
                     if numUnmasked == 0:
                         raise RuntimeError("User defined emission prob for"
                                            " state %s track %s total less"
-                                           " than 1 and there are no remaining "
+                                           " than 1 (%f)and there are no remaining "
                                            "symbols to assign leftover "
                                            "probability to" %
                                            (stateMap.getMapBack(state),
                                             trackList.getTrackByNumber(
-                                                track).getName()))
+                                                track).getName(),
+                                            tgtTotal))
                     addAmt = (1. - tgtTotal) / float(numUnmasked)
                 else:
                     assert curTotal > 0.

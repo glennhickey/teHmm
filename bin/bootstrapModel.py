@@ -52,6 +52,10 @@ def main(argv=None):
                         " none added", default=0, type=int)
     parser.add_argument("--stp", help="Self-transition probality assigned to"
                         " added states.", default=0.9, type=float)
+    parser.add_argument("--allTrans", help="By default only self-transitions"
+                        " are written.  Use this option to write entire "
+                        "transition matrix (excluding ignroed states)",
+                        default=False, action="store_true")
                         
     addLoggingOptions(parser)
     args = parser.parse_args()
@@ -102,7 +106,8 @@ def writeTransitions(hmm, stateMap, args):
             for toStateNo in xrange(numStates):
                 toName = stateMap.getMapBack(toStateNo)
                 assert toName is not None
-                if toName not in args.ignore:
+                if toName not in args.ignore and (args.allTrans is True or
+                                                  fromStateNo == toStateNo):
                     tfile.write("%s\t%s\t%e\n" % (fromName, toName,
                                                    tranProbs[fromStateNo,
                                                              toStateNo]))
@@ -134,6 +139,12 @@ def writeEmissions(hmm, stateMap, args):
     numStates = len(emProbs[0])
     assert len(stateMap) == numStates
     assert len(trackList) == len(emProbs)
+    
+    # for teHmmTrain, it's best not to have any probabilities sum
+    # to > 1 due to rounding errors from converting to strings
+    def rd(f, d=12):
+        x = np.power(12., d-1.)
+        return np.floor(x * f) / float(x)
 
     for stateNo in xrange(numStates):
         stateName = stateMap.getMapBack(stateNo)
@@ -145,27 +156,21 @@ def writeEmissions(hmm, stateMap, args):
             # GAUSSIAN : STATE TRACK MEAN STDEV
             if track.getDist() == "gaussian":
                 mean, stdev = em.getGaussianParams(trackNo, stateNo)
-                efile.write("%s\t%s\t%e\t%e\n" % (stateName, trackName,
+                efile.write("%s\t%s\t%.12e\t%.12e\n" % (stateName, trackName,
                                                   mean, stdev))
 
             # BINARY : STATE TRACK 1 Pr[not None]
             elif track.getDist() == "binary":
-                efile.write("%s\t%s\t%s\t%e\n" % (stateName, trackName,"0",
-                                                  emProbs[trackNo][stateNo][1]))
-                efile.write("%s\t%s\t%s\t%e\n" % (stateName, trackName,"1",
-                                                  emProbs[trackNo][stateNo][2]))
+                efile.write("%s\t%s\t%s\t%.12e\n" % (stateName, trackName,"1",
+                                                  rd(emProbs[trackNo][stateNo][2])))
 
             # ANYTHING ELSE : STATE TRACK SYMBOL PR[SYMBOL]
             else:
                 catMap = track.getValueMap()
-                if catMap.getReserved() == 2:
-                    efile.write("%s\t%s\t%s\t%e\n" % (stateName, trackName,
-                                                      "None",
-                                                      emProbs[trackNo][stateNo][1]))
                 for symbolName, symbolId in catMap.catMap.items():
-                    efile.write("%s\t%s\t%s\t%e\n" % (stateName, trackName,
+                    efile.write("%s\t%s\t%s\t%.12e\n" % (stateName, trackName,
                                                       symbolName,
-                                                      emProbs[trackNo][stateNo][symbolId]))
+                                                      rd(emProbs[trackNo][stateNo][symbolId])))
                                                   
     efile.close()
 

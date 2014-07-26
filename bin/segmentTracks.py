@@ -122,7 +122,8 @@ def main(argv=None):
         for name in ignoreNames:
             track = trackList.getTrackByName(name)
             if track is None:
-                raise RuntimeError("ignore track %s not found" % name)
+                logger.warning("ignore track %s not found" % name)
+                continue
             trackNo = track.getNumber()
             assert trackNo < len(ignoreList)
             ignoreList[trackNo] = 1
