@@ -261,11 +261,11 @@ def runTsd(args, tempTracksInfo):
         else:
             logger.warning("Could not find termini track")
 
-    # add chaux
-    chauxTrack = outTrackList.getTrackByName(args.chaux)
-    if chauxTrack is not None:
-        tsdInputFiles.append(chauxTrack.getPath())
-        tsdInputTracks.append(chauxTrack.getName())
+    # add repeat_modeler
+    repeat_modelerTrack = outTrackList.getTrackByName(args.repeat_modeler)
+    if repeat_modelerTrack is not None:
+        tsdInputFiles.append(repeat_modelerTrack.getPath())
+        tsdInputTracks.append(repeat_modelerTrack.getName())
 
     # run addTsdTrack (appending except first time)
     # note we override input track paths in each case
@@ -277,8 +277,8 @@ def runTsd(args, tempTracksInfo):
         # really rough hardcoded params based on
         # (A unified classification system for eukaryotic transposable elements
         # Wicker et. al 2007)
-        if tsdInputTracks[i] == args.chaux:
-            optString += " --names non-LTR"
+        if tsdInputTracks[i] == args.repeat_modeler:
+            optString += " --names LINE,SINE,Unknown"
             optString += " --maxScore 20"
             optString += " --left 20"
             optString += " --right 20"

@@ -363,7 +363,8 @@ class TrackTable(object):
                 overlap[2] = None
                 if startHint is None:
                     firstLook = 0
-                elif genStart >= self.start + self.segOffsets[startHint]:
+                elif startHint < len(self.segOffsets) and\
+                         genStart >= self.start + self.segOffsets[startHint]:
                     firstLook = startHint
                 for j, so in enumerate(self.segOffsets[firstLook:]):
                     i = j + firstLook
