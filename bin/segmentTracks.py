@@ -106,15 +106,6 @@ def main(argv=None):
             cutList[trackNo] = 1
     args.cutList = cutList
 
-    #process the --cutUnscaled option
-    if args.cutUnscaled is True:
-        for track in trackList:
-            if track.scale is None and track.shift is None and\
-              track.logScale is None:
-              trackNo = track.getNumber()
-              assert trackNo < len(cutList)
-              cutList[trackNo] = 1
-
     # process the --ignore option
     ignoreList = np.zeros((len(trackList)), np.int)
     if args.ignore is not None:
@@ -131,6 +122,17 @@ def main(argv=None):
                 raise RuntimeError("Same track (%s) cant be cut and ignored" %
                                   name)
     args.ignoreList = ignoreList
+
+    #process the --cutUnscaled option
+    if args.cutUnscaled is True:
+        for track in trackList:
+            trackNo = track.getNumber()
+            if track.scale is None and track.shift is None and\
+              track.logScale is None and\
+              args.ignoreList[trackNo] == 0:
+              assert trackNo < len(cutList)
+              cutList[trackNo] = 1
+
 
     # segment the tracks
     stats = dict()

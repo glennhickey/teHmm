@@ -41,6 +41,9 @@ def main(argv=None):
     parser.add_argument("outEmProbs", help="File to write emission model to")
     parser.add_argument("--numOut", help="Number of \"outside\" states to add"
                         " to the model.", default=1, type=int)
+    parser.add_argument("--numTot", help="Add x \"outside\" states such "
+                        "that total states is this. (overrieds --numOut)",
+                        default=0, type=int)
     parser.add_argument("--outName", help="Name of outside states (will have"
                         " numeric suffix if more than 1)", default="Outside")
     parser.add_argument("--mode", help="Strategy for initializing the "
@@ -57,6 +60,9 @@ def main(argv=None):
     parser.add_argument("--em", help="Emission probability for input track ("
                         "ie probability that state emits itself)",
                         type=float, default=0.95)
+    parser.add_argument("--outEmNone", help="Add None emission probabilities"
+                        " for target track for Outside states",
+                        action="store_true", default=None)
                         
     addLoggingOptions(parser)
     args = parser.parse_args()
@@ -106,6 +112,8 @@ def main(argv=None):
     for interval in bedIntervals:
         nameMap.update(interval[track.getValCol()])
     outNameMap = CategoryMap(reserved = 0)
+    if args.numTot > 0:
+        args.numOut = max(0, args.numTot - len(nameMap))
     for i in xrange(args.numOut):
         outName = args.outName
         if args.numOut > 1:
@@ -166,9 +174,10 @@ def writeEmissions(bedIntervals, nameMap, outNameMap, args):
     for state, i in nameMap.catMap.items():
         efile.write("%s\t%s\t%s\t%f\n" % (state, args.trackName, state,
                                           args.em))
-    for state, i in outNameMap.catMap.items():
-        efile.write("%s\t%s\t%s\t%f\n" % (state, args.trackName, "__NoNE__",
-                                          args.em))
+    if args.outEmNone is True:
+        for state, i in outNameMap.catMap.items():
+            efile.write("%s\t%s\t%s\t%f\n" % (state, args.trackName, "__NoNE__",
+                                              args.em))
     
     efile.close()
 
