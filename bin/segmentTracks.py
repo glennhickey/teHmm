@@ -53,7 +53,7 @@ def main(argv=None):
                         default="first")
     parser.add_argument("--ignore", help="Comma-separated list of tracks to "
                         "ignore (the FASTA DNA sequence would be a good "
-                        "candidate", default=None)
+                        "candidate", default="sequence")
     parser.add_argument("--maxLen", help="Maximum length of a segment (<= 0 means"
                         " no max length applied",
                         type=int, default=0)
@@ -112,7 +112,7 @@ def main(argv=None):
         ignoreNames = args.ignore.split(",")
         for name in ignoreNames:
             track = trackList.getTrackByName(name)
-            if track is None:
+            if track is None and name is not "sequence":
                 logger.warning("ignore track %s not found" % name)
                 continue
             trackNo = track.getNumber()

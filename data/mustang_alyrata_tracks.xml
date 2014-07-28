@@ -27,10 +27,9 @@
 <track name="polyA"         path="/data/douglas.hoen/sharebrowser/tracks/alyrata/permanent/misc/polyA.bb" distribution="binary"/>
 <track name="polyN"         path="/data/douglas.hoen/sharebrowser/tracks/alyrata/bed/Ns_sites.bed" distribution="binary"/>
 
-<!--
-We leave sequence out by default since I habitually forget to remove it and it mucks up scaling
-<track name="sequence" path="/data/douglas.hoen/data/genomes/a_lyrata/unmasked_renamed/scaffolds1-8.trf_softmasked.fas"/>
+<track name="sequence"      path="/data/douglas.hoen/data/genomes/a_lyrata/unmasked_renamed/scaffolds1-8.trf_softmasked.fas"/>
 
+<!--
 This track doesnt seem to help much.  Need better investigation before adding it or not.  Not immediate priority
 <track name="p_clouds"      path="/data/douglas.hoen/piatea/tools/pclouds/alyrata/c200/alyrata.bed" distribution="binary"/>
 >--
