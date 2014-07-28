@@ -112,8 +112,9 @@ def main(argv=None):
         ignoreNames = args.ignore.split(",")
         for name in ignoreNames:
             track = trackList.getTrackByName(name)
-            if track is None and name is not "sequence":
-                logger.warning("ignore track %s not found" % name)
+            if track is None:
+                if name is not "sequence":
+                    logger.warning("ignore track %s not found" % name)
                 continue
             trackNo = track.getNumber()
             assert trackNo < len(ignoreList)
