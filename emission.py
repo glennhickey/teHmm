@@ -300,7 +300,9 @@ class IndependentMultinomialEmissionModel(object):
         assert numTables > 0
         assert len(bedIntervals) > 0
         obsStats = self.initStats()
-        
+        # little cache to speed things up
+        lastTable, lastRatios = (None, None)
+
         lastHit = 0
         lastOverlapEnd = -1
         for interval in bedIntervals:
@@ -312,7 +314,10 @@ class IndependentMultinomialEmissionModel(object):
                     lastHit = tableIdx
                     hit = True
                     lastOverlapEnd = max(0, overlap[2] - 1)
-                    segRatios = self.getSegmentRatios(table)
+                    if table is not lastTable:
+                        lastRatios = self.getSegmentRatios(table)
+                        lastTable = table
+                    segRatios = lastRatios
                     if canFast(table) is True:
                         fastUpdateCounts(overlap, table, obsStats, segRatios)
                     else:
