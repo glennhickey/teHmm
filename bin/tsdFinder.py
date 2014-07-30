@@ -124,7 +124,13 @@ def findTsds(args, bedIntervals):
     nameSet = None
     if args.names is not None:
         nameSet = set(args.names.split(","))
-    for seqName, sequence in fastaRead(faFile):
+    for seqNameFa, sequence in fastaRead(faFile):
+        # try name from Fasta as well as name with everything after first
+        # whitespace skipped
+        if seqNameFa in seqTable:
+            seqName = seqNameFa
+        else:
+            seqName = seqNameFa.split()[0]
         if seqName in seqTable:
             logger.info("Scanning FASTA sequence %s" % seqName)
             bedRange = seqTable[seqName]

@@ -2,7 +2,7 @@
 <teModelConfig>
 
 <track name="repbase"       path="/data/glenn.hickey/genomes/dm5/tracks/repbase_repeats/dm5.repbase.bed"/>
-<track name="flybasebase"   path="/data/glenn.hickey/genomes/dm5/tracks/flybase_repeats/dm5.flybase.bed"/>
+<track name="flybase"   path="/data/glenn.hickey/genomes/dm5/tracks/flybase_repeats/dm5.flybase.bed"/>
 <track name="repeat_modeler" path="/data/glenn.hickey/genomes/dm5/tracks/modeler/dm5.modeler.bed"/>
 <track name="ltr_finder"    path="/data/glenn.hickey/genomes/dm5/tracks/ltr_finder/dm5.ltr_finder.bed"/>
 <track name="ltr_harvest"   path="/data/glenn.hickey/genomes/dm5/tracks/ltr_harvest/dm5.ltr_harvest.bed"/>
@@ -11,5 +11,5 @@
 <track name="copy"          path="/data/glenn.hickey/genomes/dm5/tracks/copy/dm5_cov.bw" distribution="gaussian" default="0"/>
 <track name="left_peak"     path="/data/glenn.hickey/genomes/dm5/tracks/copy/dm5_left.bw" distribution="gaussian" default="0"/>
 <track name="right_peak"    path="/data/glenn.hickey/genomes/dm5/tracks/copy/dm5_right.bw" distribution="gaussian" default="0"/>
-
+<track name="sequence"      path="/data/glenn.hickey/genomes/dm5/sequence/dmel-all-chromosome-r5.57.fasta"/>
 </teModelConfig>
