@@ -7,7 +7,7 @@
 <track name="ltr_finder"    path="/data/glenn.hickey/genomes/dm5/tracks/ltr_finder/dm5.ltr_finder.bed"/>
 <track name="ltr_harvest"   path="/data/glenn.hickey/genomes/dm5/tracks/ltr_harvest/dm5.ltr_harvest.bed"/>
 <track name="trf"           path="/data/glenn.hickey/genomes/dm5/tracks/trf/dmel.trfBig.bed" distribution="binary"/>
-<track name="gcpct"         path="/data/glenn.hickey/genomes/dm5/tracks/gc/dm5_gcPercentWin200.bw" distribution="gaussian" default="0"/>
+<track name="gcpct"         path="/data/glenn.hickey/genomes/dm5/tracks/gc/dm5_gcPercentWin20.bw" distribution="gaussian" default="0"/>
 <track name="copy"          path="/data/glenn.hickey/genomes/dm5/tracks/copy/dm5_cov.bw" distribution="gaussian" default="0"/>
 <track name="left_peak"     path="/data/glenn.hickey/genomes/dm5/tracks/copy/dm5_left.bw" distribution="gaussian" default="0"/>
 <track name="right_peak"    path="/data/glenn.hickey/genomes/dm5/tracks/copy/dm5_right.bw" distribution="gaussian" default="0"/>

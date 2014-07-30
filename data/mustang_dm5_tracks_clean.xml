@@ -6,7 +6,7 @@
 	<track distribution="multinomial" name="ltr_finder" path="/data/glenn.hickey/genomes/dm5/tracks/clean/dm5.ltr_finder_clean.bed" valCol="3"/>
 	<track distribution="multinomial" name="ltr_harvest" path="/data/glenn.hickey/genomes/dm5/tracks/clean/dm5.ltr_harvest_clean.bed" valCol="3"/>
 	<track distribution="binary" name="trf" path="/data/glenn.hickey/genomes/dm5/tracks/trf/dmel.trfBig.bed" valCol="0"/>
-	<track default="0" distribution="gaussian" name="gcpct" path="/data/glenn.hickey/genomes/dm5/tracks/gc/dm5_gcPercentWin200.bw" scale="0.1439" shift="0.0" valCol="3"/>
+	<track default="0" distribution="gaussian" name="gcpct" path="/data/glenn.hickey/genomes/dm5/tracks/gc/dm5_gcPercentWin20.bw" scale="0.1439" shift="0.0" valCol="3"/>
 	<track default="0" distribution="gaussian" logScale="2.5604" name="copy" path="/data/glenn.hickey/genomes/dm5/tracks/copy/dm5_cov.bw" shift="1.0" valCol="3"/>
 	<track default="0" distribution="gaussian" logScale="1.9971" name="left_peak" path="/data/glenn.hickey/genomes/dm5/tracks/copy/dm5_left.bw" shift="1.0" valCol="3"/>
 	<track default="0" distribution="gaussian" logScale="2.0134" name="right_peak" path="/data/glenn.hickey/genomes/dm5/tracks/copy/dm5_right.bw" shift="1.0" valCol="3"/>
