@@ -67,12 +67,16 @@ def main(argv=None):
                         default="tsd")
     parser.add_argument("--tir", help="Name of tir_termini track",
                         default="tir_termini")
+    parser.add_argument("--irf", help="Name of irf track",
+                        default="irf")
     parser.add_argument("--hollister", help="Name of hollister track",
                         default="hollister")
     parser.add_argument("--repbase", help="Name of repbase track",
                         default="repbase")
     parser.add_argument("--repeat_modeler", help="Name of repeat_modeler track",
                         default="repeat_modeler")
+    parser.add_argument("--transposon_psi", help="Name of transposon_psi track",
+                        default="transposon_psi")
     parser.add_argument("--noScale", help="Dont do any scaling", default=False,
                         action="store_true")
     parser.add_argument("--noTsd", help="Dont generate TSD track.  NOTE:"
@@ -176,6 +180,24 @@ def runCleaning(args, tempTracksInfo):
         repeat_modelerTrack.setPath(outFile)
     else:
         logger.warning("Could not find repeat_modeler track")
+
+    # run cleanChaux.py on transposon_psi track
+    transposon_psiTrack = trackList.getTrackByName(args.transposon_psi)
+    if transposon_psiTrack is not None:
+        inFile = transposon_psiTrack.getPath()
+        outFile = cleanPath(args, transposon_psiTrack)
+        tempBed1 = None
+        if inFile[-3:] == ".bb":
+            tempBed1 = getLocalTempPath("Temp_modeler", ".bed")
+            runShellCommand("bigBedToBed %s %s" % (inFile, tempBed1))
+            inFile = tempBed1
+        tempBed = getLocalTempPath("Temp_transposon_psi", ".bed")
+        runShellCommand("cleanChaux.py %s  --keepUnderscore > %s" % (inFile, tempBed))
+        runShellCommand("removeBedOverlaps.py %s > %s" % (tempBed, outFile)) 
+        runShellCommand("rm -f %s" % tempBed)
+        transposon_psiTrack.setPath(outFile)
+    else:
+        logger.warning("Could not find transposon_psi track")
                 
     # run cleanTermini.py
     lastzTracks = [trackList.getTrackByName(args.termini),
@@ -196,6 +218,24 @@ def runCleaning(args, tempTracksInfo):
         else:
             logger.warning("Could not find termini track")
 
+    # run removeBedOverlaps on irf (too bad its not in termini-like format
+    # to be included in above logic)
+    irfTrack = trackList.getTrackByName(args.irf)
+    if irfTrack is not None:
+        outFile = cleanPath(args, irfTrack)
+        inFile = irfTrack.getPath()
+        tempBed = None
+        if inFile[-3:] == ".bb":
+            tempBed = getLocalTempPath("Temp_termini", ".bed")
+            runShellCommand("bigBedToBed %s %s" % (inFile, tempBed))
+            inFile = tempBed
+        runShellCommand("removeBedOverlaps.py %s > %s" % (inFile, outFile))
+        irfTrack.setPath(outFile)
+        if tempBed is not None:
+            runShellCommand("rm -f %s" % tempBed)
+    else:
+        logger.warning("Could not find irf track")
+
     # run cleanLtrFinder.py
     for lfTrackName in args.ltrfinder.split(","): 
         ltrfinderTrack = trackList.getTrackByName(lfTrackName)
@@ -207,6 +247,8 @@ def runCleaning(args, tempTracksInfo):
             ltrfinderTrack.setPath(outFile)
         else:
             logger.warning("Could not find ltrfinder track %s" % lfTrackName)
+
+    
 
     # save a temporary xml
     trackList.saveXML(tempTracksInfo)

@@ -4,6 +4,8 @@
 <track name="hollister"     path="/data/douglas.hoen/sharebrowser/tracks/alyrata/bed/te_hollister_2011.bed"/>
 <track name="repbase"       path="/data/douglas.hoen/piatea/repeat_masker/alyrata/repbase/scaffolds1to8.bed"/>
 <track name="chaux"         path="/data/douglas.hoen/sharebrowser/tracks/alyrata/permanent/repeatmasker/chaux_sorted.bed"/>
+<!-- probably not denovo either -->
+<track name="transposon_psi" path="/data/douglas.hoen/piatea/alyrata/tracks/transposonpsi/scaffolds1-8.trf_softmasked.fas.TPSI.allHits.chains.bestPerLocus.bed"/>        
 
 <track name="repeat_modeler" path="/data/douglas.hoen/piatea/tools/repeatmodeler/alyrata/AL_renamed_scaffolds1to8.bb"/>
 
@@ -11,6 +13,7 @@
 <track name="ltr_harvest"   path="/data/douglas.hoen/sharebrowser/tracks/alyrata/permanent/te_search_programs/structural/ltrharvest_v2.bed"/>
 <track name="termini"       path="/data/douglas.hoen/sharebrowser/tracks/alyrata/permanent/termini/all_scaffolds.termini_search.filter_2.ltr.sorted.bed"/>
 <track name="tir_termini"   path="/data/douglas.hoen/sharebrowser/tracks/alyrata/permanent/termini/all_scaffolds.termini_search.filter_2.tir.sorted.bed"/>
+<track name="irf"           path="/data/douglas.hoen/piatea/alyrata/tracks/irf/scaffolds1-8.irf.bed"/>
 
 <track name="copy"          path="/data/douglas.hoen/sharebrowser/tracks/alyrata/permanent/self-alignments/mathieu_new/scaffolds1-8.trf_softmasked.fas.cov.bw" default="0.0" distribution="gaussian"/>
 <track name="copy_cv"       path="/data/douglas.hoen/sharebrowser/tracks/alyrata/permanent/mathieu/variation/AL_v_AL_100_nonSelf.cv100.bw" default="0.0" distribution="gaussian"/>
@@ -23,7 +26,10 @@
 <track name="srna"          path="/data/douglas.hoen/sharebrowser/tracks/alyrata/permanent/misc/AlsmallCS_fixed.bw" default="0.0" distribution="gaussian"/>
 <track name="ortho_depth"   path="/data/douglas.hoen/sharebrowser/tracks/alyrata/permanent/misc/All_Al_depth_fixed.bw" default="0.0" distribution="gaussian"/>
 <track name="gcpct"         path="/data/glenn.hickey/genomes/alyrata/tracks/gc/gcPercentWin20.bw" default="0.0" distribution="gaussian"/>
+
 <track name="trf"           path="/data/douglas.hoen/sharebrowser/tracks/alyrata/permanent/misc/trf_8_scaffolds.bed" distribution="binary"/>
+<track name="dustmasker"    path="/data/douglas.hoen/piatea/alyrata/tracks/dustmasker/dustmasker_scaffolds1to8.bb" distribution="binary"/>
+<track name="windowmasker"  path="/data/douglas.hoen/piatea/alyrata/tracks/windowmasker/windowmasker_scaffolds1to8.bb" distribution="binary"/>
 <track name="polyA"         path="/data/douglas.hoen/sharebrowser/tracks/alyrata/permanent/misc/polyA.bb" distribution="binary"/>
 <track name="polyN"         path="/data/douglas.hoen/sharebrowser/tracks/alyrata/bed/Ns_sites.bed" distribution="binary"/>
 
@@ -32,5 +38,5 @@
 <!--
 This track doesnt seem to help much.  Need better investigation before adding it or not.  Not immediate priority
 <track name="p_clouds"      path="/data/douglas.hoen/piatea/tools/pclouds/alyrata/c200/alyrata.bed" distribution="binary"/>
->--
+-->
 </teModelConfig>
