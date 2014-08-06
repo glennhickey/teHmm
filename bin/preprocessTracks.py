@@ -75,6 +75,8 @@ def main(argv=None):
                         default="repeat_modeler")
     parser.add_argument("--transposon_psi", help="Name of transposon_psi track",
                         default="transposon_psi")
+    parser.add_argument("--repbase_censor", help="Name of repbase_censor track",
+                        default="repbase_censor")
     parser.add_argument("--noScale", help="Dont do any scaling", default=False,
                         action="store_true")
     parser.add_argument("--noTsd", help="Dont generate TSD track.  NOTE:"
@@ -198,6 +200,24 @@ def runCleaning(args, tempTracksInfo):
         transposon_psiTrack.setPath(outFile)
     else:
         logger.warning("Could not find transposon_psi track")
+
+    # run cleanRM.py on repbase_censor track
+    repbase_censorTrack = trackList.getTrackByName(args.repbase_censor)
+    if repbase_censorTrack is not None:
+        inFile = repbase_censorTrack.getPath()
+        outFile = cleanPath(args, repbase_censorTrack)
+        tempBed1 = None
+        if inFile[-3:] == ".bb":
+            tempBed1 = getLocalTempPath("Temp_modeler", ".bed")
+            runShellCommand("bigBedToBed %s %s" % (inFile, tempBed1))
+            inFile = tempBed1
+        tempBed = getLocalTempPath("Temp_repbase_censor", ".bed")
+        runShellCommand("cleanRM.py %s  --keepUnderscore > %s" % (inFile, tempBed))
+        runShellCommand("removeBedOverlaps.py %s > %s" % (tempBed, outFile)) 
+        runShellCommand("rm -f %s" % tempBed)
+        repbase_censorTrack.setPath(outFile)
+    else:
+        logger.warning("Could not find repbase_censor track")
                 
     # run cleanTermini.py
     lastzTracks = [trackList.getTrackByName(args.termini),
