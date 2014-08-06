@@ -10,6 +10,7 @@ import copy
 
 from pybedtools import BedTool, Interval
 from teHmm.common import myLog, EPSILON, initBedTool, cleanBedTool
+from teHmm.common import addLoggingOptions, setLoggingFromOptions, logger
 
 """
 Filter out bed intervals that overlap other intervals.
@@ -30,7 +31,9 @@ def main(argv=None):
                         " if present (equivalent to running bed12ToBed6 on"
                         " input first).", action="store_true", default=False)
     
+    addLoggingOptions(parser)
     args = parser.parse_args()
+    setLoggingFromOptions(args)
     assert os.path.isfile(args.inputBed)
     tempBedToolPath = initBedTool()
 
@@ -49,6 +52,9 @@ def main(argv=None):
         if (prevInterval is not None and
             interval.chrom == prevInterval.chrom and
             interval.start < prevInterval.end):
+            logger.debug("Replace %d bases of \n%s with\n%s" % (
+                prevInterval.end - interval.start,
+                str(interval), str(prevInterval)))
             interval.start = prevInterval.end
             
         if interval.end > interval.start:

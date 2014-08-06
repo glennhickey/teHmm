@@ -78,6 +78,9 @@ def main(argv=None):
     parser.add_argument("--names", help="Only apply to bed interval whose "
                         "name is in (comma-separated) list.  If not specified"
                         " then all intervals are processed", default=None)
+    parser.add_argument("--numProc", help="Number of jobs to run in parallel."
+                        " (parallization done on different sequences in FASTA"
+                        "file", type=int, default=1)
     
     addLoggingOptions(parser)
     args = parser.parse_args()
@@ -89,7 +92,7 @@ def main(argv=None):
     if args.logFile is not None:
         args.tsdFinderOptions += " --logFile %s" % args.logFile
     for option in ["min", "max", "all", "maxScore", "left", "right", "overlap",
-                   "leftName", "rightName", "id", "names"]:
+                   "leftName", "rightName", "id", "names", "numProc"]:
         val = getattr(args, option)
         if val is True:
             args.tsdFinderOptions += " --%s" % option

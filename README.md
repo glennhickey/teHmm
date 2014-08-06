@@ -294,7 +294,7 @@ In general, running any executable with `--help` will print a brief description 
 
 **Track Name Munging**
 
-* **cleanChaux.py** : Remove BED ID suffixes (ex. after pipe or slash) to attempt to map IDs to repeat families
+* **cleanRM.py** : Remove BED ID suffixes (ex. after pipe or slash) to attempt to map IDs to repeat families
 * **cleanLTRFinderID.py**:  Similar to above, but designed to only delete the numeric ID at end of token.  Also produces mappings for symmetric and TSD free state names, as well as removes overlaps using score and length for priority. 
 * **cleanTermini.py**:  Transform a bed file representing alignments (where aligned regions share same id) into a bed file where, for each aligned pair, the leftmost region is named LTerm and the rightmost region is named RTerm.
 * **setBedCol.py**: Set the entire column of a BED file to a given value.
@@ -317,6 +317,10 @@ In general, running any executable with `--help` will print a brief description 
 * **scaleVals.py** : Scale each value of a BED or WIG file.  (Above function better as it automatically computes parameters, and doesn't create any new data files)
 * **segmentTracks.py** : Segment the track data into chunks of consistent columns.  These chunks can then be considered atomic units (as opposed to bases) by the model using the --segment option.
 * **applyTrackScaling.py** : Write scaled versions of tracks in an XML file using the parameters therein (such as those computed by setTrackScaling.py)
+
+**Automatic Preprocessing**
+
+* **preprocessTracks.py**: Given a list of input tracks in XML format, run all preprocessing steps (scaling, name munging, automatic TSD finding) to produce a list of tracks usable by the HMM.
 
 **Alignment**
 
