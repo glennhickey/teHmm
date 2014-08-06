@@ -226,7 +226,7 @@ def findTsds(args, bedIntervals):
                     # about soft masking
                     outTsds += intervalTsds(args, sequence.lower(), bedInterval)
         else:
-            logger.info("Skipping FASTA sequence %s because no intervals "
+            logger.debug("Skipping FASTA sequence %s because no intervals "
                           "found" % seqName)
 
     return outTsds
