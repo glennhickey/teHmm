@@ -81,6 +81,8 @@ def main(argv=None):
                         " TSD track is hardcoded to be generated from "
                         "termini and (non-LTR elements of ) chaux",
                         default=False, action="store_true")
+    parser.add_argument("--numProc", help="Number of processes to use for tsdFinder.py",
+                        default=1, type=int)
     
     addLoggingOptions(parser)
     args = parser.parse_args()
@@ -339,7 +341,7 @@ def runTsd(args, tempTracksInfo):
             optString += " --max 12"
 
         tempXMLOut = getLocalTempPath("Temp_tsd_xml", ".xml")
-        runShellCommand("addTsdTrack.py %s %s %s %s %s %s --inPath %s %s %s" % (
+        runShellCommand("addTsdTrack.py %s %s %s %s %s %s --inPath %s %s %s --numProc %d" % (
             tempTracksInfo,
             args.cleanTrackPath,
             tempXMLOut,
@@ -348,7 +350,8 @@ def runTsd(args, tempTracksInfo):
             args.tsd,
             tsdInputFiles[i],
             optString,
-            args.logOpString))
+            args.logOpString,
+            args.numProc))
         
         runShellCommand("mv %s %s" % (tempXMLOut, tempTracksInfo))
 
