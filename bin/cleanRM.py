@@ -13,6 +13,8 @@ from teHmm.common import myLog, EPSILON, initBedTool, cleanBedTool
 
 """
 Remove everything past the first occurence of | / ? _ in the name column
+This is used to clean the names from the various RepeatMasker
+(via repeatmasker_to_bed.sh) tracks (formerly called cleanChaux.py)
 """
 
 def main(argv=None):
@@ -41,7 +43,7 @@ def main(argv=None):
                         " specified more than once. ex --mapPrefix DNA/HELI "
                         "--maxPrefix DNA/ASINE.", action="append")
     parser.add_argument("--minScore", help="Minimum score value to not filter"
-                        " out", default=100, type=float)
+                        " out", default=-sys.maxint, type=float)
     parser.add_argument("--maxScore", help="Maximum score value to not filter"
                         " out", default=sys.maxint, type=float)
 

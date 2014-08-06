@@ -11,7 +11,7 @@ from numpy.testing import assert_array_equal, assert_array_almost_equal
 import random
 import string
 
-from teHmm.kmer import KmerTable
+from teHmm.kmer import KmerTable, hashDNA
 
 from teHmm.tests.common import getTestDirPath
 from teHmm.tests.common import TestBase
@@ -54,7 +54,7 @@ class TestCase(TestBase):
         assert [10,13,0,3] in em
 
     def testMatch2(self):
-        kt = KmerTable(kmerLen=3)
+        kt = KmerTable(kmerLen=3, hashFn = hashDNA)
         kt.loadString("CCAGAT")
         em = kt.exactMatches("ATGTTCACTCTTATCCAGAT")
         assert em == [[14, 20, 0, 6]]
@@ -68,7 +68,7 @@ class TestCase(TestBase):
         for repeat in xrange(5):
             sa = ''.join(random.choice(S) for x in xrange(50))
             sb = ''.join(random.choice(S) for x in xrange(50))
-            kt = KmerTable()
+            kt = KmerTable(hashFn = hashDNA)
             kt.loadString(sa)
             em = kt.exactMatches(sb)
             # doesnt check for any missed matches but will at least test
@@ -81,6 +81,20 @@ class TestCase(TestBase):
             kts.useClosed = False
             kts.loadString(sa)
             assert kts.exactMatches(sb) == em
+
+    def testHashFn(self):
+        numTestsPerLen = 50000
+        lengths = [3, 6, 10, 20]
+        S = ['A', 'a', 'C', 'c', 'G', 'g', 'T', 't', 'N', 'n']
+        for length in lengths:
+            stringSet = set()
+            intSet = set()
+            for trial in xrange(numTestsPerLen):
+                s = ''.join(random.choice(S) for x in xrange(length))
+                v = hashDNA(s)
+                stringSet.add(s.upper())
+                intSet.add(v)
+                assert len(intSet) == len(stringSet)
         
 
 def main():

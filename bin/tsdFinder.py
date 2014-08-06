@@ -10,7 +10,7 @@ import logging
 import numpy as np
 
 from teHmm.trackIO import readBedIntervals, fastaRead, writeBedIntervals
-from teHmm.kmer import KmerTable
+from teHmm.kmer import KmerTable, hashDNA
 from teHmm.common import addLoggingOptions, setLoggingFromOptions, logger
 
 """
@@ -171,7 +171,7 @@ def intervalTsds(args, sequence, bedInterval):
     if r1 - l1 < args.min or r2 - l2 < args.min:
         return []
 
-    kt = KmerTable(kmerLen = args.min)
+    kt = KmerTable(kmerLen = args.min, hashFn = hashDNA)
     leftFlank = sequence[l1:r1]
     rightFlank = sequence[l2:r2]
     assert l2 > r1
