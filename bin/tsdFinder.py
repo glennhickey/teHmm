@@ -8,10 +8,13 @@ import os
 import argparse
 import logging
 import numpy as np
+from collections import defaultdict
 
 from teHmm.trackIO import readBedIntervals, fastaRead, writeBedIntervals
 from teHmm.kmer import KmerTable, hashDNA
 from teHmm.common import addLoggingOptions, setLoggingFromOptions, logger
+from teHmm.common import getLocalTempPath, runParallelShellCommands
+from teHmm.common import runShellCommand
 
 """
 Find candidate target site duplications (TSD's).  These are short *exact* matches
@@ -66,6 +69,12 @@ def main(argv=None):
     parser.add_argument("--names", help="Only apply to bed interval whose "
                         "name is in (comma-separated) list.  If not specified"
                         " then all intervals are processed", default=None)
+    parser.add_argument("--numProc", help="Number of jobs to run in parallel."
+                        " (parallization done on different sequences in FASTA"
+                        "file", type=int, default=1)
+    parser.add_argument("--sequences", help="Only process given sequences of input"
+                        " FASTA file (comma-separated list).",  default=None)
+    
     addLoggingOptions(parser)
     args = parser.parse_args()
     setLoggingFromOptions(args)
@@ -75,19 +84,86 @@ def main(argv=None):
     assert args.min <= args.max
     args.nextId = 0
 
+    if args.sequences is not None:
+        args.sequences = set(args.sequences.split(","))
+
     # read intervals from the bed file
     logger.info("loading target intervals from %s" % args.inBed)
     bedIntervals = readBedIntervals(args.inBed, ncol=4, sort=True)
     if bedIntervals is None or len(bedIntervals) < 1:
         raise RuntimeError("Could not read any intervals from %s" %
                            args.inBed)
+
+    if args.numProc > 1:
+        runParallel(args, bedIntervals)
+        return 0
     
     tsds = findTsds(args, bedIntervals)
 
     writeBedIntervals(tsds, args.outBed)
 
+def runParallel(args, bedIntervals):
+    """ Quick hack to rerun parallel jobs on different interval subsets. """
+    nameSet = None
+    if args.names is not None:
+        nameSet = set(args.names.split(","))
+        
+    # chunk up BED input
+    numIntervals = 0
+    for interval in bedIntervals:
+        name = None
+        if len(interval) > 3:
+            name = interval[3]
+        if nameSet is None or name in nameSet:
+            numIntervals += 1
+    jobSize = 1 + (numIntervals / args.numProc)
+    logger.info("Dviding %d intervals into %d processes (%d intervals per)" % (
+        numIntervals, args.numProc, jobSize))
+    tempBeds = []
+    curSize = sys.maxint
+    curFile = None
+    for interval in bedIntervals:
+        name = None
+        if len(interval) > 3:
+            name = interval[3]
+        if nameSet is None or name in nameSet:
+            if curSize >= jobSize:
+                if curFile is not None:
+                    curFile.close()
+                tempBed = getLocalTempPath("TempTsdFinderIn", ".bed")
+                tempBeds.append(tempBed)
+                curFile = open(tempBed, "w")
+                curSize = 0
+            curFile.write("\t".join([str(s) for s in interval]))
+            curFile.write("\n")
+            curSize += 1
+    if curFile is not None:
+        curFile.close()
 
-def buildSeqTable(bedIntervals):
+    # map jobs
+    assert len(tempBeds) <= args.numProc
+    tempOuts = []
+    jobCmds = []
+    for tempBed in tempBeds:
+        cmdLine = " ".join(sys.argv)
+        cmdLine = cmdLine.replace("--numProc %d" % args.numProc,"--numProc 1")
+        cmdLine = cmdLine.replace(args.inBed, tempBed)
+        tempOut = getLocalTempPath("TempTsdFinderOut", ".bed")
+        cmdLine = cmdLine.replace(args.outBed, tempOut)
+        tempOuts.append(tempOut)
+        jobCmds.append(cmdLine)
+        
+    runParallelShellCommands(jobCmds, args.numProc)
+
+    # reduce
+    for i, tempOut in enumerate(tempOuts):
+        if i == 0:
+            runShellCommand("mv %s %s" % (tempOut, args.outBed))
+        else:
+            runShellCommand("cat %s >> %s" % (tempOut, args.outBed))
+            runShellCommand("rm -f %s" % (tempOut))
+
+def buildSeqTable(args, bedIntervals):
     """build table of sequence indexes from input bed file to quickly read 
     while sorting.  Table maps sequence name to range of indexes in 
     bedIntervals.  This only works if bedIntervals are sorted (and should 
@@ -106,6 +182,7 @@ def buildSeqTable(bedIntervals):
                 bedSeqTable[prevName] = (prevIdx, i)
                 prevIdx = i
         prevName = seqName
+
     seqName = bedIntervals[-1][0]
     assert seqName not in bedSeqTable
     bedSeqTable[seqName] = (prevIdx, len(bedIntervals))
@@ -118,13 +195,18 @@ def findTsds(args, bedIntervals):
     for each one """
     
     # index for quick lookups in bed file (to be used while scanning fasta file)
-    seqTable = buildSeqTable(bedIntervals)
+    seqTable = buildSeqTable(args, bedIntervals)
     outTsds = []
     faFile = open(args.fastaSequence, "r")
     nameSet = None
     if args.names is not None:
         nameSet = set(args.names.split(","))
     for seqNameFa, sequence in fastaRead(faFile):
+        if args.sequences is not None and seqNameFa not in args.sequences and\
+          seqNameFa.split()[0] not in args.sequences:
+          # skip unflagged sequences when option specified
+          continue
+            
         # try name from Fasta as well as name with everything after first
         # whitespace skipped
         if seqNameFa in seqTable:
