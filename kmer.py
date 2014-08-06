@@ -11,6 +11,27 @@ import logging
 import numpy as np
 import xml.etree.ElementTree as ET
 
+def hashDNA(s):
+    """ crappy DNA hashing function
+    IMPORTANT:  return values only unique across fixed string length.  
+     """
+    
+    # 3bits / char for up to 64 bits
+    assert len(s) < 22
+    val = 0
+    for i, c in enumerate(s):
+        if c == "A" or c == "a":
+            val |= 0 << (i * 3)
+        elif c == "C" or c == "c":
+            val |= 1 << (i * 3)
+        elif c == "G" or c == "g":
+            val |= 2 << (i * 3)
+        elif c == "T" or c == "t":
+            val |= 3 << (i * 3)
+        else:
+            assert c == "N" or c == "n"
+            val |= 4 << (i * 3)
+    return val
 
 class KmerTable:
     """ Hash table of kmers for quick seed alignment.  Easier to 
@@ -20,6 +41,7 @@ class KmerTable:
     def __init__(self, kmerLen = 3, hashFn = None):
         if hashFn is None:
             # very inefficent space-wise: for testing purposes only
+            # should use with hashDNA in practice (at least)
             self.hashFn = lambda x: x
         else:
             self.hashFn = hashFn
@@ -132,6 +154,7 @@ class KmerTable:
             if ovl1 == ovl2:
               return [leftMatch[0], leftMatch[1] + ovl1, leftMatch[2], leftMatch[3] + ovl1]
         return None
+
           
              
         

@@ -23,8 +23,6 @@ The HMM cannot use annotation tracks as output by several tools (ex repeatmasker
 without first doing some name-munging and setting some scaling parameters for binning.
 
 This script takes as input a list of "raw" annotation tracks, and runs all the necessary scripts to produce a list of "clean" tracks that can be used by the HMM.
-
-NOTE: This script is really hardcoded to run only on ./mustang_alyrata_tracks.xml at the moment, and needs to be updated to reflect changes to that file (maybe).  A more general workflow will need to be put in place later....
 """
 
 def main(argv=None):
@@ -35,7 +33,7 @@ def main(argv=None):
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
         description="Generate HMM-usable tracklist from raw tracklist. EX "
         "used to transform mustang_alyrata_tracks.xml -> "
-        "mustang_alyrata_clean.xml.  Runs cleanChaux.py cleanLtrFinder.py and "
+        "mustang_alyrata_clean.xml.  Runs cleanRM.py cleanLtrFinder.py and "
         " cleanTermini.py and addTsdTrack.py and setTrackScaling.py (also runs "
         " removeBedOverlaps.py before each of the clean scripts)")
     
@@ -123,13 +121,13 @@ def runCleaning(args, tempTracksInfo):
     """ run scripts for cleaning chaux, ltr_finder, and termini"""
     trackList = TrackList(args.tracksInfo)
 
-    # run cleanChaux.py on chaux track
+    # run cleanRM.py on chaux track
     chauxTrack = trackList.getTrackByName(args.chaux)
     if chauxTrack is not None:
         inFile = chauxTrack.getPath()
         outFile = cleanPath(args, chauxTrack)
         tempBed = getLocalTempPath("Temp_chaux", ".bed")
-        runShellCommand("cleanChaux.py --keepUnderscore %s > %s" % (inFile,
+        runShellCommand("cleanRM.py --keepUnderscore %s > %s" % (inFile,
                                                                     tempBed))
         runShellCommand("removeBedOverlaps.py %s > %s" % (tempBed, outFile))
         runShellCommand("rm -f %s" % tempBed)
@@ -137,33 +135,33 @@ def runCleaning(args, tempTracksInfo):
     else:
         logger.warning("Could not find chaux track")
 
-    # run cleanChaux.py on hollister track
+    # run cleanRM.py on hollister track
     hollisterTrack = trackList.getTrackByName(args.hollister)
     if hollisterTrack is not None:
         inFile = hollisterTrack.getPath()
         outFile = cleanPath(args, hollisterTrack)
         tempBed = getLocalTempPath("Temp_hollister", ".bed")
-        runShellCommand("cleanChaux.py %s > %s" % (inFile, tempBed))
+        runShellCommand("cleanRM.py %s > %s" % (inFile, tempBed))
         runShellCommand("removeBedOverlaps.py %s > %s" % (tempBed, outFile)) 
         runShellCommand("rm -f %s" % tempBed)
         hollisterTrack.setPath(outFile)
     else:
         logger.warning("Could not find hollister track")
 
-    # run cleanChaux.py on repbase track
+    # run cleanRM.py on repbase track
     repbaseTrack = trackList.getTrackByName(args.repbase)
     if repbaseTrack is not None:
         inFile = repbaseTrack.getPath()
         outFile = cleanPath(args, repbaseTrack)
         tempBed = getLocalTempPath("Temp_repbase", ".bed")
-        runShellCommand("cleanChaux.py %s --minScore 0 > %s" % (inFile, tempBed))
+        runShellCommand("cleanRM.py %s > %s" % (inFile, tempBed))
         runShellCommand("removeBedOverlaps.py %s > %s" % (tempBed, outFile)) 
         runShellCommand("rm -f %s" % tempBed)
         repbaseTrack.setPath(outFile)
     else:
         logger.warning("Could not find repbase track")
 
-    # run cleanChaux.py on repeat_modeler track
+    # run cleanRM.py on repeat_modeler track
     repeat_modelerTrack = trackList.getTrackByName(args.repeat_modeler)
     if repeat_modelerTrack is not None:
         inFile = repeat_modelerTrack.getPath()
@@ -174,14 +172,14 @@ def runCleaning(args, tempTracksInfo):
             runShellCommand("bigBedToBed %s %s" % (inFile, tempBed1))
             inFile = tempBed1
         tempBed = getLocalTempPath("Temp_repeat_modeler", ".bed")
-        runShellCommand("cleanChaux.py %s  > %s" % (inFile, tempBed))
+        runShellCommand("cleanRM.py %s  > %s" % (inFile, tempBed))
         runShellCommand("removeBedOverlaps.py %s > %s" % (tempBed, outFile)) 
         runShellCommand("rm -f %s" % tempBed)
         repeat_modelerTrack.setPath(outFile)
     else:
         logger.warning("Could not find repeat_modeler track")
 
-    # run cleanChaux.py on transposon_psi track
+    # run cleanRM.py on transposon_psi track
     transposon_psiTrack = trackList.getTrackByName(args.transposon_psi)
     if transposon_psiTrack is not None:
         inFile = transposon_psiTrack.getPath()
@@ -192,7 +190,7 @@ def runCleaning(args, tempTracksInfo):
             runShellCommand("bigBedToBed %s %s" % (inFile, tempBed1))
             inFile = tempBed1
         tempBed = getLocalTempPath("Temp_transposon_psi", ".bed")
-        runShellCommand("cleanChaux.py %s  --keepUnderscore > %s" % (inFile, tempBed))
+        runShellCommand("cleanRM.py %s  --keepUnderscore > %s" % (inFile, tempBed))
         runShellCommand("removeBedOverlaps.py %s > %s" % (tempBed, outFile)) 
         runShellCommand("rm -f %s" % tempBed)
         transposon_psiTrack.setPath(outFile)
