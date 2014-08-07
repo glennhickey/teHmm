@@ -103,13 +103,14 @@ def main(argv=None):
         confMat = compareIntervalsOneSided(intervals1, intervals2, args.col -1,
                                             args.intThresh, False)[1]
     else:
-        logger.info("Computing base confusion matrix")
-        confMat = compareBaseLevel(intervals1, intervals2, args.col - 1)[1]
+        logger.info("Computing base reverse confusion matrix")
+        confMat = compareBaseLevel(intervals2, intervals1, args.col - 1)[1]
 
-    logger.info("Confusion Matrix:\n%s", str(confMat))
+    logger.info("Reverse Confusion Matrix:\n%s", str(confMat))
 
     # find the best "true" match for each predicted state
-    stateMap = getStateMapFromConfMatrix(confMat)
+    stateMap = getStateMapFromConfMatrix(confMat, args.ignoreTgt, args.ignore,
+                                         args.qualThresh)
 
     # filter the stateMap to take into account the command-line options
     # notably --ignore, --ignoreTgt, --qualThresh, and --unique
@@ -185,7 +186,8 @@ def writeFittedBed(intervals, stateMap, outBed, col, noMerge, ignoreTgt):
     prevInterval = None
     for interval in intervals:
         outInterval = list(interval)
-        if stateMap[outInterval[col]][0] not in ignoreTgt:
+        if outInterval[col] in stateMap and\
+          stateMap[outInterval[col]][0] not in ignoreTgt:
             outInterval[col] = stateMap[outInterval[col]][0]
         if not noMerge and\
           prevInterval is not None and\
