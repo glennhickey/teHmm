@@ -203,6 +203,9 @@ def main(argv=None):
                         " to remember the parameters with the highest probability"
                         " rather than returning the parameters after the final "
                         "iteration.", action="store_true", default=False)
+    parser.add_argument("--maxProbCut", help="Use with --maxProb option to stop"
+                        " training if a given number of iterations go by without"
+                        " hitting a new maxProb", default=None, type=int)
     parser.add_argument("--transMatEpsilons", help="By default, epsilons are"
                         " added to all transition probabilities to prevent "
                         "converging on 0 due to rounding error only for fully"
@@ -286,6 +289,8 @@ def main(argv=None):
         trainFlags += " --maxProb"
     if args.transMatEpsilons is True:
         trainFlags += " --transMatEpsilons"
+    if args.maxProbCut is not None:
+        trainFlags += " --maxProbCut %d" % args.maxProbCut
 
     # write out command line for posteriorty's sake
     if not os.path.exists(args.outputDir):

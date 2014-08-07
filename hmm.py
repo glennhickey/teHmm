@@ -77,7 +77,8 @@ class MultitrackHmm(BaseHMM):
                  forceUserEmissions=None,
                  forceUserStart=None,
                  transMatEpsilons=False,
-                 maxProb=False):
+                 maxProb=False,
+                 maxProbCut=None):
         if emissionModel is not None:
             n_components = emissionModel.getNumStates()
         else:
@@ -146,6 +147,7 @@ class MultitrackHmm(BaseHMM):
         self.maxProb = maxProb
         self.best_forward_log_prob = None
         self.bestCopy = None
+        self.maxProbCut = maxProbCut
         
     def train(self, trackData):
         """ Use EM to estimate best parameters from scratch (unsupervised)"""
@@ -676,6 +678,13 @@ class MultitrackHmm(BaseHMM):
                 self.bestCopy = copy.deepcopy(self)
             self.last_forward_log_prob = lp
             self.last_forward_log_prob_it = self.current_iteration
+            if (self.maxProb is True and self.bestCopy is not None and
+              self.maxProbCut is not None and self.current_iteration -
+              self.bestCopy.current_iteration > self.maxProbCut):
+                # hack to converge:
+                logger.info("Stopping due to --maxProbCut %d" % self.maxProbCut)
+                self.n_iter = self.current_iteration
+                
         else:
             self.last_forward_log_prob += lp
             # very ugly repeating this here but need for final iteration
