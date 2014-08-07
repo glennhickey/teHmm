@@ -226,7 +226,7 @@ def runTrial(tracksList, iteration, newTrackName, args):
                                                    segEvalPath,
                                                    args.segOpts)
     if trainingPath == truthPath:
-        segmentCmd = "ln -f -s %s %s" % (args.segTrainingPath, args.segEvalPath)
+        segmentCmd = "ln -f -s %s %s" % (os.path.abspath(segTrainingPath), segEvalPath)
     if args.fullSegment is False:
         runShellCommand(segmentCmd)
         segLog.write(segmentCmd + "\n")
