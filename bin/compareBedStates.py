@@ -475,7 +475,9 @@ def getStateMapFromConfMatrix(reverseMatrix, truthIgnore, predIgnore, thresh):
                                          predStateSizes[predState])) >= thresh:
               predCandidates.append(predState)
             else:
-                logger.debug("state mapper skipping %s" % predState)
+                logger.debug("state mapper skipping %s with othresh %f" % (
+                    predState, float(overlap) / float(min(truthSize,
+                                                          predStateSizes[predState]))))
         logger.debug("candidates for %s: %s" % (truthState, str(predCandidates)))
 
         # iterate over all combinaations of candidate mappings
