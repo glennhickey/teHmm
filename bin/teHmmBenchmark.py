@@ -197,6 +197,19 @@ def main(argv=None):
                         " counts as a replicate.  Comparison statistics"
                         " will be generated for each rep.",
                         action="store_true", default=False)
+    parser.add_argument("--maxProb", help="Gaussian distributions and/or"
+                        " segment length corrections can cause probability"
+                        " to *decrease* during BW iteration.  Use this option"
+                        " to remember the parameters with the highest probability"
+                        " rather than returning the parameters after the final "
+                        "iteration.", action="store_true", default=False)
+    parser.add_argument("--transMatEpsilons", help="By default, epsilons are"
+                        " added to all transition probabilities to prevent "
+                        "converging on 0 due to rounding error only for fully"
+                        " unsupervised training.  Use this option to force this"
+                        " behaviour for supervised and semisupervised modes",
+                        action="store_true", default=False)
+
         
     addLoggingOptions(parser)
     args = parser.parse_args()
@@ -269,6 +282,10 @@ def main(argv=None):
         trainFlags += " --emThresh %f" % args.emThresh
     if args.saveAllReps is True:
         trainFlags += " --saveAllReps"
+    if args.maxProb is True:
+        trainFlags += " --maxProb"
+    if args.transMatEpsilons is True:
+        trainFlags += " --transMatEpsilons"
 
     # write out command line for posteriorty's sake
     if not os.path.exists(args.outputDir):
