@@ -76,7 +76,8 @@ class MultitrackHmm(BaseHMM):
                  forceUserTrans=None,
                  forceUserEmissions=None,
                  forceUserStart=None,
-                 transMatEpsilons=False):
+                 transMatEpsilons=False,
+                 maxProb=False):
         if emissionModel is not None:
             n_components = emissionModel.getNumStates()
         else:
@@ -140,11 +141,29 @@ class MultitrackHmm(BaseHMM):
         # it's probably best to turn on to not get caught in weird local
         # maxima
         self.transMatEpsilons = transMatEpsilons
-
+        # options to cherry-pick best iteration for training rather than
+        # returning the last one
+        self.maxProb = maxProb
+        self.best_forward_log_prob = None
+        self.bestCopy = None
+        
     def train(self, trackData):
         """ Use EM to estimate best parameters from scratch (unsupervised)"""
+        self.bestCopy = None
         self.trackList = trackData.getTrackList()
         self.fit(trackData.getTrackTableList())
+        if self.maxProb is True:
+            assert self.bestCopy is not None
+            logger.info("HMM parameters learned from maxProb iteration %d"
+                        " with logprob=%f" % (
+                 self.bestCopy.last_forward_log_prob_it-1,
+                 self.bestCopy.last_forward_log_prob))
+            self.emissionModel = self.bestCopy.emissionModel
+            self.transmat_ = self.bestCopy.transmat_
+            self._log_transmat = self.bestCopy._log_transmat
+            self.startprob_ = self.bestCopy.startprob_
+            self.last_forward_log_prob = self.bestCopy.last_forward_log_prob
+            self.last_forward_log_prob_it = self.bestCopy.last_forward_log_prob_it
         self.validate()
 
     def supervisedTrain(self, trackData, bedIntervals):
@@ -651,10 +670,21 @@ class MultitrackHmm(BaseHMM):
         lp = logsumexp(fwdlattice[-1])
         logger.debug("Forward log prob %f" % lp)
         if self.last_forward_log_prob_it != self.current_iteration:
+            if self.maxProb is True and (self.current_iteration == 1 or
+                    self.last_forward_log_prob > self.best_forward_log_prob):
+                self.best_forward_log_prob = self.last_forward_log_prob
+                self.bestCopy = copy.deepcopy(self)
             self.last_forward_log_prob = lp
             self.last_forward_log_prob_it = self.current_iteration
         else:
             self.last_forward_log_prob += lp
+            # very ugly repeating this here but need for final iteration
+            # should have this done thru nicer callback
+            if self.maxProb is True and self.current_iteration > 1 and\
+                    self.last_forward_log_prob > self.best_forward_log_prob:
+                self.best_forward_log_prob = self.last_forward_log_prob
+                self.bestCopy = copy.deepcopy(self)
+
         return lp, fwdlattice
 
     def _do_backward_pass(self, framelogprob, obs = None):
