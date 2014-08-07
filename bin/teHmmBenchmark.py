@@ -188,6 +188,8 @@ def main(argv=None):
     parser.add_argument("--fit", help="Run fitStateNames.py to automap names"
                         " before running comparison", action="store_true",
                         default=False)
+    parser.add_argument("--fitOpts", help="Options to pass to fitStateNames.py"
+                        " (only effective if used with --fit)", default=None)
     parser.add_argument("--saveAllReps", help="Save all replicates (--reps)"
                         " models to disk, instead of just the best one"
                         ". Format is <outputModel>.repN.  There will be "
@@ -378,6 +380,8 @@ def main(argv=None):
                     command += " && fitStateNames.py %s %s %s" % (compTruth,
                                                                   evalBed,
                                                                   fitBed)
+                    if args.fitOpts is not None:
+                        command += " " + args.fitOpts
                     compareInputBed = fitBed
 
                 # compare
