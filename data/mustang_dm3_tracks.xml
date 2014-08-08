@@ -5,6 +5,7 @@
 <track name="transposon_psi" path="/data/douglas.hoen/piatea/alyrata/tracks/transposonpsi/drosophila3_transposonpsi.bed"/>        
 
 <track name="orthology"     path="/data/glenn.hickey/genomes/dm3/tracks/alignability/dm3.alignability.bw" distribution="gaussian" default="0"/>
+<track name="phastcons_ce"  path="/data/glenn.hickey/genomes/dm3/tracks/phastcons_ce/dm3.phastCons15WayCE.bed" distribution="binary"/>
 
 <track name="genes"         path="/data/glenn.hickey/genomes/dm3/tracks/genes/dm3.flybase_genes_clean.bed"/>
 
