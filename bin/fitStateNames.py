@@ -57,7 +57,7 @@ def main(argv=None):
                         " predicted state X overlaps target state LTR 25 pct of "
                         "the time, then qualThresh must be at least 0.25 to "
                         "label X as LTR in the output.  Value in range (0, 1]",
-                        type=float, default=0.01)
+                        type=float, default=0.1)
     parser.add_argument("--ignore", help="Comma-separated list of stateNames to"
                         " ignore (in prediction)", default=None)
     parser.add_argument("--ignoreTgt", help="Comma-separated list of stateNames to"
