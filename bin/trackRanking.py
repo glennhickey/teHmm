@@ -61,6 +61,9 @@ def main(argv=None):
                         "interval-level", default=False, action="store_true")
     parser.add_argument("--naive", help="rank by \"naive\" score",
                          action="store_true", default=False)
+    parser.add_argument("--doNaive", help="compute naive stats.  will be "
+                        "turned on by default if --naive is used", default=False,
+                        action="store_true")
     
     addLoggingOptions(parser)
     args = parser.parse_args()
@@ -79,6 +82,8 @@ def main(argv=None):
 
     if args.bic is True and args.naive is True:
         raise RuntimeError("--bic and --naive are mutually incompatible")
+    if args.naive is True:
+        args.doNaive = True
         
     if not os.path.exists(args.outDir):
         os.makedirs(args.outDir)
@@ -220,6 +225,8 @@ def runTrial(tracksList, iteration, newTrackName, args):
                                                    truthPath,
                                                    segEvalPath,
                                                    args.segOpts)
+    if trainingPath == truthPath:
+        segmentCmd = "ln -f -s %s %s" % (os.path.abspath(segTrainingPath), segEvalPath)
     if args.fullSegment is False:
         runShellCommand(segmentCmd)
         segLog.write(segmentCmd + "\n")
@@ -238,7 +245,9 @@ def runTrial(tracksList, iteration, newTrackName, args):
 
     score = extractScore(benchDir, segTrainingPath, args)
     bic = extractBIC(benchDir, segTrainingPath, args)
-    naive = extractNaive(tracksPath, benchDir, segTrainingPath, args)
+    naive = 0
+    if args.doNaive is True:
+        naive = extractNaive(tracksPath, benchDir, segTrainingPath, args)
     slope, rsq = extractF1ProbSlope(benchDir, segTrainingPath, args)
 
     # clean up big files?

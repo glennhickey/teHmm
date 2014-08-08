@@ -57,6 +57,7 @@ numerical stability issues. This module will be removed in version 0.17.
 import string
 import numpy as np
 import numbers
+import copy
 
 from . import _basehmm
 from .common import logger
@@ -501,7 +502,7 @@ class BaseHMM(object):
         self._init(obs, self.init_params)
 
         logprob = []
-        for i in range(self.n_iter):
+        for i in range(copy.deepcopy(self.n_iter)):
             # Expectation step
             stats = self._initialize_sufficient_statistics()
             curr_logprob = 0
@@ -532,6 +533,7 @@ class BaseHMM(object):
             if i == self.n_iter - 1:
                 logger.debug("Finished without converging."
                              "  Logprobhistory: %s" % str(logprob))
+                break
 
             # Maximization step
             self._do_mstep(stats, self.params)

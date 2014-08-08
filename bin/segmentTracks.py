@@ -46,6 +46,8 @@ def main(argv=None):
     parser.add_argument("--cutUnscaled", help="Cut on all unscaled (used as "
                         "a proxy for non-numeric) tracks", default=False,
                         action="store_true")
+    parser.add_argument("--cutMultinomial", help="Cut non-gaussian, non-binary"
+                        " tracks everytime", default=False, action="store_true")
     parser.add_argument("--comp", help="Strategy for comparing columns for the "
                         "threshold cutoff.  Options are [first, prev], where"
                         " first compares with first column of segment and "
@@ -134,6 +136,14 @@ def main(argv=None):
               assert trackNo < len(cutList)
               cutList[trackNo] = 1
 
+    #process the --cutMultinomial option
+    if args.cutMultinomial is True:
+        for track in trackList:
+            trackNo = track.getNumber()
+            if track.dist == "multinomial" and\
+              args.ignoreList[trackNo] == 0:
+              assert trackNo < len(cutList)
+              cutList[trackNo] = 1
 
     # segment the tracks
     stats = dict()

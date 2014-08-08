@@ -11,9 +11,12 @@ import logging
 import numpy as np
 import copy
 import ast
+import itertools
+from collections import defaultdict
 
 from teHmm.trackIO import readBedIntervals
 from teHmm.common import intersectSize, initBedTool, cleanBedTool
+from teHmm.common import logger
 
 try:
     from teHmm.parameterAnalysis import pcaFlatten, plotPoints2d
@@ -412,14 +415,14 @@ def updateConfMatrix(matrix, predState, trueState):
     pred[trueState] += 1
     return matrix
 
-def getStateMapFromConfMatrix(matrix):
+def getStateMapFromConfMatrix_simple(forwardMatrix):
     """ return a dictionary mapping predicted state names to true state names
     using the confusion matrix that was generated using the above function...
     in addition to the name, the number of overlaps and total overlaps are
     returned to give an indication of the fit...
     """
     stateMap = dict()
-    for predName, predDict in matrix.items():
+    for predName, predDict in forwardMatrix.items():
         maxName, maxCount = None, -1
         total = 0
         for trueName, count in predDict.items():
@@ -428,6 +431,90 @@ def getStateMapFromConfMatrix(matrix):
                 maxName, maxCount = trueName, count
         stateMap[predName] = maxName, maxCount, total
     return stateMap
+
+def getStateMapFromConfMatrix(reverseMatrix, truthIgnore, predIgnore, thresh):
+    """ Use greedy algorithm to construct state map in order to maximize F1 score of
+    each non-ignored state (in order of size in truth).
+
+    The greedy heuristic here (mapping to truth states in order of their genome
+    coverage) is worrisome.  Since once a predicted state is mapped to the truth
+    state it is left out of consideration for all other truth states.  One hopes
+    the F1 metric compensates for this somewhat, and observes that the "truth"
+    annotations we currently consider (TE/non-TE) should *still be optimal* despite
+    the heuristic. 
+
+    NOTE: Unlike old version above, the input matrix is the reverse confusion matrix,
+    ie mapping truth states back to predictions (tho matrix data is symmetrical,
+    representation used in this module is not, and more convenient to work in one
+    direction or another)"""
+
+    # build maps of state names to # bases in resepctive annotations
+    truthStateSizes = defaultdict(int)
+    predStateSizes = defaultdict(int)
+    for truthState in reverseMatrix.keys():
+        for predState, overlap in reverseMatrix[truthState].items():
+            truthStateSizes[truthState] += overlap
+            predStateSizes[predState] += overlap
+            
+    # sort truth states decreasing order
+    truthStateList = truthStateSizes.items()
+    truthStateList.sort(key = lambda x : x[1], reverse = True)
+    logger.debug("State ranking in f1Fit:" + str(truthStateList))
+    
+    # main loop
+    stateNameMap = dict()
+    for truthState, truthSize in truthStateList:
+        if truthState in truthIgnore:
+            continue
+        # assemble list of candidate pred states that meet threshold
+        predCandidates = []
+        for predState, overlap in reverseMatrix[truthState].items():
+            if predState not in stateNameMap and\
+              predState not in predIgnore and\
+              float(overlap) / float(min(truthSize,
+                                         predStateSizes[predState])) >= thresh:
+              predCandidates.append(predState)
+            else:
+                logger.debug("state mapper skipping %s with othresh %f" % (
+                    predState, float(overlap) / float(min(truthSize,
+                                                          predStateSizes[predState]))))
+        logger.debug("candidates for %s: %s" % (truthState, str(predCandidates)))
+
+        # iterate over all combinaations of candidate mappings
+        def allSubsets(s):
+            for i in xrange(1, len(s) + 1):
+                for j in itertools.combinations(s, i):
+                    yield j
+        bestF1, bestMapSet = -1., []
+        for candidateSet in allSubsets(predCandidates):
+            if len(candidateSet) == len(predCandidates):
+                blin = True
+            # compute the f1 score of this mapping
+            p, r, f1, tp, fp, fn = 0.,0.,0.,0.,0., float(truthStateSizes[truthState])
+            for predState in candidateSet:
+                overlap = reverseMatrix[truthState][predState]
+                tp += overlap
+                fp += predStateSizes[predState] - overlap
+                fn -= overlap
+            if tp > 0.:
+                p = tp / (tp + fp)
+                r = tp / (tp + fn)
+                f1 = (2. * p * r) / (p + r)
+            #print f1, p, r, tp, fp, fn, str(candidateSet)
+            if f1 > bestF1:
+                bestF1, bestMapSet = f1, candidateSet
+                
+        # add best candidate set to prediction state name map
+        for predState in bestMapSet:
+            assert predState not in stateNameMap
+            stateNameMap[predState] = [truthState,
+                                       reverseMatrix[truthState][predState],
+                                       predStateSizes[predState]]
+        logger.debug("map %s <---- %s" % (truthState, str(bestMapSet)))
+    
+    # predStateName - > (truthStateName, tp, tp+fp)        
+    return stateNameMap
+    
             
 def extractCompStatsFromFile(dumpPath):
     """ I've developed a habit of dumping the output of this program to

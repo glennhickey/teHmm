@@ -57,7 +57,7 @@ def main(argv=None):
                         " predicted state X overlaps target state LTR 25 pct of "
                         "the time, then qualThresh must be at least 0.25 to "
                         "label X as LTR in the output.  Value in range (0, 1]",
-                        type=float, default=0.01)
+                        type=float, default=0.1)
     parser.add_argument("--ignore", help="Comma-separated list of stateNames to"
                         " ignore (in prediction)", default=None)
     parser.add_argument("--ignoreTgt", help="Comma-separated list of stateNames to"
@@ -103,13 +103,14 @@ def main(argv=None):
         confMat = compareIntervalsOneSided(intervals1, intervals2, args.col -1,
                                             args.intThresh, False)[1]
     else:
-        logger.info("Computing base confusion matrix")
-        confMat = compareBaseLevel(intervals1, intervals2, args.col - 1)[1]
+        logger.info("Computing base reverse confusion matrix")
+        confMat = compareBaseLevel(intervals2, intervals1, args.col - 1)[1]
 
-    logger.info("Confusion Matrix:\n%s", str(confMat))
+    logger.info("Reverse Confusion Matrix:\n%s", str(confMat))
 
     # find the best "true" match for each predicted state
-    stateMap = getStateMapFromConfMatrix(confMat)
+    stateMap = getStateMapFromConfMatrix(confMat, args.ignoreTgt, args.ignore,
+                                         args.qualThresh)
 
     # filter the stateMap to take into account the command-line options
     # notably --ignore, --ignoreTgt, --qualThresh, and --unique
@@ -185,7 +186,8 @@ def writeFittedBed(intervals, stateMap, outBed, col, noMerge, ignoreTgt):
     prevInterval = None
     for interval in intervals:
         outInterval = list(interval)
-        if stateMap[outInterval[col]][0] not in ignoreTgt:
+        if outInterval[col] in stateMap and\
+          stateMap[outInterval[col]][0] not in ignoreTgt:
             outInterval[col] = stateMap[outInterval[col]][0]
         if not noMerge and\
           prevInterval is not None and\

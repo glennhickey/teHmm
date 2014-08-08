@@ -188,6 +188,8 @@ def main(argv=None):
     parser.add_argument("--fit", help="Run fitStateNames.py to automap names"
                         " before running comparison", action="store_true",
                         default=False)
+    parser.add_argument("--fitOpts", help="Options to pass to fitStateNames.py"
+                        " (only effective if used with --fit)", default=None)
     parser.add_argument("--saveAllReps", help="Save all replicates (--reps)"
                         " models to disk, instead of just the best one"
                         ". Format is <outputModel>.repN.  There will be "
@@ -195,6 +197,22 @@ def main(argv=None):
                         " counts as a replicate.  Comparison statistics"
                         " will be generated for each rep.",
                         action="store_true", default=False)
+    parser.add_argument("--maxProb", help="Gaussian distributions and/or"
+                        " segment length corrections can cause probability"
+                        " to *decrease* during BW iteration.  Use this option"
+                        " to remember the parameters with the highest probability"
+                        " rather than returning the parameters after the final "
+                        "iteration.", action="store_true", default=False)
+    parser.add_argument("--maxProbCut", help="Use with --maxProb option to stop"
+                        " training if a given number of iterations go by without"
+                        " hitting a new maxProb", default=None, type=int)
+    parser.add_argument("--transMatEpsilons", help="By default, epsilons are"
+                        " added to all transition probabilities to prevent "
+                        "converging on 0 due to rounding error only for fully"
+                        " unsupervised training.  Use this option to force this"
+                        " behaviour for supervised and semisupervised modes",
+                        action="store_true", default=False)
+
         
     addLoggingOptions(parser)
     args = parser.parse_args()
@@ -267,6 +285,12 @@ def main(argv=None):
         trainFlags += " --emThresh %f" % args.emThresh
     if args.saveAllReps is True:
         trainFlags += " --saveAllReps"
+    if args.maxProb is True:
+        trainFlags += " --maxProb"
+    if args.transMatEpsilons is True:
+        trainFlags += " --transMatEpsilons"
+    if args.maxProbCut is not None:
+        trainFlags += " --maxProbCut %d" % args.maxProbCut
 
     # write out command line for posteriorty's sake
     if not os.path.exists(args.outputDir):
@@ -378,6 +402,8 @@ def main(argv=None):
                     command += " && fitStateNames.py %s %s %s" % (compTruth,
                                                                   evalBed,
                                                                   fitBed)
+                    if args.fitOpts is not None:
+                        command += " " + args.fitOpts
                     compareInputBed = fitBed
 
                 # compare

@@ -166,6 +166,21 @@ def main(argv=None):
                         " --reps -1 such models saved as the best output"
                         " counts as a replicate",
                         action="store_true", default=False)
+    parser.add_argument("--maxProb", help="Gaussian distributions and/or"
+                        " segment length corrections can cause probability"
+                        " to *decrease* during BW iteration.  Use this option"
+                        " to remember the parameters with the highest probability"
+                        " rather than returning the parameters after the final "
+                        "iteration.", action="store_true", default=False)
+    parser.add_argument("--maxProbCut", help="Use with --maxProb option to stop"
+                        " training if a given number of iterations go by without"
+                        " hitting a new maxProb", default=None, type=int)
+    parser.add_argument("--transMatEpsilons", help="By default, epsilons are"
+                        " added to all transition probabilities to prevent "
+                        "converging on 0 due to rounding error only for fully"
+                        " unsupervised training.  Use this option to force this"
+                        " behaviour for supervised and semisupervised modes",
+                        action="store_true", default=False)
 
     addLoggingOptions(parser)
     args = parser.parse_args()
@@ -202,6 +217,11 @@ def main(argv=None):
                                 float(args.emRandRange[1]))
         except:
             raise RuntimeError("Invalid --emRandRange specified")
+    if args.transMatEpsilons is False:
+        # old logic here. now overriden with above options
+        args.transMatEpsilons = (args.supervised is False and
+                                 args.initTransProbs is None and
+                                 args.forceTransProbs is None)
 
     setLoggingFromOptions(args)
     tempBedToolPath = initBedTool()
@@ -329,9 +349,9 @@ def trainModel(randomSeed, trackData, catMap, userTrans, truthIntervals,
                               forceUserTrans = args.forceTransProbs,
                               random_state = randGen,
                               thresh = args.emThresh,
-                              transMatEpsilons = (args.supervised is False and
-                                                  args.initTransProbs is None and
-                                                  args.forceTransProbs is None))
+                              transMatEpsilons = args.transMatEpsilons,
+                              maxProb = args.maxProb,
+                              maxProbCut = args.maxProbCut)
     else:
         pairEM = PairEmissionModel(emissionModel, [args.saPrior] *
                                    emissionModel.getNumStates())
