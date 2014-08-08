@@ -25,6 +25,7 @@
 	<track distribution="binary" name="trf" path="/data/douglas.hoen/sharebrowser/tracks/alyrata/permanent/misc/trf_8_scaffolds.bed" valCol="0"/>
 	<track distribution="binary" name="dustmasker" path="/data/douglas.hoen/piatea/alyrata/tracks/dustmasker/dustmasker_scaffolds1to8.bb" valCol="0"/>
 	<track distribution="binary" name="windowmasker" path="/data/douglas.hoen/piatea/alyrata/tracks/windowmasker/windowmasker_scaffolds1to8.bb" valCol="0"/>
+	<track distribution="binary" name="tantan" path="/data/douglas.hoen/piatea/genomes/alyrata/tracks/tantan/alyrata_tantan.bed" valCol="0"/>
 	<track distribution="binary" name="polyA" path="/data/douglas.hoen/sharebrowser/tracks/alyrata/permanent/misc/polyA.bb" valCol="0"/>
 	<track distribution="binary" name="polyN" path="/data/douglas.hoen/sharebrowser/tracks/alyrata/bed/Ns_sites.bed" valCol="0"/>
 	<track distribution="multinomial" name="sequence" path="/data/douglas.hoen/data/genomes/a_lyrata/unmasked_renamed/scaffolds1-8.trf_softmasked.fas" valCol="3"/>
