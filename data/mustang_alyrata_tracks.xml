@@ -30,7 +30,6 @@
 <track name="trf"           path="/data/douglas.hoen/sharebrowser/tracks/alyrata/permanent/misc/trf_8_scaffolds.bed" distribution="binary"/>
 <track name="dustmasker"    path="/data/douglas.hoen/piatea/alyrata/tracks/dustmasker/dustmasker_scaffolds1to8.bb" distribution="binary"/>
 <track name="windowmasker"  path="/data/douglas.hoen/piatea/alyrata/tracks/windowmasker/windowmasker_scaffolds1to8.bb" distribution="binary"/>
-<track name="tantan"        path="/data/douglas.hoen/piatea/genomes/alyrata/tracks/tantan/alyrata_tantan.bed" distribution="binary"/>
 <track name="polyA"         path="/data/douglas.hoen/sharebrowser/tracks/alyrata/permanent/misc/polyA.bb" distribution="binary"/>
 <track name="polyN"         path="/data/douglas.hoen/sharebrowser/tracks/alyrata/bed/Ns_sites.bed" distribution="binary"/>
 
@@ -39,5 +38,6 @@
 <!--
 This track doesnt seem to help much.  Need better investigation before adding it or not.  Not immediate priority
 <track name="p_clouds"      path="/data/douglas.hoen/piatea/genomes/alyrata/tracks/alyrata_pclouds_c10.bed" distribution="binary"/>
+<track name="tantan"        path="/data/douglas.hoen/piatea/genomes/alyrata/tracks/tantan/alyrata_tantan.bed" distribution="binary"/>
 -->
 </teModelConfig>
