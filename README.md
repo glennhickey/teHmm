@@ -61,7 +61,7 @@ Chromosome (or contig) names must be consistent within all the track files.  Tra
 The track list file contains a single *teModelConfig* element which in turn contains a list of *track* elements.  Each *track* element must have a (unique) *name* attribute and a *path* attribute.  The *path* is either absolute or relative to where ever you launch the stript from (TODO: probably better to make relative to the xml file). Optional attributes are as follows:
 * *distribution* which can take the following values: 
   * *binary*, where bed intervals specify 1 and all other regions are 0
-  * *multnomial* where the bed value is read from the *name* column of the bed file. Regions outside bed intervals are assumed to have a default value
+  * *multnomial* (**DEFAULT**) where the bed value is read from the *name* column of the bed file. Regions outside bed intervals are assumed to have a default value
   * *sparse_multinomial* same as above except regions outside of intervals are considered unobserved.
   * *gaussian* where each bed value (read as in *multinomial*) must be numeric, and is assumed to be drawn from a Gaussian distribution.  A numeric *default* value must be specified.  
 * *valCol* 0-based (so name=3) column of bed file to read state from for multinomial distribution
