@@ -10,7 +10,7 @@
 <track name="repet"             path="/data/douglas.hoen/piatea/genomes/alyrata/tracks/mamus/alyrata_repet.bed"/>
 
 <track name="ltr_finder"    path="/data/douglas.hoen/piatea/genomes/alyrata/tracks/ltrfinder/alyrata_ltrfinder.bed"/>
-<track name="ltr_harvest"   path="/data/douglas.hoen/piatea/genomes/alyrata/tracks/ltrharvest/alyrata_ltrharvest.be"/>
+<track name="ltr_harvest"   path="/data/douglas.hoen/piatea/genomes/alyrata/tracks/ltrharvest/alyrata_ltrharvest.bed"/>
 <track name="ltr_termini"       path="/data/douglas.hoen/sharebrowser/tracks/alyrata/permanent/termini/all_scaffolds.termini_search.filter_2.ltr.sorted.bed"/>
 <track name="tir_termini"   path="/data/douglas.hoen/sharebrowser/tracks/alyrata/permanent/termini/all_scaffolds.termini_search.filter_2.tir.sorted.bed"/>
 <track name="irf"           path="/data/douglas.hoen/piatea/genomes/alyrata/tracks/irf/alyrata_irf.bed"/>
@@ -24,9 +24,9 @@
 <track name="right_peak"    path="/data/douglas.hoen/piatea/genomes/alyrata/tracks/copynum/alyrata_rightpeak.bw" default="0.0" distribution="gaussian"/>
 
 <track name="te_domains"    path="/data/douglas.hoen/piatea/genomes/alyrata/tracks/domains/alyrata_tedomains.bed"/>
-<track name="fgenesh"       path="/data/douglas.hoen/piatea/genomes/alyrata/tracks/misc/alyrata_fgenesh.bedd"/>  
-<track name="mrna"          path="/data/douglas.hoen/piatea/genomes/alyrata/tracks/misc/alyrata_mrna.b" default="0.0" distribution="gaussian"/>
-<track name="srna"          path="/data/douglas.hoen/piatea/genomes/alyrata/tracks/misc/alyrata_srna.b" default="0.0" distribution="gaussian"/>
+<track name="fgenesh"       path="/data/douglas.hoen/piatea/genomes/alyrata/tracks/misc/alyrata_fgenesh.bed"/>  
+<track name="mrna"          path="/data/douglas.hoen/piatea/genomes/alyrata/tracks/misc/alyrata_mrna.bw" default="0.0" distribution="gaussian"/>
+<track name="srna"          path="/data/douglas.hoen/piatea/genomes/alyrata/tracks/misc/alyrata_srna.bw" default="0.0" distribution="gaussian"/>
 <track name="ortho_depth"   path="/data/douglas.hoen/piatea/genomes/alyrata/tracks/misc/alyrata_orthodepth.bw" default="0.0" distribution="gaussian"/>
 <track name="gcpct"         path="/data/glenn.hickey/genomes/alyrata/tracks/gc/gcPercentWin20.bw" default="0.0" distribution="gaussian"/>
 

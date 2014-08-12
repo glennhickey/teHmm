@@ -224,7 +224,7 @@ def runCleaning(args, tempTracksInfo):
         logger.warning("Could not find repbase_censor track")
                 
     # run cleanTermini.py
-    lastzTracks = [trackList.getTrackByName(args.termini),
+    lastzTracks = [trackList.getTrackByName(args.ltr_termini),
                   trackList.getTrackByName(args.tir)]
     for terminiTrack in lastzTracks:
         if terminiTrack is not None:
@@ -307,7 +307,7 @@ def runTsd(args, tempTracksInfo):
     tsdInputTracks = []
         
     # preprocess termini
-    lastzTracks = [origTrackList.getTrackByName(args.termini),
+    lastzTracks = [origTrackList.getTrackByName(args.ltr_termini),
                   origTrackList.getTrackByName(args.tir)]
     for terminiTrack in lastzTracks:
         if terminiTrack is not None:
@@ -351,7 +351,7 @@ def runTsd(args, tempTracksInfo):
             optString += " --min 5"
             optString += " --max 20"
             optString += " --overlap 20"
-        elif tsdInputTracks[i] == args.termini:
+        elif tsdInputTracks[i] == args.ltr_termini:
             optString += " --maxScore 3"
             optString += " --left 8"
             optString += " --right 8"
