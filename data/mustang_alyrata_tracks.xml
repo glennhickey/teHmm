@@ -23,7 +23,7 @@
 <track name="left_peak"     path="/data/douglas.hoen/piatea/genomes/alyrata/tracks/copynum/alyrata_leftpeak.bw" default="0.0" distribution="gaussian"/>
 <track name="right_peak"    path="/data/douglas.hoen/piatea/genomes/alyrata/tracks/copynum/alyrata_rightpeak.bw" default="0.0" distribution="gaussian"/>
 
-<track name="te_domains"    path="/data/douglas.hoen/piatea/genomes/alyrata/tracks/domains/alyrata_tedomains.bed"/>
+<track name="te_domains"    path="/data/douglas.hoen/sharebrowser/tracks/alyrata/permanent/domains/TE_domains.bed"/>
 <track name="fgenesh"       path="/data/douglas.hoen/piatea/genomes/alyrata/tracks/misc/alyrata_fgenesh.bed"/>  
 <track name="mrna"          path="/data/douglas.hoen/piatea/genomes/alyrata/tracks/misc/alyrata_mrna.bw" default="0.0" distribution="gaussian"/>
 <track name="srna"          path="/data/douglas.hoen/piatea/genomes/alyrata/tracks/misc/alyrata_srna.bw" default="0.0" distribution="gaussian"/>
