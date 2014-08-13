@@ -310,6 +310,7 @@ In general, running any executable with `--help` will print a brief description 
 * **addTrackHeader.py** : Set or modify track header of BED file in order to display on Genome Browser.
 * **filterPredictions.py** : Simple script to remove some obvious artifacts (ex orphaned ltr and tsds) or tiny predictions out of a BED file.
 * **cleanGenes.py**: Convert a BED-12 format gene prediction into suitable input for HMM by explicitly splitting block intervals into introns and exons
+* **setScoreFromTrackIntersection.py**: Intersect a intervals in BED file with specified track.  Can be used, for example, to map copy number onto RepeatModeler predictions (given a .wig copy number track).  Note that track binning specified in the XML will be applied internally so numeric values will be rounded.  Also note that the **mode** is used to report the average value across the given intervals.
 
 **Scaling, Binning and Segmentation**
 
