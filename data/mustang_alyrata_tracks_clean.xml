@@ -1,33 +1,36 @@
 <?xml version="1.0" ?>
 <teModelConfig>
-	<track distribution="multinomial" name="hollister" path="/data/glenn.hickey/genomes/alyrata/tracks/clean/te_hollister_2011_clean.bed" valCol="3"/>
-	<track distribution="multinomial" name="repbase" path="/data/glenn.hickey/genomes/alyrata/tracks/clean/scaffolds1to8_clean.bed" valCol="3"/>
-	<track distribution="multinomial" name="chaux" path="/data/glenn.hickey/genomes/alyrata/tracks/clean/chaux_sorted_clean.bed" valCol="3"/>
-	<track distribution="multinomial" name="transposon_psi" path="/data/glenn.hickey/genomes/alyrata/tracks/clean/scaffolds1-8.trf_softmasked.fas.TPSI.allHits.chains.bestPerLocus_clean.bed" valCol="3"/>
+	<track distribution="multinomial" name="hollister" path="/data/glenn.hickey/genomes/alyrata/tracks/clean/alyrata_hollister_clean.bed" valCol="3"/>
+	<track distribution="multinomial" name="repbase" path="/data/glenn.hickey/genomes/alyrata/tracks/clean/alyrata_repbase_repeatmasker_clean.bed" valCol="3"/>
+	<track distribution="multinomial" name="chaux" path="/data/glenn.hickey/genomes/alyrata/tracks/clean/alyrata_chaux_clean.bed" valCol="3"/>
+	<track distribution="multinomial" name="transposon_psi" path="/data/glenn.hickey/genomes/alyrata/tracks/clean/alyrata_transposonpsi_clean.bed" valCol="3"/>
 	<track distribution="multinomial" name="repbase_censor" path="/data/glenn.hickey/genomes/alyrata/tracks/clean/alyrata_repbase_censor_clean.bed" valCol="3"/>
-	<track distribution="multinomial" name="repeat_modeler" path="/data/glenn.hickey/genomes/alyrata/tracks/clean/AL_renamed_scaffolds1to8_clean.bed" valCol="3"/>
-	<track distribution="multinomial" name="ltr_finder" path="/data/glenn.hickey/genomes/alyrata/tracks/clean/a_lyrata-ltr_finder_clean.bed" valCol="3"/>
-	<track distribution="multinomial" name="ltr_harvest" path="/data/glenn.hickey/genomes/alyrata/tracks/clean/ltrharvest_v2_clean.bed" valCol="3"/>
-	<track distribution="multinomial" name="termini" path="/data/glenn.hickey/genomes/alyrata/tracks/clean/all_scaffolds.termini_search.filter_2.ltr.sorted_clean.bed" valCol="3"/>
+	<track distribution="multinomial" name="repeat_modeler" path="/data/glenn.hickey/genomes/alyrata/tracks/clean/alyrata_repeatmodeler_clean.bed" valCol="3"/>
+	<track distribution="multinomial" name="repet" path="/data/douglas.hoen/piatea/genomes/alyrata/tracks/mamus/alyrata_repet.bed" valCol="3"/>
+	<track distribution="multinomial" name="ltr_finder" path="/data/glenn.hickey/genomes/alyrata/tracks/clean/alyrata_ltrfinder_clean.bed" valCol="3"/>
+	<track distribution="multinomial" name="ltr_harvest" path="/data/glenn.hickey/genomes/alyrata/tracks/clean/alyrata_ltrharvest_clean.bed" valCol="3"/>
+	<track distribution="multinomial" name="ltr_termini" path="/data/glenn.hickey/genomes/alyrata/tracks/clean/all_scaffolds.termini_search.filter_2.ltr.sorted_clean.bed" valCol="3"/>
 	<track distribution="multinomial" name="tir_termini" path="/data/glenn.hickey/genomes/alyrata/tracks/clean/all_scaffolds.termini_search.filter_2.tir.sorted_clean.bed" valCol="3"/>
-	<track distribution="multinomial" name="irf" path="/data/glenn.hickey/genomes/alyrata/tracks/clean/scaffolds1-8.irf_clean.bed" valCol="3"/>
+	<track distribution="multinomial" name="irf" path="/data/glenn.hickey/genomes/alyrata/tracks/clean/alyrata_irf_clean.bed" valCol="3"/>
+	<track distribution="multinomial" name="palindrome" path="/data/douglas.hoen/piatea/genomes/alyrata/tracks/termini/alyrata_palindrome.bed" valCol="3"/>
+	<track distribution="multinomial" name="overlap" path="/data/douglas.hoen/piatea/genomes/alyrata/tracks/termini/alyrata_directoverlap.bed" valCol="3"/>
 	<track distribution="binary" name="mitehunter" path="/data/douglas.hoen/piatea/genomes/alyrata/tracks/mitehunter/alyrata_mitehunter.bed" valCol="0"/>
-	<track default="0.0" distribution="gaussian" logScale="3.5069" name="copy" path="/data/douglas.hoen/sharebrowser/tracks/alyrata/permanent/self-alignments/mathieu_new/scaffolds1-8.trf_softmasked.fas.cov.bw" shift="1.0" valCol="3"/>
-	<track default="0.0" distribution="gaussian" logScale="1.348" name="copy_cv" path="/data/douglas.hoen/sharebrowser/tracks/alyrata/permanent/mathieu/variation/AL_v_AL_100_nonSelf.cv100.bw" shift="1.0" valCol="3"/>
-	<track default="0.0" distribution="gaussian" logScale="3.0064" name="left_peak" path="/data/douglas.hoen/sharebrowser/tracks/alyrata/permanent/self-alignments/mathieu_new/scaffolds1-8.trf_softmasked.fas.left.bw" shift="1.0" valCol="3"/>
-	<track default="0.0" distribution="gaussian" logScale="3.4377" name="right_peak" path="/data/douglas.hoen/sharebrowser/tracks/alyrata/permanent/self-alignments/mathieu_new/scaffolds1-8.trf_softmasked.fas.right.bw" shift="1.0" valCol="3"/>
+	<track default="0.0" distribution="gaussian" logScale="3.5069" name="copy" path="/data/douglas.hoen/piatea/genomes/alyrata/tracks/copynum/alyrata_copynum.bw" shift="1.0" valCol="3"/>
+	<track default="0.0" distribution="gaussian" logScale="1.348" name="copy_cv" path="/data/douglas.hoen/piatea/genomes/alyrata/tracks/copynum/alyrata_copycv.bw" shift="1.0" valCol="3"/>
+	<track default="0.0" distribution="gaussian" logScale="3.0064" name="left_peak" path="/data/douglas.hoen/piatea/genomes/alyrata/tracks/copynum/alyrata_leftpeak.bw" shift="1.0" valCol="3"/>
+	<track default="0.0" distribution="gaussian" logScale="3.4377" name="right_peak" path="/data/douglas.hoen/piatea/genomes/alyrata/tracks/copynum/alyrata_rightpeak.bw" shift="1.0" valCol="3"/>
 	<track distribution="multinomial" name="te_domains" path="/data/douglas.hoen/sharebrowser/tracks/alyrata/permanent/domains/TE_domains.bed" valCol="3"/>
-	<track distribution="multinomial" name="fgenesh" path="/data/douglas.hoen/sharebrowser/tracks/alyrata/custom/fgh_relabelled.bed" valCol="3"/>
-	<track default="0.0" distribution="gaussian" logScale="4.4961" name="mrna" path="/gbdb/alyrata/wib/splicemap.bw" shift="1.0" valCol="3"/>
-	<track default="0.0" distribution="gaussian" logScale="4.0307" name="srna" path="/data/douglas.hoen/sharebrowser/tracks/alyrata/permanent/misc/AlsmallCS_fixed.bw" shift="1.0" valCol="3"/>
-	<track default="0.0" distribution="gaussian" name="ortho_depth" path="/data/douglas.hoen/sharebrowser/tracks/alyrata/permanent/misc/All_Al_depth_fixed.bw" scale="0.8889" shift="0.0" valCol="3"/>
+	<track distribution="multinomial" name="fgenesh" path="/data/douglas.hoen/piatea/genomes/alyrata/tracks/misc/alyrata_fgenesh.bed" valCol="3"/>
+	<track default="0.0" distribution="gaussian" logScale="4.4961" name="mrna" path="/data/douglas.hoen/piatea/genomes/alyrata/tracks/misc/alyrata_mrna.bw" shift="1.0" valCol="3"/>
+	<track default="0.0" distribution="gaussian" logScale="4.0307" name="srna" path="/data/douglas.hoen/piatea/genomes/alyrata/tracks/misc/alyrata_srna.bw" shift="1.0" valCol="3"/>
+	<track default="0.0" distribution="gaussian" name="ortho_depth" path="/data/douglas.hoen/piatea/genomes/alyrata/tracks/misc/alyrata_orthodepth.bw" scale="0.8889" shift="0.0" valCol="3"/>
 	<track default="0.0" distribution="gaussian" name="gcpct" path="/data/glenn.hickey/genomes/alyrata/tracks/gc/gcPercentWin20.bw" scale="0.08" shift="0.0" valCol="3"/>
-	<track distribution="binary" name="trf" path="/data/douglas.hoen/sharebrowser/tracks/alyrata/permanent/misc/trf_8_scaffolds.bed" valCol="0"/>
-	<track distribution="binary" name="dustmasker" path="/data/douglas.hoen/piatea/alyrata/tracks/dustmasker/dustmasker_scaffolds1to8.bb" valCol="0"/>
-	<track distribution="binary" name="windowmasker" path="/data/douglas.hoen/piatea/alyrata/tracks/windowmasker/windowmasker_scaffolds1to8.bb" valCol="0"/>
+	<track distribution="binary" name="trf" path="/data/douglas.hoen/piatea/genomes/alyrata/tracks/misc/alyrata_trf.bed" valCol="0"/>
+	<track distribution="binary" name="dustmasker" path="/data/douglas.hoen/piatea/genomes/alyrata/tracks/dustmasker/alyrata_dustmasker.bb" valCol="0"/>
+	<track distribution="binary" name="windowmasker" path="/data/douglas.hoen/piatea/genomes/alyrata/tracks/windowmasker/alyrata_windowmasker.bb" valCol="0"/>
 	<track distribution="binary" name="tantan" path="/data/douglas.hoen/piatea/genomes/alyrata/tracks/tantan/alyrata_tantan.bed" valCol="0"/>
-	<track distribution="binary" name="polyA" path="/data/douglas.hoen/sharebrowser/tracks/alyrata/permanent/misc/polyA.bb" valCol="0"/>
-	<track distribution="binary" name="polyN" path="/data/douglas.hoen/sharebrowser/tracks/alyrata/bed/Ns_sites.bed" valCol="0"/>
-	<track distribution="multinomial" name="sequence" path="/data/douglas.hoen/data/genomes/a_lyrata/unmasked_renamed/scaffolds1-8.trf_softmasked.fas" valCol="3"/>
-	<track distribution="multinomial" name="tsd" path="/data/glenn.hickey/genomes/alyrata/tracks/clean/termini_tsd.bed" valCol="3"/>
+	<track distribution="binary" name="polyA" path="/data/douglas.hoen/piatea/genomes/alyrata/tracks/misc/alyrata_polya.bb" valCol="0"/>
+	<track distribution="binary" name="polyN" path="/data/douglas.hoen/piatea/genomes/alyrata/tracks/misc/alyrata_polyn.bb" valCol="0"/>
+	<track distribution="multinomial" name="sequence" path="/data/douglas.hoen/piatea/genomes/alyrata/sequence/alyrata_scaffolds1to8.fas" valCol="3"/>
+	<track distribution="multinomial" name="tsd" path="/data/glenn.hickey/genomes/alyrata/tracks/clean/ltr_termini_tsd.bed" valCol="3"/>
 </teModelConfig>
