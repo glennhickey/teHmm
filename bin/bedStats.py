@@ -74,9 +74,9 @@ def makeCSV(intervals, args, dataFn):
     csv += "SummaryStats,\n"
     summaryData = summaryStats(dataDict)
     assert len(summaryData) == len(dataDict)
-    csv += "ID,Min,Max,Mean,Mode,Median\n"
+    csv += "ID,Min,Max,Mean,Mode,Median,Sum\n"
     for name, data in summaryData.items():
-        assert len(data) == 5
+        assert len(data) == 6
         if name != totalTok:
             csv += name + "," + ",".join([str(x) for x in data]) + "\n"
     data = summaryData[totalTok]
@@ -135,7 +135,7 @@ def summaryStats(dataDict):
     summaryStats = dict()
     for name, data in dataDict.items():
         summaryStats[name] = (np.min(data), np.max(data), np.mean(data),
-                              mode(data)[0][0], np.median(data))
+                              mode(data)[0][0], np.median(data), np.sum(data))
     return summaryStats
 
 def histogramStats(dataDict, summaryDict, numBins=10, start=None, end=None):
