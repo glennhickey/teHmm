@@ -36,7 +36,7 @@ def main(argv=None):
     parser.add_argument("inBed", help="Input bed file")
     parser.add_argument("outCsv", help="Path to write output in CSV format")
     parser.add_argument("--ignore", help="Comma-separated list of names"
-                        " to ignore", default=None)
+                        " to ignore", default="")
     parser.add_argument("--numBins", help="Number of (linear) bins for "
                         "histograms", type=int, default=10)
 
@@ -46,6 +46,7 @@ def main(argv=None):
     tempBedToolPath = initBedTool()
 
     outFile = open(args.outCsv, "w")
+    args.ignoreSet = set(args.ignore.split(","))
 
     intervals = readBedIntervals(args.inBed, ncol = 4)
 
@@ -65,7 +66,7 @@ def makeCSV(intervals, args, dataFn):
     """ Make string in CSV format with summary and histogram stats for
     intervals """
 
-    dataDict = bedIntervalsToDataDict(intervals, dataFn)
+    dataDict = bedIntervalsToDataDict(intervals, dataFn, args)
     csv = ""
     if len(dataDict) == 0:
         return csv
@@ -102,14 +103,16 @@ def makeCSV(intervals, args, dataFn):
     return csv
     
     
-def bedIntervalsToDataDict(intervals, dataFn, nameCol=3, 
+def bedIntervalsToDataDict(intervals, dataFn, args, nameCol=3, 
                            dtype=np.float, totalTok = totalTok):
     """ return dictionary mapping name to list of data points in numpy array """
     # pass 1: count
     counts = defaultdict(int)
     for interval in intervals:
+        if interval[nameCol] in args.ignoreSet:
+            continue
         counts[interval[nameCol]] += 1
-    counts[totalTok] = len(intervals)
+        counts[totalTok] = counts[totalTok] + 1
 
     # create arrays
     data = dict()
@@ -120,6 +123,8 @@ def bedIntervalsToDataDict(intervals, dataFn, nameCol=3,
     cur = defaultdict(int)
     for interval in intervals:
         name = interval[nameCol]
+        if name in args.ignoreSet:
+            continue
         assert cur[name] < counts[name]
         data[name][cur[name]] = dataFn(interval)
         cur[name] += 1
