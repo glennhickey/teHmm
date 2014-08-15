@@ -57,8 +57,7 @@ def main(argv=None):
     # score stats
     try: 
         csvStats += "\n" + makeCSV(intervals, args, lambda x : float(x[4]))
-    #except Exception as e:
-    except int as e:
+    except Exception as e:
         logger.warning("Couldn't make score stats because %s" % str(e))
     outFile.write(csvStats)
     outFile.write("\n")
