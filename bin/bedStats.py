@@ -92,17 +92,23 @@ def makeCSV(intervals, args, dataFn):
     histData = histogramStats(dataDict, summaryData, args,
                               start=start, end=end)
     headerBins = histData[totalTok][1]
-    csv += "ID," + ",".join([str(x) for x in headerBins]) + "\n"
+    histTable = [["ID"] + [str(x) for x in headerBins]]
     for name, data in histData.items():
         freq, bins = data[0], data[1]
         if name != totalTok:
             if not args.logHist:
                 assert_array_equal(bins, headerBins)
-            csv += name + "," + ",".join([str(x) for x in freq]) + "\n"
+            histTable.append([name] + [str(x) for x in freq])
     data = histData[totalTok]
     freq, bins = data[0], data[1]
-    csv += "Total" + "," + ",".join([str(x) for x in freq]) + "\n"
-    
+    histTable.append(["Total"] + [str(x) for x in freq])
+
+    # transpose histTable into csv (mostly because Numbers is so increadibly
+    # bad that you can't make a chart out of row-data in any way)
+    rows = len(histTable)
+    cols = len(histTable[0])
+    for col in xrange(cols):
+        csv += ",".join([histTable[x][col] for x in xrange(rows)]) + "\n"
     return csv
     
     
@@ -166,7 +172,7 @@ def histogramStats(dataDict, summaryDict, args, start=None, end=None):
             hData, hStart, hEnd = hFn(data), hFn(hStart), hFn(hEnd)
         freq, bins = np.histogram(hData, bins=args.numBins, range=(hStart, hEnd),
                                   density=True)
-        histStats[name] = (freq, bins)
+        histStats[name] = (freq, bins[:-1])
     
     return histStats
 
