@@ -39,6 +39,8 @@ def main(argv=None):
                         " to ignore", default="")
     parser.add_argument("--numBins", help="Number of (linear) bins for "
                         "histograms", type=int, default=10)
+    parser.add_argument("--logHist", help="Apply log-transform to data for "
+                        "histogram", action="store_true", default=False)
 
     addLoggingOptions(parser)
     args = parser.parse_args()
@@ -48,14 +50,15 @@ def main(argv=None):
     outFile = open(args.outCsv, "w")
     args.ignoreSet = set(args.ignore.split(","))
 
-    intervals = readBedIntervals(args.inBed, ncol = 4)
+    intervals = readBedIntervals(args.inBed, ncol = 5)
 
     # length stats
     csvStats = makeCSV(intervals, args, lambda x : int(x[2])-int(x[1]))
     # score stats
     try: 
         csvStats += "\n" + makeCSV(intervals, args, lambda x : float(x[4]))
-    except Exception as e:
+    #except Exception as e:
+    except int as e:
         logger.warning("Couldn't make score stats because %s" % str(e))
     outFile.write(csvStats)
     outFile.write("\n")
@@ -87,14 +90,15 @@ def makeCSV(intervals, args, dataFn):
     csv += "\nHistogramStats,\n"
     start = min(0, summaryData[totalTok][0])
     end = max(start, summaryData[totalTok][1]) + 1
-    histData = histogramStats(dataDict, summaryData, numBins=args.numBins,
+    histData = histogramStats(dataDict, summaryData, args,
                               start=start, end=end)
     headerBins = histData[totalTok][1]
     csv += "ID," + ",".join([str(x) for x in headerBins]) + "\n"
     for name, data in histData.items():
         freq, bins = data[0], data[1]
         if name != totalTok:
-            assert_array_equal(bins, headerBins)
+            if not args.logHist:
+                assert_array_equal(bins, headerBins)
             csv += name + "," + ",".join([str(x) for x in freq]) + "\n"
     data = histData[totalTok]
     freq, bins = data[0], data[1]
@@ -144,7 +148,7 @@ def summaryStats(dataDict):
                               np.sum(data))
     return summaryStats
 
-def histogramStats(dataDict, summaryDict, numBins=10, start=None, end=None):
+def histogramStats(dataDict, summaryDict, args, start=None, end=None):
     """ create a histogram for each category """
     histStats = dict()
     assert len(dataDict) == len(summaryDict)
@@ -157,7 +161,12 @@ def histogramStats(dataDict, summaryDict, numBins=10, start=None, end=None):
         if hEnd is None:
             hEnd = summary[1]
         hEnd = max(hEnd, hStart + 1)
-        freq, bins = np.histogram(data, bins=numBins, range=(hStart, hEnd))
+        hData = data
+        if args.logHist is True:
+            hFn = lambda x : np.log(x + summary[0] + 1)
+            hData, hStart, hEnd = hFn(data), hFn(hStart), hFn(hEnd)
+        freq, bins = np.histogram(hData, bins=args.numBins, range=(hStart, hEnd),
+                                  density=True)
         histStats[name] = (freq, bins)
     
     return histStats
