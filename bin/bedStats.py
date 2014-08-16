@@ -41,11 +41,18 @@ def main(argv=None):
                         "histograms", type=int, default=10)
     parser.add_argument("--logHist", help="Apply log-transform to data for "
                         "histogram", action="store_true", default=False)
+    parser.add_argument("--histRange", help="Histogram range as comma-"
+                        "separated pair of numbers", default=None)
 
     addLoggingOptions(parser)
     args = parser.parse_args()
     setLoggingFromOptions(args)
     tempBedToolPath = initBedTool()
+
+    if args.histRange is not None:
+        args.histRange = args.histRange.split(",")
+        assert len(args.histRange) == 2
+        args.histRange = int(args.histRange[0]), int(args.histRange[1])
 
     outFile = open(args.outCsv, "w")
     args.ignoreSet = set(args.ignore.split(","))
@@ -53,10 +60,14 @@ def main(argv=None):
     intervals = readBedIntervals(args.inBed, ncol = 5)
 
     # length stats
-    csvStats = makeCSV(intervals, args, lambda x : int(x[2])-int(x[1]))
+    csvStats = makeCSV(intervals, args, lambda x : int(x[2])-int(x[1]),
+                        "Length")
     # score stats
-    try: 
-        csvStats += "\n" + makeCSV(intervals, args, lambda x : float(x[4]))
+    try:
+        csvStats += "\n" + makeCSV(intervals, args, lambda x : float(x[4]),
+                                   "Score")
+        csvStats += "\n" + makeCSV(intervals, args, lambda x : float(x[4]) / (
+            float(x[2]) - float(x[1])), "Score/Length")
     except Exception as e:
         logger.warning("Couldn't make score stats because %s" % str(e))
     outFile.write(csvStats)
@@ -64,7 +75,7 @@ def main(argv=None):
     outFile.close()
     cleanBedTool(tempBedToolPath)
 
-def makeCSV(intervals, args, dataFn):
+def makeCSV(intervals, args, dataFn, sectionName):
     """ Make string in CSV format with summary and histogram stats for
     intervals """
 
@@ -74,7 +85,7 @@ def makeCSV(intervals, args, dataFn):
         return csv
 
     # summary
-    csv += "SummaryStats,\n"
+    csv += "%s SummaryStats,\n" % sectionName
     summaryData = summaryStats(dataDict)
     assert len(summaryData) == len(dataDict)
     csv += "ID,Min,Max,Mean,Mode,Median,Count,Sum\n"
@@ -86,11 +97,13 @@ def makeCSV(intervals, args, dataFn):
     csv += "Total" + "," + ",".join([str(x) for x in data]) + "\n"
         
     # histogram
-    csv += "\nHistogramStats,\n"
+    csv += "\n%s HistogramStats,\n" % sectionName
     start = min(0, summaryData[totalTok][0])
     end = max(start, summaryData[totalTok][1]) + 1
+    if args.histRange is not None:
+        start, end = args.histRange[0], args.histRange[1]
     histData = histogramStats(dataDict, summaryData, args,
-                              start=start, end=end)
+                              start=start, end=end, density=True)
     headerBins = histData[totalTok][1]
     histTable = [["ID"] + [str(x) for x in headerBins]]
     for name, data in histData.items():
@@ -153,7 +166,8 @@ def summaryStats(dataDict):
                               np.sum(data))
     return summaryStats
 
-def histogramStats(dataDict, summaryDict, args, start=None, end=None):
+def histogramStats(dataDict, summaryDict, args, start=None, end=None,
+                   density=False):
     """ create a histogram for each category """
     histStats = dict()
     assert len(dataDict) == len(summaryDict)
@@ -171,7 +185,7 @@ def histogramStats(dataDict, summaryDict, args, start=None, end=None):
             hFn = lambda x : np.log(x + summary[0] + 1)
             hData, hStart, hEnd = hFn(data), hFn(hStart), hFn(hEnd)
         freq, bins = np.histogram(hData, bins=args.numBins, range=(hStart, hEnd),
-                                  density=True)
+                                  density=density)
         histStats[name] = (freq, bins[:-1])
     
     return histStats
