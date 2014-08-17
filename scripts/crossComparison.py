@@ -26,10 +26,12 @@ setLogLevel("INFO")
 addLoggingFileHandler("log.txt", False)
 
 bedFiles=dict()
-bedFiles["holl"] = "alyrata_hollister_clean.bed"
-bedFiles["modelr"] = "alyrata_repeatmodeler_clean.bed"
+bedFiles["hollister"] = "alyrata_hollister_clean.bed"
+bedFiles["modeler"] = "alyrata_repeatmodeler_clean.bed"
 bedFiles["chaux"] = "alyrata_chaux_clean.bed"
 bedFiles["hmm"] = "hmm_1_clean_2state.bed"
+bedFiles["trf"] = "alyrata_trf_clean.bed"
+bedFiles["fgenesh"] = "alyrata_fgenesh_clean.bed"
 
 regionPath = "region1c4.bed"
 
@@ -62,8 +64,9 @@ for name, path in bedFiles.items():
     twoGapPath = bedPath(name, "gap_te")
     runShellCommand("addBedGaps.py %s %s %s" % (regionPath, twoPath, twoGapPath))
 
-# now we need to do all the deltas
+# now we need to do all the deltas and intersections
 difFiles = dict()
+intFiles = dict()
 for name1 in bedFiles.keys():
     for name2 in bedFiles.keys():
         if name1 == name2:
@@ -71,16 +74,30 @@ for name1 in bedFiles.keys():
         bedA, bedB = bedPath(name1, "te"), bedPath(name2, "te")
         difName = "%s_minus_%s" % (name1, name2)
         difPath = bedPath(difName, "te")
-        runShellCommand("subtractBed -a %s -b %s > %s" % (bedA, bedB, difPath))
+        runShellCommand("subtractBed -a %s -b %s > %s" % (bedA, bedB, difPath))        
         # make gapped TE version
         twoGapPath = bedPath(difName, "gap_te")
         runShellCommand("addBedGaps.py %s %s %s" % (
             regionPath, difPath, twoGapPath))
         # add to our file list
         difFiles[difName] = difPath
+
+        # make intersection file
+        if name1 < name2:
+            intName = "%s_int_%s" % (name1, name2)
+            intPath = bedPath(intName, "te")
+            runShellCommand("intersectBed -a %s -b %s > %s" % (bedA, bedB,
+                                                               intPath)) 
+            #make gapped TE version
+            twoGapPath = bedPath(intName, "gap_te")
+            runShellCommand("addBedGaps.py %s %s %s" % (
+                regionPath, intPath, twoGapPath))
+            # add to our file list
+            intFiles[intName] = intPath
             
 # do TE/nonTE comparisions
 prMap = dict()
+prIntMap = dict()
 for compSet in itertools.combinations(bedFiles.keys(), 2):
     compPath = os.path.join(workPath, "%s_%s_comp.txt" % compSet)
     runShellCommand("compareBedStates.py %s %s > %s" % (
@@ -89,49 +106,63 @@ for compSet in itertools.combinations(bedFiles.keys(), 2):
     assert "TE" in baseStats
     if compSet[0] not in prMap:
         prMap[compSet[0]] = dict()
+        prIntMap[compSet[0]] = dict()
     prMap[compSet[0]][compSet[1]] = baseStats["TE"]
+    prIntMap[compSet[0]][compSet[1]] = intervalStats["TE"]
     if compSet[1] not in prMap:
         prMap[compSet[1]] = dict()
+        prIntMap[compSet[1]] = dict()
     prMap[compSet[1]][compSet[0]] = baseStats["TE"][1], baseStats["TE"][0]
+    prIntMap[compSet[1]][compSet[0]] = (intervalStats["TE"][1],
+                                        intervalStats["TE"][0])
 
 # write the TE/nonTE comparisions in CSV table
 compFile = open(compCsvPath, "w")
-# header
-compFile.write("query")
-for truth in bedFiles.keys():
-    compFile.write(",%s,," % truth)
-compFile.write("\n")
-#body
-for query in bedFiles.keys():
-    compFile.write("%s" % query)
+for batch in [("Base Stats", prMap), ("Interval Stats", prIntMap)]:
+    # header
+    compFile.write(batch[0] + "\n")
+    compFile.write("query")
     for truth in bedFiles.keys():
-        if query == truth:
-            prec, rec, f1 = 1., 1., 1.
-        else:
-            prec, rec = prMap[truth][query]
-            f1 = 0.
-            if prec + rec > 0.:
-                f1 = (2. * prec * rec) / (prec + rec)
-        compFile.write(",%.3f,%.3f,%.3f" % (prec, rec, f1))
+        compFile.write(",%s,," % truth)
     compFile.write("\n")
+    #body
+    for query in bedFiles.keys():
+        compFile.write("%s" % query)
+        for truth in bedFiles.keys():
+            if query == truth:
+                prec, rec, f1 = 1., 1., 1.
+            else:
+                prec, rec = batch[1][truth][query]
+                f1 = 0.
+                if prec + rec > 0.:
+                    f1 = (2. * prec * rec) / (prec + rec)
+            compFile.write(",%.3f,%.3f,%.3f" % (prec, rec, f1))
+        compFile.write("\n")
 compFile.close()
 
-# now make a combined bed file to run through bedStats
-teCombinePath = bedPath("combined", "te_gap")
-runShellCommand("rm -f %s" % teCombinePath)
-
-for name in bedFiles.keys() + difFiles.keys():
-    twoPath = bedPath(name, "te")
-    runShellCommand("cat %s | setBedCol.py 3 TE_%s >> %s" % (
-        twoPath, name, teCombinePath))
-
-# todo (combined breakdown by score)
-    
-# run the bedstats
-runShellCommand("bedStats.py %s %s --logHist" % (teCombinePath, statsCsvPath))
-
+# Start the stats
 runShellCommand("echo Cross Comparison Stats > %s" % outCsvPath)
-runShellCommand("cat %s >> %s" % (statsCsvPath, outCsvPath))
+
+# now make a combined bed file to run through bedStats
+for batch in [("Input Stats", bedFiles), ("Delta Stats", difFiles),
+              ("Intersection Stats", intFiles)]:
+    runShellCommand("echo %s >> %s" % (batch[0], outCsvPath))
+    teCombinePath = bedPath("combined", "te_gap")
+    runShellCommand("rm -f %s" % teCombinePath)
+
+    for name in batch[1].keys():
+        twoPath = bedPath(name, "te")
+        runShellCommand("cat %s | setBedCol.py 3 TE_%s >> %s" % (
+            twoPath, name, teCombinePath))
+
+    # todo (combined breakdown by score)
+    
+    # run the bedstats
+    runShellCommand("bedStats.py %s %s --logHist" % (teCombinePath,
+                                                     statsCsvPath))
+
+    runShellCommand("cat %s >> %s" % (statsCsvPath, outCsvPath))
+    
 runShellCommand("echo Cross Comparison Accuracy >> %s" % outCsvPath)
 runShellCommand("cat %s >> %s" % (compCsvPath, outCsvPath))
         

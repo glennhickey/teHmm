@@ -66,8 +66,8 @@ def main(argv=None):
     try:
         csvStats += "\n" + makeCSV(intervals, args, lambda x : float(x[4]),
                                    "Score")
-        csvStats += "\n" + makeCSV(intervals, args, lambda x : float(x[4]) / (
-            float(x[2]) - float(x[1])), "Score/Length")
+        csvStats += "\n" + makeCSV(intervals, args, lambda x : float(x[4]) * (
+            float(x[2]) - float(x[1])), "Score*Length")
     except Exception as e:
         logger.warning("Couldn't make score stats because %s" % str(e))
     outFile.write(csvStats)
