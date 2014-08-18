@@ -468,17 +468,25 @@ def getStateMapFromConfMatrix(reverseMatrix, truthIgnore, predIgnore, thresh):
             continue
         # assemble list of candidate pred states that meet threshold
         predCandidates = []
+        # assemble list of andidate pred states that exceed 1-threshold
+        # these will be sure bets that we assume are good
+        sureBets = [] 
         for predState, overlap in reverseMatrix[truthState].items():
             if predState not in stateNameMap and\
-              predState not in predIgnore and\
-              float(overlap) / float(min(truthSize,
-                                         predStateSizes[predState])) >= thresh:
-              predCandidates.append(predState)
+              predState not in predIgnore:
+                predFrac = float(overlap) / float(min(truthSize,
+                                                      predStateSizes[predState]))
+                if predFrac >= thresh:
+                    if predFrac >= 1. - thresh:
+                        sureBets.append(predState)
+                    else:
+                        predCandidates.append(predState)
             else:
                 logger.debug("state mapper skipping %s with othresh %f" % (
                     predState, float(overlap) / float(min(truthSize,
                                                           predStateSizes[predState]))))
         logger.debug("candidates for %s: %s" % (truthState, str(predCandidates)))
+        logger.debug("sure bets for %s: %s" % (truthState, str(sureBets)))
 
         # iterate over all combinaations of candidate mappings
         def allSubsets(s):
@@ -486,9 +494,8 @@ def getStateMapFromConfMatrix(reverseMatrix, truthIgnore, predIgnore, thresh):
                 for j in itertools.combinations(s, i):
                     yield j
         bestF1, bestMapSet = -1., []
-        for candidateSet in allSubsets(predCandidates):
-            if len(candidateSet) == len(predCandidates):
-                blin = True
+        for candidateSetIter in allSubsets(predCandidates):
+            candidateSet = list(candidateSetIter) + sureBets
             # compute the f1 score of this mapping
             p, r, f1, tp, fp, fn = 0.,0.,0.,0.,0., float(truthStateSizes[truthState])
             for predState in candidateSet:
