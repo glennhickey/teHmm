@@ -110,10 +110,10 @@ for compRange in copyRanges:
         truthPath=bedPath(compSet[0], "gap_te_%s" % compName)
         queryPath = bedPath(compSet[1], "gap_te_%s" % compName)
 
-        runShellCommand("filterBedScores.py %s --names TE %d %d"
+        runShellCommand("filterBedScores.py %s --names TE %f %f"
                         " --rename 0 > %s" % (
                             truthPathUnfiltered, minScore, maxScore, truthPath))
-        runShellCommand("filterBedScores.py %s --names TE %d %d"
+        runShellCommand("filterBedScores.py %s --names TE %f %f"
                         " --rename 0 > %s" % (
                             queryPathUnfiltered, minScore, maxScore,queryPath))
 
