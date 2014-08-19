@@ -6,7 +6,7 @@
 <track name="chaux"         path="/data/douglas.hoen/piatea/genomes/alyrata/tracks/chaux/alyrata_chaux.bed"/>
 <track name="transposon_psi" path="/data/douglas.hoen/piatea/genomes/alyrata/tracks/transposonpsi/alyrata_transposonpsi.bed"/>        
 <track name="repbase_censor" path="/data/douglas.hoen/piatea/genomes/alyrata/tracks/repbase-censor/alyrata_repbase_censor.bed"/>
-<track name="repeat_modeler" path="/data/douglas.hoen/piatea/genomes/alyrata/tracks/repeatmodeler/alyrata_repeatmodeler.bed"/>
+<track name="repeat_modeler" path="/data/douglas.hoen/piatea/genomes/alyrata/tracks/repeatmodeler/alyrata_repeatmodeler_unfiltered.bed"/>
 <track name="repet"             path="/data/douglas.hoen/piatea/genomes/alyrata/tracks/mamus/alyrata_repet.bed"/>
 
 <track name="ltr_finder"    path="/data/douglas.hoen/piatea/genomes/alyrata/tracks/ltrfinder/alyrata_ltrfinder.bed"/>
