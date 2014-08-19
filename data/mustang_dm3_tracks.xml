@@ -1,19 +1,29 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <teModelConfig>
 <track name="repbase"       path="/data/glenn.hickey/genomes/dm3/tracks/repbase/dm3.repbase.bed"/>
-<track name="repeat_modeler" path="/data/douglas.hoen/piatea/genomes/drosophila/tracks/repeatmodeler-repeatmasker/drosophila3_repeatmodeler.bed"/>
-<track name="transposon_psi" path="/data/douglas.hoen/piatea/alyrata/tracks/transposonpsi/drosophila3_transposonpsi.bed"/>        
+<track name="repeat_modeler" path="/data/douglas.hoen/piatea/genomes/drosophila/tracks/repeatmodeler/dm3_repeatmodeler.bed"/>
+<track name="transposon_psi" path="/data/douglas.hoen/piatea/genomes/drosophila/tracks/transposonpsi/dm3_transposonpsi.bed"/>        
 
 <track name="orthology"     path="/data/glenn.hickey/genomes/dm3/tracks/alignability/dm3.alignability.bw" distribution="gaussian" default="0"/>
+<track name="phastcons_ce"  path="/data/glenn.hickey/genomes/dm3/tracks/phastcons_ce/dm3.phastCons15WayCE.bed" distribution="binary"/>
 
 <track name="genes"         path="/data/glenn.hickey/genomes/dm3/tracks/genes/dm3.flybase_genes_clean.bed"/>
 
-<track name="ltr_finder"    path="/data/glenn.hickey/genomes/dm3/tracks/ltr_finder/dm3.ltr_finder.bed"/>
+<!--
+NOTE LTR FINDER STILL RUNNING USING PARTIAL FOR NOW
+-->
+<track name="ltr_finder"    path="/data/glenn.hickey/genomes/dm3/tracks/ltr_finder/chr2L.ltr_finder.bed"/>
+
+
 <track name="ltr_harvest"   path="/data/glenn.hickey/genomes/dm3/tracks/ltr_harvest/dm3.ltr_harvest.bed"/>
 <track name="trf"           path="/data/glenn.hickey/genomes/dm3/tracks/trf/dm3.trf.bed" distribution="binary"/>
+<track name="irf"               path="/data/douglas.hoen/piatea/genomes/drosophila/tracks/irf/dm3_irf.bed"                      distribution="binary"/>
+<track name="mitehunter"        path="/data/douglas.hoen/piatea/genomes/drosophila/tracks/mitehunter/dm3_mitehunter.bed"               distribution="binary"/>
 <track name="gcpct"         path="/data/glenn.hickey/genomes/dm3/tracks/gc/dm3_gcPercentWin20.bw" distribution="gaussian" default="0"/>
 
-<track name="dustmasker"    path="/data/douglas.hoen/piatea/drosophila/tracks/dustmasker/drosophila3_dustmasker.bb" distribution="binary"/>
-<track name="windowmasker"  path="/data/douglas.hoen/piatea/drosophila/tracks/windowmasker/drosophila3_windowmasker.bed" distribution="binary"/>
-<track name="tantan"        path="/data/douglas.hoen/piatea/genomes/drosophila/tracks/tantan/drosophila3_tantan.bed" distribution="binary"/>
+<track name="dustmasker"    path="/data/douglas.hoen/piatea/genomes/drosophila/tracks/dustmasker/dm3_dustmasker.bb" distribution="binary"/>
+<track name="windowmasker"  path="/data/douglas.hoen/piatea/genomes/drosophila/tracks/windowmasker/dm3_windowmasker.bed" distribution="binary"/>
+<track name="tantan"        path="/data/douglas.hoen/piatea/genomes/drosophila/tracks/tantan/dm3_tantan.bed" distribution="binary"/>
+
+<track name="sequence"      path="/data/douglas.hoen/piatea/genomes/drosophila/sequence/drosophila3.fa"/>
 </teModelConfig>

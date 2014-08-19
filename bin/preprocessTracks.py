@@ -57,13 +57,17 @@ def main(argv=None):
     parser.add_argument("--chaux", help="Name of chaux track", default="chaux")
     parser.add_argument("--ltrfinder", help="comma-sep Name(s) of ltrfinder track(s)",
                         default="ltr_finder,ltr_harvest")
-    parser.add_argument("--termini", help="Name of termini track",
-                        default="termini")
+    parser.add_argument("--ltr_termini", help="Name of termini track (appy cleanTermini.py)",
+                        default="ltr_termini")
+    parser.add_argument("--overlap", help="Name of overlap track (appy cleanTermini.py)",
+                        default="overlap")
+    parser.add_argument("--palindrome", help="Name of palindrome track (appy cleanTermini.py)",
+                        default="palindrome")
     parser.add_argument("--sequence", help="Name of fasta sequence track",
                         default="sequence")
-    parser.add_argument("--tsd", help="Name of tsd track to generate",
+    parser.add_argument("--tsd", help="Name of tsd track to generate (appy cleanTermini.py)",
                         default="tsd")
-    parser.add_argument("--tir", help="Name of tir_termini track",
+    parser.add_argument("--tir", help="Name of tir_termini track (appy cleanTermini.py)",
                         default="tir_termini")
     parser.add_argument("--irf", help="Name of irf track",
                         default="irf")
@@ -220,7 +224,7 @@ def runCleaning(args, tempTracksInfo):
         logger.warning("Could not find repbase_censor track")
                 
     # run cleanTermini.py
-    lastzTracks = [trackList.getTrackByName(args.termini),
+    lastzTracks = [trackList.getTrackByName(args.ltr_termini),
                   trackList.getTrackByName(args.tir)]
     for terminiTrack in lastzTracks:
         if terminiTrack is not None:
@@ -303,7 +307,7 @@ def runTsd(args, tempTracksInfo):
     tsdInputTracks = []
         
     # preprocess termini
-    lastzTracks = [origTrackList.getTrackByName(args.termini),
+    lastzTracks = [origTrackList.getTrackByName(args.ltr_termini),
                   origTrackList.getTrackByName(args.tir)]
     for terminiTrack in lastzTracks:
         if terminiTrack is not None:
@@ -347,7 +351,7 @@ def runTsd(args, tempTracksInfo):
             optString += " --min 5"
             optString += " --max 20"
             optString += " --overlap 20"
-        elif tsdInputTracks[i] == args.termini:
+        elif tsdInputTracks[i] == args.ltr_termini:
             optString += " --maxScore 3"
             optString += " --left 8"
             optString += " --right 8"

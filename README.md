@@ -61,7 +61,7 @@ Chromosome (or contig) names must be consistent within all the track files.  Tra
 The track list file contains a single *teModelConfig* element which in turn contains a list of *track* elements.  Each *track* element must have a (unique) *name* attribute and a *path* attribute.  The *path* is either absolute or relative to where ever you launch the stript from (TODO: probably better to make relative to the xml file). Optional attributes are as follows:
 * *distribution* which can take the following values: 
   * *binary*, where bed intervals specify 1 and all other regions are 0
-  * *multnomial* where the bed value is read from the *name* column of the bed file. Regions outside bed intervals are assumed to have a default value
+  * *multnomial* (**DEFAULT**) where the bed value is read from the *name* column of the bed file. Regions outside bed intervals are assumed to have a default value
   * *sparse_multinomial* same as above except regions outside of intervals are considered unobserved.
   * *gaussian* where each bed value (read as in *multinomial*) must be numeric, and is assumed to be drawn from a Gaussian distribution.  A numeric *default* value must be specified.  
 * *valCol* 0-based (so name=3) column of bed file to read state from for multinomial distribution
@@ -309,7 +309,10 @@ In general, running any executable with `--help` will print a brief description 
 * **chopBedStates.py**: Slice up given intervals in BED according to their ID and some other parameters.
 * **addTrackHeader.py** : Set or modify track header of BED file in order to display on Genome Browser.
 * **filterPredictions.py** : Simple script to remove some obvious artifacts (ex orphaned ltr and tsds) or tiny predictions out of a BED file.
+* **filterBedLengths.py** : Filter BED file based on interval length.
+* **filterBedScores.py** : Filter BED file based on interval score.
 * **cleanGenes.py**: Convert a BED-12 format gene prediction into suitable input for HMM by explicitly splitting block intervals into introns and exons
+* **setScoreFromTrackIntersection.py**: Intersect a intervals in BED file with specified track.  Can be used, for example, to map copy number onto RepeatModeler predictions (given a .wig copy number track).  Note that track binning specified in the XML will be applied internally so numeric values will be rounded.  Also note that the **mode** is used to report the average value across the given intervals.
 
 **Scaling, Binning and Segmentation**
 
@@ -331,6 +334,7 @@ In general, running any executable with `--help` will print a brief description 
 
 * **valStats.py** : Compute simple statistics of numeric track data
 * **countBedStates.py** : Print number of unique IDs
+* **bedStats.py** : Generate statistics in CSV spreadsheet format about interval lengths and scores from a BED-file, broken down by ID.  Note that the scores can be mapped from other tracks with `setScoreFromTrackIntersection.py`, so this script could be used to, for example, analyse copy number statistics.
 
 **Validation and Comparison**
 

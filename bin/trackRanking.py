@@ -178,7 +178,7 @@ def greedyRank(args):
         rankedTrackList.saveXML(os.path.join(args.outDir, "iter%d" % iteration,
                                 "tracks.xml"))
         
-        rankFile = open(os.path.join(args.outDir, "ranking.txt"), flags)
+        rankFile = open(os.path.join(args.outDir, "ranking.txt"), "a")
         rankFile.write("%d\t%s\t%s\t%s\t%s\t%s\t%s\n" % (iteration, bestNextTrack.getName(),
                                             bestItScore, bestItBic, bestItNaive,
                                             bestSlope, bestR))

@@ -1,0 +1,20 @@
+<?xml version="1.0" ?>
+<teModelConfig>
+	<track distribution="multinomial" name="repbase" path="/data/glenn.hickey/genomes/dm3/tracks/clean/dm3.repbase_clean.bed" valCol="3"/>
+	<track distribution="multinomial" name="repeat_modeler" path="/data/glenn.hickey/genomes/dm3/tracks/clean/dm3_repeatmodeler_clean.bed" valCol="3"/>
+	<track distribution="multinomial" name="transposon_psi" path="/data/glenn.hickey/genomes/dm3/tracks/clean/dm3_transposonpsi_clean.bed" valCol="3"/>
+	<track default="0" distribution="gaussian" name="orthology" path="/data/glenn.hickey/genomes/dm3/tracks/alignability/dm3.alignability.bw" scale="0.5714" shift="0.0" valCol="3"/>
+	<track distribution="binary" name="phastcons_ce" path="/data/glenn.hickey/genomes/dm3/tracks/phastcons_ce/dm3.phastCons15WayCE.bed" valCol="0"/>
+	<track distribution="multinomial" name="genes" path="/data/glenn.hickey/genomes/dm3/tracks/genes/dm3.flybase_genes_clean.bed" valCol="3"/>
+	<track distribution="multinomial" name="ltr_finder" path="/data/glenn.hickey/genomes/dm3/tracks/clean/chr2L.ltr_finder_clean.bed" valCol="3"/>
+	<track distribution="multinomial" name="ltr_harvest" path="/data/glenn.hickey/genomes/dm3/tracks/clean/dm3.ltr_harvest_clean.bed" valCol="3"/>
+	<track distribution="binary" name="trf" path="/data/glenn.hickey/genomes/dm3/tracks/trf/dm3.trf.bed" valCol="0"/>
+	<track distribution="binary" name="irf" path="/data/glenn.hickey/genomes/dm3/tracks/clean/dm3_irf_clean.bed" valCol="0"/>
+	<track distribution="binary" name="mitehunter" path="/data/douglas.hoen/piatea/genomes/drosophila/tracks/mitehunter/dm3_mitehunter.bed" valCol="0"/>
+	<track default="0" distribution="gaussian" name="gcpct" path="/data/glenn.hickey/genomes/dm3/tracks/gc/dm3_gcPercentWin20.bw" scale="0.08" shift="0.0" valCol="3"/>
+	<track distribution="binary" name="dustmasker" path="/data/douglas.hoen/piatea/genomes/drosophila/tracks/dustmasker/dm3_dustmasker.bb" valCol="0"/>
+	<track distribution="binary" name="windowmasker" path="/data/douglas.hoen/piatea/genomes/drosophila/tracks/windowmasker/dm3_windowmasker.bed" valCol="0"/>
+	<track distribution="binary" name="tantan" path="/data/douglas.hoen/piatea/genomes/drosophila/tracks/tantan/dm3_tantan.bed" valCol="0"/>
+	<track distribution="multinomial" name="sequence" path="/data/douglas.hoen/piatea/genomes/drosophila/sequence/drosophila3.fa" valCol="3"/>
+	<track distribution="multinomial" name="tsd" path="/data/glenn.hickey/genomes/dm3/tracks/clean/repeat_modeler_tsd.bed" valCol="3"/>
+</teModelConfig>
