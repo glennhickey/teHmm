@@ -18,6 +18,8 @@ from teHmm.bin.compareBedStates import extractCompStatsFromFile
 workPath = "work"
 tracksPath = "tracks_bin250.xml"
 copyTrack = "copy"
+copyRanges = [("All", 0, sys.maxint), ("Low", 0, 19), ("Middle", 20, 99),
+              ("High", 100, sys.maxint)]
 compCsvPath = os.path.join(workPath, "comp.csv")
 statsCsvPath = os.path.join(workPath, "stats.csv")
 outCsvPath = "cross.csv"
@@ -96,48 +98,62 @@ for name1 in bedFiles.keys():
             intFiles[intName] = intPath
             
 # do TE/nonTE comparisions
-prMap = dict()
-prIntMap = dict()
-for compSet in itertools.combinations(bedFiles.keys(), 2):
-    compPath = os.path.join(workPath, "%s_%s_comp.txt" % compSet)
-    runShellCommand("compareBedStates.py %s %s > %s" % (
-        bedPath(compSet[0], "gap_te"), bedPath(compSet[1], "gap_te"), compPath))
-    baseStats, intervalStats, weightedStats = extractCompStatsFromFile(compPath)
-    assert "TE" in baseStats
-    if compSet[0] not in prMap:
-        prMap[compSet[0]] = dict()
-        prIntMap[compSet[0]] = dict()
-    prMap[compSet[0]][compSet[1]] = baseStats["TE"]
-    prIntMap[compSet[0]][compSet[1]] = intervalStats["TE"]
-    if compSet[1] not in prMap:
-        prMap[compSet[1]] = dict()
-        prIntMap[compSet[1]] = dict()
-    prMap[compSet[1]][compSet[0]] = baseStats["TE"][1], baseStats["TE"][0]
-    prIntMap[compSet[1]][compSet[0]] = (intervalStats["TE"][1],
-                                        intervalStats["TE"][0])
-
-# write the TE/nonTE comparisions in CSV table
 compFile = open(compCsvPath, "w")
-for batch in [("Base Stats", prMap), ("Interval Stats", prIntMap)]:
-    # header
-    compFile.write(batch[0] + "\n")
-    compFile.write("query")
-    for truth in bedFiles.keys():
-        compFile.write(",%s,," % truth)
-    compFile.write("\n")
-    #body
-    for query in bedFiles.keys():
-        compFile.write("%s" % query)
+for compRange in copyRanges:
+    compName, minScore, maxScore = compRange
+    prMap = dict()
+    prIntMap = dict()
+    for compSet in itertools.combinations(bedFiles.keys(), 2):
+        compPath = os.path.join(workPath, "%s_%s_comp.txt" % compSet)
+        truthPathUnfiltered = bedPath(compSet[0], "gap_te")
+        queryPathUnfiltered = bedPath(compSet[1], "gap_te")
+        truthPath=bedPath(compSet[0], "gap_te_%s" % compName)
+        queryPath = bedPath(compSet[1], "gap_te_%s" % compName)
+
+        runShellCommand("filterBedScores.py %s --names TE %d %d"
+                        " --rename 0 > %s" % (
+                            truthPathUnfiltered, minScore, maxScore, truthPath))
+        runShellCommand("filterBedScores.py %s --names TE %d %d"
+                        " --rename 0 > %s" % (
+                            queryPathUnfiltered, minScore, maxScore,queryPath))
+
+        runShellCommand("compareBedStates.py %s %s > %s" % (
+            truthPath, queryPath, compPath))
+        baseStats, intervalStats, weightedStats = extractCompStatsFromFile(compPath)
+        assert "TE" in baseStats
+        if compSet[0] not in prMap:
+            prMap[compSet[0]] = dict()
+            prIntMap[compSet[0]] = dict()
+        prMap[compSet[0]][compSet[1]] = baseStats["TE"]
+        prIntMap[compSet[0]][compSet[1]] = intervalStats["TE"]
+        if compSet[1] not in prMap:
+            prMap[compSet[1]] = dict()
+            prIntMap[compSet[1]] = dict()
+        prMap[compSet[1]][compSet[0]] = baseStats["TE"][1], baseStats["TE"][0]
+        prIntMap[compSet[1]][compSet[0]] = (intervalStats["TE"][1],
+                                            intervalStats["TE"][0])
+
+    # write the TE/nonTE comparisions in CSV table
+    for batch in [("Base Stats", prMap), ("Interval Stats", prIntMap)]:
+        # header
+        compFile.write(batch[0] +"(%d <= score <= %d)\n" % (minScore, maxScore))
+        compFile.write("query")
         for truth in bedFiles.keys():
-            if query == truth:
-                prec, rec, f1 = 1., 1., 1.
-            else:
-                prec, rec = batch[1][truth][query]
-                f1 = 0.
-                if prec + rec > 0.:
-                    f1 = (2. * prec * rec) / (prec + rec)
-            compFile.write(",%.3f,%.3f,%.3f" % (prec, rec, f1))
+            compFile.write(",%s,," % truth)
         compFile.write("\n")
+        #body
+        for query in bedFiles.keys():
+            compFile.write("%s" % query)
+            for truth in bedFiles.keys():
+                if query == truth:
+                    prec, rec, f1 = 1., 1., 1.
+                else:
+                    prec, rec = batch[1][truth][query]
+                    f1 = 0.
+                    if prec + rec > 0.:
+                        f1 = (2. * prec * rec) / (prec + rec)
+                compFile.write(",%.3f,%.3f,%.3f" % (prec, rec, f1))
+            compFile.write("\n")
 compFile.close()
 
 # Start the stats

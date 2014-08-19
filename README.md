@@ -309,6 +309,8 @@ In general, running any executable with `--help` will print a brief description 
 * **chopBedStates.py**: Slice up given intervals in BED according to their ID and some other parameters.
 * **addTrackHeader.py** : Set or modify track header of BED file in order to display on Genome Browser.
 * **filterPredictions.py** : Simple script to remove some obvious artifacts (ex orphaned ltr and tsds) or tiny predictions out of a BED file.
+* **filterBedLengths.py** : Filter BED file based on interval length.
+* **filterBedScores.py** : Filter BED file based on interval score.
 * **cleanGenes.py**: Convert a BED-12 format gene prediction into suitable input for HMM by explicitly splitting block intervals into introns and exons
 * **setScoreFromTrackIntersection.py**: Intersect a intervals in BED file with specified track.  Can be used, for example, to map copy number onto RepeatModeler predictions (given a .wig copy number track).  Note that track binning specified in the XML will be applied internally so numeric values will be rounded.  Also note that the **mode** is used to report the average value across the given intervals.
 
@@ -332,6 +334,7 @@ In general, running any executable with `--help` will print a brief description 
 
 * **valStats.py** : Compute simple statistics of numeric track data
 * **countBedStates.py** : Print number of unique IDs
+* **bedStats.py** : Generate statistics in CSV spreadsheet format about interval lengths and scores from a BED-file, broken down by ID.  Note that the scores can be mapped from other tracks with `setScoreFromTrackIntersection.py`, so this script could be used to, for example, analyse copy number statistics.
 
 **Validation and Comparison**
 
