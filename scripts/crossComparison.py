@@ -120,6 +120,10 @@ for compRange in copyRanges:
         runShellCommand("compareBedStates.py %s %s > %s" % (
             truthPath, queryPath, compPath))
         baseStats, intervalStats, weightedStats = extractCompStatsFromFile(compPath)
+        if "TE" not in baseStats:
+            logger.warning("No TE elements in %s" % compPath)
+            baseStats["TE"] = (-1., -1.)
+            intervalStats["TE"] = (-1, -1.)
         assert "TE" in baseStats
         if compSet[0] not in prMap:
             prMap[compSet[0]] = dict()
