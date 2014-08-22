@@ -23,14 +23,16 @@ def main(argv=None):
     parser = argparse.ArgumentParser(
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
         description="Filter out bed intervals that are outside [minScore, "
-        "maxScore] (or rename them)")
+        "maxScore) (or rename them)")
     parser.add_argument("inputBed", help="Bed file to filter")
-    parser.add_argument("minScore", help="Minimum score.  Intervals with score"
+    parser.add_argument("minScore", help="Minimum score (inclusive)."
+                        "  Intervals with score"
                         " < this amount will be filtered out.", type=float)
-    parser.add_argument("maxScore", help="Minimum score.  Intervals with score"
-                        " > this amount will be filtered out.", type=float)
+    parser.add_argument("maxScore", help="Maximum score (exclusive).  "
+                        "Intervals with score"
+                        " >= this amount will be filtered out.", type=float)
     parser.add_argument("--rename", help="Instead of removing intervals that "
-                        "are outside [minScore, maxScore], rename them",
+                        "are outside [minScore, maxScore), rename them",
                         default=None)
     parser.add_argument("--names", help="Comma-separated list of IDs ("
                         "0-based 3rd column) to apply filter to.  All elements"
@@ -50,7 +52,7 @@ def main(argv=None):
     for interval in bedIntervals:
         doFilter = interval.name in nameSet and\
           (float(interval.score) < args.minScore or
-           float(interval.score) > args.maxScore)
+           float(interval.score) >= args.maxScore)
         if doFilter is False:
             sys.stdout.write("%s" % str(interval))
         elif args.rename is not None:

@@ -110,16 +110,20 @@ for compRange in copyRanges:
         truthPath=bedPath(compSet[0], "gap_te_%s" % compName)
         queryPath = bedPath(compSet[1], "gap_te_%s" % compName)
 
-        runShellCommand("filterBedScores.py %s --names TE %d %d"
+        runShellCommand("filterBedScores.py %s --names TE %f %f"
                         " --rename 0 > %s" % (
                             truthPathUnfiltered, minScore, maxScore, truthPath))
-        runShellCommand("filterBedScores.py %s --names TE %d %d"
+        runShellCommand("filterBedScores.py %s --names TE %f %f"
                         " --rename 0 > %s" % (
                             queryPathUnfiltered, minScore, maxScore,queryPath))
 
         runShellCommand("compareBedStates.py %s %s > %s" % (
             truthPath, queryPath, compPath))
         baseStats, intervalStats, weightedStats = extractCompStatsFromFile(compPath)
+        if "TE" not in baseStats:
+            logger.warning("No TE elements in %s" % compPath)
+            baseStats["TE"] = (-1., -1.)
+            intervalStats["TE"] = (-1, -1.)
         assert "TE" in baseStats
         if compSet[0] not in prMap:
             prMap[compSet[0]] = dict()

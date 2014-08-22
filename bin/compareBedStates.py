@@ -61,6 +61,9 @@ def main(argv=None):
                         " element, as opposed to only needing 80pct of itself"
                         " overlapping with the true element. ",
                         action="store_true", default = False)
+    parser.add_argument("--noBase", help="Skip base-level stats (and only show"
+                        " interval stats).  Runs faster", action="store_true",
+                        default=False)
 
     args = parser.parse_args()
     tempBedToolPath = initBedTool()
@@ -74,16 +77,18 @@ def main(argv=None):
 
     intervals1 = readBedIntervals(args.bed1, ncol = args.col)
     intervals2 = readBedIntervals(args.bed2, ncol = args.col)
-    stats = compareBaseLevel(intervals1, intervals2, args.col - 1)[0]
 
-    totalRight, totalWrong, accMap = summarizeBaseComparision(stats, args.ignore)
-    print stats
-    totalBoth = totalRight + totalWrong
-    accuracy = float(totalRight) / float(totalBoth)
-    print "Accuaracy: %d / %d = %f" % (totalRight, totalBoth, accuracy)
-    print "State-by-state (Precision, Recall):"
-    print "Base-by-base Accuracy"    
-    print accMap
+    if args.noBase is False:
+        stats = compareBaseLevel(intervals1, intervals2, args.col - 1)[0]
+
+        totalRight, totalWrong, accMap = summarizeBaseComparision(stats, args.ignore)
+        print stats
+        totalBoth = totalRight + totalWrong
+        accuracy = float(totalRight) / float(totalBoth)
+        print "Accuaracy: %d / %d = %f" % (totalRight, totalBoth, accuracy)
+        print "State-by-state (Precision, Recall):"
+        print "Base-by-base Accuracy"    
+        print accMap
 
     trueStats = compareIntervalsOneSided(intervals1, intervals2, args.col -1,
                                          args.thresh, False)[0]
@@ -103,9 +108,10 @@ def main(argv=None):
 
 
     # print some row data to be picked up by scrapeBenchmarkRow.py
-    header, row = summaryRow(accuracy, stats, accMap)
-    print " ".join(header)
-    print " ".join(row)
+    if args.noBase is False:
+        header, row = summaryRow(accuracy, stats, accMap)
+        print " ".join(header)
+        print " ".join(row)
 
     # make graph
     if args.plot is not None:
