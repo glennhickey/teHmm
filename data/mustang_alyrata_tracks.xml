@@ -6,7 +6,7 @@
 <track name="chaux"         path="/data/douglas.hoen/piatea/genomes/alyrata/tracks/chaux/alyrata_chaux.bed"/>
 <track name="transposon_psi" path="/data/douglas.hoen/piatea/genomes/alyrata/tracks/transposonpsi/alyrata_transposonpsi.bed"/>        
 <track name="repbase_censor" path="/data/douglas.hoen/piatea/genomes/alyrata/tracks/repbase-censor/alyrata_repbase_censor.bed"/>
-<track name="repeat_modeler" path="/data/douglas.hoen/piatea/genomes/alyrata/tracks/repeatmodeler/alyrata_repeatmodeler.bed"/>
+<track name="repeat_modeler" path="/data/douglas.hoen/piatea/genomes/alyrata/tracks/repeatmodeler/alyrata_repeatmodeler_unfiltered.bed"/>
 <track name="repet"             path="/data/douglas.hoen/piatea/genomes/alyrata/tracks/mamus/alyrata_repet.bed"/>
 
 <track name="ltr_finder"    path="/data/douglas.hoen/piatea/genomes/alyrata/tracks/ltrfinder/alyrata_ltrfinder.bed"/>
@@ -35,7 +35,7 @@
 <track name="windowmasker"  path="/data/douglas.hoen/piatea/genomes/alyrata/tracks/windowmasker/alyrata_windowmasker.bb" distribution="binary"/>
 <track name="tantan"        path="/data/douglas.hoen/piatea/genomes/alyrata/tracks/tantan/alyrata_tantan.bed" distribution="binary"/>
 <track name="polyA"         path="/data/douglas.hoen/piatea/genomes/alyrata/tracks/misc/alyrata_polya.bb" distribution="binary"/>
-<track name="polyN"         path="/data/douglas.hoen/piatea/genomes/alyrata/tracks/misc/alyrata_polyn.bb" distribution="binary"/>
+<track name="polyN"         path="/data/douglas.hoen/piatea/genomes/alyrata/tracks/misc/alyrata_polyn.bed" distribution="binary"/>
 
 <track name="sequence"      path="/data/douglas.hoen/piatea/genomes/alyrata/sequence/alyrata_scaffolds1to8.fas"/>
 

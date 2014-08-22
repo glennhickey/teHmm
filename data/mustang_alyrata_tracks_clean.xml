@@ -30,7 +30,7 @@
 	<track distribution="binary" name="windowmasker" path="/data/douglas.hoen/piatea/genomes/alyrata/tracks/windowmasker/alyrata_windowmasker.bb" valCol="0"/>
 	<track distribution="binary" name="tantan" path="/data/douglas.hoen/piatea/genomes/alyrata/tracks/tantan/alyrata_tantan.bed" valCol="0"/>
 	<track distribution="binary" name="polyA" path="/data/douglas.hoen/piatea/genomes/alyrata/tracks/misc/alyrata_polya.bb" valCol="0"/>
-	<track distribution="binary" name="polyN" path="/data/douglas.hoen/piatea/genomes/alyrata/tracks/misc/alyrata_polyn.bb" valCol="0"/>
+	<track distribution="binary" name="polyN" path="/data/douglas.hoen/piatea/genomes/alyrata/tracks/misc/alyrata_polyn.bed" valCol="0"/>
 	<track distribution="multinomial" name="sequence" path="/data/douglas.hoen/piatea/genomes/alyrata/sequence/alyrata_scaffolds1to8.fas" valCol="3"/>
 	<track distribution="multinomial" name="tsd" path="/data/glenn.hickey/genomes/alyrata/tracks/clean/ltr_termini_tsd.bed" valCol="3"/>
 </teModelConfig>

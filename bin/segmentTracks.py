@@ -77,10 +77,6 @@ def main(argv=None):
 
     if args.comp != "first" and args.comp != "prev":
         raise RuntimeError("--comp must be either first or prev")
-    if args.fixLen > 0:
-        if args.ignore is not None or args.maxLen > 0 \
-           or args.thresh != 0 or args.cutTracks is not None:
-            raise RuntimeError("--fixLen not compatible with other options")
         
     # read query intervals from the bed file
     logger.info("loading training intervals from %s" % args.allBed)

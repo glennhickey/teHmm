@@ -52,6 +52,10 @@ def main(argv=None):
                         " tgtBed covered by predBed.  If not specified, then base"
                         " level statistics will be used. Value in range (0,1]",
                         type=float, default=None)
+    parser.add_argument("--frag", help="Allow fragmented interval matches ("
+                        "see help for --frag in compareBedStates.py).  Only"
+                        " relevant with --intThresh", action="store_true",
+                        default=False)
     parser.add_argument("--qualThresh", help="Minimum match ratio between truth"
                         " and prediction to relabel prediction.  Example, if"
                         " predicted state X overlaps target state LTR 25 pct of "
@@ -99,9 +103,9 @@ def main(argv=None):
     # generate confusion matrix based on accuracy comparison using
     # base or interval stats as desired
     if args.intThresh is not None:
-        logger.info("Computing interval confusion matrix")
-        confMat = compareIntervalsOneSided(intervals1, intervals2, args.col -1,
-                                            args.intThresh, False)[1]
+        logger.info("Computing interval reverse confusion matrix")
+        confMat = compareIntervalsOneSided(intervals2, intervals1, args.col -1,
+                                            args.intThresh, False, args.frag)[1]
     else:
         logger.info("Computing base reverse confusion matrix")
         confMat = compareBaseLevel(intervals2, intervals1, args.col - 1)[1]
