@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <teModelConfig>
 <track name="repbase"       path="/data/glenn.hickey/genomes/dm3/tracks/repbase/dm3.repbase.bed"/>
-<track name="repeat_modeler" path="/data/douglas.hoen/piatea/genomes/drosophila/tracks/repeatmodeler/dm3_repeatmodeler.bed"/>
+<track name="repeat_modeler" path="/data/douglas.hoen/piatea/genomes/drosophila/tracks/repeatmodeler/dm3_repeatmodeler_unfiltered.bed"/>
 <track name="transposon_psi" path="/data/douglas.hoen/piatea/genomes/drosophila/tracks/transposonpsi/dm3_transposonpsi.bed"/>        
 
 <track name="orthology"     path="/data/glenn.hickey/genomes/dm3/tracks/alignability/dm3.alignability.bw" distribution="gaussian" default="0"/>
