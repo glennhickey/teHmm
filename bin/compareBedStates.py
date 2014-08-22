@@ -64,6 +64,13 @@ def main(argv=None):
     parser.add_argument("--noBase", help="Skip base-level stats (and only show"
                         " interval stats).  Runs faster", action="store_true",
                         default=False)
+    parser.add_argument("--frag", help="Allow fragmented matches in interval"
+                        " predictions.  ie if a single truth interval is "
+                        "covered by a series of predicted intervals, it "
+                        "will count as a recall hit if the coverage totals"
+                        " more than --thresh.  Vice versa for precision. By "
+                        "default, only the single, best, query interval is "
+                        "counted.", action="store_true", default=False)
 
     args = parser.parse_args()
     tempBedToolPath = initBedTool()
@@ -91,9 +98,10 @@ def main(argv=None):
         print accMap
 
     trueStats = compareIntervalsOneSided(intervals1, intervals2, args.col -1,
-                                         args.thresh, False)[0]
+                                         args.thresh, False, args.frag)[0]
     predStats = compareIntervalsOneSided(intervals2, intervals1, args.col -1,
-                                         args.thresh, args.strictPrec)[0]
+                                         args.thresh, args.strictPrec,
+                                         args.frag)[0]
     intAccMap = summarizeIntervalComparison(trueStats, predStats, False,
                                             args.ignore)
     intAccMapWeighted = summarizeIntervalComparison(trueStats, predStats, True,
@@ -171,7 +179,7 @@ def compareBaseLevel(intervals1, intervals2, col):
     return stats, confMat
 
 def compareIntervalsOneSided(trueIntervals, predIntervals, col, threshold,
-                             usePredLenForThreshold):
+                             usePredLenForThreshold, allowMultipleMatches):
     """ Same idea as baselevel comparison above, but treats bed intervals
     as single unit, and does not perform symmetric test.  In particular, we
     return the following stats here: for each true interval, is it covered
@@ -225,6 +233,7 @@ def compareIntervalsOneSided(trueIntervals, predIntervals, col, threshold,
 
         # scan all intersecting predIntervals with ti
         bestFrac = 0.0
+        totalFrac = 0.0
         for i in xrange(pi, LP):
             overlapSize = intersectSize(trueInterval, predIntervals[i])
             if overlapSize > 0:
@@ -235,11 +244,16 @@ def compareIntervalsOneSided(trueIntervals, predIntervals, col, threshold,
                 # look for biggest true overlap when computing accuracy
                 if predIntervals[i][col] == trueState:
                     bestFrac = max(bestFrac, frac)
+                # compute total overlap for allowMultipleMatches option
+                totalFrac += frac
                 # count all overlaps >= thresh when computing confusion matrix
                 if frac >= threshold:
                     updateConfMatrix(confMat, predIntervals[i][col], trueState)
             else:
                 break
+
+        if allowMultipleMatches is True:
+            bestFrac = totalFrac
 
         # update stats
         if trueState not in stats:
