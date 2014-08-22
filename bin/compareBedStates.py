@@ -244,8 +244,8 @@ def compareIntervalsOneSided(trueIntervals, predIntervals, col, threshold,
                 # look for biggest true overlap when computing accuracy
                 if predIntervals[i][col] == trueState:
                     bestFrac = max(bestFrac, frac)
-                # compute total overlap for allowMultipleMatches option
-                totalFrac += frac
+                    # compute total overlap for allowMultipleMatches option
+                    totalFrac += frac
                 # count all overlaps >= thresh when computing confusion matrix
                 if frac >= threshold:
                     updateConfMatrix(confMat, predIntervals[i][col], trueState)
