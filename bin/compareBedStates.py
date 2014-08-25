@@ -510,6 +510,8 @@ def getStateMapFromConfMatrix(reverseMatrix, truthIgnore, predIgnore, thresh):
 
         # iterate over all combinaations of candidate mappings
         def allSubsets(s):
+            if len(sureBets) > 0:
+                yield []
             for i in xrange(1, len(s) + 1):
                 for j in itertools.combinations(s, i):
                     yield j
