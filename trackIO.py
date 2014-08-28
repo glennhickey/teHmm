@@ -185,7 +185,7 @@ def readBedData(bedPath, chrom, start, end, **kwargs):
         data[oStart - start] = val0
         for i in xrange(1, oEnd - oStart):
             data[i + oStart - start] = val
-            basesRead += oEnd - oStart            
+        basesRead += oEnd - oStart            
 
     logger.debug("done readBedData(%s). %d bases read" % (bedPath, basesRead))
 

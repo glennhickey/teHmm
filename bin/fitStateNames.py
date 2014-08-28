@@ -17,7 +17,7 @@ from teHmm.common import intersectSize, initBedTool, cleanBedTool
 from teHmm.common import addLoggingOptions, setLoggingFromOptions, logger
 from teHmm.bin.compareBedStates import compareIntervalsOneSided
 from teHmm.bin.compareBedStates import compareBaseLevel
-from teHmm.bin.compareBedStates import getStateMapFromConfMatrix
+from teHmm.bin.compareBedStates import getStateMapFromConfMatrix, getStateMapFromConfMatrix_simple
 
 try:
     from teHmm.parameterAnalysis import plotHeatMap
@@ -52,7 +52,7 @@ def main(argv=None):
                         " tgtBed covered by predBed.  If not specified, then base"
                         " level statistics will be used. Value in range (0,1]",
                         type=float, default=None)
-    parser.add_argument("--frag", help="Allow fragmented interval matches ("
+    parser.add_argument("--noFrag", help="Dont allow fragmented interval matches ("
                         "see help for --frag in compareBedStates.py).  Only"
                         " relevant with --intThresh", action="store_true",
                         default=False)
@@ -80,6 +80,10 @@ def main(argv=None):
                         default=False)
     parser.add_argument("--hm", help="Write confusion matrix as heatmap in PDF"
                         " format to specified file", default = None)
+    parser.add_argument("--old", help="Use old name mapping logic which just "
+                        "takes biggest overlap in forward confusion matrix.  "
+                        "faster than new default logic which does the greedy"
+                        " f1 optimization", action="store_true", default=False)
 
     addLoggingOptions(parser)
     args = parser.parse_args()
@@ -99,22 +103,31 @@ def main(argv=None):
     
     intervals1 = readBedIntervals(args.tgtBed, ncol = args.col)
     intervals2 = readBedIntervals(args.predBed, ncol = args.col)
+    cfName = "reverse"
+
+    if args.old is True:
+        intervals1, intervals2 = intervals2, intervals1
+        cfName = "forward"
 
     # generate confusion matrix based on accuracy comparison using
     # base or interval stats as desired
     if args.intThresh is not None:
-        logger.info("Computing interval reverse confusion matrix")
+        logger.info("Computing interval %s confusion matrix" % cfName)
         confMat = compareIntervalsOneSided(intervals2, intervals1, args.col -1,
-                                            args.intThresh, False, args.frag)[1]
+                                            args.intThresh, False,
+                                           not args.noFrag)[1]
     else:
-        logger.info("Computing base reverse confusion matrix")
+        logger.info("Computing base %s confusion matrix" % cfName)
         confMat = compareBaseLevel(intervals2, intervals1, args.col - 1)[1]
 
-    logger.info("Reverse Confusion Matrix:\n%s", str(confMat))
+    logger.info("%s Confusion Matrix:\n%s" % (cfName, str(confMat)))
 
-    # find the best "true" match for each predicted state
-    stateMap = getStateMapFromConfMatrix(confMat, args.ignoreTgt, args.ignore,
-                                         args.qualThresh)
+    # find the best "true" match for each predicted state    
+    if args.old is True:
+        stateMap = getStateMapFromConfMatrix_simple(confMat)
+    else:
+        stateMap = getStateMapFromConfMatrix(confMat, args.ignoreTgt,
+                                             args.ignore, args.qualThresh)
 
     # filter the stateMap to take into account the command-line options
     # notably --ignore, --ignoreTgt, --qualThresh, and --unique
