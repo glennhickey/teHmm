@@ -64,13 +64,11 @@ def main(argv=None):
     parser.add_argument("--noBase", help="Skip base-level stats (and only show"
                         " interval stats).  Runs faster", action="store_true",
                         default=False)
-    parser.add_argument("--frag", help="Allow fragmented matches in interval"
-                        " predictions.  ie if a single truth interval is "
-                        "covered by a series of predicted intervals, it "
-                        "will count as a recall hit if the coverage totals"
-                        " more than --thresh.  Vice versa for precision. By "
-                        "default, only the single, best, query interval is "
-                        "counted.", action="store_true", default=False)
+    parser.add_argument("--noFrag", help="Do not allow fragmented matches in"
+                        "interval predictions.  ie if a single truth interval"
+                        " is covered by a series of predicted intervals, only "
+                        "the best match will be counted if this flag is used", 
+                        action="store_true", default=False)
 
     args = parser.parse_args()
     tempBedToolPath = initBedTool()
@@ -98,10 +96,10 @@ def main(argv=None):
         print accMap
 
     trueStats = compareIntervalsOneSided(intervals1, intervals2, args.col -1,
-                                         args.thresh, False, args.frag)[0]
+                                         args.thresh, False, not args.noFrag)[0]
     predStats = compareIntervalsOneSided(intervals2, intervals1, args.col -1,
                                          args.thresh, args.strictPrec,
-                                         args.frag)[0]
+                                         not args.noFrag)[0]
     intAccMap = summarizeIntervalComparison(trueStats, predStats, False,
                                             args.ignore)
     intAccMapWeighted = summarizeIntervalComparison(trueStats, predStats, True,

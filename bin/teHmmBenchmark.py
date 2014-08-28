@@ -399,7 +399,7 @@ def main(argv=None):
                     fitBed = os.path.join(outDir,
                                           os.path.splitext(base)[0] + "_eval_fit.bed" +
                                           repSuffix)
-                    command += " && fitStateNames.py %s %s %s" % (compTruth,
+                    command += " && fitStateNames.py %s %s %s --intThresh 0.8" % (compTruth,
                                                                   evalBed,
                                                                   fitBed)
                     if args.fitOpts is not None:
@@ -410,7 +410,7 @@ def main(argv=None):
                 compPath = os.path.join(outDir,
                                         os.path.splitext(base)[0] + "_comp.txt" +
                                         repSuffix)
-                command += " && compareBedStates.py %s %s > %s" % (compTruth,
+                command += " && compareBedStates.py %s %s --thresh 0.8 > %s" % (compTruth,
                                                                    compareInputBed,
                                                                    compPath)
             
