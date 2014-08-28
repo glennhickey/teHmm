@@ -124,6 +124,7 @@ def main(argv=None):
 
     # find the best "true" match for each predicted state    
     if args.old is True:
+        intervals1, intervals2 = intervals2, intervals1
         stateMap = getStateMapFromConfMatrix_simple(confMat)
     else:
         stateMap = getStateMapFromConfMatrix(confMat, args.ignoreTgt,
