@@ -41,7 +41,7 @@ def main(argv=None):
     
     args = parser.parse_args()
     assert os.path.isfile(args.inputBed)
-    nameSet = set()
+    nameSet = None
     if args.names is not None:
         nameSet = set(args.names.split(","))
     
@@ -50,7 +50,7 @@ def main(argv=None):
     bedIntervals = BedTool(args.inputBed).sort()
     
     for interval in bedIntervals:
-        doFilter = interval.name in nameSet and\
+        doFilter = (nameSet is None or interval.name in nameSet) and\
           (float(interval.score) < args.minScore or
            float(interval.score) >= args.maxScore)
         if doFilter is False:

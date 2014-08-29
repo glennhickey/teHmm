@@ -156,6 +156,7 @@ def segmentTracks(trackData, args, stats):
 
     trackTableList = trackData.getTrackTableList()
     # for every non-contiguous region
+    count = 0
     for trackTable in trackTableList:
         start = trackTable.getStart()
         end = trackTable.getEnd()
@@ -164,14 +165,13 @@ def segmentTracks(trackData, args, stats):
         intervalLen = end - start
         # scan each column (base) in region, and write new bed segment
         # if necessary (ie too much change in track values)
-        count = 0
         pi = 0
         curLen = 0
         for i in xrange(1, intervalLen):
             curLen += 1
             if isNewSegment(trackTable, pi, i, curLen, args, stats) is True:
                 oFile.write("%s\t%d\t%d\t%d\n" % (chrom, interval[1], start + i,
-                                                  count % 2))
+                                                  count))
                 interval[1] = start + i
                 interval[2] = interval[1] + 1
                 count += 1
@@ -183,7 +183,7 @@ def segmentTracks(trackData, args, stats):
         if interval[1] < trackTable.getEnd():
             oFile.write("%s\t%d\t%d\t%d\n" % (chrom, interval[1],
                                               trackTable.getEnd(),
-                                              count % 2))        
+                                              count))        
     
     oFile.close()
 
