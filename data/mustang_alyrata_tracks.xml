@@ -18,10 +18,16 @@
 <track name="overlap"           path="/data/douglas.hoen/piatea/genomes/alyrata/tracks/termini/alyrata_directoverlap.bed"/>
 <track name="mitehunter"    path="/data/douglas.hoen/piatea/genomes/alyrata/tracks/mitehunter/alyrata_mitehunter.bed" distribution="binary"/>
 
-<track name="copy"          path="/data/douglas.hoen/piatea/genomes/alyrata/tracks/copynum/alyrata_copynum.bw" default="0.0" distribution="gaussian"/>
-<track name="copy_cv"       path="/data/douglas.hoen/piatea/genomes/alyrata/tracks/copynum/alyrata_copycv.bw" default="0.0" distribution="gaussian"/>
-<track name="left_peak"     path="/data/douglas.hoen/piatea/genomes/alyrata/tracks/copynum/alyrata_leftpeak.bw" default="0.0" distribution="gaussian"/>
-<track name="right_peak"    path="/data/douglas.hoen/piatea/genomes/alyrata/tracks/copynum/alyrata_rightpeak.bw" default="0.0" distribution="gaussian"/>
+<track name="cov_80-"          path="/data/glenn.hickey/genomes/alyrata/tracks/copynum/coverage.cov.80-.bw" default="0.0" distribution="gaussian"/>
+<track name="left_peak_80-"    path="/data/glenn.hickey/genomes/alyrata/tracks/copynum/coverage.left.80-.bw" default="0.0" distribution="gaussian"/>
+<track name="right_peak_80-"   path="/data/glenn.hickey/genomes/alyrata/tracks/copynum/coverage.right.80-.bw" default="0.0" distribution="gaussian"/>
+<track name="cov_80-90"        path="/data/glenn.hickey/genomes/alyrata/tracks/copynum/coverage.cov.80-90.bw" default="0.0" distribution="gaussian"/>
+<track name="left_peak_80-90"  path="/data/glenn.hickey/genomes/alyrata/tracks/copynum/coverage.left.80-90.bw" default="0.0" distribution="gaussian"/>
+<track name="right_peak_80-90" path="/data/glenn.hickey/genomes/alyrata/tracks/copynum/coverage.right.80-90.bw" default="0.0" distribution="gaussian"/>
+<track name="cov_90+"          path="/data/glenn.hickey/genomes/alyrata/tracks/copynum/coverage.cov.90+.bw" default="0.0" distribution="gaussian"/>
+<track name="left_peak_90+"    path="/data/glenn.hickey/genomes/alyrata/tracks/copynum/coverage.left.90+.bw" default="0.0" distribution="gaussian"/>
+<track name="right_peak_90+"   path="/data/glenn.hickey/genomes/alyrata/tracks/copynum/coverage.right.90+.bw" default="0.0" distribution="gaussian"/>
+<track name="cov_maxPId"       path="/data/glenn.hickey/genomes/alyrata/tracks/copynum/coverage.maxPId.bw" default="0.0" distribution="gaussian"/>
 
 <track name="te_domains"    path="/data/douglas.hoen/sharebrowser/tracks/alyrata/permanent/domains/TE_domains.bed"/>
 <track name="fgenesh"       path="/data/douglas.hoen/piatea/genomes/alyrata/tracks/misc/alyrata_fgenesh.bed"/>  
