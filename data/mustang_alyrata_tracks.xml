@@ -29,6 +29,10 @@
 <track name="right_peak_90+"   path="/data/glenn.hickey/genomes/alyrata/tracks/copynum/coverage.right.90+.bw" default="0.0" distribution="gaussian"/>
 <track name="cov_maxPId"       path="/data/glenn.hickey/genomes/alyrata/tracks/copynum/coverage.maxPId.bw" default="0.0" distribution="gaussian"/>
 
+<!-- this track is getting disabled for now as i think it was based on the old (and flawed) copy number track.  
+<track name="copy_cv"       path="/data/douglas.hoen/piatea/genomes/alyrata/tracks/copynum/alyrata_copycv.bw" default="0.0" distribution="gaussian"/>
+-->
+
 <track name="te_domains"    path="/data/douglas.hoen/sharebrowser/tracks/alyrata/permanent/domains/TE_domains.bed"/>
 <track name="fgenesh"       path="/data/douglas.hoen/piatea/genomes/alyrata/tracks/misc/alyrata_fgenesh.bed"/>  
 <track name="mrna"          path="/data/douglas.hoen/piatea/genomes/alyrata/tracks/misc/alyrata_mrna.bw" default="0.0" distribution="gaussian"/>
