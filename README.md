@@ -346,7 +346,8 @@ In general, running any executable with `--help` will print a brief description 
 
 
 **Misc**
-* **trackDump.py** : Write an ASCII matrix of track data given an XML track listing and query BED. 
+* **trackDump.py** : Write an ASCII matrix of track data given an XML track listing and query BED.
+* **extractMonomer.py** : Extract runs of a single nucleotide out of a FASTA file and into a BED file (ie use to extract Ns positions or polyA tail candidates)
 
 
 
