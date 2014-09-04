@@ -24,6 +24,8 @@ NOTE LTR FINDER STILL RUNNING USING PARTIAL FOR NOW
 <track name="dustmasker"    path="/data/douglas.hoen/piatea/genomes/drosophila/tracks/dustmasker/dm3_dustmasker.bb" distribution="binary"/>
 <track name="windowmasker"  path="/data/douglas.hoen/piatea/genomes/drosophila/tracks/windowmasker/dm3_windowmasker.bed" distribution="binary"/>
 <track name="tantan"        path="/data/douglas.hoen/piatea/genomes/drosophila/tracks/tantan/dm3_tantan.bed" distribution="binary"/>
+<track name="polyA"         path="/data/glenn.hickey/genomes/dm3/tracks/singleBaseRepeats/dm3_polya.bed" distribution="binary"/>
+<track name="polyN"         path="/data/glenn.hickey/genomes/dm3/tracks/singleBaseRepeats/dm3_polyn.bed" distribution="binary"/>
 
 <track name="sequence"      path="/data/douglas.hoen/piatea/genomes/drosophila/sequence/drosophila3.fa"/>
 </teModelConfig>

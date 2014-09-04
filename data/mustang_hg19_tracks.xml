@@ -20,6 +20,8 @@
 <track name="dustmasker"    path="/data/douglas.hoen/piatea/genomes/human/hg19/tracks/dustmasker/hg19_dustmasker.bb" distribution="binary"/>
 <track name="windowmasker"  path="/data/douglas.hoen/piatea/genomes/human/hg19/tracks/windowmasker/hg19_windowmasker.bb" distribution="binary"/>
 <track name="tantan"            path="/data/douglas.hoen/piatea/genomes/human/hg19/tracks/tantan/hg19_tantan.bed"                   distribution="binary"/>
+<track name="polyA"         path="/data/glenn.hickey/genomes/hg19/tracks/singleBaseRepeats/hg19_polya.bed" distribution="binary"/>
+<track name="polyN"         path="/data/glenn.hickey/genomes/hg19/tracks/singleBaseRepeats/hg19_polyn.bed" distribution="binary"/>
 
 <track name="encseg_gm12878" path="/data/glenn.hickey/genomes/hg19/tracks/encode/hg19.encodeSegmentsCombined.gm12878.bed"/>
 <track name="encseg_h1hesc"  path="/data/glenn.hickey/genomes/hg19/tracks/encode/hg19.encodeSegmentsCombined.h1hesc.bed"/>

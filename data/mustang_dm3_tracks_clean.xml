@@ -15,6 +15,8 @@
 	<track distribution="binary" name="dustmasker" path="/data/douglas.hoen/piatea/genomes/drosophila/tracks/dustmasker/dm3_dustmasker.bb" valCol="0"/>
 	<track distribution="binary" name="windowmasker" path="/data/douglas.hoen/piatea/genomes/drosophila/tracks/windowmasker/dm3_windowmasker.bed" valCol="0"/>
 	<track distribution="binary" name="tantan" path="/data/douglas.hoen/piatea/genomes/drosophila/tracks/tantan/dm3_tantan.bed" valCol="0"/>
+	<track distribution="binary" name="polyA" path="/data/glenn.hickey/genomes/dm3/tracks/singleBaseRepeats/dm3_polya.bed" valCol="0"/>
+	<track distribution="binary" name="polyN" path="/data/glenn.hickey/genomes/dm3/tracks/singleBaseRepeats/dm3_polyn.bed" valCol="0"/>
 	<track distribution="multinomial" name="sequence" path="/data/douglas.hoen/piatea/genomes/drosophila/sequence/drosophila3.fa" valCol="3"/>
 	<track distribution="multinomial" name="tsd" path="/data/glenn.hickey/genomes/dm3/tracks/clean/repeat_modeler_tsd.bed" valCol="3"/>
 </teModelConfig>

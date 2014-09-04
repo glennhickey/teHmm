@@ -20,7 +20,7 @@ def main(argv=None):
 
     parser = argparse.ArgumentParser(
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
-        description="Extract monomers (runs of a single nucleotide) from a "
+        description="Extract runs of a single nucleotide from a "
         "FASTA file into a BED file.")
     parser.add_argument("inputFa", help="Input FASTA file")
     parser.add_argument("minLength", help="Minimum interval length", type=int)
