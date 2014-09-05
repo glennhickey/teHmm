@@ -64,6 +64,11 @@ def main(argv=None):
     parser.add_argument("--doNaive", help="compute naive stats.  will be "
                         "turned on by default if --naive is used", default=False,
                         action="store_true")
+    parser.add_argument("--segTracks", help="tracks XML to use for segmentation"
+                        " (by default will be same as tracks))", default=None)
+    parser.add_argument("--recallSkew", help="when computing f1, multiply recall"
+                        " by this number (hack to favour larger recall)",
+                        default=1., type=float)
     
     addLoggingOptions(parser)
     args = parser.parse_args()
@@ -84,6 +89,8 @@ def main(argv=None):
         raise RuntimeError("--bic and --naive are mutually incompatible")
     if args.naive is True:
         args.doNaive = True
+    if args.segTracks is None:
+        args.segTracks = args.tracks
         
     if not os.path.exists(args.outDir):
         os.makedirs(args.outDir)
@@ -111,14 +118,14 @@ def greedyRank(args):
     if args.fullSegment is True:
         args.fullSegTrainPath = os.path.abspath(os.path.join(args.outDir,
                                                              "fullSegTrain.bed"))
-        segmentCmd = "segmentTracks.py %s %s %s %s" % (args.tracks,
+        segmentCmd = "segmentTracks.py %s %s %s %s" % (args.segTracks,
                                                        args.training,
                                                        args.fullSegTrainPath,
                                                        args.segOpts)
         runShellCommand(segmentCmd)
         args.fullSegEvalPath = os.path.abspath(os.path.join(args.outDir,
                                                             "fullSegEval.bed"))
-        segmentCmd = "segmentTracks.py %s %s %s %s" % (args.tracks,
+        segmentCmd = "segmentTracks.py %s %s %s %s" % (args.segTracks,
                                                        args.truth,
                                                        args.fullSegEvalPath,
                                                        args.segOpts)
@@ -200,13 +207,29 @@ def runTrial(tracksList, iteration, newTrackName, args):
 
     segLogPath = os.path.join(benchDir, "segment_cmd.txt")
     segLog = open(segLogPath, "w")
-    
+
+    if args.segTracks == args.tracks:
+        segTracksPath = tracksPath
+    # pull out desired tracks from segment tracks XML if specified
+    else:
+        segTracksIn = TrackList(args.segTracks)
+        segTracks = TrackList()
+        for track in tracksList:
+            segTrack = segTracksIn.getTrackByName(track.getName())
+            if segTrack is not None:
+                segTracks.addTrack(segTrack)
+            else:
+                logger.warning("track %s not found in segment tracks %s" % (
+                    track.getName(), args.segTracks))
+        segTracksPath = os.path.join(benchDir, "seg_tracks.xml")
+        segTracks.saveXML(segTracksPath)
+        
     # segment training
     segTrainingPath = os.path.join(benchDir,
                                    os.path.splitext(
                                        os.path.basename(trainingPath))[0]+
                                    "_trainSeg.bed")    
-    segmentCmd = "segmentTracks.py %s %s %s %s" % (tracksPath,
+    segmentCmd = "segmentTracks.py %s %s %s %s" % (segTracksPath,
                                                    trainingPath,
                                                    segTrainingPath,
                                                    args.segOpts)
@@ -221,7 +244,7 @@ def runTrial(tracksList, iteration, newTrackName, args):
     segEvalPath = os.path.join(benchDir,
                                 os.path.splitext(os.path.basename(truthPath))[0]+
                                 "_evalSeg.bed")    
-    segmentCmd = "segmentTracks.py %s %s %s %s" % (tracksPath,
+    segmentCmd = "segmentTracks.py %s %s %s %s" % (segTracksPath,
                                                    truthPath,
                                                    segEvalPath,
                                                    args.segOpts)
@@ -273,8 +296,8 @@ def extractScore(benchDir, benchInputBedPath, args, repSuffix = ""):
             f1List.append(0)
             continue
         
-        prec = stats[state][0]
-        rec = stats[state][1]
+        prec = stats[state][0] 
+        rec = stats[state][1] * args.recallSkew
         f1 = 0
         if prec + rec > 0:
             f1 = 2. * ((prec * rec) / (prec + rec))
