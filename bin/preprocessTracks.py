@@ -225,7 +225,9 @@ def runCleaning(args, tempTracksInfo):
                 
     # run cleanTermini.py
     lastzTracks = [trackList.getTrackByName(args.ltr_termini),
-                  trackList.getTrackByName(args.tir)]
+                   trackList.getTrackByName(args.tir),
+                   trackList.getTrackByName(args.overlap),
+                   trackList.getTrackByName(args.palindrome)]
     for terminiTrack in lastzTracks:
         if terminiTrack is not None:
             outFile = cleanPath(args, terminiTrack)
