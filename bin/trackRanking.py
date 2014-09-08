@@ -69,6 +69,8 @@ def main(argv=None):
     parser.add_argument("--recallSkew", help="when computing f1, multiply recall"
                         " by this number (hack to favour larger recall)",
                         default=1., type=float)
+    parser.add_argument("--score", help="accuracy score to use from "
+                        "{f1, prec, rec}", default="f1")
     
     addLoggingOptions(parser)
     args = parser.parse_args()
@@ -301,7 +303,12 @@ def extractScore(benchDir, benchInputBedPath, args, repSuffix = ""):
         f1 = 0
         if prec + rec > 0:
             f1 = 2. * ((prec * rec) / (prec + rec))
-        f1List.append(f1)
+        if args.score  == "prec":
+            f1List.append(prec)
+        elif args.score == "rec":
+            f1List.append(rec)
+        else:
+            f1List.append(f1)
 
     avgF1 = np.mean(f1List)
     return avgF1

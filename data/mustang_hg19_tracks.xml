@@ -1,17 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <currentTracks>
-<track name="repbase"       path="/data/glenn.hickey/genomes/hg19/tracks/repbase/hg19.repbase.bed"/>
-<track name="transposon_psi" path="/data/douglas.hoen/piatea/genomes/human/hg19/tracks/transposonpsi/hg19_transposonpsi.bed"/>
-<track name="repeat_modeler" path="/data/douglas.hoen/piatea/genomes/human/hg19/tracks/repeatmodeler/hg19_repeatmodeler_unfiltered.bed"/>
+<track name="repbase"       path="/data/glenn.hickey/genomes/hg19/tracks/repbase/hg19.repbase.bed" distribution="multinomial" preprocess="rm"/>
+<track name="transposon_psi" path="/data/douglas.hoen/piatea/genomes/human/hg19/tracks/transposonpsi/hg19_transposonpsi.bed" distribution="multinomial" preprocess="rmu"/>
+<track name="repeat_modeler" path="/data/douglas.hoen/piatea/genomes/human/hg19/tracks/repeatmodeler/hg19_repeatmodeler_unfiltered.bed" distribution="multinomial" preprocess="rm"/>
 
-<track name="ltr_finder"    path="/data/glenn.hickey/genomes/hg19/tracks/ltr_finder/hg19.ltr_finder.bed"/>
-<track name="ltr_harvest"   path="/data/glenn.hickey/genomes/hg19/tracks/ltr_harvest/hg19.ltrharvest.bed"/>
+<track name="ltr_finder"    path="/data/glenn.hickey/genomes/hg19/tracks/ltr_finder/hg19.ltr_finder.bed" distribution="multinomial" preprocess="ltr_finder"/>
+<track name="ltr_harvest"   path="/data/glenn.hickey/genomes/hg19/tracks/ltr_harvest/hg19.ltrharvest.bed" distribution="multinomial" preprocess="ltr_finder"/>
 
 <track name="mappability"   path="/data/glenn.hickey/genomes/hg19/tracks/mappability/H.sapiens.genome.hg19.main.mappability-24.bw" distribution="gaussian" default="0"/>
 <track name="orthology"     path="/data/glenn.hickey/genomes/hg19/tracks/alignability/chr22.alignability.bw" distribution="gaussian" default="0"/>
 
-<track name="mrna"          path="/data/glenn.hickey/genomes/hg19/tracks/mrna/hg19.mrna_clean.bed"/>
-<track name="refseq"        path="/data/glenn.hickey/genomes/hg19/tracks/genes/hg19.refseq_clean.bed"/>
+<track name="mrna"          path="/data/glenn.hickey/genomes/hg19/tracks/mrna/hg19.mrna_clean.bed" distribution="multinomial"/>
+<track name="refseq"        path="/data/glenn.hickey/genomes/hg19/tracks/genes/hg19.refseq_clean.bed" distribution="multinomial"/>
 <track name="phastcons"     path="/data/glenn.hickey/genomes/hg19/tracks/cons/hg19.100way.phastCons.bw" default="0.0" distribution="gaussian"/>
 <track name="phylop"        path="/data/glenn.hickey/genomes/hg19/tracks/cons/hg19.100way.phyloP100way.bw" default="0.0" distribution="gaussian"/>
 <track name="gcpct"         path="/data/glenn.hickey/genomes/hg19/tracks/gcpct/hg19_gcPercentWin20.bw" distribution="gaussian" default="0"/>
@@ -23,11 +23,11 @@
 <track name="polyA"         path="/data/glenn.hickey/genomes/hg19/tracks/singleBaseRepeats/hg19_polya.bed" distribution="binary"/>
 <track name="polyN"         path="/data/glenn.hickey/genomes/hg19/tracks/singleBaseRepeats/hg19_polyn.bed" distribution="binary"/>
 
-<track name="encseg_gm12878" path="/data/glenn.hickey/genomes/hg19/tracks/encode/hg19.encodeSegmentsCombined.gm12878.bed"/>
-<track name="encseg_h1hesc"  path="/data/glenn.hickey/genomes/hg19/tracks/encode/hg19.encodeSegmentsCombined.h1hesc.bed"/>
-<track name="encseg_k562"    path="/data/glenn.hickey/genomes/hg19/tracks/encode/hg19.encodeSegmentsCombined.k562.bed"/>
+<track name="encseg_gm12878" path="/data/glenn.hickey/genomes/hg19/tracks/encode/hg19.encodeSegmentsCombined.gm12878.bed" distribution="multinomial"/>
+<track name="encseg_h1hesc"  path="/data/glenn.hickey/genomes/hg19/tracks/encode/hg19.encodeSegmentsCombined.h1hesc.bed" distribution="multinomial"/>
+<track name="encseg_k562"    path="/data/glenn.hickey/genomes/hg19/tracks/encode/hg19.encodeSegmentsCombined.k562.bed" distribution="multinomial"/>
 
-<track name="sequence"      path="/data/glenn.hickey/genomes/hg19/sequence/hg19.fa"/>
+<track name="sequence"      path="/data/glenn.hickey/genomes/hg19/sequence/hg19.fa" distribution="multinomial"/>
 
 <!--
 Using only tier 1 encode tracks.  3 more available

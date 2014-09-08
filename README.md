@@ -71,6 +71,12 @@ The track list file contains a single *teModelConfig* element which in turn cont
 operation is performed before scaling.  Note, since deltas can be negative this mode is incompatible with *logScale*.  Using this flag with non-numeric tracks is probably not a great idea.  
 * *shift*. Add constant to track data value, and is applied before scaling. Useful in conjunction with *logScale* to process values less than or equal to 0.
 * *default*. Default value for regions of genome that are not annotated by track (only applies to *multinomial* distribution).  If not specified, unannotated bases are assigned a special NULL symbol.  For numeric tracks, such as those specified in BigWig format, it will probably most often make sense to set default="0.0" (Warning: if default=0 is used in conjunction with logScale, shift must be set to at least 1)
+* *preprocess*. Preprocessor action to be applied to track when running `preprcessTracks.py` script on the XML file.  Acceptable values are:
+  * *rm*: Apply RepeatMasker output name cleaning using `cleanRM.py` script.
+  * *rmu*: As above but the `--keepUnderscore` option is used.
+  * *termini*: Apply `cleanTermini.py`
+  * *ltr_finder*: Apply `cleanLtrFinderID.py`
+  * *overlap*: Apply `removeBedOverlaps.y`
 
 *Note on BED-12 format* By default, only the start and end coordinate (2nd and 3rd BED) column are used.  This may not be desired behaviour for files in BED-12 format, such as gene annotations with the exons in blocks (columns 10-12).   In this case, please see the `cleanGenes.py` script as a potential preprocessing step to convert a gene annotation into a flattened BED file more suitable for the HMM.
 
