@@ -54,6 +54,8 @@ class Track(object):
         self.delta = False
         #: Specify value given to unannotated bases
         self.defaultVal = None
+        #: Specify preprocessor token
+        self.preprocess = None
 
         if xmlElement is not None:
             self._fromXMLElement(xmlElement)
@@ -132,6 +134,12 @@ class Track(object):
                                        "shift attribute set to at least %f" % (
                                            self.getName(), self.defaultVal,
                                            1. - df))
+        if "preprocess" in elem.attrib:
+            self.preprocess = elem.attrib["preprocess"]
+            if self.preprocess not in ["rm", "rmu", "ltr_finder", "termini", "overlap"]:
+                raise RuntimeError("track %s: preprocess set to invalid value %s.  must"
+                                   " be rm, rmu, ltr_finder, termini or overlap" % (
+                    self.getName(), self.preprocess))
             
     def toXMLElement(self):
         elem = ET.Element("track")
@@ -156,6 +164,8 @@ class Track(object):
             elem.attrib["delta"] = "True"
         if self.defaultVal is not None:
             elem.attrib["default"] = str(self.defaultVal)
+        if self.preprocess is not None:
+            elem.attrib["preprocess"] = str(self.preprocess)
         return elem
 
     def getValueMap(self):
@@ -207,6 +217,9 @@ class Track(object):
 
     def getDefaultVal(self):
         return self.defaultVal
+
+    def getPreprocess(self):
+        return self.preprocess
     
 ###########################################################################
 """list of tracks (see above) that we can index by name or number as well as

@@ -42,6 +42,8 @@ def main(argv=None):
                         " distribution will be processed.", default=None)
     parser.add_argument("--skip", help="Comma-separated list of tracks to "
                         "skip.", default=None)
+    parser.add_argument("--noLog", help="Never use log scaling",
+                        action="store_true", default=False)
     
     addLoggingOptions(parser)
     args = parser.parse_args()
@@ -70,7 +72,7 @@ def main(argv=None):
           track.getDist() == "gaussian") and\
           not isFasta:
           try:
-              setTrackScale(track, args.numBins, allIntervals)
+              setTrackScale(track, args.numBins, allIntervals, args.noLog)
           except ValueError as e:
               logger.warning("Skipping (non-numeric?) track %s due to: %s" % (
                   track.getName(), str(e)))
@@ -78,12 +80,12 @@ def main(argv=None):
     trackList.saveXML(args.outputTracks)
     cleanBedTool(tempBedToolPath)
 
-def setTrackScale(track, numBins, allIntervals):
+def setTrackScale(track, numBins, allIntervals, noLog):
     """ Modify the track XML element in place with the heuristically
     computed scaling paramaters below """
     data = readTrackIntoFloatArray(track, allIntervals)
     if len(data) > numBins:
-        scaleType, scaleParam, shift = computeScale(data, numBins)
+        scaleType, scaleParam, shift = computeScale(data, numBins, noLog)
         # round down so xml file doesnt look too ugly
         if scaleParam > 1e-4:
             scaleParam = float("%.4f" % scaleParam)
@@ -158,7 +160,7 @@ def histVariance(data, bins, fromLog = False):
         assert np.sum(np.sum(tempFreq) == len(data))
     return np.var(freq)
 
-def computeScale(data, numBins):
+def computeScale(data, numBins, noLog):
     """ very simple heuristic to compute reasonable scaling"""
     minVal, maxVal = np.amin(data), np.amax(data)
     range = maxVal - minVal
@@ -204,7 +206,7 @@ def computeScale(data, numBins):
     logger.debug("Log base=%f has variance=%f" % (logBase, logVar))
 
     ret = "scale", linearScale, 0.
-    if logVar < linearVar:
+    if logVar < linearVar and noLog is False:
         ret = "logScale", logBase, shift
     return ret
             

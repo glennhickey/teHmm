@@ -50,37 +50,18 @@ def main(argv=None):
                         "to process for scaling. If not set, all"
                         " tracks listed as having a multinomial distribution"
                         " (since this is the default value, this includes "
-                        "tracks with no distribution attribute) will be"
-                        " processed.", default=None)
+                        "tracks with no distribution attribute) or gaussian "
+                        "distribution will be processed.", default=None)
     parser.add_argument("--skipScale", help="Comma-separated list of tracks to "
                         "skip for scaling.", default=None)
-    parser.add_argument("--chaux", help="Name of chaux track", default="chaux")
-    parser.add_argument("--ltrfinder", help="comma-sep Name(s) of ltrfinder track(s)",
-                        default="ltr_finder,ltr_harvest")
     parser.add_argument("--ltr_termini", help="Name of termini track (appy cleanTermini.py)",
                         default="ltr_termini")
-    parser.add_argument("--overlap", help="Name of overlap track (appy cleanTermini.py)",
-                        default="overlap")
-    parser.add_argument("--palindrome", help="Name of palindrome track (appy cleanTermini.py)",
-                        default="palindrome")
     parser.add_argument("--sequence", help="Name of fasta sequence track",
                         default="sequence")
     parser.add_argument("--tsd", help="Name of tsd track to generate (appy cleanTermini.py)",
                         default="tsd")
     parser.add_argument("--tir", help="Name of tir_termini track (appy cleanTermini.py)",
                         default="tir_termini")
-    parser.add_argument("--irf", help="Name of irf track",
-                        default="irf")
-    parser.add_argument("--hollister", help="Name of hollister track",
-                        default="hollister")
-    parser.add_argument("--repbase", help="Name of repbase track",
-                        default="repbase")
-    parser.add_argument("--repeat_modeler", help="Name of repeat_modeler track",
-                        default="repeat_modeler")
-    parser.add_argument("--transposon_psi", help="Name of transposon_psi track",
-                        default="transposon_psi")
-    parser.add_argument("--repbase_censor", help="Name of repbase_censor track",
-                        default="repbase_censor")
     parser.add_argument("--noScale", help="Dont do any scaling", default=False,
                         action="store_true")
     parser.add_argument("--noTsd", help="Dont generate TSD track.  NOTE:"
@@ -129,150 +110,58 @@ def runCleaning(args, tempTracksInfo):
     """ run scripts for cleaning chaux, ltr_finder, and termini"""
     trackList = TrackList(args.tracksInfo)
 
-    # run cleanRM.py on chaux track
-    chauxTrack = trackList.getTrackByName(args.chaux)
-    if chauxTrack is not None:
-        inFile = chauxTrack.getPath()
-        outFile = cleanPath(args, chauxTrack)
-        tempBed = getLocalTempPath("Temp_chaux", ".bed")
-        runShellCommand("cleanRM.py --keepUnderscore %s > %s" % (inFile,
-                                                                    tempBed))
-        runShellCommand("removeBedOverlaps.py %s > %s" % (tempBed, outFile))
-        runShellCommand("rm -f %s" % tempBed)
-        chauxTrack.setPath(outFile)
-    else:
-        logger.warning("Could not find chaux track")
+    for track in trackList:
+        if track.getPreprocess() is None:
+            continue
 
-    # run cleanRM.py on hollister track
-    hollisterTrack = trackList.getTrackByName(args.hollister)
-    if hollisterTrack is not None:
-        inFile = hollisterTrack.getPath()
-        outFile = cleanPath(args, hollisterTrack)
-        tempBed = getLocalTempPath("Temp_hollister", ".bed")
-        runShellCommand("cleanRM.py %s > %s" % (inFile, tempBed))
-        runShellCommand("removeBedOverlaps.py %s > %s" % (tempBed, outFile)) 
-        runShellCommand("rm -f %s" % tempBed)
-        hollisterTrack.setPath(outFile)
-    else:
-        logger.warning("Could not find hollister track")
-
-    # run cleanRM.py on repbase track
-    repbaseTrack = trackList.getTrackByName(args.repbase)
-    if repbaseTrack is not None:
-        inFile = repbaseTrack.getPath()
-        outFile = cleanPath(args, repbaseTrack)
-        tempBed = getLocalTempPath("Temp_repbase", ".bed")
-        runShellCommand("cleanRM.py %s > %s" % (inFile, tempBed))
-        runShellCommand("removeBedOverlaps.py %s > %s" % (tempBed, outFile)) 
-        runShellCommand("rm -f %s" % tempBed)
-        repbaseTrack.setPath(outFile)
-    else:
-        logger.warning("Could not find repbase track")
-
-    # run cleanRM.py on repeat_modeler track
-    repeat_modelerTrack = trackList.getTrackByName(args.repeat_modeler)
-    if repeat_modelerTrack is not None:
-        inFile = repeat_modelerTrack.getPath()
-        outFile = cleanPath(args, repeat_modelerTrack)
+        # convert bigbed/wig
+        inFile = track.getPath()
         tempBed1 = None
-        if inFile[-3:] == ".bb":
-            tempBed1 = getLocalTempPath("Temp_modeler", ".bed")
-            runShellCommand("bigBedToBed %s %s" % (inFile, tempBed1))
-            inFile = tempBed1
-        tempBed = getLocalTempPath("Temp_repeat_modeler", ".bed")
-        runShellCommand("cleanRM.py %s  > %s" % (inFile, tempBed))
-        runShellCommand("removeBedOverlaps.py %s > %s" % (tempBed, outFile)) 
-        runShellCommand("rm -f %s" % tempBed)
-        repeat_modelerTrack.setPath(outFile)
-    else:
-        logger.warning("Could not find repeat_modeler track")
-
-    # run cleanRM.py on transposon_psi track
-    transposon_psiTrack = trackList.getTrackByName(args.transposon_psi)
-    if transposon_psiTrack is not None:
-        inFile = transposon_psiTrack.getPath()
-        outFile = cleanPath(args, transposon_psiTrack)
-        tempBed1 = None
-        if inFile[-3:] == ".bb":
-            tempBed1 = getLocalTempPath("Temp_modeler", ".bed")
-            runShellCommand("bigBedToBed %s %s" % (inFile, tempBed1))
-            inFile = tempBed1
-        tempBed = getLocalTempPath("Temp_transposon_psi", ".bed")
-        runShellCommand("cleanRM.py %s  --keepUnderscore > %s" % (inFile, tempBed))
-        runShellCommand("removeBedOverlaps.py %s > %s" % (tempBed, outFile)) 
-        runShellCommand("rm -f %s" % tempBed)
-        transposon_psiTrack.setPath(outFile)
-    else:
-        logger.warning("Could not find transposon_psi track")
-
-    # run cleanRM.py on repbase_censor track
-    repbase_censorTrack = trackList.getTrackByName(args.repbase_censor)
-    if repbase_censorTrack is not None:
-        inFile = repbase_censorTrack.getPath()
-        outFile = cleanPath(args, repbase_censorTrack)
-        tempBed1 = None
-        if inFile[-3:] == ".bb":
-            tempBed1 = getLocalTempPath("Temp_modeler", ".bed")
-            runShellCommand("bigBedToBed %s %s" % (inFile, tempBed1))
-            inFile = tempBed1
-        tempBed = getLocalTempPath("Temp_repbase_censor", ".bed")
-        runShellCommand("cleanRM.py %s  --keepUnderscore > %s" % (inFile, tempBed))
-        runShellCommand("removeBedOverlaps.py %s > %s" % (tempBed, outFile)) 
-        runShellCommand("rm -f %s" % tempBed)
-        repbase_censorTrack.setPath(outFile)
-    else:
-        logger.warning("Could not find repbase_censor track")
-                
-    # run cleanTermini.py
-    lastzTracks = [trackList.getTrackByName(args.ltr_termini),
-                  trackList.getTrackByName(args.tir)]
-    for terminiTrack in lastzTracks:
-        if terminiTrack is not None:
-            outFile = cleanPath(args, terminiTrack)
-            inFile = terminiTrack.getPath()
-            tempBed = None
+        if inFile[-3:] == ".bb" or inFile[-3:] == ".bw":
+            tempBed1 = getLocalTempPath("Temp_%s" % track.getName(), ".bed")
             if inFile[-3:] == ".bb":
-                tempBed = getLocalTempPath("Temp_termini", ".bed")
-                runShellCommand("bigBedToBed %s %s" % (inFile, tempBed))
-                inFile = tempBed
-            runShellCommand("cleanTermini.py %s %s" % (inFile, outFile))
-            terminiTrack.setPath(outFile)
-            if tempBed is not None:
-                runShellCommand("rm -f %s" % tempBed)
-        else:
-            logger.warning("Could not find termini track")
-
-    # run removeBedOverlaps on irf (too bad its not in termini-like format
-    # to be included in above logic)
-    irfTrack = trackList.getTrackByName(args.irf)
-    if irfTrack is not None:
-        outFile = cleanPath(args, irfTrack)
-        inFile = irfTrack.getPath()
-        tempBed = None
-        if inFile[-3:] == ".bb":
-            tempBed = getLocalTempPath("Temp_termini", ".bed")
-            runShellCommand("bigBedToBed %s %s" % (inFile, tempBed))
-            inFile = tempBed
-        runShellCommand("removeBedOverlaps.py %s > %s" % (inFile, outFile))
-        irfTrack.setPath(outFile)
-        if tempBed is not None:
+                runShellCommand("bigBedToBed %s %s" % (inFile, tempBed1))
+            else:
+                runShellCommand("bigWigToBedGraph %s %s" % (inFile, tempBed1))    
+            inFile = tempBed1            
+        
+        # run cleanRM.py on all tracks with rm or rmu preprocessor
+        if track.getPreprocess() == "rm" or track.getPreprocess() == "rmu":
+            flag = ""
+            if track.getPreprocess() == "rmu":
+                flag == "--keepUnderscore"
+            inFile = track.getPath()
+            outFile = cleanPath(args, track)
+            tempBed = getLocalTempPath("Temp_%s" % track.getName(), ".bed")
+            runShellCommand("cleanRM.py %s %s > %s" % (inFile, flag, tempBed))
+            runShellCommand("removeBedOverlaps.py %s > %s" % (tempBed, outFile)) 
             runShellCommand("rm -f %s" % tempBed)
-    else:
-        logger.warning("Could not find irf track")
+            track.setPath(outFile)
 
-    # run cleanLtrFinder.py
-    for lfTrackName in args.ltrfinder.split(","): 
-        ltrfinderTrack = trackList.getTrackByName(lfTrackName)
-        if ltrfinderTrack is not None:
-            inFile = ltrfinderTrack.getPath()
-            outFile = cleanPath(args, ltrfinderTrack)
+        # run cleanTermini.py            
+        elif track.getPreprocess() == "termini":            
+            outFile = cleanPath(args, track)
+            inFile = track.getPath()
+            runShellCommand("cleanTermini.py %s %s" % (inFile, outFile))
+            track.setPath(outFile)
+
+        # run removeBedOverlaps
+        elif track.getPreprocess() == "overlap":
+            outFile = cleanPath(args, track)
+            inFile = track.getPath()
+            runShellCommand("removeBedOverlaps.py %s > %s" % (inFile, outFile))
+            track.setPath(outFile)
+
+        # run cleanLtrFinder.py
+        elif track.getPreprocess() == "ltr_finder":
+            inFile = track.getPath()
+            outFile = cleanPath(args, track)
             # note: overlaps now removed in cleanLtrFinderID script
             runShellCommand("cleanLtrFinderID.py %s %s" % (inFile, outFile))
-            ltrfinderTrack.setPath(outFile)
-        else:
-            logger.warning("Could not find ltrfinder track %s" % lfTrackName)
+            track.setPath(outFile)
 
-    
+        if tempBed1 is not None:
+            runShellCommand("rm -f %s" % tempBed1)
 
     # save a temporary xml
     trackList.saveXML(tempTracksInfo)
