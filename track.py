@@ -530,9 +530,10 @@ class IntegerTrackTable(TrackTable):
             trackNo = track.getNumber()
             if track.getDist() == "gaussian":
                 valMap = track.getValueMap()
-                meanVal = np.mean(
-                    [float(valMap.getMapBack(self.data[x, trackNo]))
-                     for x in xrange(start, end)])
+                total = 0.
+                for x in xrange(start, end):
+                    total += valMap.getMapBack(self.data[x, trackNo])
+                meanVal = total / float(end-start)
                 self.data[pos, trackNo] = valMap.getMap(meanVal, update=True)
             else:
                 self.data[pos, trackNo] = mode(self.data[start:end,
