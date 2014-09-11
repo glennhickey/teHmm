@@ -419,14 +419,14 @@ class TestCase(TestBase):
         segIntervals = readBedIntervals(getSegmentsPath(), sort=True)
         
         trackData = TrackData()
-        trackData.loadTrackData(getTracksInfoPath(), bedIntervals)
+        trackData.loadTrackData(getTracksInfoPath(7), bedIntervals)
 
         segTrackData = TrackData()
-        segTrackData.loadTrackData(getTracksInfoPath(), bedIntervals,
+        segTrackData.loadTrackData(getTracksInfoPath(7), bedIntervals,
                                    segmentIntervals=segIntervals,
                                    interpolateSegments=False)
         segTrackData2 = TrackData()
-        segTrackData2.loadTrackData(getTracksInfoPath(), bedIntervals,
+        segTrackData2.loadTrackData(getTracksInfoPath(7), bedIntervals,
                                    segmentIntervals=segIntervals,
                                    interpolateSegments=True)
 
@@ -437,6 +437,9 @@ class TestCase(TestBase):
         tlist3 = segTrackData2.getTrackTableList()
         assert len(tlist3) == len(tlist2)
 
+        trackList = trackData.getTrackList()
+        segTrackList = segTrackData2.getTrackList()
+        
         icount = 0
         segLens = [2, 1, 3, 2, 2]
         for i in xrange(5):
@@ -454,8 +457,20 @@ class TestCase(TestBase):
                 assert length == t2.getSegmentLength(j)
                 assert float(length) / 100. == segLenRatios[j]
                 originalData = t1[t2.segOffsets[j]:t2.segOffsets[j] + length]
-                originalMode = scipy.stats.mode(originalData)[0][0]
-                assert_array_equal(originalMode, t3[j])
+                for track in trackList:
+                    trackNo = track.getNumber()
+                    if track.getDist() != "gaussian":
+                        originalMode = scipy.stats.mode(originalData)[0][0]
+                        assert_array_equal(originalMode[trackNo], t3[j][trackNo])
+                    else:
+                        originalValues = [track.getValueMap().getMapBack(
+                            originalData[x, trackNo])
+                            for x in xrange(len(originalData))]
+                        originalMean = np.mean(originalValues)
+                        dataMean = t3[j][trackNo]
+                        originalScaledMean = segTrackList.getTrackByName(
+                            track.getName()).getValueMap().getMap(originalMean)
+                        assert_array_equal(originalScaledMean, t3[j][trackNo])
                 icount += 1
         
 def main():

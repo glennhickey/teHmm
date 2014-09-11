@@ -414,7 +414,7 @@ class TrackTable(object):
     def getSegmentOffsets(self):
         return self.segOffsets
 
-    def segment(self, segIntervals, interpolate=True):
+    def segment(self, segIntervals, trackList, interpolate=True):
         """ completely transform table to contain only one coordinate per
         segment interval (compression).  """
         firstIdx = binSearch(segIntervals, (self.chrom, self.start), [0,1])
@@ -430,7 +430,7 @@ class TrackTable(object):
             j += 1
 
         if interpolate is True:
-            self.interpolateSegments()
+            self.interpolateSegments(trackList)
         self.compressSegments()
         self.shape = (len(self), self.getNumTracks())
 
@@ -452,7 +452,7 @@ class TrackTable(object):
             seglens[i] = float(self.getSegmentLength(i)) / effectiveSegmentLength
         return seglens
 
-    def interpolateSegments(self):
+    def interpolateSegments(self, trackList):
         """ A segment interval (i, j) in the original data, A,  is mapped to just
         A[i] in the segmented data.  Here we scan over the entire segment and put
         an average value into the first entriy (A[i]).  We use mode as it can
@@ -461,7 +461,7 @@ class TrackTable(object):
             segLen = self.getSegmentLength(so)
             start = self.segOffsets[so]
             end = start + segLen
-            self.setMode(start, start, end)
+            self.setAverages(start, start, end, trackList)
         
 ###########################################################################
 
@@ -522,9 +522,21 @@ class IntegerTrackTable(TrackTable):
         assert newShape[0] == len(self.segOffsets)
         assert_array_equal(oldShape[1:], newShape[1:])
 
-    def setMode(self, pos, start, end):
-        """ set position pos to mode of range from [start, end) """
-        self.data[pos] = mode(self.data[start:end])[0][0]
+    def setAverages(self, pos, start, end, trackList):
+        """ set position pos to mode of range from [start, end) for all
+        tracks except gaussian distributions, where we use mean isntead of
+        mode """
+        for track in trackList:
+            trackNo = track.getNumber()
+            if track.getDist() == "gaussian":
+                valMap = track.getValueMap()
+                meanVal = np.mean(
+                    [float(valMap.getMapBack(self.data[x, trackNo]))
+                     for x in xrange(start, end)])
+                self.data[pos, trackNo] = valMap.getMap(meanVal, update=True)
+            else:
+                self.data[pos, trackNo] = mode(self.data[start:end,
+                                                         trackNo])[0][0]
             
 ###########################################################################
             
@@ -751,6 +763,7 @@ class TrackData(object):
             if segmentIntervals is not None:
                 oldShape = self.trackTableList[-1].getNumPyArray().shape
                 self.trackTableList[-1].segment(segmentIntervals,
+                                                self.trackList,
                                                 interpolate=interpolateSegments)
                 newShape = self.trackTableList[-1].getNumPyArray().shape
                 logger.info("Compressed track table from %s to %s" % (
