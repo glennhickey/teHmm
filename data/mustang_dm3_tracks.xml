@@ -20,10 +20,7 @@
 <track name="right_peak_90+"   path="/data/glenn.hickey/genomes/dm3/tracks/copynum/drosophila_coverage.right.90+.bw" default="0.0" distribution="gaussian"/>
 <track name="cov_maxPId"       path="/data/glenn.hickey/genomes/dm3/tracks/copynum/drosophila_coverage.maxPId.bw" default="0.0" distribution="gaussian"/>
 
-<!--
-NOTE LTR FINDER STILL RUNNING USING PARTIAL FOR NOW
--->
-<track name="ltr_finder"    path="/data/glenn.hickey/genomes/dm3/tracks/ltr_finder/chr2L.ltr_finder.bed" distribution="multinomial" preprocess="ltr_finder"/>
+<track name="ltr_finder"    path="/data/glenn.hickey/genomes/dm3/tracks/ltr_finder/dm3.ltr_finder.bed" distribution="multinomial" preprocess="ltr_finder"/>
 
 <track name="ltr_harvest"   path="/data/glenn.hickey/genomes/dm3/tracks/ltr_harvest/dm3.ltr_harvest.bed" distribution="multinomial" preprocess="ltr_finder"/>
 <track name="trf"           path="/data/glenn.hickey/genomes/dm3/tracks/trf/dm3.trf.bed" distribution="binary"/>

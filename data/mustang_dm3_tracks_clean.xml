@@ -16,7 +16,7 @@
 	<track default="0.0" distribution="gaussian" logScale="2.4134" name="left_peak_90+" path="/data/glenn.hickey/genomes/dm3/tracks/copynum/drosophila_coverage.left.90+.bw" shift="1.0" valCol="3"/>
 	<track default="0.0" distribution="gaussian" logScale="2.4452" name="right_peak_90+" path="/data/glenn.hickey/genomes/dm3/tracks/copynum/drosophila_coverage.right.90+.bw" shift="1.0" valCol="3"/>
 	<track default="0.0" distribution="gaussian" name="cov_maxPId" path="/data/glenn.hickey/genomes/dm3/tracks/copynum/drosophila_coverage.maxPId.bw" scale="0.08" shift="0.0" valCol="3"/>
-	<track distribution="multinomial" name="ltr_finder" path="/data/glenn.hickey/genomes/dm3/tracks/clean/chr2L.ltr_finder_clean.bed" valCol="3"/>
+	<track distribution="multinomial" name="ltr_finder" path="/data/glenn.hickey/genomes/dm3/tracks/clean/dm3.ltr_finder_clean.bed" valCol="3"/>
 	<track distribution="multinomial" name="ltr_harvest" path="/data/glenn.hickey/genomes/dm3/tracks/clean/dm3.ltr_harvest_clean.bed" valCol="3"/>
 	<track distribution="binary" name="trf" path="/data/glenn.hickey/genomes/dm3/tracks/trf/dm3.trf.bed" valCol="0"/>
 	<track distribution="binary" name="irf" path="/data/glenn.hickey/genomes/dm3/tracks/clean/dm3_irf_clean.bed" valCol="0"/>
