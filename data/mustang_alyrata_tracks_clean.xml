@@ -1,6 +1,6 @@
 <?xml version="1.0" ?>
 <teModelConfig>
-	<track distribution="multinomial" name="hollister" path="/data/glenn.hickey/genomes/alyrata/tracks/clean/alyrata_hollister_clean.bed" valCol="3"/>
+	<track distribution="multinomial" name="hollister" path="/data/glenn.hickey/genomes/alyrata/tracks/clean/alyrata_hollister_v2_clean.bed" valCol="3"/>
 	<track distribution="multinomial" name="repbase" path="/data/glenn.hickey/genomes/alyrata/tracks/clean/alyrata_repbase_repeatmasker_clean.bed" valCol="3"/>
 	<track distribution="multinomial" name="chaux" path="/data/glenn.hickey/genomes/alyrata/tracks/clean/alyrata_chaux_clean.bed" valCol="3"/>
 	<track distribution="multinomial" name="transposon_psi" path="/data/glenn.hickey/genomes/alyrata/tracks/clean/alyrata_transposonpsi_clean.bed" valCol="3"/>

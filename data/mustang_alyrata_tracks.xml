@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <teModelConfig>
 <!-- These six tracks considered non denovo -->
-<track name="hollister"     path="/data/douglas.hoen/piatea/genomes/alyrata/tracks/hollister/alyrata_hollister.bed" distribution="multinomial" preprocess="rm"/>
+<track name="hollister"     path="/data/douglas.hoen/piatea/genomes/alyrata/tracks/hollister/alyrata_hollister_v2.bed" distribution="multinomial" preprocess="rm"/>
 <track name="repbase"       path="/data/douglas.hoen/piatea/genomes/alyrata/tracks/repbase-repeatmasker/alyrata_repbase_repeatmasker.bed" distribution="multinomial" preprocess="rm"/>
 <track name="chaux"         path="/data/douglas.hoen/piatea/genomes/alyrata/tracks/chaux/alyrata_chaux.bed" distribution="multinomial" preprocess="rmu"/>
 <track name="transposon_psi" path="/data/douglas.hoen/piatea/genomes/alyrata/tracks/transposonpsi/alyrata_transposonpsi.bed" distribution="multinomial" preprocess="rmu"/>        
