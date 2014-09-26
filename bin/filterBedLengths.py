@@ -24,6 +24,8 @@ def main(argv=None):
         description="Filter out bed intervals that are smaller than a cutoff")
     parser.add_argument("inputBed", help="Bed file to filter")
     parser.add_argument("minLength", help="Minimum interval length", type=int)
+    parser.add_argument("--rename", help="Rename id column to given name instead "
+                        "of removing", default=None)
     
     args = parser.parse_args()
     assert os.path.isfile(args.inputBed)
@@ -35,6 +37,10 @@ def main(argv=None):
     for interval in bedIntervals:
         if interval.end - interval.start >= args.minLength:
             sys.stdout.write("%s" % str(interval))
+        elif args.rename is not None:
+            x = copy.deepcopy(interval)
+            x.name = args.rename
+            sys.stdout.write("%s" % str(x))
 
     cleanBedTool(tempBedToolPath)
     
