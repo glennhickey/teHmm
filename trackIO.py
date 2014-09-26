@@ -143,6 +143,7 @@ def readBedData(bedPath, chrom, start, end, **kwargs):
         tempTool = BedTool(str(interval), from_string = True)
         intersections = bedTool.intersect(tempTool)
         tempTool.delete_temporary_history(ask=False)
+        tempTool = None
 
     else:
         intersections = bedTool
@@ -188,7 +189,8 @@ def readBedData(bedPath, chrom, start, end, **kwargs):
         basesRead += oEnd - oStart            
 
     logger.debug("done readBedData(%s). %d bases read" % (bedPath, basesRead))
-
+    bedTool.delete_temporary_history(ask = False)
+    bedTool = None
     return data
 
 ###########################################################################

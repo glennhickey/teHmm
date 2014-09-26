@@ -40,7 +40,7 @@ cutTrack = "polyN"
 truthPaths=["alyrata_hollister_clean_gapped_TE.bed", "alyrata_chaux_clean_gapped_TE.bed", "alyrata_repet_gapped_TE.bed"]
 modelerPath="alyrata_repeatmodeler_clean_gapped_TE.bed"
 
-numParallelBatch = 42
+numParallelBatch = 40
 cutTrackLenFilter = 100
 fragmentFilterLen = 100000
 
@@ -48,7 +48,7 @@ fragmentFilterLen = 100000
 segOpts = "--cutMultinomial --thresh 2"
 segLen = 20
 numStates = 40
-trainThreads = 6
+trainThreads = 3
 thresh = 0.08
 numIter = 200
 #mpFlags = "--maxProb --maxProbCut 5"
@@ -102,7 +102,8 @@ def filterCutTrack(genomePath, fragmentFilterLen, trackListPath, cutTrackName,
         tempPath1, fragmentFilterLen, tag, tag, tempPath2))
     runShellCommand("cat %s | setBedCol.py 3 N | setBedCol.py 4 0 | setBedCol.py 5 . > %s" % (tempPath2, tempPath1))
     runShellCommand("cat %s | setBedCol.py 3 N | setBedCol.py 4 0 | setBedCol.py 5 . >> %s" % (cutTrackPath, tempPath1))
-    runShellCommand("cat %s | mergeBed | sortBed > %s" % (tempPath1, cutTrackPath))
+    runShellCommand("sortBed -i %s > %s" % (tempPath1, tempPath2))
+    runShellCommand("mergeBed -i %s > %s" %(tempPath2, cutTrackPath))
     runShellCommand("rm -f %s %s" % (tempPath1, tempPath2))                    
     return cutTrackPath
 
