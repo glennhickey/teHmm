@@ -53,7 +53,7 @@ thresh = 0.08
 numIter = 200
 #mpFlags = "--maxProb --maxProbCut 5"
 mpFlags = ""
-fitFlags = "--ignoreTgt 0"
+fitFlags = "--ignoreTgt 0 --qualThresh 0.2"
 #####################
 
 ##################################
