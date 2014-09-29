@@ -35,10 +35,8 @@ if not os.path.isdir(outDir):
 tracksPath="tracks_clean.xml"
 tracksPath250="tracks_clean_bin250.xml"
 genomePath="alyrata.bed"
-regions = [["scaffold_1"], ["scaffold_2"], ["scaffold_3"], ["scaffold_4"],
-           ["scaffold_5"], ["scaffold_6"], ["scaffold_7"], ["scaffold_8"],
-           ["scaffold_9"]]
-#regions = [["scaffold_1"], ["scaffold_2"]]
+regionsPath = "regions.bed"
+regions = bedRead(regionsPath)
 cutTrack = "polyN"
 truthPaths=["alyrata_hollister_clean_gapped_TE.bed", "alyrata_chaux_clean_gapped_TE.bed", "alyrata_repet_gapped_TE.bed"]
 modelerPath="alyrata_repeatmodeler_clean_gapped_TE.bed"
@@ -72,15 +70,25 @@ def getOutPath(inBed, outDir, regionName, suffix=""):
     outFile += inExt
     return outFile
 
-def cutBedRegion(sequenceList, cutTrackPath, inBed, outBed):
-    """ grep out a list of sequences and subtract N's """
+def getRegionName(region, i):
+    return "%s.%d" % (region[0], i)
+
+def cutBedRegion(bedInterval, cutTrackPath, inBed, outBed):
+    """ intersect with a given interval """
     tempPath = getLocalTempPath("Temp_cut", ".bed")
+    tempPath2 = getLocalTempPath("Temp_cut", ".bed")
     runShellCommand("rm -f %s" % outBed)
-    for sequence in sequenceList:
-        runShellCommand("grep %s %s >> %s" % (sequence, inBed, tempPath))
+    runShellCommand("echo %s\t%d\t%d\n > %s" % (bedInterval[0],
+                                                bedInterval[1],
+                                                bedInterval[2].
+                                                tempPath2))
+    runShellCommand("intersectBed -a %s -b %s | sortBed > %s" % (inBed,
+                                                                 tempPath2,
+                                                                 tempPath))
     runShellCommand("subtractBed -a %s -b %s | sortBed > %s" % (tempPath,
-                                                                cutTrackPath, outBed))
-    runShellCommand("rm -f %s" % tempPath)
+                                                                cutTrackPath,
+                                                                outBed))
+    runShellCommand("rm -f %s %s" % (tempPath, tempPath2))
 
 def filterCutTrack(genomePath, fragmentFilterLen, trackListPath, cutTrackName,
                    cutTrackLenFilter):
@@ -110,12 +118,25 @@ def filterCutTrack(genomePath, fragmentFilterLen, trackListPath, cutTrackName,
     runShellCommand("rm -f %s %s" % (tempPath1, tempPath2))                    
     return cutTrackPath
 
+def filterEmptyRegions(genomePath, regions, outDir, cutTrackPath):
+    """ to a trial cut on each region.  return a list of those that
+    aren't empty after cut """
+    filteredRegions = []
+    for i, region in enumerate(regions):
+        regionName = getRegionName(region, i)
+        tempPath1 = getLocalTempPath("Temp", ".bed")
+        cutBedRegion(region, cutTrackPath, genomePath, tempPath1)
+        intervals = bedRead(tempPath1)
+        runShellCommand("rm -f %s" % tempPath1)
+        if len(intervals) > 0:
+            filteredRegions.append(region)
+
 def cutInput(genomePath, regions, truthPaths, modelerPath,outDir, cutTrackPath):
     """ cut all the input into outDir """
     inList = [genomePath] + truthPaths + [modelerPath]
     assert len(inList) == 2 + len(truthPaths)
     for i, region in enumerate(regions):
-        regionName = "region%d" % i
+        regionName = getRegionName(region, i)
         for bedFile in inList:
             outFile = getOutPath(bedFile, outDir, regionName)
             cutBedRegion(region, cutTrackPath, bedFile, outFile)
@@ -124,7 +145,7 @@ def segmentCommands(genomePath, regions, outDir, segOpts, tracksPath):
     """ make the segmenation command list """
     segmentCmds = []
     for i, region in enumerate(regions):
-        regionName = "region%d" % i
+        regionName = getRegionName(region, i)
         inBed = getOutPath(genomePath, outDir, regionName)
         outBed = getOutPath(genomePath, outDir, regionName, "segments")
         cmd = "segmentTracks.py %s %s %s %s --logInfo" % (tracksPath,
@@ -137,7 +158,7 @@ def trainCommands(genomePath, regions, outDir, tracksPath250, segLen, numStates,
                   trainThreads, thresh, numIter):
     trainCmds = []
     for i, region in enumerate(regions):
-        regionName = "region%d" % i
+        regionName = getRegionName(region, i)
         segmentsBed = getOutPath(genomePath, outDir, regionName, "segments")
         outMod = getOutPath(genomePath, outDir, regionName, "unsup").replace(
             ".bed", ".mod")
@@ -156,7 +177,7 @@ def trainCommands(genomePath, regions, outDir, tracksPath250, segLen, numStates,
 def evalCommands(genomePath, regions, outDir, tracksPath250):
     evalCmds = []
     for i, region in enumerate(regions):
-        regionName = "region%d" % i
+        regionName = getRegionName(region, i)
         segmentsBed = getOutPath(genomePath, outDir, regionName, "segments")
         inMod = getOutPath(genomePath, outDir, regionName, "unsup").replace(
             ".bed", ".mod")
@@ -171,7 +192,7 @@ def evalCommands(genomePath, regions, outDir, tracksPath250):
 def fitCommands(genomePath, regions, outDir, modelerPath, truthPaths):
     fitCmds = []
     for i, region in enumerate(regions):
-        regionName = "region%d" % i
+        regionName = getRegionName(region, i)
         evalBed = getOutPath(genomePath, outDir, regionName, "unsup_eval")
         fitTgts = copy.deepcopy(truthPaths)
         fitTgts.append(modelerPath)
@@ -190,7 +211,7 @@ def fitCommands(genomePath, regions, outDir, modelerPath, truthPaths):
 def compareCommands(genomePath, regions, outDir, modelerPath, truthPaths):
     compareCmds = []
     for i, region in enumerate(regions):
-        regionName = "region%d" % i
+        regionName = getRegionName(region, i)
         fitTgts = truthPaths
         modelerInputBed = getOutPath(modelerPath, outDir, regionName)
         modelerName = os.path.splitext(os.path.basename(
@@ -251,7 +272,7 @@ def harvestStats(genomePath, regions, outDir, modelerPath, truthPaths,
         if len(rows) == 0:
             header.append("region")
         row = []
-        regionName = "region%d" % i
+        regionName = getRegionName(region, i)
         row.append(regionName)
         fitTgts = truthPaths
         modelerInputBed = getOutPath(modelerPath, outDir, regionName)
@@ -319,6 +340,9 @@ def harvestStats(genomePath, regions, outDir, modelerPath, truthPaths,
 
 cutTrackPath = filterCutTrack(genomePath, fragmentFilterLen, tracksPath,
                               cutTrack, cutTrackLenFilter)
+
+regions = filterEmptyRegions(genomePath, regions, outDir, cutTrackPath)
+
 cutInput(genomePath, regions, truthPaths, modelerPath, outDir, cutTrackPath)
 
 segmentCmds = segmentCommands(genomePath, regions, outDir, segOpts, tracksPath)        
