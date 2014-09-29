@@ -16,6 +16,8 @@ import copy
 from teHmm.common import runShellCommand, setLogLevel, addLoggingFileHandler
 from teHmm.common import runParallelShellCommands, getLocalTempPath
 from teHmm.track import TrackList
+from teHmm.trackIO import bedRead
+from teHmm.bin.compareBedStates import extractCompStatsFromFile
 
 # todo: make command-line options?
 ##################################
@@ -36,7 +38,7 @@ genomePath="alyrata.bed"
 regions = [["scaffold_1"], ["scaffold_2"], ["scaffold_3"], ["scaffold_4"],
            ["scaffold_5"], ["scaffold_6"], ["scaffold_7"], ["scaffold_8"],
            ["scaffold_9"]]
-#regions = [["scaffold_9"]]
+#regions = [["scaffold_1"], ["scaffold_2"]]
 cutTrack = "polyN"
 truthPaths=["alyrata_hollister_clean_gapped_TE.bed", "alyrata_chaux_clean_gapped_TE.bed", "alyrata_repet_gapped_TE.bed"]
 modelerPath="alyrata_repeatmodeler_clean_gapped_TE.bed"
@@ -212,19 +214,107 @@ def compareCommands(genomePath, regions, outDir, modelerPath, truthPaths):
             compareCmds.append(cmd)
             
             # "Semisupervised" comparison where we fit with modeler
-            compFile = modelerFitBed.replace(".bed", "comp_modfit.txt")
+            compFile = fitBed.replace(".bed", "comp_modfit.txt")
             cmd = "compareBedStates.py %s %s > %s " % (truthBed,
                                                        modelerFitBed,
                                                        compFile)
             compareCmds.append(cmd)
-                                             
-               
+
+            # Modeler comparision with truth (baseline)
+            compFile = fitBed.replace(".bed", "_comp_baseline.txt")
+            cmd = "compareBedStates.py %s %s > %s " % (truthBed,
+                                                       modelerInputBed,
+                                                       compFile)
+            compareCmds.append(cmd)
+            
     return compareCmds
                                                         
+def countBases(bedPath):
+    numBases = 0
+    for interval in bedRead(bedPath):
+        numBases += int(interval[2]) - int(interval[1])
+    return numBases
 
+def prettyAcc(prec, rec):
+    f1 = 0.
+    if prec + rec > 0:
+        f1 = (2. * prec * rec) / (prec + rec)
+    return ["%.4f" % prec, "%.4f" % rec, "%.4f" % f1]
 
-def harvestSTats(genomePath, regions, outDir, modelerPath, truthPaths):
-    pass
+def harvestStats(genomePath, regions, outDir, modelerPath, truthPaths,
+                 outStatsName, compIdx):
+    statFile = open(os.path.join(outDir, outStatsName) + ".csv", "w")
+    rows = []
+    header = []
+    totalBases = 0
+    for i, region in enumerate(regions):
+        if len(rows) == 0:
+            header.append("region")
+        row = []
+        regionName = "region%d" % i
+        row.append(regionName)
+        fitTgts = truthPaths
+        modelerInputBed = getOutPath(modelerPath, outDir, regionName)
+        modelerName = os.path.splitext(os.path.basename(
+            modelerInputBed))[0].replace(regionName, "")
+        modelerFitBed = getOutPath(genomePath, outDir, regionName,
+                                   "unsup_eval_fit_%s" % modelerName)
+        if len(rows) == 0:
+            header.append("numBases")
+        numBases = countBases(modelerInputBed)
+        totalBases += numBases
+        row.append(numBases)
+
+        for fitTgt in fitTgts:
+            fitInputBed = getOutPath(fitTgt, outDir, regionName)
+            fitName = os.path.splitext(os.path.basename(
+                fitInputBed))[0].replace(regionName, "")
+            # "Cheat" comparision where we fit with truth
+            fitBed = getOutPath(genomePath, outDir, regionName,
+                                   "unsup_eval_fit_%s" % fitName)
+            cheatCompFile = fitBed.replace(".bed", "comp_cheat.txt")
+            # "Semisupervised" comparison where we fit with modeler
+            compFile = fitBed.replace(".bed", "comp_modfit.txt")
+            # Modeler comparision with truth (baseline)
+            modCompFile = fitBed.replace(".bed", "_comp_baseline.txt")
+            
+            stats = extractCompStatsFromFile(compFile)[compIdx]
+            statsCheat = extractCompStatsFromFile(cheatCompFile)[compIdx]
+            statsMod =  extractCompStatsFromFile(modCompFile)[compIdx]
+            if "TE" not in stats:
+                stats["TE"] = (0,0)
+                statsCheat["TE"] = (0,0)
+                statsMod["TE"] = (0,0)
+            
+            if len(rows) == 0:
+                header += [fitName[:12] + "_ModPrec", fitName[:12]+ "_ModRec",
+                           fitName[:12]+ "_ModF1"]
+            row += prettyAcc(statsMod["TE"][0], statsMod["TE"][1])
+            
+            if len(rows) == 0:
+                header += [fitName[:12] + "_Prec", fitName[:12]+ "_Rec",
+                           fitName[:12]+ "_F1"]
+            row += prettyAcc(stats["TE"][0], stats["TE"][1])
+
+            if len(rows) == 0:
+                header += [fitName[:12] + "_PrecCheat", fitName[:12]+ "_RecCheat",
+                           fitName[:12]+ "_F1Cheat"]
+            row += prettyAcc(statsCheat["TE"][0], statsCheat["TE"][1])
+            
+        if len(rows) == 0:
+            rows.append(header)
+        rows.append(row)
+    # compute weighted averages
+    row = ["total", totalBases]
+    for col in xrange(2,len(rows[0])):
+        val = sum( (float(rows[i][1]) / float(totalBases)) * float(rows[i][col])
+                   for i in xrange(1, len(rows)))
+        row.append("%.4f" % val)
+    rows.append(row)
+    
+    for row in rows:
+        statFile.write(",".join(str(x) for x in row) + "\n")
+    statFile.close()
 
 
 cutTrackPath = filterCutTrack(genomePath, fragmentFilterLen, tracksPath,
@@ -252,9 +342,11 @@ print evalCmds
 runParallelShellCommands(evalCmds, numParallelBatch)
 print fitCmds
 runParallelShellCommands(fitCmds, numParallelBatch)
-print compareCmds
+print "\n".join(compareCmds)
 runParallelShellCommands(compareCmds, numParallelBatch)
 
-#harvestStats(genomePath, regions, outDir, modelerPath, truthPaths)
+harvestStats(genomePath, regions, outDir, modelerPath, truthPaths, "stats_base", 0)
+harvestStats(genomePath, regions, outDir, modelerPath, truthPaths, "stats_interval", 1)
+harvestStats(genomePath, regions, outDir, modelerPath, truthPaths, "stats_weighted", 2)
 
 
