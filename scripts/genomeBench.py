@@ -35,11 +35,11 @@ if not os.path.isdir(outDir):
 tracksPath="tracks_clean.xml"
 tracksPath250="tracks_clean_bin250.xml"
 genomePath="alyrata.bed"
+truthPaths=["alyrata_hollister_clean_gapped_TE.bed", "alyrata_chaux_clean_gapped_TE.bed", "alyrata_repet_gapped_TE.bed"]
+modelerPath="alyrata_repeatmodeler_clean_gapped_TE.bed"
 regionsPath = "regions.bed"
 regions = bedRead(regionsPath)
 cutTrack = "polyN"
-truthPaths=["alyrata_hollister_clean_gapped_TE.bed", "alyrata_chaux_clean_gapped_TE.bed", "alyrata_repet_gapped_TE.bed"]
-modelerPath="alyrata_repeatmodeler_clean_gapped_TE.bed"
 
 numParallelBatch = 40
 cutTrackLenFilter = 100
@@ -78,9 +78,9 @@ def cutBedRegion(bedInterval, cutTrackPath, inBed, outBed):
     tempPath = getLocalTempPath("Temp_cut", ".bed")
     tempPath2 = getLocalTempPath("Temp_cut", ".bed")
     runShellCommand("rm -f %s" % outBed)
-    runShellCommand("echo %s\t%d\t%d\n > %s" % (bedInterval[0],
+    runShellCommand("echo \"%s\t%s\t%s\n\" > %s" % (bedInterval[0],
                                                 bedInterval[1],
-                                                bedInterval[2].
+                                                bedInterval[2],
                                                 tempPath2))
     runShellCommand("intersectBed -a %s -b %s | sortBed > %s" % (inBed,
                                                                  tempPath2,
@@ -130,6 +130,7 @@ def filterEmptyRegions(genomePath, regions, outDir, cutTrackPath):
         runShellCommand("rm -f %s" % tempPath1)
         if len(intervals) > 0:
             filteredRegions.append(region)
+    return filteredRegions
 
 def cutInput(genomePath, regions, truthPaths, modelerPath,outDir, cutTrackPath):
     """ cut all the input into outDir """
