@@ -11,6 +11,7 @@ import logging
 import random
 import numpy as np
 import string
+import copy
 
 from teHmm.common import runShellCommand, setLogLevel, addLoggingFileHandler
 from teHmm.common import runParallelShellCommands, getLocalTempPath
@@ -170,7 +171,7 @@ def fitCommands(genomePath, regions, outDir, modelerPath, truthPaths):
     for i, region in enumerate(regions):
         regionName = "region%d" % i
         evalBed = getOutPath(genomePath, outDir, regionName, "unsup_eval")
-        fitTgts = truthPaths
+        fitTgts = copy.deepcopy(truthPaths)
         fitTgts.append(modelerPath)
         for fitTgt in fitTgts:
             fitInputBed = getOutPath(fitTgt, outDir, regionName)
@@ -189,21 +190,35 @@ def compareCommands(genomePath, regions, outDir, modelerPath, truthPaths):
     for i, region in enumerate(regions):
         regionName = "region%d" % i
         fitTgts = truthPaths
-        fitTgts.append(modelerPath)
+        modelerInputBed = getOutPath(modelerPath, outDir, regionName)
+        modelerName = os.path.splitext(os.path.basename(
+            modelerInputBed))[0].replace(regionName, "")
+        modelerFitBed = getOutPath(genomePath, outDir, regionName,
+                                   "unsup_eval_fit_%s" % modelerName)
         for fitTgt in fitTgts:
             fitInputBed = getOutPath(fitTgt, outDir, regionName)
             fitName = os.path.splitext(os.path.basename(
                 fitInputBed))[0].replace(regionName, "")
 
             truthBed = getOutPath(fitTgt, outDir, regionName)
-            
+
+            # "Cheat" comparision where we fit with truth
             fitBed = getOutPath(genomePath, outDir, regionName,
                                    "unsup_eval_fit_%s" % fitName)
-            compFile = fitBed.replace(".bed", "comp.txt")
+            compFile = fitBed.replace(".bed", "comp_cheat.txt")
             cmd = "compareBedStates.py %s %s > %s" % (truthBed,
                                                       fitBed,
                                                       compFile)
             compareCmds.append(cmd)
+            
+            # "Semisupervised" comparison where we fit with modeler
+            compFile = modelerFitBed.replace(".bed", "comp_modfit.txt")
+            cmd = "compareBedStates.py %s %s > %s " % (truthBed,
+                                                       modelerFitBed,
+                                                       compFile)
+            compareCmds.append(cmd)
+                                             
+               
     return compareCmds
                                                         
 

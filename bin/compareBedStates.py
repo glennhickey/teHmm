@@ -83,6 +83,7 @@ def main(argv=None):
     intervals1 = readBedIntervals(args.bed1, ncol = args.col)
     intervals2 = readBedIntervals(args.bed2, ncol = args.col)
 
+    print "Commandline %s" % " ".join(sys.argv)
     if args.noBase is False:
         stats = compareBaseLevel(intervals1, intervals2, args.col - 1)[0]
 
