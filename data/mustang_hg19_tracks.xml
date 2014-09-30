@@ -4,6 +4,17 @@
 <track name="transposon_psi" path="/data/douglas.hoen/piatea/genomes/human/hg19/tracks/transposonpsi/hg19_transposonpsi.bed" distribution="multinomial" preprocess="rmu"/>
 <track name="repeat_modeler" path="/data/douglas.hoen/piatea/genomes/human/hg19/tracks/repeatmodeler/hg19_repeatmodeler_unfiltered.bed" distribution="multinomial" preprocess="rm"/>
 
+<track name="cov_80-"          path="/data/glenn.hickey/genomes/hg19/tracks/copynum/coverage_hg19.fa.chr22.cov.80-.bw" default="0.0" distribution="gaussian"/>
+<track name="left_peak_80-"    path="/data/glenn.hickey/genomes/hg19/tracks/copynum/coverage_hg19.fa.chr22.left.80-.bw" default="0.0" distribution="gaussian"/>
+<track name="right_peak_80-"   path="/data/glenn.hickey/genomes/hg19/tracks/copynum/coverage_hg19.fa.chr22.right.80-.bw" default="0.0" distribution="gaussian"/>
+<track name="cov_80-90"        path="/data/glenn.hickey/genomes/hg19/tracks/copynum/coverage_hg19.fa.chr22.cov.80-90.bw" default="0.0" distribution="gaussian"/>
+<track name="left_peak_80-90"  path="/data/glenn.hickey/genomes/hg19/tracks/copynum/coverage_hg19.fa.chr22.left.80-90.bw" default="0.0" distribution="gaussian"/>
+<track name="right_peak_80-90" path="/data/glenn.hickey/genomes/hg19/tracks/copynum/coverage_hg19.fa.chr22.right.80-90.bw" default="0.0" distribution="gaussian"/>
+<track name="cov_90+"          path="/data/glenn.hickey/genomes/hg19/tracks/copynum/coverage_hg19.fa.chr22.cov.90+.bw" default="0.0" distribution="gaussian"/>
+<track name="left_peak_90+"    path="/data/glenn.hickey/genomes/hg19/tracks/copynum/coverage_hg19.fa.chr22.left.90+.bw" default="0.0" distribution="gaussian"/>
+<track name="right_peak_90+"   path="/data/glenn.hickey/genomes/hg19/tracks/copynum/coverage_hg19.fa.chr22.right.90+.bw" default="0.0" distribution="gaussian"/>
+<track name="cov_maxPId"       path="/data/glenn.hickey/genomes/hg19/tracks/copynum/coverage_hg19.fa.chr22.maxPId.bw" default="0.0" distribution="gaussian"/>
+
 <track name="ltr_finder"    path="/data/glenn.hickey/genomes/hg19/tracks/ltr_finder/hg19.ltr_finder.bed" distribution="multinomial" preprocess="ltr_finder"/>
 <track name="ltr_harvest"   path="/data/glenn.hickey/genomes/hg19/tracks/ltr_harvest/hg19.ltrharvest.bed" distribution="multinomial" preprocess="ltr_finder"/>
 
