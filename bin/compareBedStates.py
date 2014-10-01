@@ -451,7 +451,8 @@ def getStateMapFromConfMatrix_simple(forwardMatrix):
         stateMap[predName] = maxName, maxCount, total
     return stateMap
 
-def getStateMapFromConfMatrix(reverseMatrix, truthIgnore, predIgnore, thresh):
+def getStateMapFromConfMatrix(reverseMatrix, truthTgt, truthIgnore, predIgnore, thresh,
+                              fdr):
     """ Use greedy algorithm to construct state map in order to maximize F1 score of
     each non-ignored state (in order of size in truth).
 
@@ -465,7 +466,11 @@ def getStateMapFromConfMatrix(reverseMatrix, truthIgnore, predIgnore, thresh):
     NOTE: Unlike old version above, the input matrix is the reverse confusion matrix,
     ie mapping truth states back to predictions (tho matrix data is symmetrical,
     representation used in this module is not, and more convenient to work in one
-    direction or another)"""
+    direction or another)
+
+    UPDATE: FDR option allows to skip F1 optimization and just use fdr directly
+    as a cutoff for candidates
+    """
 
     # build maps of state names to # bases in resepctive annotations
     truthStateSizes = defaultdict(int)
@@ -483,13 +488,17 @@ def getStateMapFromConfMatrix(reverseMatrix, truthIgnore, predIgnore, thresh):
     # main loop
     stateNameMap = dict()
     for truthState, truthSize in truthStateList:
-        if truthState in truthIgnore:
+        if truthState in truthIgnore or \
+               (len(truthTgt) > 0 and truthState not in truthTgt):
             continue
         # assemble list of candidate pred states that meet threshold
         predCandidates = []
         # assemble list of andidate pred states that exceed 1-threshold
         # these will be sure bets that we assume are good
-        sureBets = [] 
+        sureBets = []
+        # tack in extra list for FDR option that overrides other two
+        # if FDR activated
+        fdrSureBets = []
         for predState, overlap in reverseMatrix[truthState].items():
             if predState not in stateNameMap and\
               predState not in predIgnore:
@@ -500,10 +509,15 @@ def getStateMapFromConfMatrix(reverseMatrix, truthIgnore, predIgnore, thresh):
                         sureBets.append(predState)
                     else:
                         predCandidates.append(predState)
+                if fdr is not None and predFrac >= 1. - fdr:
+                    fdrSureBets.append(predState)
             else:
                 logger.debug("state mapper skipping %s with othresh %f" % (
                     predState, float(overlap) / float(min(truthSize,
                                                           predStateSizes[predState]))))
+        if fdr is not None:
+            sureBets = fdrSureBets
+            predCandidates = []
         logger.debug("candidates for %s: %s" % (truthState, str(predCandidates)))
         logger.debug("sure bets for %s: %s" % (truthState, str(sureBets)))
 
@@ -539,6 +553,7 @@ def getStateMapFromConfMatrix(reverseMatrix, truthIgnore, predIgnore, thresh):
                                        reverseMatrix[truthState][predState],
                                        predStateSizes[predState]]
         logger.debug("map %s <---- %s" % (truthState, str(bestMapSet)))
+        logger.debug("best F1 = %s" % bestF1)
     
     # predStateName - > (truthStateName, tp, tp+fp)        
     return stateNameMap

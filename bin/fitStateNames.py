@@ -66,6 +66,9 @@ def main(argv=None):
                         " ignore (in prediction)", default=None)
     parser.add_argument("--ignoreTgt", help="Comma-separated list of stateNames to"
                         " ignore (int target)", default=None)
+    parser.add_argument("--tgt", help="Comma-separated list of stateNames to "
+                        " consider (in target).  All others will be ignored",
+                        default=None)
     parser.add_argument("--unique", help="If more than one predicted state maps"
                         " to the same target state, add a unique id (numeric "
                         "suffix) to the output so that they can be distinguished",
@@ -84,6 +87,9 @@ def main(argv=None):
                         "takes biggest overlap in forward confusion matrix.  "
                         "faster than new default logic which does the greedy"
                         " f1 optimization", action="store_true", default=False)
+    parser.add_argument("--fdr", help="Use FDR cutoff instead of (default)"
+                        " greedy F1 optimization for state labeling",
+                        type=float, default=None)
 
     addLoggingOptions(parser)
     args = parser.parse_args()
@@ -98,6 +104,14 @@ def main(argv=None):
         args.ignoreTgt = set(args.ignoreTgt.split(","))
     else:
         args.ignoreTgt = set()
+    if args.tgt is not None:
+        args.tgt = set(args.tgt.split(","))
+        if args.old is True:
+            raise RuntimeError("--tgt option not implemented for --old")
+    else:
+        args.tgt = set()
+    if args.old is True and args.fdr is not None:
+        raise RuntimeError("--old and --fdr options are exclusive")
 
     assert args.col == 4 or args.col == 5
     
@@ -127,8 +141,9 @@ def main(argv=None):
         intervals1, intervals2 = intervals2, intervals1
         stateMap = getStateMapFromConfMatrix_simple(confMat)
     else:
-        stateMap = getStateMapFromConfMatrix(confMat, args.ignoreTgt,
-                                             args.ignore, args.qualThresh)
+        stateMap = getStateMapFromConfMatrix(confMat, args.tgt, args.ignoreTgt,
+                                             args.ignore, args.qualThresh,
+                                             args.fdr)
 
     # filter the stateMap to take into account the command-line options
     # notably --ignore, --ignoreTgt, --qualThresh, and --unique
