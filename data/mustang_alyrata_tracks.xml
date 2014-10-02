@@ -7,7 +7,7 @@
 <track name="transposon_psi" path="/data/douglas.hoen/piatea/genomes/alyrata/tracks/transposonpsi/alyrata_transposonpsi.bed" distribution="multinomial" preprocess="rmu"/>        
 <track name="repbase_censor" path="/data/douglas.hoen/piatea/genomes/alyrata/tracks/repbase-censor/alyrata_repbase_censor.bed" distribution="multinomial" preprocess="rmu"/>
 <track name="repeat_modeler" path="/data/douglas.hoen/piatea/genomes/alyrata/tracks/repeatmodeler/alyrata_repeatmodeler_unfiltered.bed" distribution="multinomial" preprocess="rm"/>
-<track name="repet"             path="/data/douglas.hoen/piatea/genomes/alyrata/tracks/mamus/alyrata_repet.bed" distribution="multinomial"/>
+<track name="repet"             path="/data/glenn.hickey/genomes/alyrata/tracks/repet/alyrata_repet_clean.bed" distribution="multinomial"/>
 
 <track name="ltr_finder"    path="/data/douglas.hoen/piatea/genomes/alyrata/tracks/ltrfinder/alyrata_ltrfinder.bed" distribution="multinomial" preprocess="ltr_finder"/>
 <track name="ltr_harvest"   path="/data/douglas.hoen/piatea/genomes/alyrata/tracks/ltrharvest/alyrata_ltrharvest.bed" distribution="multinomial" preprocess="ltr_finder"/>

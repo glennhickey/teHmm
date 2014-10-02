@@ -11,6 +11,7 @@ import copy
 from pybedtools import BedTool, Interval
 from teHmm.common import myLog, EPSILON, initBedTool, cleanBedTool
 from teHmm.common import addLoggingOptions, setLoggingFromOptions, logger
+from teHmm.common import getLocalTempPath, runShellCommand
 
 """
 Filter out bed intervals that overlap other intervals.
@@ -30,6 +31,9 @@ def main(argv=None):
     parser.add_argument("--bed12", help="Use bed12 exons instead of start/end"
                         " if present (equivalent to running bed12ToBed6 on"
                         " input first).", action="store_true", default=False)
+    parser.add_argument("--rm", help="Make sure intervals that are labeled as TE "
+                        "by rm2State.sh script are never cut by ones that are not",
+                        default=False, action='store_true')
     
     addLoggingOptions(parser)
     args = parser.parse_args()
@@ -37,7 +41,34 @@ def main(argv=None):
     assert os.path.isfile(args.inputBed)
     tempBedToolPath = initBedTool()
 
-    bedIntervals = BedTool(args.inputBed).sort()
+    # do the --rm filter.  by splitting into TE / non-TE
+    # then removing everything in non-TE that overlaps
+    # TE.  The adding the remainder back to TE. 
+    inputPath = args.inputBed
+    if args.rm is True:
+        tempPath = getLocalTempPath("Temp_", ".bed")
+        tePath = getLocalTempPath("Temp_te_", ".bed")
+        runShellCommand("rm2State.sh %s |grep TE | sortBed > %s" % (
+            args.inputBed, tempPath))
+        runShellCommand("intersectBed -a %s -b %s | sortBed > %s" %(
+            args.inputBed, tempPath, tePath))
+        otherPath = getLocalTempPath("Temp_other_", ".bed")
+        runShellCommand("rm2State.sh %s |grep -v TE | sortBed > %s" % (
+            args.inputBed, tempPath))
+        runShellCommand("intersectBed -a %s -b %s | sortBed > %s" %(
+            args.inputBed, tempPath, otherPath))
+        if os.path.getsize(tePath) > 0  and\
+           os.path.getsize(otherPath) > 0:
+            filterPath = getLocalTempPath("Temp_filter_", ".bed")
+            runShellCommand("subtractBed -a %s -b %s | sortBed > %s" % (
+                otherPath, tePath, filterPath))
+            inputPath = getLocalTempPath("Temp_input_", ".bed")
+            runShellCommand("cat %s %s | sortBed > %s" % (
+                tePath, filterPath, inputPath))
+            runShellCommand("rm -f %s" % filterPath)
+        runShellCommand("rm -f %s %s %s" % (tePath, otherPath, tempPath))
+
+    bedIntervals = BedTool(inputPath).sort()
     if args.bed12 is True:
         bedIntervals = bedIntervals.bed6()
         
@@ -66,6 +97,8 @@ def main(argv=None):
         if sanity[i].chrom == sanity[i+1].chrom:
             assert sanity[i+1].start >= sanity[i].end
     cleanBedTool(tempBedToolPath)
+    if args.inputBed != inputPath:
+        runShellCommand("rm -f %s" % inputPath)
 
 if __name__ == "__main__":
     sys.exit(main())

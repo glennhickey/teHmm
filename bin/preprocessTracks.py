@@ -134,7 +134,7 @@ def runCleaning(args, tempTracksInfo):
             outFile = cleanPath(args, track)
             tempBed = getLocalTempPath("Temp_%s" % track.getName(), ".bed")
             runShellCommand("cleanRM.py %s %s > %s" % (inFile, flag, tempBed))
-            runShellCommand("removeBedOverlaps.py %s > %s" % (tempBed, outFile)) 
+            runShellCommand("removeBedOverlaps.py --rm %s > %s" % (tempBed, outFile)) 
             runShellCommand("rm -f %s" % tempBed)
             track.setPath(outFile)
 

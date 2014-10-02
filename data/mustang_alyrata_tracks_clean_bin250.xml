@@ -6,7 +6,7 @@
 	<track distribution="multinomial" name="transposon_psi" path="/data/glenn.hickey/genomes/alyrata/tracks/clean/alyrata_transposonpsi_clean.bed" valCol="3"/>
 	<track distribution="multinomial" name="repbase_censor" path="/data/glenn.hickey/genomes/alyrata/tracks/clean/alyrata_repbase_censor_clean.bed" valCol="3"/>
 	<track distribution="multinomial" name="repeat_modeler" path="/data/glenn.hickey/genomes/alyrata/tracks/clean/alyrata_repeatmodeler_clean.bed" valCol="3"/>
-	<track distribution="multinomial" name="repet" path="/data/douglas.hoen/piatea/genomes/alyrata/tracks/mamus/alyrata_repet.bed" valCol="3"/>
+	<track distribution="multinomial" name="repet" path="/data/glenn.hickey/genomes/alyrata/tracks/repet/alyrata_repet_clean.bed" valCol="3"/>
 	<track distribution="multinomial" name="ltr_finder" path="/data/glenn.hickey/genomes/alyrata/tracks/clean/alyrata_ltrfinder_clean.bed" valCol="3"/>
 	<track distribution="multinomial" name="ltr_harvest" path="/data/glenn.hickey/genomes/alyrata/tracks/clean/alyrata_ltrharvest_clean.bed" valCol="3"/>
 	<track distribution="multinomial" name="ltr_termini" path="/data/glenn.hickey/genomes/alyrata/tracks/clean/all_scaffolds.termini_search.filter_2.ltr.sorted_clean.bed" valCol="3"/>
