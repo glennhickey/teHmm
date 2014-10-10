@@ -21,6 +21,7 @@
 	<track distribution="binary" name="trf" path="/data/glenn.hickey/genomes/dm3/tracks/trf/dm3.trf.bed" valCol="0"/>
 	<track distribution="binary" name="irf" path="/data/glenn.hickey/genomes/dm3/tracks/clean/dm3_irf_clean.bed" valCol="0"/>
 	<track distribution="binary" name="mitehunter" path="/data/douglas.hoen/piatea/genomes/drosophila/tracks/mitehunter/dm3_mitehunter.bed" valCol="0"/>
+	<track distribution="binary" name="helitronscanner" path="/data/douglas.hoen/piatea/genomes/drosophila/tracks/helitronscanner/dm3_helitronscanner.bed" valCol="0"/>
 	<track default="0" distribution="gaussian" name="gcpct" path="/data/glenn.hickey/genomes/dm3/tracks/gc/dm3_gcPercentWin20.bw" scale="2.48" shift="0.0" valCol="3"/>
 	<track distribution="binary" name="dustmasker" path="/data/douglas.hoen/piatea/genomes/drosophila/tracks/dustmasker/dm3_dustmasker.bb" valCol="0"/>
 	<track distribution="binary" name="windowmasker" path="/data/douglas.hoen/piatea/genomes/drosophila/tracks/windowmasker/dm3_windowmasker.bed" valCol="0"/>

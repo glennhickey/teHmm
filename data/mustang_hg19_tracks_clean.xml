@@ -15,6 +15,7 @@
 	<track default="0.0" distribution="gaussian" name="cov_maxPId" path="/data/glenn.hickey/genomes/hg19/tracks/copynum/coverage_hg19.fa.chr22.maxPId.bw" scale="0.08" shift="0.0" valCol="3"/>
 	<track distribution="multinomial" name="ltr_finder" path="/data/glenn.hickey/genomes/hg19/tracks/clean/hg19.ltr_finder_clean.bed" valCol="3"/>
 	<track distribution="multinomial" name="ltr_harvest" path="/data/glenn.hickey/genomes/hg19/tracks/clean/hg19.ltrharvest_clean.bed" valCol="3"/>
+   <track distribution="binary" name="helitronscanner" path="/data/douglas.hoen/piatea/genomes/human/hg19/tracks/helitronscanner/hg19_helitronscanner.bed" valCol="3"/>
 	<track default="0" distribution="gaussian" logScale="1.0905" name="mappability" path="/data/glenn.hickey/genomes/hg19/tracks/mappability/H.sapiens.genome.hg19.main.mappability-24.bw" shift="1.0" valCol="3"/>
 	<track default="0" distribution="gaussian" logScale="1.6138" name="orthology" path="/data/glenn.hickey/genomes/hg19/tracks/alignability/chr22.alignability.bw" shift="1.0" valCol="3"/>
 	<track distribution="multinomial" name="mrna" path="/data/glenn.hickey/genomes/hg19/tracks/mrna/hg19.mrna_clean.bed" valCol="3"/>
