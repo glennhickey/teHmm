@@ -35,27 +35,35 @@ if not os.path.isdir(outDir):
 tracksPath="tracks_clean.xml"
 tracksPath250="tracks_clean_bin250.xml"
 genomePath="alyrata.bed"
-truthPaths=["alyrata_hollister_clean_gapped_TE.bed", "alyrata_chaux_clean_gapped_TE.bed", "alyrata_repet_gapped_TE.bed"]
+truthPaths=["alyrata_hollister_clean_gapped_TE.bed", "alyrata_chaux_clean_gapped_TE.bed", "alyrata_repet_gapped_TE.bed", "alyrata_repetssr_gapped_TE.bed"]
 modelerPath="alyrata_repeatmodeler_clean_gapped_TE.bed"
 regionsPath = "regions.bed"
 regions = bedRead(regionsPath)
 cutTrack = "polyN"
 
-numParallelBatch = 40
-cutTrackLenFilter = 100
+numParallelBatch = 30
+cutTrackLenFilter = 500
 fragmentFilterLen = 100000
 
 # HMM options ############
 segOpts = "--cutMultinomial --thresh 2"
 segLen = 20
-numStates = 40
+numStates = 35
 trainThreads = 3
 thresh = 0.08
 numIter = 200
 #mpFlags = "--maxProb --maxProbCut 5"
 mpFlags = ""
 fitFlags = "--tgt TE --qualThresh 0.25"
+#fitFlags = "--tgt TE --fdr .65"
 #####################
+
+startPoint = 1 # Segment
+#startPoint = 2 # Train
+#startPoint = 3 # Eval
+#startPoint = 4 # Fit
+#startPoint = 5 # Compare
+#startPoint = 6 # Munge Stats
 
 ##################################
 ##################################
@@ -190,7 +198,7 @@ def evalCommands(genomePath, regions, outDir, tracksPath250):
         evalCmds.append(cmd)
     return evalCmds
     
-def fitCommands(genomePath, regions, outDir, modelerPath, truthPaths):
+def fitCommands(genomePath, regions, outDir, modelerPath, truthPaths, fitFlags):
     fitCmds = []
     for i, region in enumerate(regions):
         regionName = getRegionName(region, i)
@@ -309,18 +317,18 @@ def harvestStats(genomePath, regions, outDir, modelerPath, truthPaths,
                 statsMod["TE"] = (0,0)
             
             if len(rows) == 0:
-                header += [fitName[:12] + "_ModPrec", fitName[:12]+ "_ModRec",
-                           fitName[:12]+ "_ModF1"]
+                header += [fitName[:17] + "_ModPrec", fitName[:12]+ "_ModRec",
+                           fitName[:17]+ "_ModF1"]
             row += prettyAcc(statsMod["TE"][0], statsMod["TE"][1])
             
             if len(rows) == 0:
-                header += [fitName[:12] + "_Prec", fitName[:12]+ "_Rec",
-                           fitName[:12]+ "_F1"]
+                header += [fitName[:17] + "_Prec", fitName[:12]+ "_Rec",
+                           fitName[:17]+ "_F1"]
             row += prettyAcc(stats["TE"][0], stats["TE"][1])
 
             if len(rows) == 0:
-                header += [fitName[:12] + "_PrecCheat", fitName[:12]+ "_RecCheat",
-                           fitName[:12]+ "_F1Cheat"]
+                header += [fitName[:17] + "_PrecCheat", fitName[:12]+ "_RecCheat",
+                           fitName[:17]+ "_F1Cheat"]
             row += prettyAcc(statsCheat["TE"][0], statsCheat["TE"][1])
             
         if len(rows) == 0:
@@ -353,25 +361,29 @@ trainCmds = trainCommands(genomePath, regions, outDir, tracksPath250,
 
 evalCmds = evalCommands(genomePath, regions, outDir, tracksPath250)
 
-fitCmds = fitCommands(genomePath, regions, outDir, modelerPath, truthPaths)
+fitCmds = fitCommands(genomePath, regions, outDir, modelerPath, truthPaths, fitFlags)
 
 compareCmds =  compareCommands(genomePath, regions, outDir, modelerPath,
                                truthPaths)
-
-
-print segmentCmds
-runParallelShellCommands(segmentCmds, numParallelBatch)
-print trainCmds
-runParallelShellCommands(trainCmds, max(1, numParallelBatch / trainThreads))
-print evalCmds
-runParallelShellCommands(evalCmds, numParallelBatch)
-print fitCmds
-runParallelShellCommands(fitCmds, numParallelBatch)
-print "\n".join(compareCmds)
-runParallelShellCommands(compareCmds, numParallelBatch)
-
-harvestStats(genomePath, regions, outDir, modelerPath, truthPaths, "stats_base", 0)
-harvestStats(genomePath, regions, outDir, modelerPath, truthPaths, "stats_interval", 1)
-harvestStats(genomePath, regions, outDir, modelerPath, truthPaths, "stats_weighted", 2)
+if startPoint <= 1:
+    print segmentCmds
+    runParallelShellCommands(segmentCmds, numParallelBatch)
+if startPoint <= 2:
+    print trainCmds
+    runParallelShellCommands(trainCmds, max(1, numParallelBatch /
+                                            max(1, trainThreads/2)))
+if startPoint <= 3:
+    print evalCmds
+    runParallelShellCommands(evalCmds, numParallelBatch)
+if startPoint <= 4:
+    print fitCmds
+    runParallelShellCommands(fitCmds, numParallelBatch)
+if startPoint <= 5:
+    print "\n".join(compareCmds)
+    runParallelShellCommands(compareCmds, numParallelBatch)
+if startPoint <= 6:
+    harvestStats(genomePath, regions, outDir, modelerPath, truthPaths, "stats_base", 0)
+    harvestStats(genomePath, regions, outDir, modelerPath, truthPaths, "stats_interval", 1)
+    harvestStats(genomePath, regions, outDir, modelerPath, truthPaths, "stats_weighted", 2)
 
 

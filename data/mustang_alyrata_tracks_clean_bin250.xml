@@ -15,6 +15,7 @@
 	<track distribution="multinomial" name="palindrome" path="/data/glenn.hickey/genomes/alyrata/tracks/clean/alyrata_palindrome_clean.bed" valCol="3"/>
 	<track distribution="multinomial" name="overlap" path="/data/glenn.hickey/genomes/alyrata/tracks/clean/alyrata_directoverlap_clean.bed" valCol="3"/>
 	<track distribution="binary" name="mitehunter" path="/data/douglas.hoen/piatea/genomes/alyrata/tracks/mitehunter/alyrata_mitehunter.bed" valCol="0"/>
+   <track distribution="binary" name="helitronscanner" path="/data/douglas.hoen/piatea/genomes/alyrata/tracks/helitronscanner/alyrata_helitronscanner.bed" valCol="0"/>
 	<track default="0.0" distribution="gaussian" logScale="1.0475" name="cov_80-" path="/data/glenn.hickey/genomes/alyrata/tracks/copynum/coverage.cov.80-.bw" shift="1.0" valCol="3"/>
 	<track default="0.0" distribution="gaussian" logScale="1.0457" name="left_peak_80-" path="/data/glenn.hickey/genomes/alyrata/tracks/copynum/coverage.left.80-.bw" shift="1.0" valCol="3"/>
 	<track default="0.0" distribution="gaussian" logScale="1.0453" name="right_peak_80-" path="/data/glenn.hickey/genomes/alyrata/tracks/copynum/coverage.right.80-.bw" shift="1.0" valCol="3"/>
