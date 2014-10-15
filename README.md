@@ -63,7 +63,8 @@ The track list file contains a single *teModelConfig* element which in turn cont
   * *binary*, where bed intervals specify 1 and all other regions are 0
   * *multnomial* (**DEFAULT**) where the bed value is read from the *name* column of the bed file. Regions outside bed intervals are assumed to have a default value
   * *sparse_multinomial* same as above except regions outside of intervals are considered unobserved.
-  * *gaussian* where each bed value (read as in *multinomial*) must be numeric, and is assumed to be drawn from a Gaussian distribution.  A numeric *default* value must be specified.  
+  * *gaussian* where each bed value (read as in *multinomial*) must be numeric, and is assumed to be drawn from a Gaussian distribution.  A numeric *default* value must be specified.
+  * *mask* track is treated as a masking track where all intervals it covers are completely ignored by the HMM. 
 * *valCol* 0-based (so name=3) column of bed file to read state from for multinomial distribution
 * *scale* Scale values by spefied factor and round them to an integer (useful for binning numeric states)
 * *logScale* .  Scale values by taking logarithm with the given value as base then rounding to integer.  Since log is undefined for values less or equal to 0, the *shift* attribute (see below) needs to be used to in conjunction should such valuers be present in the data.  Failure to do so will result in an assertion error. 

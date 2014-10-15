@@ -12,6 +12,8 @@ setup(
                 include_dirs=[numpy.get_include()]),
         Extension("_emission", ["_emission.pyx"],
                 include_dirs=[numpy.get_include()]),
+        Extension("_track", ["_track.pyx"],
+                include_dirs=[numpy.get_include()]),                
         Extension("_cfg", ["_cfg.pyx"],
                 include_dirs=[numpy.get_include()],
                 #extra_compile_args=['-fopenmp'],

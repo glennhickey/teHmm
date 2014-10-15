@@ -27,7 +27,8 @@ def main(argv=None):
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
         description="Produce a bed file of genome segments which are atomic"
         " elements with resepect to the hmm. ie each segment emits a single"
-        " state.  Output intervals are assigned name 0 1 0 1 etc.")
+        " state. Mask tracks always cut.  "
+        "Output intervals are assigned name 0 1 0 1 etc.")
     
     parser.add_argument("tracksInfo", help="Path of Tracks Info file "
                         "containing paths to genome annotation tracks")
@@ -103,6 +104,11 @@ def main(argv=None):
             assert trackNo < len(cutList)
             cutList[trackNo] = 1
     args.cutList = cutList
+
+    # make sure mask tracks count as cut tracks
+    for track in trackList:
+        if track.getDist() == 'mask':
+            args.cutList[track.getNumber()] = 1
 
     # process the --ignore option
     ignoreList = np.zeros((len(trackList)), np.int)

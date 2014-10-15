@@ -53,6 +53,7 @@ class TestCase(TestBase):
         assert ret == 0
         output = open(outputPath, "r")
         outputString = output.readline()
+        outputString = output.readline()
         outputStats = ast.literal_eval(outputString)
 
         assert outputStats['A'] == [0, 5, 20]

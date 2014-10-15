@@ -472,6 +472,34 @@ class TestCase(TestBase):
                             track.getName()).getValueMap().getMap(originalMean)
                         assert_array_equal(originalScaledMean, t3[j][trackNo])
                 icount += 1
+
+    def testMask(self):
+        trackData1 = TrackData()
+        trackData1.loadTrackData(getTracksInfoPath(8),
+                                 [("scaffold_1", 0, 50)])        
+        tableList1 = trackData1.getTrackTableList()
+
+        trackData2 = TrackData()
+        trackData2.loadTrackData(getTracksInfoPath(7),
+                                 [("scaffold_1", 0, 50)])        
+        tableList2 = trackData2.getTrackTableList()
+
+        assert len(tableList1) == 1
+        assert len(tableList2) == len(tableList1)
+        table1 = tableList1[0]
+        table2 = tableList2[0]
+
+        assert len(table2) == 50
+        assert len(table1) == 42
+
+        maskOffsets1 = table1.getMaskRunningOffsets()
+        maskOffsets2 = table2.getMaskRunningOffsets()
+
+        assert maskOffsets2 == None
+        for i in xrange(len(table1)):
+            v1 = table1[i]
+            v2 = table2[i + maskOffsets1[i]]
+            assert_array_equal(v1, v2)
         
 def main():
     sys.argv = sys.argv[:1]
