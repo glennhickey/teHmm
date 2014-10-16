@@ -40,12 +40,12 @@
 <track name="ortho_depth"   path="/data/douglas.hoen/piatea/genomes/alyrata/tracks/misc/alyrata_orthodepth.bw" default="0.0" distribution="gaussian"/>
 <track name="gcpct"         path="/data/glenn.hickey/genomes/alyrata/tracks/gc/gcPercentWin20.bw" default="0.0" distribution="gaussian"/>
 
-<track name="trf"           path="/data/douglas.hoen/piatea/genomes/alyrata/tracks/misc/alyrata_trf.bed" distribution="binary"/>
+<track name="trf"           path="/data/douglas.hoen/piatea/genomes/alyrata/tracks/misc/alyrata_trf.bed" distribution="mask"/>
 <track name="dustmasker"    path="/data/douglas.hoen/piatea/genomes/alyrata/tracks/dustmasker/alyrata_dustmasker.bb" distribution="binary"/>
 <track name="windowmasker"  path="/data/douglas.hoen/piatea/genomes/alyrata/tracks/windowmasker/alyrata_windowmasker.bb" distribution="binary"/>
 <track name="tantan"        path="/data/douglas.hoen/piatea/genomes/alyrata/tracks/tantan/alyrata_tantan.bed" distribution="binary"/>
 <track name="polyA"         path="/data/glenn.hickey/genomes/alyrata/tracks/singleBaseRepeats/alyrata_polya.bed" distribution="binary"/>
-<track name="polyN"         path="/data/glenn.hickey/genomes/alyrata/tracks/singleBaseRepeats/alyrata_polyn.bed" distribution="binary"/>
+<track name="polyN"         path="/data/glenn.hickey/genomes/alyrata/tracks/singleBaseRepeats/alyrata_polyn.bed" distribution="mask"/>
 
 <track name="sequence"      path="/data/douglas.hoen/piatea/genomes/alyrata/sequence/alyrata_scaffolds1to8.fas" distribution="multinomial"/>
 

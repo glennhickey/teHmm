@@ -23,12 +23,12 @@
 	<track default="0.0" distribution="gaussian" logScale="1.0905" name="phastcons" path="/data/glenn.hickey/genomes/hg19/tracks/cons/hg19.100way.phastCons.bw" shift="1.0" valCol="3"/>
 	<track default="0.0" distribution="gaussian" name="phylop" path="/data/glenn.hickey/genomes/hg19/tracks/cons/hg19.100way.phyloP100way.bw" scale="0.2678" shift="0.0" valCol="3"/>
 	<track default="0" distribution="gaussian" name="gcpct" path="/data/glenn.hickey/genomes/hg19/tracks/gcpct/hg19_gcPercentWin20.bw" scale="0.08" shift="0.0" valCol="3"/>
-	<track distribution="binary" name="trf" path="/data/glenn.hickey/genomes/hg19/tracks/trf/hg19.trf.bed" valCol="0"/>
+	<track distribution="mask" name="trf" path="/data/glenn.hickey/genomes/hg19/tracks/trf/hg19.trf.bed" valCol="0"/>
 	<track distribution="binary" name="dustmasker" path="/data/douglas.hoen/piatea/genomes/human/hg19/tracks/dustmasker/hg19_dustmasker.bb" valCol="0"/>
 	<track distribution="binary" name="windowmasker" path="/data/douglas.hoen/piatea/genomes/human/hg19/tracks/windowmasker/hg19_windowmasker.bb" valCol="0"/>
 	<track distribution="binary" name="tantan" path="/data/douglas.hoen/piatea/genomes/human/hg19/tracks/tantan/hg19_tantan.bed" valCol="0"/>
 	<track distribution="binary" name="polyA" path="/data/glenn.hickey/genomes/hg19/tracks/singleBaseRepeats/hg19_polya.bed" valCol="0"/>
-	<track distribution="binary" name="polyN" path="/data/glenn.hickey/genomes/hg19/tracks/singleBaseRepeats/hg19_polyn.bed" valCol="0"/>
+	<track distribution="mask" name="polyN" path="/data/glenn.hickey/genomes/hg19/tracks/singleBaseRepeats/hg19_polyn.bed" valCol="0"/>
 	<track distribution="multinomial" name="encseg_gm12878" path="/data/glenn.hickey/genomes/hg19/tracks/encode/hg19.encodeSegmentsCombined.gm12878.bed" valCol="3"/>
 	<track distribution="multinomial" name="encseg_h1hesc" path="/data/glenn.hickey/genomes/hg19/tracks/encode/hg19.encodeSegmentsCombined.h1hesc.bed" valCol="3"/>
 	<track distribution="multinomial" name="encseg_k562" path="/data/glenn.hickey/genomes/hg19/tracks/encode/hg19.encodeSegmentsCombined.k562.bed" valCol="3"/>

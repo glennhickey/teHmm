@@ -18,7 +18,7 @@
 	<track default="0.0" distribution="gaussian" name="cov_maxPId" path="/data/glenn.hickey/genomes/dm3/tracks/copynum/drosophila_coverage.maxPId.bw" scale="2.48" shift="0.0" valCol="3"/>
 	<track distribution="multinomial" name="ltr_finder" path="/data/glenn.hickey/genomes/dm3/tracks/clean/dm3.ltr_finder_clean.bed" valCol="3"/>
 	<track distribution="multinomial" name="ltr_harvest" path="/data/glenn.hickey/genomes/dm3/tracks/clean/dm3.ltr_harvest_clean.bed" valCol="3"/>
-	<track distribution="binary" name="trf" path="/data/glenn.hickey/genomes/dm3/tracks/trf/dm3.trf.bed" valCol="0"/>
+	<track distribution="mask" name="trf" path="/data/glenn.hickey/genomes/dm3/tracks/trf/dm3.trf.bed" valCol="0"/>
 	<track distribution="binary" name="irf" path="/data/glenn.hickey/genomes/dm3/tracks/clean/dm3_irf_clean.bed" valCol="0"/>
 	<track distribution="binary" name="mitehunter" path="/data/douglas.hoen/piatea/genomes/drosophila/tracks/mitehunter/dm3_mitehunter.bed" valCol="0"/>
 	<track distribution="binary" name="helitronscanner" path="/data/douglas.hoen/piatea/genomes/drosophila/tracks/helitronscanner/dm3_helitronscanner.bed" valCol="0"/>
@@ -27,7 +27,7 @@
 	<track distribution="binary" name="windowmasker" path="/data/douglas.hoen/piatea/genomes/drosophila/tracks/windowmasker/dm3_windowmasker.bed" valCol="0"/>
 	<track distribution="binary" name="tantan" path="/data/douglas.hoen/piatea/genomes/drosophila/tracks/tantan/dm3_tantan.bed" valCol="0"/>
 	<track distribution="binary" name="polyA" path="/data/glenn.hickey/genomes/dm3/tracks/singleBaseRepeats/dm3_polya.bed" valCol="0"/>
-	<track distribution="binary" name="polyN" path="/data/glenn.hickey/genomes/dm3/tracks/singleBaseRepeats/dm3_polyn.bed" valCol="0"/>
+	<track distribution="mask" name="polyN" path="/data/glenn.hickey/genomes/dm3/tracks/singleBaseRepeats/dm3_polyn.bed" valCol="0"/>
 	<track distribution="multinomial" name="sequence" path="/data/douglas.hoen/piatea/genomes/drosophila/sequence/drosophila3.fa" valCol="3"/>
 	<track distribution="multinomial" name="tsd" path="/data/glenn.hickey/genomes/dm3/tracks/clean/repeat_modeler_tsd.bed" valCol="3"/>
 </teModelConfig>
