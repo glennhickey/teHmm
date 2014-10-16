@@ -622,13 +622,18 @@ def cutOutMaskIntervals(inBed, minLength, tracksInfoPath):
     tempPath2 = getLocalTempPath("Tempcut2", ".bed")
     runShellCommand("cp %s %s" % (inBed, outPath))
     for maskPath in maskPaths:
-        runShellCommand("sortBed -i %s | mergeBed > %s" % (maskPath, tempPath1))
+        runShellCommand("sortBed -i %s > %s && mergeBed -i %s > %s" % (
+            maskPath, tempPath2, tempPath2, tempPath1))
         runShellCommand("filterBedLengths.py %s %d > %s" % (tempPath1, minLength,
                                                              tempPath2))
-        runShellCommand("subtractBed -a %s -b %s | sortBed > %s" % (outPath, tempPath2,
-                                                                    tempPath1))
-        runShellCommand("mv %s %s" % (tempPath1, outPath))
+        if os.path.getsize(tempPath2) > 0:
+            runShellCommand("subtractBed -a %s -b %s | sortBed > %s" % (outPath, tempPath2,
+                                                                        tempPath1))
+            runShellCommand("mv %s %s" % (tempPath1, outPath))
     runShellCommand("rm -f %s %s" % (tempPath1, tempPath2))
+    if os.path.getsize(outPath) == 0:
+        raise RuntimeError("cutOutMaskIntervals removed everything.  Can't continue."
+                           " probably best to rerun calling script on bigger region?")
     return outPath
                 
 if __name__ == "__main__":
