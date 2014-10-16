@@ -58,6 +58,8 @@ def main(argv=None):
     parser.add_argument("--noPos", help="Do not print genomic position"
                         " (first 2 columnts)", action="store_true",
                         default=False)
+    parser.add_argument("--noMask", help="Ignore mask tracks",
+                        default=False, action="store_true")
     
     addLoggingOptions(parser)
     args = parser.parse_args()
@@ -83,7 +85,8 @@ def main(argv=None):
     logger.info("loading tracks %s" % args.tracks)
     trackData = TrackData()
     trackData.loadTrackData(args.tracks, mergedIntervals,
-                            segmentIntervals=segIntervals)
+                            segmentIntervals=segIntervals,
+                            applyMasking = not args.noMask)
 
     # dump the data to output
     dumpTrackData(trackData, outFile, args.map, not args.noPos)
@@ -101,6 +104,7 @@ def dumpTrackData(trackData, outFile, doMapping, doPosition):
     # scan column by column
     for trackTable in trackData.getTrackTableList():
         segmentOffsets = trackTable.getSegmentOffsets()
+        maskOffsets = trackTable.getMaskRunningOffsets()
         for pos in xrange(len(trackTable)):
             column = trackTable[pos]
             if doMapping is False:
@@ -114,6 +118,8 @@ def dumpTrackData(trackData, outFile, doMapping, doPosition):
                 currentPos = pos
                 if segmentOffsets != None:
                     currentPos = segmentOffsets[pos]
+                if maskOffsets != None:
+                    currentPos += maskOffsets[pos]
                 outFile.write("%s,%d," % (trackTable.getChrom(),
                               trackTable.getStart() + currentPos))
             outFile.write(",".join(column))

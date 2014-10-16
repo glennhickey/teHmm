@@ -89,7 +89,8 @@ def main(argv=None):
     # read the tracks, while intersecting them with the query intervals
     logger.info("loading tracks %s" % args.tracksInfo)
     trackData = TrackData()
-    trackData.loadTrackData(args.tracksInfo, mergedIntervals)
+    trackData.loadTrackData(args.tracksInfo, mergedIntervals,
+                            treatMaskAsBinary=True)
 
     # process the --cutTracks option
     trackList = trackData.getTrackList()

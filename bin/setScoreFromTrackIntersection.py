@@ -65,7 +65,8 @@ def main(argv=None):
     trackData = TrackData()
     logger.info("loading track %s" % singleListPath)
     trackData.loadTrackData(singleListPath, mergedIntervals,
-                            segmentIntervals=filledIntervals)
+                            segmentIntervals=filledIntervals,
+                            applyMasking=False)
 
     # finally, write the annotation
     writeAnnotatedIntervals(trackData, filledIntervals, mergedIntervals, obFile,

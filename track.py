@@ -229,7 +229,7 @@ class Track(object):
 load from or save to a file. this strucuture needs to accompany a trained
 model. """
 class TrackList(object):
-   def __init__(self, xmlPath = None):
+   def __init__(self, xmlPath = None, treatMaskAsBinary = False):
        #: list of tracks.  track.number = its position in this list
        self.trackList = []
        #: keep alignment track separate because it's special
@@ -238,6 +238,8 @@ class TrackList(object):
        self.maskTrackList = []
        #: map a track name to its position in the list
        self.trackMap = dict()
+       #: hack to have option to not give mask tracks special treatment
+       self.treatMaskAsBinary = treatMaskAsBinary
        if xmlPath is not None:
            self.loadXML(xmlPath)
 
@@ -275,7 +277,7 @@ class TrackList(object):
        if track.dist == "alignment":
            track.number = 0
            self.alignmentTrack = track
-       elif track.dist == "mask":
+       elif track.dist == "mask" and not self.treatMaskAsBinary:
            track.number = len(self.maskTrackList)
            self.maskTrackList.append(track)
            assert track.name not in self.trackMap
@@ -354,6 +356,7 @@ class TrackTable(object):
         self.start = start
         #: End coordinate (last coordinate plus 1)
         self.end = end
+        self.origEnd = end
         assert end > start
         #: offsets used for segmentation (optional)
         self.segOffsets = None
@@ -442,22 +445,46 @@ class TrackTable(object):
     def segment(self, segIntervals, trackList, interpolate=True):
         """ completely transform table to contain only one coordinate per
         segment interval (compression).  """
+                
         firstIdx = binSearch(segIntervals, (self.chrom, self.start), [0,1])
-        lastIdx = binSearch(segIntervals, (self.chrom, self.end), [0,2])
+        lastIdx = binSearch(segIntervals, (self.chrom, self.origEnd), [0,2])
 
         assert firstIdx is not None
         assert lastIdx is not None
 
+        maskTransform = self.getMaskRunningOffsets(reverseTransform = True)
         self.segOffsets = np.zeros((1 + lastIdx - firstIdx), np.int)
         j = 0
         for i in xrange(firstIdx, lastIdx + 1):
-            self.segOffsets[j] = int(segIntervals[i][1]) - self.start
+            offset = int(segIntervals[i][1]) - self.start
+            if maskTransform is not None:
+                # segment should be either all masksed or not all masked
+                # assertion failure here means mask segment were not cut
+                segLen = segIntervals[i][2] - segIntervals[i][1]
+                if self.maskArray[offset] == True:
+                    assert maskTransform[offset] == \
+                      maskTransform[offset + segLen - 1]
+                    offset -= maskTransform[offset]
+                else:
+                    # segment is masked
+                    continue
+            self.segOffsets[j] = offset
             j += 1
+        if j != len(self.segOffsets):
+            assert maskTransform is not None
+            self.segOffsets = self.segOffsets[:j]
 
+        if len(self.segOffsets) == 0:
+            # we've masked out the whole table!
+            assert maskTransform is not None
+            self.shape = (0, self.getNumTracks())
+            return
+        
         if interpolate is True:
             self.interpolateSegments(trackList)
         self.compressSegments()
         self.shape = (len(self), self.getNumTracks())
+        assert len(self.segOffsets) > 0
 
     def getSegmentLength(self, i):
         """ get the length of a segment corresponding to a given index """
@@ -595,12 +622,13 @@ class IntegerTrackTable(TrackTable):
             assert self.shape[1] == oldShape[1]
             logger.debug("masked table %s -> %s" % (str(oldShape),
                                                     str(self.shape)))
+            self.origEnd = self.end            
             self.end = self.start + self.shape[0]
 
     def hasMask(self):
         return self.maskArray is not None
 
-    def getMaskRunningOffsets(self):
+    def getMaskRunningOffsets(self, reverseTransform = False):
         """ get a 1-dimensional array (that spans masked table) where the ith
         value is the number of masked bases before position i in the table.
         this can be used to reverse the masking compression. """
@@ -608,8 +636,9 @@ class IntegerTrackTable(TrackTable):
             # compute running offsets on uncompressed dimensions
             runningOffsets = np.zeros(self.maskArray.shape, np.int32)
             runSum(self.maskArray.astype(np.uint8), runningOffsets)
-            # mask the offsets so they are relative to masked coordates
-            runningOffsets = runningOffsets[self.maskArray]
+            if not reverseTransform:
+                # mask the offsets so they are relative to masked coordates
+                runningOffsets = runningOffsets[self.maskArray]
             return runningOffsets
         return None
         
@@ -813,13 +842,14 @@ class TrackData(object):
         return nspt
     
     def loadTrackData(self, trackListPath, intervals, trackList = None,
-                      segmentIntervals = None, interpolateSegments=True):
+                      segmentIntervals = None, interpolateSegments=True,
+                      applyMasking = True, treatMaskAsBinary=False):
         """ load track data for list of given intervals.  tracks is either
         a TrackList object loaded from a saved pickle, or None in
         which case they will be generated from the data.  each interval
         is a 3-tuple of chrom,start,end"""
         assert len(intervals) > 0
-        inputTrackList = TrackList(trackListPath)
+        inputTrackList = TrackList(trackListPath, treatMaskAsBinary)
         if trackList is None:
             initTracks = True
             self.trackList = inputTrackList
@@ -835,17 +865,23 @@ class TrackData(object):
         for interval in intervals:
             assert len(interval) >= 3 and interval[2] > interval[1]
             self.__loadTrackDataInterval(inputTrackList, interval[0],
-                                         interval[1], interval[2], initTracks)
+                                         interval[1], interval[2], initTracks,
+                                         applyMasking)
             if segmentIntervals is not None:
                 oldShape = self.trackTableList[-1].getNumPyArray().shape
-                self.trackTableList[-1].segment(segmentIntervals,
-                                                self.trackList,
-                                                interpolate=interpolateSegments)
-                newShape = self.trackTableList[-1].getNumPyArray().shape
-                logger.info("Compressed track table from %s to %s" % (
-                    str(oldShape), str(newShape)))
+                # remove masked out table
+                if oldShape[0] == 0:
+                    self.trackTableList.pop()
+                else:
+                    self.trackTableList[-1].segment(segmentIntervals,
+                                                    self.trackList,
+                                                    interpolate=interpolateSegments)
+                    newShape = self.trackTableList[-1].getNumPyArray().shape
+                    logger.info("Compressed track table from %s to %s" % (
+                        str(oldShape), str(newShape)))
 
-    def __loadTrackDataInterval(self, inputTrackList, chrom, start, end, init):
+    def __loadTrackDataInterval(self, inputTrackList, chrom, start, end, init,
+                                applyMasking):
         trackTable = IntegerTrackTable(self.getNumTracks(), chrom, start, end,
                                        dtype=self.dtype)
         maskTable = None
@@ -860,16 +896,20 @@ class TrackData(object):
             trackName = inputTrack.getName()
             trackPath = inputTrack.getPath()
             selfTrack = self.trackList.getTrackByName(trackName, isMask)
-            if selfTrack is None:
+            if selfTrack is None and not isMask:
                 logger.warning("track %s not learned\n" % trackName)
                 continue
-            track = self.getTrackList().getTrackByName(trackName, isMask)
+            if selfTrack is None and isMask:
+                # hack to allow unlearned mask track (since training independent)
+                track = inputTrack
+                selfTrack = inputTrack
+            else:
+                track = self.getTrackList().getTrackByName(trackName, isMask)
             trackNo = track.getNumber()
             table = trackTable
-            if track.getDist() == "mask":
+            if isMask is True:
                 table = maskTable
-            table.initRow(track.getNumber(),
-                               selfTrack.getValueMap().getMissingVal())
+            table.initRow(trackNo, selfTrack.getValueMap().getMissingVal())
             readTrackData(trackPath, chrom, start, end,
                           valCol=inputTrack.getValCol(),
                           valMap=selfTrack.getValueMap(),
@@ -877,8 +917,9 @@ class TrackData(object):
                           caseSensitive=inputTrack.getCaseSensitive(),
                           outputBuf=table.getRow(trackNo),
                           useDelta=inputTrack.getDelta())
-
-        trackTable.setMaskTable(maskTable)
+            
+        if applyMasking is True:
+            trackTable.setMaskTable(maskTable)
         self.trackTableList.append(trackTable)
 
         if self.trackList.getAlignmentTrack() is not None:

@@ -13,6 +13,7 @@ from teHmm.trackIO import *
 from teHmm.track import *
 from teHmm.tests.common import getTestDirPath
 from teHmm.tests.common import TestBase
+from teHmm.common import intersectSize
 
 def getTracksInfoPath(idx = 1):
     if idx == 1:
@@ -28,6 +29,9 @@ def getStatesPath():
 
 def getSegmentsPath():
     return getTestDirPath("segments.bed")
+
+def getMaskPath():
+    return getTestDirPath("mask.bed")
 
 class TestCase(TestBase):
 
@@ -490,7 +494,7 @@ class TestCase(TestBase):
         table2 = tableList2[0]
 
         assert len(table2) == 50
-        assert len(table1) == 42
+        assert len(table1) == 39
 
         maskOffsets1 = table1.getMaskRunningOffsets()
         maskOffsets2 = table2.getMaskRunningOffsets()
@@ -500,6 +504,60 @@ class TestCase(TestBase):
             v1 = table1[i]
             v2 = table2[i + maskOffsets1[i]]
             assert_array_equal(v1, v2)
+
+        # now test segmentation
+        statesPath = getStatesPath()
+        segPath = getSegmentsPath()
+
+        bedIntervals = getMergedBedIntervals(getStatesPath(), sort=True)
+        segIntervals = readBedIntervals(getSegmentsPath(), sort=True)
+        
+        segTrackData2 = TrackData()
+        segTrackData2.loadTrackData(getTracksInfoPath(7), bedIntervals,
+                                   segmentIntervals=segIntervals,
+                                   interpolateSegments=True)
+        segTrackData3 = TrackData()
+        segTrackData3.loadTrackData(getTracksInfoPath(9), bedIntervals,
+                                   segmentIntervals=segIntervals,
+                                   interpolateSegments=True)
+
+        tlist3 = segTrackData2.getTrackTableList()
+        tlist4 = segTrackData3.getTrackTableList()
+        assert len(tlist4) == 3
+        assert len(tlist3) == 4
+
+        maskIntervals = getMergedBedIntervals(getMaskPath(), sort=True)
+
+        tracks2 = segTrackData2.getTrackList()
+        tracks3 = segTrackData3.getTrackList()
+
+        for i in xrange(len(tlist4)):
+            t3 = tlist3[i]
+            t4 = tlist4[i]
+            maskOffsets = t4.getMaskRunningOffsets()
+            assert maskOffsets is not None
+            assert t3.getMaskRunningOffsets() is None
+            k = 0
+            for j in xrange(len(t3)):
+                start3 = t3.start + t3.segOffsets[j]
+                len3 = t3.getSegmentLength(j)
+                end3 = start3 + len3
+                i3 = (t3.chrom, start3, end3)
+                masked = False
+                for x in maskIntervals:
+                    if intersectSize(i3, x) > 0:
+                        masked = True
+                        assert intersectSize(i3, x) == i3[2] - i3[1]
+                if masked is False:
+                    start4 = t4.start + t4.segOffsets[k] + maskOffsets[k]
+                    len4 = t4.getSegmentLength(k)
+                    end4 = start4 + len4
+                    i4 = (t4.chrom, start4, end4)
+                    assert_array_equal(i3, i4)
+                    v3 = [tracks2.getTrackByNumber(x).getValueMap().getMapBack(t3[j][x]) for x in xrange(len(t3[j]))]
+                    v4 = [tracks3.getTrackByNumber(x).getValueMap().getMapBack(t4[k][x]) for x in xrange(len(t4[k]))]
+                    assert_array_equal(v3, v4)
+                    k += 1                    
         
 def main():
     sys.argv = sys.argv[:1]
