@@ -16,7 +16,8 @@ from collections import defaultdict
 
 from teHmm.trackIO import readBedIntervals
 from teHmm.common import intersectSize, initBedTool, cleanBedTool
-from teHmm.common import logger
+from teHmm.common import logger, getLocalTempPath, runShellCommand
+from teHmm.track import TrackList
 
 try:
     from teHmm.parameterAnalysis import pcaFlatten, plotPoints2d
@@ -69,6 +70,10 @@ def main(argv=None):
                         " is covered by a series of predicted intervals, only "
                         "the best match will be counted if this flag is used", 
                         action="store_true", default=False)
+    parser.add_argument("--tl", help="Path to tracks XML file.  Used to cut "
+                        "out mask tracks so they are removed from comparison."
+                        " (convenience option to not have to manually run "
+                        "subtractBed everytime...)", default=None)
 
     args = parser.parse_args()
     tempBedToolPath = initBedTool()
@@ -79,11 +84,21 @@ def main(argv=None):
         args.ignore = set()
 
     assert args.col == 4 or args.col == 5
+    print "Commandline %s" % " ".join(sys.argv)
+    
+    tempFiles = []
+    if args.tl is not None:
+        cutBed1 = cutOutMaskIntervals(args.bed1, 0, args.tl)
+        cutBed2 = cutOutMaskIntervals(args.bed1, 0, args.tl)
+        if cutBed1 is not None:
+            assert cutBed2 is not None
+            tempFiles += [cutBed1, cutBed2]
+            args.bed1 = cutBed1
+            args.bed2 = cutBed2
 
     intervals1 = readBedIntervals(args.bed1, ncol = args.col)
     intervals2 = readBedIntervals(args.bed2, ncol = args.col)
 
-    print "Commandline %s" % " ".join(sys.argv)
     if args.noBase is False:
         stats = compareBaseLevel(intervals1, intervals2, args.col - 1)[0]
 
@@ -128,6 +143,8 @@ def main(argv=None):
         writeAccPlots(accuracy, accMap, intAccMap, intAccMapWeighted,
                       args.thresh, args.plot)
 
+    if len(tempFiles) > 0:
+        runShellCommand("rm -f %s" % " ".join(tempFiles))
     cleanBedTool(tempBedToolPath)
 
 def compareBaseLevel(intervals1, intervals2, col):
@@ -588,6 +605,31 @@ def extractCompStatsFromFile(dumpPath):
           break
     return baseStats, intervalStats, weightedStats
     dumpFile.close()
+
+def cutOutMaskIntervals(inBed, minLength, tracksInfoPath):
+    """ Filter out intervals of mask tracks from inBed that exceed a given
+    length threshold.  Idea is that it makes less sense to simply ignore,
+    say, giant stretches of N's (like centromeres), as we would by masking
+    them normally, than it does to remove them entirely, splitting the
+    genome into multiple chunks.  Can also be used during comparision to
+    get rid of all masked intervals """
+    outPath = getLocalTempPath("Tempcut", ".bed")
+    trackList = TrackList(tracksInfoPath)
+    maskPaths = [t.getPath() for t in trackList.getMaskTracks()]
+    if len(maskPaths) == 0:
+        return None
+    tempPath1 = getLocalTempPath("Tempcut1", ".bed")
+    tempPath2 = getLocalTempPath("Tempcut2", ".bed")
+    runShellCommand("cp %s %s" % (inBed, outPath))
+    for maskPath in maskPaths:
+        runShellCommand("sortBed -i %s | mergeBed > %s" % (maskPath, tempPath1))
+        runShellCommand("filterBedLengths.py %s %d > %s" % (tempPath1, minLength,
+                                                             tempPath2))
+        runShellCommand("subtractBed -a %s -b %s | sortBed > %s" % (outPath, tempPath2,
+                                                                    tempPath1))
+        runShellCommand("mv %s %s" % (tempPath1, outPath))
+    runShellCommand("rm -f %s %s" % (tempPath1, tempPath2))
+    return outPath
                 
 if __name__ == "__main__":
     sys.exit(main())
