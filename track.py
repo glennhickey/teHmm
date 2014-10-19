@@ -317,7 +317,7 @@ class TrackList(object):
 
    def saveXML(self, path):
        root = ET.Element("teModelConfig")
-       for track in self.trackList:
+       for track in itertools.chain(self.trackList, self.maskTrackList):
            root.append(track.toXMLElement())
        if self.alignmentTrack is not None:
            root.append(self.alignmentTrack.toXMLElement())

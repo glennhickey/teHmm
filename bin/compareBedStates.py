@@ -89,7 +89,7 @@ def main(argv=None):
     tempFiles = []
     if args.tl is not None:
         cutBed1 = cutOutMaskIntervals(args.bed1, 0, args.tl)
-        cutBed2 = cutOutMaskIntervals(args.bed1, 0, args.tl)
+        cutBed2 = cutOutMaskIntervals(args.bed2, 0, args.tl)
         if cutBed1 is not None:
             assert cutBed2 is not None
             tempFiles += [cutBed1, cutBed2]

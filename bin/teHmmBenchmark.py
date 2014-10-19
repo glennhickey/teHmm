@@ -399,9 +399,10 @@ def main(argv=None):
                     fitBed = os.path.join(outDir,
                                           os.path.splitext(base)[0] + "_eval_fit.bed" +
                                           repSuffix)
-                    command += " && fitStateNames.py %s %s %s" % (compTruth,
-                                                                  evalBed,
-                                                                  fitBed)
+                    command += " && fitStateNames.py %s %s %s --tl %s" % (compTruth,
+                                                                          evalBed,
+                                                                          fitBed,
+                                                                          evalTrackPath)
                     if args.fitOpts is not None:
                         command += " " + args.fitOpts
                     compareInputBed = fitBed

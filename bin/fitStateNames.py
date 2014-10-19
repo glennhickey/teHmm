@@ -13,10 +13,10 @@ import copy
 
 from teHmm.trackIO import readBedIntervals
 from teHmm.modelIO import loadModel
-from teHmm.common import intersectSize, initBedTool, cleanBedTool
+from teHmm.common import intersectSize, initBedTool, cleanBedTool, runShellCommand
 from teHmm.common import addLoggingOptions, setLoggingFromOptions, logger
 from teHmm.bin.compareBedStates import compareIntervalsOneSided
-from teHmm.bin.compareBedStates import compareBaseLevel
+from teHmm.bin.compareBedStates import compareBaseLevel, cutOutMaskIntervals
 from teHmm.bin.compareBedStates import getStateMapFromConfMatrix, getStateMapFromConfMatrix_simple
 
 try:
@@ -90,6 +90,10 @@ def main(argv=None):
     parser.add_argument("--fdr", help="Use FDR cutoff instead of (default)"
                         " greedy F1 optimization for state labeling",
                         type=float, default=None)
+    parser.add_argument("--tl", help="Path to tracks XML file.  Used to cut "
+                        "out mask tracks so they are removed from comparison."
+                        " (convenience option to not have to manually run "
+                        "subtractBed everytime...)", default=None)
 
     addLoggingOptions(parser)
     args = parser.parse_args()
@@ -114,7 +118,17 @@ def main(argv=None):
         raise RuntimeError("--old and --fdr options are exclusive")
 
     assert args.col == 4 or args.col == 5
-    
+
+    tempFiles = []
+    if args.tl is not None:
+        cutBedTgt = cutOutMaskIntervals(args.tgtBed, 0, args.tl)
+        cutBedPred = cutOutMaskIntervals(args.predBed, 0, args.tl)
+        if cutBedTgt is not None:
+            assert cutBedPred is not None
+            tempFiles += [cutBedTgt, cutBedPred]
+            args.tgtBed = cutBedTgt
+            args.predBed = cutBedPred
+
     intervals1 = readBedIntervals(args.tgtBed, ncol = args.col)
     intervals2 = readBedIntervals(args.predBed, ncol = args.col)
     cfName = "reverse"
@@ -166,6 +180,8 @@ def main(argv=None):
                                "not installed?")
         writeHeatMap(confMat, args.hm)
 
+    if len(tempFiles) > 0:
+        runShellCommand("rm -f %s" % " ".join(tempFiles))
     cleanBedTool(tempBedToolPath)
 
 def filterStateMap(stateMap, args):
