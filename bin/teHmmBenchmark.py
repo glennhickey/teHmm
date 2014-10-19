@@ -410,9 +410,11 @@ def main(argv=None):
                 compPath = os.path.join(outDir,
                                         os.path.splitext(base)[0] + "_comp.txt" +
                                         repSuffix)
-                command += " && compareBedStates.py %s %s > %s" % (compTruth,
-                                                                   compareInputBed,
-                                                                   compPath)
+                command += " && compareBedStates.py %s %s --tl %s > %s" % (
+                    compTruth,
+                    compareInputBed,
+                    evalTrackPath,
+                    compPath)
             
 
                 # make table row
