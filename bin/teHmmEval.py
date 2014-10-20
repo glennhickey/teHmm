@@ -228,14 +228,14 @@ def statesToBed(trackTable, states, bedFile,
     for i in xrange(len(states)):
 
         curStart = start + segDist
-
-        if maskOffsets is not None:
-            curStart += maskOffsets[i]
         
         intLen = 1
         if segOffsets is not None:
             intLen = trackTable.getSegmentLength(i)
         segDist += intLen
+
+        if maskOffsets is not None:
+            curStart += maskOffsets[curStart - trackTable.getStart()]
 
         curEnd = curStart + intLen
 
