@@ -67,6 +67,9 @@ def main(argv=None):
 
     # make sure output writeable
     outFile = open(args.output, "w")
+
+    # need to remember to fix this, disable as precaution for now
+    assert args.noMask is True or args.segment is False
     
     # read query intervals from the bed file
     logger.info("loading query intervals from %s" % args.query)
