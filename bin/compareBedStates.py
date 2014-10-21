@@ -94,8 +94,10 @@ def main(argv=None):
     
     tempFiles = []
     if args.tl is not None:
-        cutBed1 = cutOutMaskIntervals(args.bed1, args.delMask, args.tl)
-        cutBed2 = cutOutMaskIntervals(args.bed2, args.delMask, args.tl)
+        cutBed1 = cutOutMaskIntervals(args.bed1, args.delMask,
+                                      sys.maxint, args.tl)
+        cutBed2 = cutOutMaskIntervals(args.bed2, args.delMask,
+                                      sys.maxint, args.tl)
         if cutBed1 is not None:
             assert cutBed2 is not None
             tempFiles += [cutBed1, cutBed2]
@@ -612,9 +614,9 @@ def extractCompStatsFromFile(dumpPath):
     return baseStats, intervalStats, weightedStats
     dumpFile.close()
 
-def cutOutMaskIntervals(inBed, minLength, tracksInfoPath):
-    """ Filter out intervals of mask tracks from inBed that exceed a given
-    length threshold.  Idea is that it makes less sense to simply ignore,
+def cutOutMaskIntervals(inBed, minLength, maxLength, tracksInfoPath):
+    """ Filter out intervals of mask tracks from inBed with lengths
+    outside given range. Idea is that it makes less sense to simply ignore,
     say, giant stretches of N's (like centromeres), as we would by masking
     them normally, than it does to remove them entirely, splitting the
     genome into multiple chunks.  Can also be used during comparision to
@@ -631,8 +633,10 @@ def cutOutMaskIntervals(inBed, minLength, tracksInfoPath):
         runShellCommand("cat %s | awk \'{print $1\"\t\"$2\"\t\"$3}\' >> %s" % (
             maskPath, tempPath1))
     if os.path.getsize(tempPath1) > 0:
-        runShellCommand("filterBedLengths.py %s %d | sortBed  | mergeBed > %s" % (
-            tempPath1, minLength+1, tempPath2))
+        runShellCommand("sortBed -i %s > %s ; mergeBed -i %s > %s" % (
+            tempPath1, tempPath2, tempPath2, tempPath1))
+        runShellCommand("filterBedLengths.py %s %d %d > %s" % (
+            tempPath1, minLength+1, maxLength-1, tempPath2))
         runShellCommand("subtractBed -a %s -b %s | sortBed > %s" % (
             outPath, tempPath2, tempPath1))
         runShellCommand("mv %s %s" % (tempPath1, outPath))

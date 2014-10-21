@@ -88,7 +88,8 @@ def main(argv=None):
     # read query intervals from the bed file
     tempFiles = []
     if args.delMask is not None:
-        cutBed = cutOutMaskIntervals(args.allBed, args.delMask, args.tracksInfo)
+        cutBed = cutOutMaskIntervals(args.allBed, args.delMask, sys.maxint,
+                                     args.tracksInfo)
         if cutBed is not None:
             tempFiles.append(cutBed)
             args.allBed = cutBed

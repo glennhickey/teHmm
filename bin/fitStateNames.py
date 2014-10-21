@@ -94,12 +94,6 @@ def main(argv=None):
                         "out mask tracks so they are removed from comparison."
                         " (convenience option to not have to manually run "
                         "subtractBed everytime...)", default=None)
-    parser.add_argument("--delMask", help="Entirely remove intervals from "
-                        "mask tracks that are > given length.  Probably "
-                        "only want to set to non-zero value K if using"
-                        " with a prediction that was processed with "
-                        "interpolateMaskedRegions.py --max K",
-                        type=int, default=0)
     
     addLoggingOptions(parser)
     args = parser.parse_args()
@@ -127,8 +121,9 @@ def main(argv=None):
 
     tempFiles = []
     if args.tl is not None:
-        cutBedTgt = cutOutMaskIntervals(args.tgtBed, args.delMask, args.tl)
-        cutBedPred = cutOutMaskIntervals(args.predBed, args.delMask, args.tl)
+        cutBedTgt = cutOutMaskIntervals(args.tgtBed, -1, sys.maxint, args.tl)                                
+        cutBedPred = cutOutMaskIntervals(args.predBed, -1, sys.maxint, args.tl)
+        
         if cutBedTgt is not None:
             assert cutBedPred is not None
             tempFiles += [cutBedTgt, cutBedPred]
