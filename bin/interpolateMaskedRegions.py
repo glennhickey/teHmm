@@ -19,7 +19,7 @@ from teHmm.common import intersectSize, initBedTool, cleanBedTool, runShellComma
 from teHmm.common import addLoggingOptions, setLoggingFromOptions, logger
 from teHmm.common import getLocalTempPath
 from teHmm.track import TrackList
-
+from teHmm.bin.compareBedStates import cutOutMaskIntervals
 
 def main(argv=None):
     if argv is None:
@@ -41,7 +41,9 @@ def main(argv=None):
                         " the input bed except all gaps corresponding to "
                         "masked intervals will be filled")
     parser.add_argument("--maxLen", help="Maximum length of a masked interval"
-                        " to fill (inclusive)", type=int, default=sys.maxint)
+                        " to fill (inclusive). Use --delMask option with same value"
+                        "if running compareBedStates.py after.",
+                        type=int, default=sys.maxint)
     parser.add_argument("--default", help="Default label to give to masked "
                         "region if no label can be determined", default="0")
     parser.add_argument("--tgts", help="Only relabel gaps that "
@@ -56,6 +58,11 @@ def main(argv=None):
     parser.add_argument("--onlyDefault", help="Add the default state (--default) no"
                         " no all masked gaps no matter what. ie ignoring all other "
                         "logic", action="store_true", default=False)
+    parser.add_argument("--cut", help="Cut out gaps for masked tracks from the input."
+                        " By default, the input is expected to come from the HMM "
+                        "with mask intervals already absent, and will crash on with"
+                        " an assertion error if an overlap is detected.",
+                        action="store_true", default=False)
 
     addLoggingOptions(parser)
     args = parser.parse_args()
@@ -76,12 +83,18 @@ def main(argv=None):
     maskTracks = trackList.getMaskTracks()
 
     # read the input bed
-    inputIntervals = readBedIntervals(args.inBed, ncol = 4, sort = True)
+    inBed = args.inBed
+    if args.cut is True:
+        inBed = cutOutMaskIntervals(inBed, -1, args.maxLen + 1, args.tracksXML)
+    inputIntervals = readBedIntervals(inBed, ncol = 4, sort = True)
+    if args.cut is True:
+        runShellCommand("rm -f %s" % inBed)
     if len(maskTracks) == 0 or len(inputIntervals) == 0:
         runShellCommand("cp %s %s" % (args.inBed, args.outBed))
         logger.warning("No mask tracks located in %s or"
                        " %s empty" % (args.tracksXML, args.inBed))
         return 0
+
 
     # make a temporary, combined, merged masking bed file
     tempMaskBed = getLocalTempPath("Temp_mb", ".bed")
