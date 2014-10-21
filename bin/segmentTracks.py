@@ -72,7 +72,7 @@ def main(argv=None):
                         " is the average perecentage of all such differences "
                         "accounted for by the track", default=None)
     parser.add_argument("--delMask", help="Entirely remove intervals from "
-                        "mask tracks that are >= given length (otherwise "
+                        "mask tracks that are > given length (otherwise "
                         "they would just be ignored by HMM tools). The difference"
                         " here is that removed intervals will break contiguity.",
                         type=int, default=None)

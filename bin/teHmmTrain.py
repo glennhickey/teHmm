@@ -267,7 +267,7 @@ def main(argv=None):
         args.numStates = len(catMap)
 
     # train the model
-    seeds = [random.randint(0, sys.maxint)]
+    seeds = [random.randint(0, 4294967294)]
     if args.seed is not None:
         seeds = [args.seed]
         random.seed(args.seed)

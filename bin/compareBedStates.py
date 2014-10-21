@@ -74,6 +74,12 @@ def main(argv=None):
                         "out mask tracks so they are removed from comparison."
                         " (convenience option to not have to manually run "
                         "subtractBed everytime...)", default=None)
+    parser.add_argument("--delMask", help="Entirely remove intervals from "
+                        "mask tracks that are > given length.  Probably "
+                        "only want to set to non-zero value K if using"
+                        " with a prediction that was processed with "
+                        "interpolateMaskedRegions.py --max K",
+                        type=int, default=0)
 
     args = parser.parse_args()
     tempBedToolPath = initBedTool()
@@ -88,8 +94,8 @@ def main(argv=None):
     
     tempFiles = []
     if args.tl is not None:
-        cutBed1 = cutOutMaskIntervals(args.bed1, 0, args.tl)
-        cutBed2 = cutOutMaskIntervals(args.bed2, 0, args.tl)
+        cutBed1 = cutOutMaskIntervals(args.bed1, args.delMask, args.tl)
+        cutBed2 = cutOutMaskIntervals(args.bed2, args.delMask, args.tl)
         if cutBed1 is not None:
             assert cutBed2 is not None
             tempFiles += [cutBed1, cutBed2]
@@ -622,14 +628,14 @@ def cutOutMaskIntervals(inBed, minLength, tracksInfoPath):
     tempPath2 = getLocalTempPath("Tempcut2", ".bed")
     runShellCommand("cp %s %s" % (inBed, outPath))
     for maskPath in maskPaths:
-        runShellCommand("sortBed -i %s > %s && mergeBed -i %s > %s" % (
-            maskPath, tempPath2, tempPath2, tempPath1))
-        runShellCommand("filterBedLengths.py %s %d > %s" % (tempPath1, minLength,
-                                                             tempPath2))
-        if os.path.getsize(tempPath2) > 0:
-            runShellCommand("subtractBed -a %s -b %s | sortBed > %s" % (outPath, tempPath2,
-                                                                        tempPath1))
-            runShellCommand("mv %s %s" % (tempPath1, outPath))
+        runShellCommand("cat %s | awk \'{print $1\"\t\"$2\"\t\"$3}\' >> %s" % (
+            maskPath, tempPath1))
+    if os.path.getsize(tempPath1) > 0:
+        runShellCommand("filterBedLengths.py %s %d | sortBed  | mergeBed > %s" % (
+            tempPath1, minLength+1, tempPath2))
+        runShellCommand("subtractBed -a %s -b %s | sortBed > %s" % (
+            outPath, tempPath2, tempPath1))
+        runShellCommand("mv %s %s" % (tempPath1, outPath))
     runShellCommand("rm -f %s %s" % (tempPath1, tempPath2))
     if os.path.getsize(outPath) == 0:
         raise RuntimeError("cutOutMaskIntervals removed everything.  Can't continue."
