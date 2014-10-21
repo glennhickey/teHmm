@@ -298,6 +298,7 @@ In general, running any executable with `--help` will print a brief description 
 * **teHmmView.py**: Print all parameters of a given model.  Options to generate some figures. 
 * **createStartingModel.py** :  Given an input track and a prior confidence value, create transition and probability matrix files (which can be tuned by hand) to pass to teHmmTrain.py
 * **bootstrapModel.py** : Create transition and probability matrix files (like above) from an existing model.  Facilliates use of multiple rounds of training (say supervised then unsupervised).
+* **interpolateMaskedRegions.py** : If masking tracks are used, they will result in gaps in the HMM predictions.  This script can fill these gaps in as a postprocessing step using some simple heuristics.  
 
 **Track Name Munging**
 
