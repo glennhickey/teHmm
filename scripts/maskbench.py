@@ -34,9 +34,9 @@ startPoint = 1 # Segment
 #startPoint = 6 # Munge Stats
 
 # input ############
-segTracksPath = "tracks.xml"
-trainTracksPath = "tracks_bin250.xml"
-compTracksPath = "tracks_bin250.xml"
+segTracksPath = "segTracks.xml"
+trainTracksPath = "hmmTracks.xml"
+compTracksPath = "hmmTracks.xml"
 
 trainRegionPath = "train_region.bed"
 evalRegionPath = "eval_region.bed"
@@ -50,9 +50,9 @@ assert len(truthPaths) == len(truthNames)
 maskK = 10000
 segOpts = "--cutMultinomial --thresh 2 --delMask %d %s" % (maskK, logOpts)
 segLen = 20
-numStates = 5
-threads = 1
-iter = 10
+numStates = 35
+threads = 5
+iter = 200
 thresh = 0.08
 fitFlags = "--tgt TE --qualThresh 0.15 --tl %s %s" % (trainTracksPath, logOpts)
 fitFlagsFdr = "--tgt TE --fdr 0.65 --tl %s %s" % (trainTracksPath, logOpts)
@@ -73,7 +73,7 @@ if startPoint <= 1:
 # train ############
 modelPath = "hmm.mod"
 if startPoint <=2:
-    cmd = "teHmmTrain.py %s %s %s %s" % (trainTracksPath, trainRegionPath, modelPath, logOpts)
+    cmd = "teHmmTrain.py %s %s %s %s" % (trainTracksPath, trainSegPath, modelPath, logOpts)
     cmd += " --fixStart"
     cmd += " --segLen %d" % segLen
     cmd += " --numStates %d" % numStates
