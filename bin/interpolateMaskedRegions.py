@@ -100,8 +100,8 @@ def main(argv=None):
     tempMaskBed = getLocalTempPath("Temp_mb", ".bed")
     for maskTrack in maskTracks:
         assert os.path.isfile(maskTrack.getPath())
-        runShellCommand("cat %s | setBedCol.py 3 mask >> %s" % (maskTrack.getPath(),
-                                                                tempMaskBed))
+        runShellCommand("cat %s | setBedCol.py 3 mask | awk \'{print $1\"\t\"$2\"\t\"$3}\'>> %s" % (
+            maskTrack.getPath(), tempMaskBed))
     maskedIntervals = getMergedBedIntervals(tempMaskBed, sort = True)
     resolvedMasks = 0
 
