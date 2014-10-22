@@ -56,6 +56,7 @@ iter = 200
 thresh = 0.08
 fitFlags = "--tgt TE --qualThresh 0.15 --tl %s %s" % (trainTracksPath, logOpts)
 fitFlagsFdr = "--tgt TE --fdr 0.65 --tl %s %s" % (trainTracksPath, logOpts)
+interpolateFlags =  "--tgts TE --maxLen %d %s" % (maskK, logOpts)
 compIdx = 0 #base
 #compIdx = 1 #interval
 #compIdx = 2 #weightintervs
@@ -122,10 +123,10 @@ if startPoint <= 5:
         runShellCommand("intersectBed -a %s -b %s | sortBed > %s" % (truthInputPath, evalRegionPath, getTruthPath(i)))
 
     # do our interpolations
-    runShellCommand("interpolateMaskedRegions.py %s %s %s %s --tgts TE --maxLen %d %s" % (
-        compTracksPath, evalRegionPath, fitPath, fitPathMI, maskK, logOpts))
-    runShellCommand("interpolateMaskedRegions.py %s %s %s %s --tgts TE --maxLen %d %s" % (
-        compTracksPath, evalRegionPath, fitFdrPath, fitFdrPathMI, maskK, logOpts))
+    runShellCommand("interpolateMaskedRegions.py %s %s %s %s %s" % (
+        compTracksPath, evalRegionPath, fitPath, fitPathMI, interpolateFlags))
+    runShellCommand("interpolateMaskedRegions.py %s %s %s %s %s" % (
+        compTracksPath, evalRegionPath, fitFdrPath, fitFdrPathMI, interpolateFlags))
 
     # do our comparisons
     compCmds = []
