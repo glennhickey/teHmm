@@ -8,6 +8,7 @@ import os
 import argparse
 import copy
 
+from teHmm.common import intersectSize, initBedTool, cleanBedTool, runShellCommand
 from pybedtools import BedTool, Interval
 
 """
@@ -27,6 +28,7 @@ def main(argv=None):
     wiggle = 0.5
     
     args = parser.parse_args()
+    tempBedToolPath = initBedTool()
     assert os.path.exists(args.inBed)
 
     for interval in BedTool(args.inBed):
@@ -44,6 +46,7 @@ def main(argv=None):
                 if i < numChunks - 1:
                     outInterval.end = outInterval.start + chunkSize
                 sys.stdout.write(str(outInterval))
+    cleanBedTool(tempBedToolPath)
             
 if __name__ == "__main__":
     sys.exit(main())

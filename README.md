@@ -323,12 +323,14 @@ In general, running any executable with `--help` will print a brief description 
 * **cleanGenes.py**: Convert a BED-12 format gene prediction into suitable input for HMM by explicitly splitting block intervals into introns and exons
 * **setScoreFromTrackIntersection.py**: Intersect a intervals in BED file with specified track.  Can be used, for example, to map copy number onto RepeatModeler predictions (given a .wig copy number track).  Note that track binning specified in the XML will be applied internally so numeric values will be rounded.  Also note that the **mode** is used to report the average value across the given intervals.
 
-**Scaling, Binning and Segmentation**
+**Scaling, Binning, Chunking, Segmentation, etc.**
 
 * **setTrackScaling.py** : Compute the best scaling factor (between linear and log) for each track in the XML file for a given number of bases, and annotate the XML file accordingly.  Only applies to numeric tracks.
 * **scaleVals.py** : Scale each value of a BED or WIG file.  (Above function better as it automatically computes parameters, and doesn't create any new data files)
 * **segmentTracks.py** : Segment the track data into chunks of consistent columns.  These chunks can then be considered atomic units (as opposed to bases) by the model using the --segment option.
 * **applyTrackScaling.py** : Write scaled versions of tracks in an XML file using the parameters therein (such as those computed by setTrackScaling.py)
+* **chunkBedRegions.py** : Chunk up a BED file into approximately equal-sized chunks.
+* **sampleBedChunks.py**: Sample the output of `chunkBedRegions.py` do produce, for example, a random training set. 
 
 **Automatic Preprocessing**
 
