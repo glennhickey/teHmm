@@ -2,6 +2,9 @@ from distutils.core import setup
 from Cython.Build import cythonize
 from distutils.core import Extension
 import numpy
+from teHmm.common import checkRequirements
+
+checkRequirements()
 
 setup(
   name = 'teHmm',
@@ -21,5 +24,3 @@ setup(
                  )
         ])
 )
-
-#Cython.Build import cythonize
