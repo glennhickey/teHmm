@@ -456,6 +456,8 @@ class TrackTable(object):
         maskTransform = self.getMaskRunningOffsets(reverseTransform = True)
         self.segOffsets = np.zeros((1 + lastIdx - firstIdx), np.int)
         j = 0
+        logger.info("Computing mask and segment offsets in table with shape %s" %
+                    str(self.shape))
         for i in xrange(firstIdx, lastIdx + 1):
             offset = int(segIntervals[i][1]) - self.start
             if maskTransform is not None:
@@ -482,7 +484,9 @@ class TrackTable(object):
             return
         
         if interpolate is True:
+            logger.info("Interpolating segments (shape=%s)" % str(self.shape))
             self.interpolateSegments(trackList)
+        logger.info("Compressing the track table...")
         self.compressSegments()
         self.shape = (len(self), self.getNumTracks())
         assert len(self.segOffsets) > 0
@@ -874,6 +878,8 @@ class TrackData(object):
                 if oldShape[0] == 0:
                     self.trackTableList.pop()
                 else:
+                    logger.info("Applying segmentation on track table with shape %s" %
+                                str(self.trackTableList[-1].getNumPyArray().shape))
                     self.trackTableList[-1].segment(segmentIntervals,
                                                     self.trackList,
                                                     interpolate=interpolateSegments)
