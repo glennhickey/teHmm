@@ -15,6 +15,7 @@ import xml.dom.minidom
 from numpy.testing import assert_array_equal, assert_array_almost_equal
 from _track import runSum
 import itertools
+import math
 
 from .trackIO import readTrackData
 from .common import EPSILON, logger, binSearch
@@ -717,7 +718,7 @@ class CategoryMap(object):
     def __setLogScale(self, logScale):
         self.logScaleBase = logScale
         assert self.logScaleBase != 0.0
-        self.logScaleDiv = np.log(self.logScaleBase)
+        self.logScaleDiv = math.log(self.logScaleBase)
         self.scaleFac = None
 
     def __setShift(self, shift):
@@ -750,7 +751,7 @@ class CategoryMap(object):
             return str(int(self.scaleFac * float(y)))
         elif self.logScaleBase is not None:
             assert y >= 0.0
-            return str(int(np.log(float(y)) / self.logScaleDiv))
+            return str(int(math.log(float(y)) / self.logScaleDiv))
         return y
 
     def __scaleInv(self, x):
@@ -758,7 +759,7 @@ class CategoryMap(object):
         if self.scaleFac is not None:
             y = float(x) / float(self.scaleFac)
         elif self.logScaleBase is not None:
-            y = np.power(self.logScaleBase, float(x))
+            y = math.pow(self.logScaleBase, float(x))
         if self.shift is not None:
             y = float(y) - self.shift
         return y
