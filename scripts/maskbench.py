@@ -161,12 +161,12 @@ if startPoint <= 6:
     statsFile.write(header + "\n")
     
     for i, predName in enumerate(predNames):
-        line = "%s, %s, %s, " % (predName, fits[i], interpolations[i])
+        line = "%s, %s, %s" % (predName, fits[i], interpolations[i])
         for j, truthName in enumerate(truthNames):
             compPath = getCompPath(j, i)
             stats = extractCompStatsFromFile(compPath)[compIdx]
             if "TE" not in stats:
                 stats["TE"] = (0,0)
-            line += ",".join(prettyAcc(stats["TE"][0], stats["TE"][1]))
+            line += ", " + ",".join(prettyAcc(stats["TE"][0], stats["TE"][1]))
         statsFile.write(line + "\n")
     statsFile.close()
