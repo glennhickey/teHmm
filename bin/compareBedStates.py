@@ -104,6 +104,8 @@ def main(argv=None):
             args.bed1 = cutBed1
             args.bed2 = cutBed2
 
+    checkExactOverlap(args.bed1, args.bed2)    
+
     intervals1 = readBedIntervals(args.bed1, ncol = args.col)
     intervals2 = readBedIntervals(args.bed2, ncol = args.col)
 
@@ -645,6 +647,61 @@ def cutOutMaskIntervals(inBed, minLength, maxLength, tracksInfoPath):
         raise RuntimeError("cutOutMaskIntervals removed everything.  Can't continue."
                            " probably best to rerun calling script on bigger region?")
     return outPath
+
+def checkExactOverlap(bed1, bed2):
+    """ make sure two bed files cover same region exactly: a requirement for all
+    code based on the comparisons in this module."""
+
+    errorMessage = ("Bed files %s and %s cannot be compared. xxx. "
+    " Input files must be both sorted, cover the exact same region,"
+    " and contain no self-overlaps.") % (bed1, bed2)
+
+    # empty file may break downstream comparisons
+    size1 = os.path.getsize(bed1)
+    size2 = os.path.getsize(bed2)
+    if size1 == 0 or size2 == 0:
+        raise RuntimeError(errorMessage.replace("xxx", "one or both inputs empty" % bed1))
+                            
+
+    # test self-overlap and sorting
+    intervals1 = readBedIntervals(bed1, sort=False)
+    for i in xrange(1, len(intervals1)):
+        if intersectSize(intervals1[i-1], intervals1[i]) != 0:
+            raise RuntimeError(errorMessage.replace(
+                "xxx", "Overlapping intervals %s and %s found in input1" % (
+                    intervals1[i-1], intervals1[i])))
+        if intervals1[i-1] > intervals1[i]:
+            raise RuntimeError(errorMessage.replace(
+                "xxx", "Out of order intervals %s and %s found in input1" % (
+                    intervals1[i-1], intervals1[i])))
+
+    # test self-overlap and sorting
+    intervals2 = readBedIntervals(bed1, sort=False)
+    for i in xrange(1, len(intervals2)):
+        if intersectSize(intervals2[i-1], intervals2[i]) != 0:
+            raise RuntimeError(errorMessage.replace(
+                "xxx", "Overlapping intervals %s and %s found in input2" % (
+                    intervals2[i-1], intervals2[i])))
+        if intervals2[i-1] > intervals2[i]:
+            raise RuntimeError(errorMessage.replace(
+                "xxx", "Out of order intervals %s and %s found in input2" % (
+                    intervals2[i-1], intervals2[i])))
+        
+
+    # test intersection size
+    tempFile = getLocalTempPath("Temp_test", ".bed")
+    runShellCommand("subtractBed -a %s -b %s > %s" % (bed1, bed2, tempFile))
+    if os.path.getsize(tempFile) != 0:
+        runShellCommand("rm -f %s" % tempFile)
+        raise RuntimeError(errorMessage.replace(
+            "xxx", "Input1 covers regions outside input2"))
+    runShellCommand("subtractBed -a %s -b %s > %s" % (bed2, bed1, tempFile))
+    if os.path.getsize(tempFile) != 0:
+        runShellCommand("rm -f %s" % tempFile)
+        raise RuntimeError(errorMessage.replace(
+            "xxx", "Input2 covers regions outside input1"))
+    runShellCommand("rm -f %s" % tempFile)
+    
                 
 if __name__ == "__main__":
     sys.exit(main())

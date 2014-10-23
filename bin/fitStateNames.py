@@ -15,7 +15,7 @@ from teHmm.trackIO import readBedIntervals
 from teHmm.modelIO import loadModel
 from teHmm.common import intersectSize, initBedTool, cleanBedTool, runShellCommand
 from teHmm.common import addLoggingOptions, setLoggingFromOptions, logger
-from teHmm.bin.compareBedStates import compareIntervalsOneSided
+from teHmm.bin.compareBedStates import compareIntervalsOneSided, checkExactOverlap
 from teHmm.bin.compareBedStates import compareBaseLevel, cutOutMaskIntervals
 from teHmm.bin.compareBedStates import getStateMapFromConfMatrix, getStateMapFromConfMatrix_simple
 
@@ -129,6 +129,8 @@ def main(argv=None):
             tempFiles += [cutBedTgt, cutBedPred]
             args.tgtBed = cutBedTgt
             args.predBed = cutBedPred
+
+    checkExactOverlap(args.tgtBed, args.predBed)
 
     intervals1 = readBedIntervals(args.tgtBed, ncol = args.col)
     intervals2 = readBedIntervals(args.predBed, ncol = args.col)
