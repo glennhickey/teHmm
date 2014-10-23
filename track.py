@@ -595,7 +595,7 @@ class IntegerTrackTable(TrackTable):
                 total = 0.
                 for x in xrange(start, end):
                     total += valMap.getMapBack(self.data[x, trackNo])
-                meanVal = total / float(end-start)
+                meanVal = total / (end-start)
                 self.data[pos, trackNo] = valMap.getMap(meanVal, update=True)
             else:
                 self.data[pos, trackNo] = mode(self.data[start:end,
