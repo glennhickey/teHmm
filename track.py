@@ -513,12 +513,21 @@ class TrackTable(object):
         """ A segment interval (i, j) in the original data, A,  is mapped to just
         A[i] in the segmented data.  Here we scan over the entire segment and put
         an average value into the first entriy (A[i]).  We use mode as it can
-        apply to both numerical and categorical data"""                
+        apply to both numerical and categorical data"""
+        # make a faster mapback table for each gaussian track
+        mbTables = dict()
+        for track in trackList:
+            if track.getDist() == "gaussian":
+                mbTables[track.getNumber()] = \
+                  track.getValueMap().getMapBackTable(INTEGER_ARRAY_TYPE)
+            else:
+                mbTables[track.getNumber()] = None
+
         for so in xrange(len(self.segOffsets)):
             segLen = self.getSegmentLength(so)
             start = self.segOffsets[so]
             end = start + segLen
-            self.setAverages(start, start, end, trackList)
+            self.setAverages(start, start, end, trackList, mbTables)
 
     def setMaskTable(self, maskTable):
         """ Pair a table with a mask table (of binary-style mask tracks) of
@@ -588,17 +597,19 @@ class IntegerTrackTable(TrackTable):
         assert newShape[0] == len(self.segOffsets)
         assert_array_equal(oldShape[1:], newShape[1:])
 
-    def setAverages(self, pos, start, end, trackList):
+    def setAverages(self, pos, start, end, trackList, mbTables):
         """ set position pos to mode of range from [start, end) for all
         tracks except gaussian distributions, where we use mean isntead of
         mode """
         for track in trackList:
             trackNo = track.getNumber()
             if track.getDist() == "gaussian":
+                mbTable = mbTables[trackNo]
+                assert mbTable is not None
                 valMap = track.getValueMap()
                 total = 0.
                 for x in xrange(start, end):
-                    total += valMap.getMapBack(self.data[x, trackNo])
+                    total += mbTable[self.data[x, trackNo]]
                 meanVal = total / (end-start)
                 self.data[pos, trackNo] = valMap.getMap(meanVal, update=True)
             else:
@@ -705,6 +716,17 @@ class CategoryMap(object):
                 self.getMap(self.defaultVal)])
         else:
             return None
+
+    def getMapBackTable(self, dtype):
+        """ doing getMapBack millions of times is super slow (ie
+        when interpolating gaussian segments. speed up with a table"""
+        tsize = np.iinfo(dtype).max + 1
+        table = np.zeros((tsize,), dtype=np.float) + sys.maxint
+        for i in xrange(len(table)):
+            val = self.getMapBack(i)
+            if val is not None:
+                table[i] = val
+        return table
 
     def getMissingVal(self):
         return self.missingVal
