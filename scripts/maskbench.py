@@ -12,7 +12,7 @@ import random
 import numpy as np
 
 from teHmm.common import runShellCommand, setLogLevel, addLoggingFileHandler
-from teHmm.common import runParallelShellCommands
+from teHmm.common import runParallelShellCommands, getLocalTempPath
 from teHmm.bin.compareBedStates import extractCompStatsFromFile
 
 #
@@ -95,7 +95,10 @@ fitPath = "fit.bed"
 fitFdrPath = "fitFdr.bed"
 labelPath = "label.bed"
 if startPoint <=4:
-    runShellCommand("intersectBed -a %s -b %s | sortBed > %s" % (modelerPath, evalRegionPath, labelPath))
+    tempPath = getLocalTempPath("Tempmask", ".bed")
+    runShellCommand("mergeBed -i %s | sortBed > %s" % (evalSegPath, tempPath))
+    runShellCommand("intersectBed -a %s -b %s | sortBed > %s" % (modelerPath, tempPath, labelPath))
+    runShellCommand("rm -f %s" % tempPath)
     fitCmd = "fitStateNames.py %s %s %s %s" % (labelPath, evalPath, fitPath, fitFlags)
     fitFdrCmd = "fitStateNames.py %s %s %s %s" % (labelPath, evalPath, fitFdrPath, fitFlagsFdr)
     runParallelShellCommands([fitCmd, fitFdrCmd], 2)
@@ -119,8 +122,11 @@ def getCompPath(truthIdx, predIdx):
 
 if startPoint <= 5:
     # cut up truths
+    tempPath = getLocalTempPath("Tempmask", ".bed")
+    runShellCommand("mergeBed -i %s | sortBed > %s" % (evalSegPath, tempPath))
     for i, truthInputPath in enumerate(truthPaths):
-        runShellCommand("intersectBed -a %s -b %s | sortBed > %s" % (truthInputPath, evalRegionPath, getTruthPath(i)))
+        runShellCommand("intersectBed -a %s -b %s | sortBed > %s" % (truthInputPath, tempPath, getTruthPath(i)))
+    runShellCommand("rm -f %s" % tempPath)
 
     # do our interpolations
     runShellCommand("interpolateMaskedRegions.py %s %s %s %s %s" % (
