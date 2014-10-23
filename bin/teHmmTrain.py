@@ -239,7 +239,7 @@ def main(argv=None):
     if args.segment is not None:
         logger.info("loading segment intervals from %s" % args.segment)
         try:
-            checkExactOverlap(args.trainingBed, args.segment):
+            checkExactOverlap(args.trainingBed, args.segment)
         except:
             raise RuntimeError("bed file passed with --segments option"
                                " must exactly overlap trainingBed")
