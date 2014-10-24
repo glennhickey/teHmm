@@ -313,11 +313,15 @@ def main(argv=None):
             os.makedirs(outDir)
         trainingTrackPath = os.path.join(outDir, "training_tracks.xml")
         evalTrackPath = os.path.join(outDir, "eval_tracks.xml")
+        for maskTrack in trainingTrackList.getMaskTracks():
+            pList.addTrack(copy.deepcopy(maskTrack))
         pList.saveXML(trainingTrackPath)
         epList = TrackList()
         for track in pList:
             t = copy.deepcopy(evalTrackList.getTrackByName(track.getName()))
             epList.addTrack(t)
+        for maskTrack in trainingTrackList.getMaskTracks():
+            epList.addTrack(copy.deepcopy(maskTrack))
         epList.saveXML(evalTrackPath)
         
         for inBed in args.inBeds:
@@ -399,9 +403,10 @@ def main(argv=None):
                     fitBed = os.path.join(outDir,
                                           os.path.splitext(base)[0] + "_eval_fit.bed" +
                                           repSuffix)
-                    command += " && fitStateNames.py %s %s %s --intThresh 0.8" % (compTruth,
-                                                                  evalBed,
-                                                                  fitBed)
+                    command += " && fitStateNames.py %s %s %s --tl %s" % (compTruth,
+                                                                          evalBed,
+                                                                          fitBed,
+                                                                          evalTrackPath)
                     if args.fitOpts is not None:
                         command += " " + args.fitOpts
                     compareInputBed = fitBed
@@ -410,9 +415,11 @@ def main(argv=None):
                 compPath = os.path.join(outDir,
                                         os.path.splitext(base)[0] + "_comp.txt" +
                                         repSuffix)
-                command += " && compareBedStates.py %s %s --thresh 0.8 > %s" % (compTruth,
-                                                                   compareInputBed,
-                                                                   compPath)
+                command += " && compareBedStates.py %s %s --tl %s > %s" % (
+                    compTruth,
+                    compareInputBed,
+                    evalTrackPath,
+                    compPath)
             
 
                 # make table row

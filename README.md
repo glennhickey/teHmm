@@ -63,7 +63,8 @@ The track list file contains a single *teModelConfig* element which in turn cont
   * *binary*, where bed intervals specify 1 and all other regions are 0
   * *multnomial* (**DEFAULT**) where the bed value is read from the *name* column of the bed file. Regions outside bed intervals are assumed to have a default value
   * *sparse_multinomial* same as above except regions outside of intervals are considered unobserved.
-  * *gaussian* where each bed value (read as in *multinomial*) must be numeric, and is assumed to be drawn from a Gaussian distribution.  A numeric *default* value must be specified.  
+  * *gaussian* where each bed value (read as in *multinomial*) must be numeric, and is assumed to be drawn from a Gaussian distribution.  A numeric *default* value must be specified.
+  * *mask* track is treated as a masking track where all intervals it covers are completely ignored by the HMM. 
 * *valCol* 0-based (so name=3) column of bed file to read state from for multinomial distribution
 * *scale* Scale values by spefied factor and round them to an integer (useful for binning numeric states)
 * *logScale* .  Scale values by taking logarithm with the given value as base then rounding to integer.  Since log is undefined for values less or equal to 0, the *shift* attribute (see below) needs to be used to in conjunction should such valuers be present in the data.  Failure to do so will result in an assertion error. 
@@ -297,6 +298,7 @@ In general, running any executable with `--help` will print a brief description 
 * **teHmmView.py**: Print all parameters of a given model.  Options to generate some figures. 
 * **createStartingModel.py** :  Given an input track and a prior confidence value, create transition and probability matrix files (which can be tuned by hand) to pass to teHmmTrain.py
 * **bootstrapModel.py** : Create transition and probability matrix files (like above) from an existing model.  Facilliates use of multiple rounds of training (say supervised then unsupervised).
+* **interpolateMaskedRegions.py** : If masking tracks are used, they will result in gaps in the HMM predictions.  This script can fill these gaps in as a postprocessing step using some simple heuristics.  
 
 **Track Name Munging**
 
@@ -316,16 +318,19 @@ In general, running any executable with `--help` will print a brief description 
 * **addTrackHeader.py** : Set or modify track header of BED file in order to display on Genome Browser.
 * **filterPredictions.py** : Simple script to remove some obvious artifacts (ex orphaned ltr and tsds) or tiny predictions out of a BED file.
 * **filterBedLengths.py** : Filter BED file based on interval length.
+* **filterFastaLengths.py** : Filter FASTA file based in sequence length.
 * **filterBedScores.py** : Filter BED file based on interval score.
 * **cleanGenes.py**: Convert a BED-12 format gene prediction into suitable input for HMM by explicitly splitting block intervals into introns and exons
 * **setScoreFromTrackIntersection.py**: Intersect a intervals in BED file with specified track.  Can be used, for example, to map copy number onto RepeatModeler predictions (given a .wig copy number track).  Note that track binning specified in the XML will be applied internally so numeric values will be rounded.  Also note that the **mode** is used to report the average value across the given intervals.
 
-**Scaling, Binning and Segmentation**
+**Scaling, Binning, Chunking, Segmentation, etc.**
 
 * **setTrackScaling.py** : Compute the best scaling factor (between linear and log) for each track in the XML file for a given number of bases, and annotate the XML file accordingly.  Only applies to numeric tracks.
 * **scaleVals.py** : Scale each value of a BED or WIG file.  (Above function better as it automatically computes parameters, and doesn't create any new data files)
 * **segmentTracks.py** : Segment the track data into chunks of consistent columns.  These chunks can then be considered atomic units (as opposed to bases) by the model using the --segment option.
 * **applyTrackScaling.py** : Write scaled versions of tracks in an XML file using the parameters therein (such as those computed by setTrackScaling.py)
+* **chunkBedRegions.py** : Chunk up a BED file into approximately equal-sized chunks.
+* **sampleBedChunks.py**: Sample the output of `chunkBedRegions.py` do produce, for example, a random training set. 
 
 **Automatic Preprocessing**
 

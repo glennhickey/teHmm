@@ -138,6 +138,35 @@ def intersectSize(interval1, interval2):
         overlap = min(i1[2], i2[2]) - i2[1]
         overlap = max(0, overlap)
     return overlap
+
+def checkRequirements():
+    """ check some version numbers of pyhton libraries to see if
+    things ought to run -- should be kept consistent with readme"""
+    try:
+        from Cython.Compiler.Version import version
+    except:
+        raise RuntimeError("Cython not installed")
+    
+    if version < "0.19.2":
+        raise RuntimeError("Cython version >= 0.19.2 required (%s detected)" %
+                           version)
+
+    if sys.version_info < (2, 7):
+        raise RuntimeError("Python version >= 2.7 required (%s detected)" %
+                           "%d.%d" % (sys.version_info[0], sys.version_info[1]))
+
+    if np.version.version < "1.7":
+        raise RuntimeError("Numpy version >= 1.7 required (%s detected)" %
+                           np.version.version)
+
+    try:
+        from pybedtools import __version__ as pbt_version
+    except:
+        raise RuntimeError("Unable to detect pybedtools version")
+    if pbt_version < "0.6.7":
+        raise RuntimeError("Pybedtools version >= 0.6.7 required (%s detected)" %
+                           pbt_version)
+            
                       
 #########################################################
 #########################################################

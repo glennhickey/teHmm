@@ -16,7 +16,8 @@ from collections import defaultdict
 
 from teHmm.trackIO import readBedIntervals
 from teHmm.common import intersectSize, initBedTool, cleanBedTool
-from teHmm.common import logger
+from teHmm.common import logger, getLocalTempPath, runShellCommand
+from teHmm.track import TrackList
 
 try:
     from teHmm.parameterAnalysis import pcaFlatten, plotPoints2d
@@ -69,6 +70,16 @@ def main(argv=None):
                         " is covered by a series of predicted intervals, only "
                         "the best match will be counted if this flag is used", 
                         action="store_true", default=False)
+    parser.add_argument("--tl", help="Path to tracks XML file.  Used to cut "
+                        "out mask tracks so they are removed from comparison."
+                        " (convenience option to not have to manually run "
+                        "subtractBed everytime...)", default=None)
+    parser.add_argument("--delMask", help="Entirely remove intervals from "
+                        "mask tracks that are > given length.  Probably "
+                        "only want to set to non-zero value K if using"
+                        " with a prediction that was processed with "
+                        "interpolateMaskedRegions.py --max K",
+                        type=int, default=0)
 
     args = parser.parse_args()
     tempBedToolPath = initBedTool()
@@ -79,6 +90,21 @@ def main(argv=None):
         args.ignore = set()
 
     assert args.col == 4 or args.col == 5
+    print "Commandline %s" % " ".join(sys.argv)
+    
+    tempFiles = []
+    if args.tl is not None:
+        cutBed1 = cutOutMaskIntervals(args.bed1, args.delMask,
+                                      sys.maxint, args.tl)
+        cutBed2 = cutOutMaskIntervals(args.bed2, args.delMask,
+                                      sys.maxint, args.tl)
+        if cutBed1 is not None:
+            assert cutBed2 is not None
+            tempFiles += [cutBed1, cutBed2]
+            args.bed1 = cutBed1
+            args.bed2 = cutBed2
+
+    checkExactOverlap(args.bed1, args.bed2)    
 
     intervals1 = readBedIntervals(args.bed1, ncol = args.col)
     intervals2 = readBedIntervals(args.bed2, ncol = args.col)
@@ -127,6 +153,8 @@ def main(argv=None):
         writeAccPlots(accuracy, accMap, intAccMap, intAccMapWeighted,
                       args.thresh, args.plot)
 
+    if len(tempFiles) > 0:
+        runShellCommand("rm -f %s" % " ".join(tempFiles))
     cleanBedTool(tempBedToolPath)
 
 def compareBaseLevel(intervals1, intervals2, col):
@@ -450,7 +478,8 @@ def getStateMapFromConfMatrix_simple(forwardMatrix):
         stateMap[predName] = maxName, maxCount, total
     return stateMap
 
-def getStateMapFromConfMatrix(reverseMatrix, truthIgnore, predIgnore, thresh):
+def getStateMapFromConfMatrix(reverseMatrix, truthTgt, truthIgnore, predIgnore, thresh,
+                              fdr):
     """ Use greedy algorithm to construct state map in order to maximize F1 score of
     each non-ignored state (in order of size in truth).
 
@@ -464,7 +493,11 @@ def getStateMapFromConfMatrix(reverseMatrix, truthIgnore, predIgnore, thresh):
     NOTE: Unlike old version above, the input matrix is the reverse confusion matrix,
     ie mapping truth states back to predictions (tho matrix data is symmetrical,
     representation used in this module is not, and more convenient to work in one
-    direction or another)"""
+    direction or another)
+
+    UPDATE: FDR option allows to skip F1 optimization and just use fdr directly
+    as a cutoff for candidates
+    """
 
     # build maps of state names to # bases in resepctive annotations
     truthStateSizes = defaultdict(int)
@@ -482,13 +515,17 @@ def getStateMapFromConfMatrix(reverseMatrix, truthIgnore, predIgnore, thresh):
     # main loop
     stateNameMap = dict()
     for truthState, truthSize in truthStateList:
-        if truthState in truthIgnore:
+        if truthState in truthIgnore or \
+               (len(truthTgt) > 0 and truthState not in truthTgt):
             continue
         # assemble list of candidate pred states that meet threshold
         predCandidates = []
         # assemble list of andidate pred states that exceed 1-threshold
         # these will be sure bets that we assume are good
-        sureBets = [] 
+        sureBets = []
+        # tack in extra list for FDR option that overrides other two
+        # if FDR activated
+        fdrSureBets = []
         for predState, overlap in reverseMatrix[truthState].items():
             if predState not in stateNameMap and\
               predState not in predIgnore:
@@ -499,10 +536,15 @@ def getStateMapFromConfMatrix(reverseMatrix, truthIgnore, predIgnore, thresh):
                         sureBets.append(predState)
                     else:
                         predCandidates.append(predState)
+                if fdr is not None and predFrac >= 1. - fdr:
+                    fdrSureBets.append(predState)
             else:
                 logger.debug("state mapper skipping %s with othresh %f" % (
                     predState, float(overlap) / float(min(truthSize,
                                                           predStateSizes[predState]))))
+        if fdr is not None:
+            sureBets = fdrSureBets
+            predCandidates = []
         logger.debug("candidates for %s: %s" % (truthState, str(predCandidates)))
         logger.debug("sure bets for %s: %s" % (truthState, str(sureBets)))
 
@@ -538,6 +580,7 @@ def getStateMapFromConfMatrix(reverseMatrix, truthIgnore, predIgnore, thresh):
                                        reverseMatrix[truthState][predState],
                                        predStateSizes[predState]]
         logger.debug("map %s <---- %s" % (truthState, str(bestMapSet)))
+        logger.debug("best F1 = %s" % bestF1)
     
     # predStateName - > (truthStateName, tp, tp+fp)        
     return stateNameMap
@@ -572,6 +615,93 @@ def extractCompStatsFromFile(dumpPath):
           break
     return baseStats, intervalStats, weightedStats
     dumpFile.close()
+
+def cutOutMaskIntervals(inBed, minLength, maxLength, tracksInfoPath):
+    """ Filter out intervals of mask tracks from inBed with lengths
+    outside given range. Idea is that it makes less sense to simply ignore,
+    say, giant stretches of N's (like centromeres), as we would by masking
+    them normally, than it does to remove them entirely, splitting the
+    genome into multiple chunks.  Can also be used during comparision to
+    get rid of all masked intervals """
+    outPath = getLocalTempPath("Tempcut", ".bed")
+    trackList = TrackList(tracksInfoPath)
+    maskPaths = [t.getPath() for t in trackList.getMaskTracks()]
+    if len(maskPaths) == 0:
+        return None
+    tempPath1 = getLocalTempPath("Tempcut1", ".bed")
+    tempPath2 = getLocalTempPath("Tempcut2", ".bed")
+    runShellCommand("cp %s %s" % (inBed, outPath))
+    for maskPath in maskPaths:
+        runShellCommand("cat %s | awk \'{print $1\"\t\"$2\"\t\"$3}\' >> %s" % (
+            maskPath, tempPath1))
+    if os.path.getsize(tempPath1) > 0:
+        runShellCommand("sortBed -i %s > %s ; mergeBed -i %s > %s" % (
+            tempPath1, tempPath2, tempPath2, tempPath1))
+        runShellCommand("filterBedLengths.py %s %d %d > %s" % (
+            tempPath1, minLength+1, maxLength-1, tempPath2))
+        runShellCommand("subtractBed -a %s -b %s | sortBed > %s" % (
+            outPath, tempPath2, tempPath1))
+        runShellCommand("mv %s %s" % (tempPath1, outPath))
+    runShellCommand("rm -f %s %s" % (tempPath1, tempPath2))
+    if os.path.getsize(outPath) == 0:
+        raise RuntimeError("cutOutMaskIntervals removed everything.  Can't continue."
+                           " probably best to rerun calling script on bigger region?")
+    return outPath
+
+def checkExactOverlap(bed1, bed2):
+    """ make sure two bed files cover same region exactly: a requirement for all
+    code based on the comparisons in this module."""
+
+    errorMessage = ("Bed files %s and %s cannot be compared. xxx. "
+    " Input files must be both sorted, cover the exact same region,"
+    " and contain no self-overlaps.") % (bed1, bed2)
+
+    # empty file may break downstream comparisons
+    size1 = os.path.getsize(bed1)
+    size2 = os.path.getsize(bed2)
+    if size1 == 0 or size2 == 0:
+        raise RuntimeError(errorMessage.replace("xxx", "one or both inputs empty" % bed1))
+                            
+
+    # test self-overlap and sorting
+    intervals1 = readBedIntervals(bed1, sort=False)
+    for i in xrange(1, len(intervals1)):
+        if intersectSize(intervals1[i-1], intervals1[i]) != 0:
+            raise RuntimeError(errorMessage.replace(
+                "xxx", "Overlapping intervals %s and %s found in input1" % (
+                    intervals1[i-1], intervals1[i])))
+        if intervals1[i-1] > intervals1[i]:
+            raise RuntimeError(errorMessage.replace(
+                "xxx", "Out of order intervals %s and %s found in input1" % (
+                    intervals1[i-1], intervals1[i])))
+
+    # test self-overlap and sorting
+    intervals2 = readBedIntervals(bed1, sort=False)
+    for i in xrange(1, len(intervals2)):
+        if intersectSize(intervals2[i-1], intervals2[i]) != 0:
+            raise RuntimeError(errorMessage.replace(
+                "xxx", "Overlapping intervals %s and %s found in input2" % (
+                    intervals2[i-1], intervals2[i])))
+        if intervals2[i-1] > intervals2[i]:
+            raise RuntimeError(errorMessage.replace(
+                "xxx", "Out of order intervals %s and %s found in input2" % (
+                    intervals2[i-1], intervals2[i])))
+        
+
+    # test intersection size
+    tempFile = getLocalTempPath("Temp_test", ".bed")
+    runShellCommand("subtractBed -a %s -b %s > %s" % (bed1, bed2, tempFile))
+    if os.path.getsize(tempFile) != 0:
+        runShellCommand("rm -f %s" % tempFile)
+        raise RuntimeError(errorMessage.replace(
+            "xxx", "Input1 covers regions outside input2"))
+    runShellCommand("subtractBed -a %s -b %s > %s" % (bed2, bed1, tempFile))
+    if os.path.getsize(tempFile) != 0:
+        runShellCommand("rm -f %s" % tempFile)
+        raise RuntimeError(errorMessage.replace(
+            "xxx", "Input2 covers regions outside input1"))
+    runShellCommand("rm -f %s" % tempFile)
+    
                 
 if __name__ == "__main__":
     sys.exit(main())

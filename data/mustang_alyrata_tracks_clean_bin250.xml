@@ -16,22 +16,22 @@
 	<track distribution="multinomial" name="overlap" path="/data/glenn.hickey/genomes/alyrata/tracks/clean/alyrata_directoverlap_clean.bed" valCol="3"/>
 	<track distribution="binary" name="mitehunter" path="/data/douglas.hoen/piatea/genomes/alyrata/tracks/mitehunter/alyrata_mitehunter.bed" valCol="0"/>
    <track distribution="binary" name="helitronscanner" path="/data/douglas.hoen/piatea/genomes/alyrata/tracks/helitronscanner/alyrata_helitronscanner.bed" valCol="0"/>
-	<track default="0.0" distribution="gaussian" logScale="4.2136" name="cov_80-" path="/data/glenn.hickey/genomes/alyrata/tracks/copynum/coverage.cov.80-.bw" shift="1.0" valCol="3"/>
-	<track default="0.0" distribution="gaussian" logScale="3.9939" name="left_peak_80-" path="/data/glenn.hickey/genomes/alyrata/tracks/copynum/coverage.left.80-.bw" shift="1.0" valCol="3"/>
-	<track default="0.0" distribution="gaussian" logScale="3.9474" name="right_peak_80-" path="/data/glenn.hickey/genomes/alyrata/tracks/copynum/coverage.right.80-.bw" shift="1.0" valCol="3"/>
-	<track default="0.0" distribution="gaussian" logScale="3.4374" name="cov_80-90" path="/data/glenn.hickey/genomes/alyrata/tracks/copynum/coverage.cov.80-90.bw" shift="1.0" valCol="3"/>
-	<track default="0.0" distribution="gaussian" logScale="3.0401" name="left_peak_80-90" path="/data/glenn.hickey/genomes/alyrata/tracks/copynum/coverage.left.80-90.bw" shift="1.0" valCol="3"/>
-	<track default="0.0" distribution="gaussian" logScale="2.6847" name="right_peak_80-90" path="/data/glenn.hickey/genomes/alyrata/tracks/copynum/coverage.right.80-90.bw" shift="1.0" valCol="3"/>
-	<track default="0.0" distribution="gaussian" logScale="2.7237" name="cov_90+" path="/data/glenn.hickey/genomes/alyrata/tracks/copynum/coverage.cov.90+.bw" shift="1.0" valCol="3"/>
-	<track default="0.0" distribution="gaussian" logScale="2.5232" name="left_peak_90+" path="/data/glenn.hickey/genomes/alyrata/tracks/copynum/coverage.left.90+.bw" shift="1.0" valCol="3"/>
-	<track default="0.0" distribution="gaussian" logScale="2.4542" name="right_peak_90+" path="/data/glenn.hickey/genomes/alyrata/tracks/copynum/coverage.right.90+.bw" shift="1.0" valCol="3"/>
-	<track default="0.0" distribution="gaussian" name="cov_maxPId" path="/data/glenn.hickey/genomes/alyrata/tracks/copynum/coverage.maxPId.bw" scale="0.08" shift="0.0" valCol="3"/>
+	<track default="0.0" distribution="gaussian" logScale="1.0475" name="cov_80-" path="/data/glenn.hickey/genomes/alyrata/tracks/copynum/coverage.cov.80-.bw" shift="1.0" valCol="3"/>
+	<track default="0.0" distribution="gaussian" logScale="1.0457" name="left_peak_80-" path="/data/glenn.hickey/genomes/alyrata/tracks/copynum/coverage.left.80-.bw" shift="1.0" valCol="3"/>
+	<track default="0.0" distribution="gaussian" logScale="1.0453" name="right_peak_80-" path="/data/glenn.hickey/genomes/alyrata/tracks/copynum/coverage.right.80-.bw" shift="1.0" valCol="3"/>
+	<track default="0.0" distribution="gaussian" logScale="1.0406" name="cov_80-90" path="/data/glenn.hickey/genomes/alyrata/tracks/copynum/coverage.cov.80-90.bw" shift="1.0" valCol="3"/>
+	<track default="0.0" distribution="gaussian" logScale="1.0365" name="left_peak_80-90" path="/data/glenn.hickey/genomes/alyrata/tracks/copynum/coverage.left.80-90.bw" shift="1.0" valCol="3"/>
+	<track default="0.0" distribution="gaussian" logScale="1.0324" name="right_peak_80-90" path="/data/glenn.hickey/genomes/alyrata/tracks/copynum/coverage.right.80-90.bw" shift="1.0" valCol="3"/>
+	<track default="0.0" distribution="gaussian" logScale="1.0329" name="cov_90+" path="/data/glenn.hickey/genomes/alyrata/tracks/copynum/coverage.cov.90+.bw" shift="1.0" valCol="3"/>
+	<track default="0.0" distribution="gaussian" logScale="1.0303" name="left_peak_90+" path="/data/glenn.hickey/genomes/alyrata/tracks/copynum/coverage.left.90+.bw" shift="1.0" valCol="3"/>
+	<track default="0.0" distribution="gaussian" logScale="1.0294" name="right_peak_90+" path="/data/glenn.hickey/genomes/alyrata/tracks/copynum/coverage.right.90+.bw" shift="1.0" valCol="3"/>
+	<track default="0.0" distribution="gaussian" name="cov_maxPId" path="/data/glenn.hickey/genomes/alyrata/tracks/copynum/coverage.maxPId.bw" scale="2.48" shift="0.0" valCol="3"/>
 	<track distribution="multinomial" name="te_domains" path="/data/douglas.hoen/sharebrowser/tracks/alyrata/permanent/domains/TE_domains.bed" valCol="3"/>
 	<track distribution="multinomial" name="fgenesh" path="/data/douglas.hoen/piatea/genomes/alyrata/tracks/misc/alyrata_fgenesh.bed" valCol="3"/>
-	<track default="0.0" distribution="gaussian" logScale="4.4961" name="mrna" path="/data/douglas.hoen/piatea/genomes/alyrata/tracks/misc/alyrata_mrna.bw" shift="1.0" valCol="3"/>
-	<track default="0.0" distribution="gaussian" logScale="4.0307" name="srna" path="/data/douglas.hoen/piatea/genomes/alyrata/tracks/misc/alyrata_srna.bw" shift="1.0" valCol="3"/>
-	<track default="0.0" distribution="gaussian" name="ortho_depth" path="/data/douglas.hoen/piatea/genomes/alyrata/tracks/misc/alyrata_orthodepth.bw" scale="0.8889" shift="0.0" valCol="3"/>
-	<track default="0.0" distribution="gaussian" name="gcpct" path="/data/glenn.hickey/genomes/alyrata/tracks/gc/gcPercentWin20.bw" scale="0.08" shift="0.0" valCol="3"/>
+	<track default="0.0" distribution="gaussian" logScale="1.0497" name="mrna" path="/data/douglas.hoen/piatea/genomes/alyrata/tracks/misc/alyrata_mrna.bw" shift="1.0" valCol="3"/>
+	<track default="0.0" distribution="gaussian" logScale="1.046" name="srna" path="/data/douglas.hoen/piatea/genomes/alyrata/tracks/misc/alyrata_srna.bw" shift="1.0" valCol="3"/>
+	<track default="0.0" distribution="gaussian" name="ortho_depth" path="/data/douglas.hoen/piatea/genomes/alyrata/tracks/misc/alyrata_orthodepth.bw" scale="27.5556" shift="0.0" valCol="3"/>
+	<track default="0.0" distribution="gaussian" name="gcpct" path="/data/glenn.hickey/genomes/alyrata/tracks/gc/gcPercentWin20.bw" scale="2.48" shift="0.0" valCol="3"/>
 	<track distribution="mask" name="trf" path="/data/douglas.hoen/piatea/genomes/alyrata/tracks/misc/alyrata_trf.bed" valCol="0"/>
 	<track distribution="binary" name="dustmasker" path="/data/douglas.hoen/piatea/genomes/alyrata/tracks/dustmasker/alyrata_dustmasker.bb" valCol="0"/>
 	<track distribution="binary" name="windowmasker" path="/data/douglas.hoen/piatea/genomes/alyrata/tracks/windowmasker/alyrata_windowmasker.bb" valCol="0"/>

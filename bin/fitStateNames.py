@@ -13,10 +13,10 @@ import copy
 
 from teHmm.trackIO import readBedIntervals
 from teHmm.modelIO import loadModel
-from teHmm.common import intersectSize, initBedTool, cleanBedTool
+from teHmm.common import intersectSize, initBedTool, cleanBedTool, runShellCommand
 from teHmm.common import addLoggingOptions, setLoggingFromOptions, logger
-from teHmm.bin.compareBedStates import compareIntervalsOneSided
-from teHmm.bin.compareBedStates import compareBaseLevel
+from teHmm.bin.compareBedStates import compareIntervalsOneSided, checkExactOverlap
+from teHmm.bin.compareBedStates import compareBaseLevel, cutOutMaskIntervals
 from teHmm.bin.compareBedStates import getStateMapFromConfMatrix, getStateMapFromConfMatrix_simple
 
 try:
@@ -66,6 +66,9 @@ def main(argv=None):
                         " ignore (in prediction)", default=None)
     parser.add_argument("--ignoreTgt", help="Comma-separated list of stateNames to"
                         " ignore (int target)", default=None)
+    parser.add_argument("--tgt", help="Comma-separated list of stateNames to "
+                        " consider (in target).  All others will be ignored",
+                        default=None)
     parser.add_argument("--unique", help="If more than one predicted state maps"
                         " to the same target state, add a unique id (numeric "
                         "suffix) to the output so that they can be distinguished",
@@ -84,7 +87,14 @@ def main(argv=None):
                         "takes biggest overlap in forward confusion matrix.  "
                         "faster than new default logic which does the greedy"
                         " f1 optimization", action="store_true", default=False)
-
+    parser.add_argument("--fdr", help="Use FDR cutoff instead of (default)"
+                        " greedy F1 optimization for state labeling",
+                        type=float, default=None)
+    parser.add_argument("--tl", help="Path to tracks XML file.  Used to cut "
+                        "out mask tracks so they are removed from comparison."
+                        " (convenience option to not have to manually run "
+                        "subtractBed everytime...)", default=None)
+    
     addLoggingOptions(parser)
     args = parser.parse_args()
     setLoggingFromOptions(args)
@@ -98,9 +108,30 @@ def main(argv=None):
         args.ignoreTgt = set(args.ignoreTgt.split(","))
     else:
         args.ignoreTgt = set()
+    if args.tgt is not None:
+        args.tgt = set(args.tgt.split(","))
+        if args.old is True:
+            raise RuntimeError("--tgt option not implemented for --old")
+    else:
+        args.tgt = set()
+    if args.old is True and args.fdr is not None:
+        raise RuntimeError("--old and --fdr options are exclusive")
 
     assert args.col == 4 or args.col == 5
-    
+
+    tempFiles = []
+    if args.tl is not None:
+        cutBedTgt = cutOutMaskIntervals(args.tgtBed, -1, sys.maxint, args.tl)                                
+        cutBedPred = cutOutMaskIntervals(args.predBed, -1, sys.maxint, args.tl)
+        
+        if cutBedTgt is not None:
+            assert cutBedPred is not None
+            tempFiles += [cutBedTgt, cutBedPred]
+            args.tgtBed = cutBedTgt
+            args.predBed = cutBedPred
+
+    checkExactOverlap(args.tgtBed, args.predBed)
+
     intervals1 = readBedIntervals(args.tgtBed, ncol = args.col)
     intervals2 = readBedIntervals(args.predBed, ncol = args.col)
     cfName = "reverse"
@@ -127,8 +158,9 @@ def main(argv=None):
         intervals1, intervals2 = intervals2, intervals1
         stateMap = getStateMapFromConfMatrix_simple(confMat)
     else:
-        stateMap = getStateMapFromConfMatrix(confMat, args.ignoreTgt,
-                                             args.ignore, args.qualThresh)
+        stateMap = getStateMapFromConfMatrix(confMat, args.tgt, args.ignoreTgt,
+                                             args.ignore, args.qualThresh,
+                                             args.fdr)
 
     # filter the stateMap to take into account the command-line options
     # notably --ignore, --ignoreTgt, --qualThresh, and --unique
@@ -151,6 +183,8 @@ def main(argv=None):
                                "not installed?")
         writeHeatMap(confMat, args.hm)
 
+    if len(tempFiles) > 0:
+        runShellCommand("rm -f %s" % " ".join(tempFiles))
     cleanBedTool(tempBedToolPath)
 
 def filterStateMap(stateMap, args):

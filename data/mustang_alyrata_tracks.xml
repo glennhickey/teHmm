@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <teModelConfig>
 <!-- These six tracks considered non denovo -->
-<track name="hollister"     path="/data/douglas.hoen/piatea/genomes/alyrata/tracks/hollister/alyrata_hollister.bed" distribution="multinomial" preprocess="rm"/>
+<track name="hollister"     path="/data/douglas.hoen/piatea/genomes/alyrata/tracks/hollister/alyrata_hollister_v2.bed" distribution="multinomial" preprocess="rm"/>
 <track name="repbase"       path="/data/douglas.hoen/piatea/genomes/alyrata/tracks/repbase-repeatmasker/alyrata_repbase_repeatmasker.bed" distribution="multinomial" preprocess="rm"/>
 <track name="chaux"         path="/data/douglas.hoen/piatea/genomes/alyrata/tracks/chaux/alyrata_chaux.bed" distribution="multinomial" preprocess="rmu"/>
 <track name="transposon_psi" path="/data/douglas.hoen/piatea/genomes/alyrata/tracks/transposonpsi/alyrata_transposonpsi.bed" distribution="multinomial" preprocess="rmu"/>        
 <track name="repbase_censor" path="/data/douglas.hoen/piatea/genomes/alyrata/tracks/repbase-censor/alyrata_repbase_censor.bed" distribution="multinomial" preprocess="rmu"/>
 <track name="repeat_modeler" path="/data/douglas.hoen/piatea/genomes/alyrata/tracks/repeatmodeler/alyrata_repeatmodeler_unfiltered.bed" distribution="multinomial" preprocess="rm"/>
-<track name="repet"             path="/data/douglas.hoen/piatea/genomes/alyrata/tracks/mamus/alyrata_repet.bed" distribution="multinomial"/>
+<track name="repet"             path="/data/glenn.hickey/genomes/alyrata/tracks/repet/alyrata_repet_clean.bed" distribution="multinomial"/>
 
 <track name="ltr_finder"    path="/data/douglas.hoen/piatea/genomes/alyrata/tracks/ltrfinder/alyrata_ltrfinder.bed" distribution="multinomial" preprocess="ltr_finder"/>
 <track name="ltr_harvest"   path="/data/douglas.hoen/piatea/genomes/alyrata/tracks/ltrharvest/alyrata_ltrharvest.bed" distribution="multinomial" preprocess="ltr_finder"/>
@@ -17,7 +17,7 @@
 <track name="palindrome"        path="/data/douglas.hoen/piatea/genomes/alyrata/tracks/termini/alyrata_palindrome.bed" distribution="multinomial" preprocess="termini"/>
 <track name="overlap"           path="/data/douglas.hoen/piatea/genomes/alyrata/tracks/termini/alyrata_directoverlap.bed" distribution="multinomial" preprocess="termini"/>
 <track name="mitehunter"    path="/data/douglas.hoen/piatea/genomes/alyrata/tracks/mitehunter/alyrata_mitehunter.bed" distribution="binary"/>
-
+<track name="helitronscanner"  path="/data/douglas.hoen/piatea/genomes/alyrata/tracks/helitronscanner/alyrata_helitronscanner.bed" distribution="binary"/>
 <track name="cov_80-"          path="/data/glenn.hickey/genomes/alyrata/tracks/copynum/coverage.cov.80-.bw" default="0.0" distribution="gaussian"/>
 <track name="left_peak_80-"    path="/data/glenn.hickey/genomes/alyrata/tracks/copynum/coverage.left.80-.bw" default="0.0" distribution="gaussian"/>
 <track name="right_peak_80-"   path="/data/glenn.hickey/genomes/alyrata/tracks/copynum/coverage.right.80-.bw" default="0.0" distribution="gaussian"/>
@@ -40,12 +40,12 @@
 <track name="ortho_depth"   path="/data/douglas.hoen/piatea/genomes/alyrata/tracks/misc/alyrata_orthodepth.bw" default="0.0" distribution="gaussian"/>
 <track name="gcpct"         path="/data/glenn.hickey/genomes/alyrata/tracks/gc/gcPercentWin20.bw" default="0.0" distribution="gaussian"/>
 
-<track name="trf"           path="/data/douglas.hoen/piatea/genomes/alyrata/tracks/misc/alyrata_trf.bed" distribution="binary"/>
+<track name="trf"           path="/data/douglas.hoen/piatea/genomes/alyrata/tracks/misc/alyrata_trf.bed" distribution="mask"/>
 <track name="dustmasker"    path="/data/douglas.hoen/piatea/genomes/alyrata/tracks/dustmasker/alyrata_dustmasker.bb" distribution="binary"/>
 <track name="windowmasker"  path="/data/douglas.hoen/piatea/genomes/alyrata/tracks/windowmasker/alyrata_windowmasker.bb" distribution="binary"/>
 <track name="tantan"        path="/data/douglas.hoen/piatea/genomes/alyrata/tracks/tantan/alyrata_tantan.bed" distribution="binary"/>
 <track name="polyA"         path="/data/glenn.hickey/genomes/alyrata/tracks/singleBaseRepeats/alyrata_polya.bed" distribution="binary"/>
-<track name="polyN"         path="/data/glenn.hickey/genomes/alyrata/tracks/singleBaseRepeats/alyrata_polyn.bed" distribution="binary"/>
+<track name="polyN"         path="/data/glenn.hickey/genomes/alyrata/tracks/singleBaseRepeats/alyrata_polyn.bed" distribution="mask"/>
 
 <track name="sequence"      path="/data/douglas.hoen/piatea/genomes/alyrata/sequence/alyrata_scaffolds1to8.fas" distribution="multinomial"/>
 

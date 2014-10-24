@@ -22,6 +22,7 @@ from teHmm.modelIO import saveModel
 from teHmm.common import myLog, EPSILON, initBedTool, cleanBedTool, LOGZERO
 from teHmm.common import addLoggingOptions, setLoggingFromOptions, logger
 from teHmm.common import runParallelShellCommands
+from teHmm.bin.compareBedStates import checkExactOverlap
 
 def main(argv=None):
     if argv is None:
@@ -237,6 +238,11 @@ def main(argv=None):
     segIntervals = None
     if args.segment is not None:
         logger.info("loading segment intervals from %s" % args.segment)
+        try:
+            checkExactOverlap(args.trainingBed, args.segment)
+        except:
+            raise RuntimeError("bed file passed with --segments option"
+                               " must exactly overlap trainingBed")
         segIntervals = readBedIntervals(args.segment, sort=True)
     elif args.segLen > 0:
         raise RuntimeError("--segLen can only be used with --segment")
@@ -267,7 +273,7 @@ def main(argv=None):
         args.numStates = len(catMap)
 
     # train the model
-    seeds = [random.randint(0, sys.maxint)]
+    seeds = [random.randint(0, 4294967294)]
     if args.seed is not None:
         seeds = [args.seed]
         random.seed(args.seed)

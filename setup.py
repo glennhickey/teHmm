@@ -2,6 +2,9 @@ from distutils.core import setup
 from Cython.Build import cythonize
 from distutils.core import Extension
 import numpy
+from teHmm.common import checkRequirements
+
+checkRequirements()
 
 setup(
   name = 'teHmm',
@@ -12,6 +15,8 @@ setup(
                 include_dirs=[numpy.get_include()]),
         Extension("_emission", ["_emission.pyx"],
                 include_dirs=[numpy.get_include()]),
+        Extension("_track", ["_track.pyx"],
+                include_dirs=[numpy.get_include()]),                
         Extension("_cfg", ["_cfg.pyx"],
                 include_dirs=[numpy.get_include()],
                 #extra_compile_args=['-fopenmp'],
@@ -19,5 +24,3 @@ setup(
                  )
         ])
 )
-
-#Cython.Build import cythonize

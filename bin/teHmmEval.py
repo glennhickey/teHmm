@@ -178,8 +178,7 @@ def main(argv=None):
                 vitOutFile.write("#Viterbi Score: %f\n" % (vitLogProb))
             trackTable = trackData.getTrackTableList()[tableIndex]
             tableIndex += 1
-            statesToBed(trackTable.getChrom(), trackTable.getStart(),
-                        trackTable.getEnd(), trackTable.getSegmentOffsets(),
+            statesToBed(trackTable,
                         vitStates, vitOutFile, posteriors[i], posteriorsMask,
                         posteriorsFile, emProbs[i], emissionsMask, emissionsFile)
             totalDatapoints += len(trackTable) * trackTable.getNumTracks()
@@ -211,56 +210,44 @@ def main(argv=None):
 
     cleanBedTool(tempBedToolPath)
 
-def statesToBed(chrom, start, end, segmentOffsets, states, bedFile,
+def statesToBed(trackTable, states, bedFile,
                 posteriors, posteriorsMask, posteriorsFile,
                 emProbs, emissionsMask, emissionsFile):
-    """write a sequence of states out in bed format where intervals are
-    maximum runs of contiguous states."""
-    if segmentOffsets is None:
+    """write a sequence of states out in bed format. Note: continguous
+    intervals with same state no longer merged (since mask support added)
+    """
+    chrom = trackTable.getChrom()
+    start = trackTable.getStart()
+    end = trackTable.getEnd()
+    segOffsets = trackTable.getSegmentOffsets()
+    maskOffsets = trackTable.getMaskRunningOffsets()
+    if segOffsets is None:
         assert len(states) == end - start
-    intLen = 1
-    if segmentOffsets is not None:
-        if len(segmentOffsets) > 1:
-            intLen = segmentOffsets[1]
-            assert segmentOffsets[-1] - (end - start)
-        else:
-            intLen = end - start
-    prevInterval = (chrom, start, start + intLen, states[0])
-    prevPostInterval = prevInterval
 
-    for i in xrange(1, len(states) + 1):
-        if i < len(states):
-            state = states[i]
-        else:
-            state = None
-            
-        if segmentOffsets is not None:
-            if i == len(states) - 1:
-                intLen = end - (start + segmentOffsets[-1])
-            elif i < len(states) - 1:
-                intLen = segmentOffsets[i+1] - segmentOffsets[i]
+    segDist = 0
+    for i in xrange(len(states)):
+
+        curStart = start + segDist
+        
+        intLen = 1
+        if segOffsets is not None:
+            intLen = trackTable.getSegmentLength(i)
+        segDist += intLen
+
+        if maskOffsets is not None:
+            curStart += maskOffsets[curStart - trackTable.getStart()]
+
+        curEnd = curStart + intLen
 
         if bedFile is not None:
-            if state != prevInterval[3]:
-                assert prevInterval[3] is not None
-                assert prevInterval[1] >= start and prevInterval[2] <= end
-                bedFile.write("%s\t%d\t%d\t%s\n" % prevInterval)
-                prevInterval = (prevInterval[0], prevInterval[2],
-                                prevInterval[2] + intLen, state)
-            else:
-                prevInterval = (prevInterval[0], prevInterval[1],
-                                prevInterval[2] + intLen, prevInterval[3])
+            bedFile.write("%s\t%d\t%d\t%s\n" % (chrom, curStart, curEnd, states[i]))
+            
         if posteriors is not None:
-            posteriorsFile.write("%s\t%d\t%d\t%f\n" % (prevPostInterval[0],
-                                 prevPostInterval[1], prevPostInterval[2],
+            posteriorsFile.write("%s\t%d\t%d\t%s\n" % (chrom, curStart, curEnd, 
                                  np.sum(posteriors[i-1] * posteriorsMask)))
         if emProbs is not None:
-            emissionsFile.write("%s\t%d\t%d\t%f\n" % (prevPostInterval[0],
-                                 prevPostInterval[1], prevPostInterval[2],
+            emissionsFile.write("%s\t%d\t%d\t%s\n" % (chrom, curStart, curEnd, 
                                  np.log(np.sum(np.exp(emProbs[i-1]) * emissionsMask))))
-        if emProbs is not None or posteriors is not None:
-            prevPostInterval = (prevPostInterval[0], prevPostInterval[2],
-                            prevPostInterval[2] + intLen, state)
 
 def slicedIntervals(bedIntervals, chunkSize):
     """slice bed intervals by a given length.  used as a quick way to get

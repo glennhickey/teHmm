@@ -18,6 +18,7 @@ from teHmm.trackIO import readTrackData, getMergedBedIntervals
 from teHmm.common import myLog, EPSILON, initBedTool, cleanBedTool
 from teHmm.common import addLoggingOptions, setLoggingFromOptions, logger
 from teHmm.common import runShellCommand
+from teHmm.bin.compareBedStates import cutOutMaskIntervals
 
 def main(argv=None):
     if argv is None:
@@ -27,7 +28,8 @@ def main(argv=None):
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
         description="Produce a bed file of genome segments which are atomic"
         " elements with resepect to the hmm. ie each segment emits a single"
-        " state.  Output intervals are assigned name 0 1 0 1 etc.")
+        " state. Mask tracks always cut.  "
+        "Output intervals are assigned name 0 1 0 1 etc.")
     
     parser.add_argument("tracksInfo", help="Path of Tracks Info file "
                         "containing paths to genome annotation tracks")
@@ -69,6 +71,11 @@ def main(argv=None):
                         " between two consecutive segments, and <DiffPct> "
                         " is the average perecentage of all such differences "
                         "accounted for by the track", default=None)
+    parser.add_argument("--delMask", help="Entirely remove intervals from "
+                        "mask tracks that are > given length (otherwise "
+                        "they would just be ignored by HMM tools). The difference"
+                        " here is that removed intervals will break contiguity.",
+                        type=int, default=None)
     
     addLoggingOptions(parser)
     args = parser.parse_args()
@@ -79,7 +86,14 @@ def main(argv=None):
         raise RuntimeError("--comp must be either first or prev")
         
     # read query intervals from the bed file
-    logger.info("loading training intervals from %s" % args.allBed)
+    tempFiles = []
+    if args.delMask is not None:
+        cutBed = cutOutMaskIntervals(args.allBed, args.delMask, sys.maxint,
+                                     args.tracksInfo)
+        if cutBed is not None:
+            tempFiles.append(cutBed)
+            args.allBed = cutBed
+    logger.info("loading segment region intervals from %s" % args.allBed)
     mergedIntervals = getMergedBedIntervals(args.allBed, ncol=4)
     if mergedIntervals is None or len(mergedIntervals) < 1:
         raise RuntimeError("Could not read any intervals from %s" %
@@ -88,7 +102,8 @@ def main(argv=None):
     # read the tracks, while intersecting them with the query intervals
     logger.info("loading tracks %s" % args.tracksInfo)
     trackData = TrackData()
-    trackData.loadTrackData(args.tracksInfo, mergedIntervals)
+    trackData.loadTrackData(args.tracksInfo, mergedIntervals,
+                            treatMaskAsBinary=True)
 
     # process the --cutTracks option
     trackList = trackData.getTrackList()
@@ -103,6 +118,11 @@ def main(argv=None):
             assert trackNo < len(cutList)
             cutList[trackNo] = 1
     args.cutList = cutList
+
+    # make sure mask tracks count as cut tracks
+    for track in trackList:
+        if track.getDist() == 'mask':
+            args.cutList[track.getNumber()] = 1
 
     # process the --ignore option
     ignoreList = np.zeros((len(trackList)), np.int)
@@ -146,6 +166,8 @@ def main(argv=None):
     segmentTracks(trackData, args, stats)
     writeStats(trackData, args, stats)
 
+    if len(tempFiles) > 0:
+        runShellCommand("rm -f %s" % " ".join(tempFiles))
     cleanBedTool(tempBedToolPath)
 
 def segmentTracks(trackData, args, stats):

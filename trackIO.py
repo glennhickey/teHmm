@@ -13,7 +13,7 @@ import logging
 import array
 import numpy as np
 from pybedtools import BedTool, Interval
-from .common import runShellCommand, logger
+from .common import runShellCommand, logger, getLocalTempPath
 
 """ all track-data specific io code goes here.  Just BED implemented for now,
 will eventually add WIG and maybe eventually bigbed / bigwig """
@@ -32,14 +32,8 @@ def readTrackData(trackPath, chrom=None, start=None, end=None, **kwargs):
     tempPath = None
     if trackExt == ".bw" or trackExt == ".bigwig" or trackExt == ".wg" or\
       trackExt == ".bb" or trackExt == "bigbed":
-        #just writing in current directory.  something more principaled might
-        #be safer / nicer eventually
-        # make a little id tag:
-        S = string.ascii_uppercase + string.digits
-        tag = ''.join(random.choice(S) for x in range(5))
-  
-        tempPath = os.path.splitext(os.path.basename(trackPath))[0] \
-                   + "_temp%s.bed" % tag
+        tempPath = getLocalTempPath("Temp_" + os.path.splitext(
+            os.path.basename(trackPath))[0], ".bed")
         logger.info("Extracting %s to temp bed %s. Make sure to erase"
                      " in event of crash" % (trackExt,
                                               os.path.abspath(tempPath)))
@@ -123,15 +117,8 @@ def readBedData(bedPath, chrom, start, end, **kwargs):
         data = outputBuf
 
     logger.debug("readBedData(%s, update=%s)" % (bedPath, updateMap))
-    bedTool = BedTool(bedPath)
-    if sort is True:
-        logger.debug("sortBed(%s)" % bedPath)
-        bedTool = bedTool.sort()
-    if ignoreBed12 is False:
-        logger.debug("bed6(%s)" % bedPath)
-        bedTool = bedTool.bed6()
 
-    # todo: check how efficient this is
+    intersectionPath = bedPath
     if needIntersect is True:
         interval = Interval(chrom, start, end)
         logger.debug("intersecting (%s,%d,%d) and %s" % (
@@ -140,12 +127,43 @@ def readBedData(bedPath, chrom, start, end, **kwargs):
         # all_hits seems to leak a ton of memory for big files, so
         # we hope intersect (which creates a temp file) will be better
         #intersections = bedTool.all_hits(interval)
-        tempTool = BedTool(str(interval), from_string = True)
-        intersections = bedTool.intersect(tempTool)
-        tempTool.delete_temporary_history(ask=False)
 
+        # bedtool intersect still leaking files. comment out
+        # and try command-line intersect command instead, removing
+        # BedTool entirely from this method
+        #tempTool = BedTool(str(interval), from_string = True)
+        #intersections = bedTool.intersect(tempTool)
+        #tempTool.delete_temporary_history(ask=False)
+        #tempTool = None
+
+        tempFileIntIn = getLocalTempPath("Temp_intin", ".bed")
+        tempFileIntOut = getLocalTempPath("Temp_intout", ".bed")
+        runShellCommand("echo \"%s\" > %s && intersectBed -a %s "
+                        "-b %s | sortBed > %s && rm -f %s" % (
+                            str(interval), tempFileIntIn, bedPath,
+                            tempFileIntIn, tempFileIntOut, tempFileIntIn))
+        intersectionPath = tempFileIntOut
     else:
-        intersections = bedTool
+        intersectionPath = bedPath       
+        if sort is True:
+            logger.debug("sortBed(%s)" % bedPath)
+            tempFileSortOut = getLocalTempPath("Temp_sortout", ".bed")
+            runShellCommand("sortBed -i %s > %s" % (bedPath, tempFileSortOut))
+            intersectionPath = tempFileSortOut
+            
+    if ignoreBed12 is False:
+        logger.debug("bed6(%s)" % bedPath)
+        tempFileBed6Out = getLocalTempPath("Temp_b6out", ".bed")
+        runShellCommand("bed12ToBed6 -i %s > %s" % (intersectionPath,
+                                                    tempFileBed6Out))
+        if intersectionPath != bedPath:
+            runShellCommand("rm -f %s" % intersectionPath)
+        intersectionPath = tempFileBed6Out
+
+    intersections = bedRead(intersectionPath)
+    if intersectionPath != bedPath:
+        runShellCommand("rm -f %s" % intersectionPath)
+
     logger.debug("loading data from intersections")
     basesRead = 0
     # prevInterval / prevVal only updated in useDelta mode
@@ -153,23 +171,25 @@ def readBedData(bedPath, chrom, start, end, **kwargs):
     prevVal = 0
         
     for overlap in intersections:
-        oStart = max(start, overlap.start)
-        oEnd = min(end, overlap.end)
-        val = overlap.name
+        oStart = max(start, int(overlap[1]))
+        oEnd = min(end, int(overlap[2]))
         if valCol is not None:
             if valCol == 0:
                 val = 1
             elif valCol == 4:
-                assert overlap.score is not None and overlap.score != ""
-                val = overlap.score
+                assert overlap[4] is not None and overlap[4] != ""
+                val = overlap[4]
             else:
                 assert valCol == 3
-                assert overlap.name is not None and overlap.name != ""
+                assert overlap[3] is not None and overlap[3] != ""
+                val = overlap[3]
+        else:
+            val = overlap[3]
 
         val0 = val
         if useDelta is True:
-            if prevInterval is not None and overlap.start == prevInterval.end \
-              and prevInterval.chrom == overlap.chrom:
+            if prevInterval is not None and int(overlap[1]) == int(prevInterval[2]) \
+              and prevInterval[0] == overlap[0]:
                 try: # numeric delta
                     val0 = float(val) - float(prevVal)
                 except: # fallback to 0 : same 1 : different
@@ -365,3 +385,20 @@ def fastaRead(fileHandle):
             yield name, seq.tostring()
         else:
             line = fileHandle.readline()
+
+def bedRead(filePath):
+    """ pyBedTools leaks files and I can't figure out what to do about it,
+    other than just replace it insdead the readBedData loop..."""
+    bf = open(filePath, "r")
+    intervals = []
+
+    for line in bf:
+        if len(line) > 0 and line[0] != "#":
+            interval = line[:-1].split("\t")
+            if len(interval) > 2:
+                intervals.append(interval)
+
+    # man I wish I could figure out just how to close a BedTool?!:
+    bf.close()
+
+    return intervals

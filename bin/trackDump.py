@@ -58,6 +58,8 @@ def main(argv=None):
     parser.add_argument("--noPos", help="Do not print genomic position"
                         " (first 2 columnts)", action="store_true",
                         default=False)
+    parser.add_argument("--noMask", help="Ignore mask tracks",
+                        default=False, action="store_true")
     
     addLoggingOptions(parser)
     args = parser.parse_args()
@@ -65,6 +67,9 @@ def main(argv=None):
 
     # make sure output writeable
     outFile = open(args.output, "w")
+
+    # need to remember to fix this, disable as precaution for now
+    assert args.noMask is True or args.segment is False
     
     # read query intervals from the bed file
     logger.info("loading query intervals from %s" % args.query)
@@ -83,7 +88,8 @@ def main(argv=None):
     logger.info("loading tracks %s" % args.tracks)
     trackData = TrackData()
     trackData.loadTrackData(args.tracks, mergedIntervals,
-                            segmentIntervals=segIntervals)
+                            segmentIntervals=segIntervals,
+                            applyMasking = not args.noMask)
 
     # dump the data to output
     dumpTrackData(trackData, outFile, args.map, not args.noPos)
@@ -101,6 +107,7 @@ def dumpTrackData(trackData, outFile, doMapping, doPosition):
     # scan column by column
     for trackTable in trackData.getTrackTableList():
         segmentOffsets = trackTable.getSegmentOffsets()
+        maskOffsets = trackTable.getMaskRunningOffsets()
         for pos in xrange(len(trackTable)):
             column = trackTable[pos]
             if doMapping is False:
@@ -114,6 +121,8 @@ def dumpTrackData(trackData, outFile, doMapping, doPosition):
                 currentPos = pos
                 if segmentOffsets != None:
                     currentPos = segmentOffsets[pos]
+                if maskOffsets != None:
+                    currentPos += maskOffsets[pos]
                 outFile.write("%s,%d," % (trackTable.getChrom(),
                               trackTable.getStart() + currentPos))
             outFile.write(",".join(column))
