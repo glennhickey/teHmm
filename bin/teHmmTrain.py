@@ -248,6 +248,9 @@ def main(argv=None):
         raise RuntimeError("--segLen can only be used with --segment")
     if args.segLen <= 0:
         args.segLen = None
+    if args.segLen > 0 and args.segLen != 1:
+        raise RuntimeError("--segLen must be 0 (no correction) or 1. "
+                           "Other values are disabled for now")
 
     # read the tracks, while intersecting them with the training intervals
     logger.info("loading tracks %s" % args.tracksInfo)

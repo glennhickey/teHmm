@@ -143,9 +143,13 @@ def fbTest(hmm, frame):
     btable = hmm._do_backward_pass(frame)
     bneg = np.zeros((btable.shape[1]))
     for i in xrange(len(bneg)):
+        if segRatios[0] > 1.:
+            segFac = segRatios[0]-1.
+        else:
+            segFac = 0.
         bneg[i] = logsumexp(np.asarray(
             [hmm._log_startprob[j] + frame[0, j] + btable[0, j] + \
-             hmm._log_transmat[j, j] * segRatios[0] \
+             hmm._log_transmat[j, j] * segFac \
                              for j in xrange(len(bneg))]))
     blp = logsumexp(bneg)
     print ("SegFProb = %f  SegBProb = %f,  delta=%f" % (flp, blp, (flp-blp)))

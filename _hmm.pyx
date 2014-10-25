@@ -86,16 +86,8 @@ def _log_sum_lneta(int n_observations, int n_components,
                 for j in range(n_components):
                     x = fwdlattice[t, i] + log_transmat[i, j] \
                       + framelogprob[t + 1, j] + bwdlattice[t + 1, j] - logprob
-                    if hasRatios == 1:
-                        x += log_transmat[j, j] * segRatios[t + 1]
-                        if i == j:
-                            x -= log_transmat[i, j]
-                            # to check if this check needed
-                            if segRatios[t + 1] > 1.: 
-                                y = fwdlattice[t + 1, i] + bwdlattice[t + 1, j] + \
-                                  log(1 - 1. / segRatios[t + 1]) - logprob
-                                if y > maxMatrix[i, j]:
-                                    maxMatrix[i, j] = y
+                    if hasRatios == 1 and segRatios[t + 1] > 1.:
+                        x += log_transmat[j, j] * (segRatios[t + 1] - 1.)
                     if x > maxMatrix[i, j]:
                         maxMatrix[i, j] = x
 
@@ -105,14 +97,8 @@ def _log_sum_lneta(int n_observations, int n_components,
                 for j in xrange(0, n_components):
                     x = fwdlattice[t, i] + log_transmat[i, j] \
                         + framelogprob[t + 1, j] + bwdlattice[t + 1, j] - logprob
-                    if hasRatios == 1:
-                        x += log_transmat[j, j] * segRatios[t + 1]
-                        if i == j:
-                            x -= log_transmat[i, j]
-                            if segRatios[t + 1] > 1.:
-                                y = fwdlattice[t + 1, i] + bwdlattice[t + 1, j] + \
-                                  log(1. - 1. / segRatios[t + 1]) - logprob
-                                logsum_lneta[i, j] += exp(y - maxMatrix[i, j])
+                    if hasRatios == 1 and segRatios[t + 1] > 1.:
+                        x += log_transmat[j, j] * (segRatios[t + 1] - 1.)
                     logsum_lneta[i, j] += exp(x - maxMatrix[i, j])
 
         # return log(sum(x-max)) + max
@@ -141,18 +127,16 @@ def _forward(int n_observations, int n_components,
     with nogil:
         for i in xrange(n_components):
             fwdlattice[0, i] = log_startprob[i] + framelogprob[0, i]
-            if hasRatios == 1:
-                fwdlattice[0, i] += log_transmat[i, i] * segRatios[0]
+            if hasRatios == 1 and segRatios[0] > 1.:
+                fwdlattice[0, i] += log_transmat[i, i] * (segRatios[0] - 1.)
 
         for t in xrange(1, n_observations):
             for j in xrange(n_components):
                 vmax = _NINF
                 for i in xrange(n_components):
                     work_buffer[i] = fwdlattice[t - 1, i] + log_transmat[i, j]
-                    if hasRatios == 1:
-                        work_buffer[i] += log_transmat[j, j] * segRatios[t]
-                        if i == j:
-                            work_buffer[i] -= log_transmat[j, j]
+                    if hasRatios == 1 and segRatios[t] > 1.:
+                        work_buffer[i] += log_transmat[j, j] * (segRatios[t] - 1.)
                     if work_buffer[i] > vmax:
                         vmax = work_buffer[i]
                 power_sum = 0.0
@@ -190,10 +174,8 @@ def _backward(int n_observations, int n_components,
                 for j in xrange(n_components):
                     work_buffer[j] = log_transmat[i, j] + framelogprob[t + 1, j] \
                         + bwdlattice[t + 1, j]
-                    if hasRatios == 1:
-                        work_buffer[j] += log_transmat[j, j] * segRatios[t+1]
-                        if i == j:
-                            work_buffer[j] -= log_transmat[i, j]
+                    if hasRatios == 1 and segRatios[t+1] > 1.:
+                        work_buffer[j] += log_transmat[j, j] * (segRatios[t+1] - 1.)
                     if work_buffer[j] > vmax:
                         vmax = work_buffer[j]
                 power_sum = 0.0
@@ -228,9 +210,9 @@ def _viterbi(int n_observations, int n_components,
     state_sequence = np.empty(n_observations, dtype=np.int)
     viterbi_lattice = np.zeros((n_observations, n_components))
     viterbi_lattice[0] = log_startprob + framelogprob[0]
-    if hasRatios == 1:
+    if hasRatios == 1 and segRatios[0] > 1.:
         for toState in xrange(0, n_components):
-            viterbi_lattice[0, toState] += log_transmat[toState, toState] * segRatios[0]
+            viterbi_lattice[0, toState] += log_transmat[toState, toState] * (segRatios[0] - 1.)
 
     trace_back = np.empty((n_observations, n_components), dtype=np.int16)
 
@@ -248,10 +230,8 @@ def _viterbi(int n_observations, int n_components,
                 curprob = viterbi_lattice[t-1, fromState] + \
                   log_transmat[fromState, toState] +\
                   framelogprob[t, toState]
-                if hasRatios == 1:
-                    curprob += log_transmat[toState, toState] * segRatios[t]
-                    if fromState == toState:
-                        curprob -= log_transmat[fromState, toState]
+                if hasRatios == 1 and segRatios[t] > 1.:
+                    curprob += log_transmat[toState, toState] * (segRatios[t] - 1.)
                 if curprob > maxprob:
                     maxprob = curprob
                     maxState = fromState
