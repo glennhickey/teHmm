@@ -88,6 +88,12 @@ def _log_sum_lneta(int n_observations, int n_components,
                       + framelogprob[t + 1, j] + bwdlattice[t + 1, j] - logprob
                     if hasRatios == 1 and segRatios[t + 1] > 1.:
                         x += log_transmat[j, j] * (segRatios[t + 1] - 1.)
+                        if i == j:
+                            # to check if this check needed
+                            y = fwdlattice[t + 1, i] + bwdlattice[t + 1, j] + \
+                              log(segRatios[t + 1] - 1.) - logprob
+                            if y > maxMatrix[i, j]:
+                                maxMatrix[i, j] = y                        
                     if x > maxMatrix[i, j]:
                         maxMatrix[i, j] = x
 
@@ -99,6 +105,10 @@ def _log_sum_lneta(int n_observations, int n_components,
                         + framelogprob[t + 1, j] + bwdlattice[t + 1, j] - logprob
                     if hasRatios == 1 and segRatios[t + 1] > 1.:
                         x += log_transmat[j, j] * (segRatios[t + 1] - 1.)
+                        if i == j:
+                            y = fwdlattice[t + 1, i] + bwdlattice[t + 1, j] + \
+                              log(segRatios[t + 1] - 1.) - logprob
+                            logsum_lneta[i, j] += exp(y - maxMatrix[i, j])                        
                     logsum_lneta[i, j] += exp(x - maxMatrix[i, j])
 
         # return log(sum(x-max)) + max
