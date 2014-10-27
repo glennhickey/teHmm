@@ -102,6 +102,7 @@ def main(argv=None):
 
     assert args.col == 4 or args.col == 5
     print "Commandline %s" % " ".join(sys.argv)
+    origArgs = copy.deepcopy(args)
     
     tempFiles = []
     if args.tl is not None:
@@ -118,7 +119,7 @@ def main(argv=None):
     checkExactOverlap(args.bed1, args.bed2)
 
     if args.window is not None:
-        runPositionalComparison(argv, args)
+        runPositionalComparison(argv, origArgs)
 
     intervals1 = readBedIntervals(args.bed1, ncol = args.col)
     intervals2 = readBedIntervals(args.bed2, ncol = args.col)
