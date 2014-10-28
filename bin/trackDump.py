@@ -19,7 +19,7 @@ from pybedtools import BedTool, Interval
 from teHmm.common import addLoggingOptions, setLoggingFromOptions, logger
 from teHmm.common import getLogLevelString, setLogLevel
 from teHmm.bin.compareBedStates import extractCompStatsFromFile
-from teHmm.track import TrackData
+from teHmm.track import TrackData, INTEGER_ARRAY_TYPE
 from teHmm.trackIO import readBedIntervals, getMergedBedIntervals
 
 """ Dump some track data from the XML file to an ASCII matrix
@@ -99,10 +99,15 @@ def main(argv=None):
 def dumpTrackData(trackData, outFile, doMapping, doPosition):
     """ do the dump"""
     
-    # make a list to category maps for convenience
-    mapList = []
+    # make a list to category tables for convenience
+    # as it turns out that getMapBack() is inordinately expensive. 
+    mapTableList = []
     for track in trackData.getTrackList():
-        mapList.append(track.getValueMap())
+        table = dict()
+        vm = track.getValueMap()
+        for i in xrange(np.iinfo(INTEGER_ARRAY_TYPE).max + 1):
+            table[i] = vm.getMapBack(i)
+        mapTableList.append(table)
         
     # scan column by column
     for trackTable in trackData.getTrackTableList():
@@ -113,7 +118,7 @@ def dumpTrackData(trackData, outFile, doMapping, doPosition):
             if doMapping is False:
                 # since we don't want the internal mapped values, we
                 # need to map them back 
-                mappedCol = [mapList[x].getMapBack(column[x]) for x in
+                mappedCol = [mapTableList[x][column[x]] for x in
                              xrange(len(column))]
                 column = mappedCol
             column = [str(x) for x in column]
@@ -121,7 +126,7 @@ def dumpTrackData(trackData, outFile, doMapping, doPosition):
                 currentPos = pos
                 if segmentOffsets != None:
                     currentPos = segmentOffsets[pos]
-                if maskOffsets != None:
+                if maskOffsets is not None:
                     currentPos += maskOffsets[pos]
                 outFile.write("%s,%d," % (trackTable.getChrom(),
                               trackTable.getStart() + currentPos))
