@@ -37,7 +37,9 @@ def main(argv=None):
 
     parser.add_argument("tracks", help="tracks xml used for training and eval")
     parser.add_argument("trainingBeds", help="comma-separated list of training regions"
-                        " (training region size will be a variable in output table)")
+                        " (training region size will be a variable in output table). "
+                        "if segmentation is activated, these must also be the "
+                        "segmented beds...")
     parser.add_argument("evalBed", help="eval region")
     parser.add_argument("trainOpts", help="all teHmmTrain options in quotes")
     parser.add_argument("evalOpts", help="all teHmmEval options in quotes")
@@ -81,6 +83,11 @@ def main(argv=None):
         npIdx = trainOpts.index("--numThreads")
         assert npIdx < len(trainOpts) - 1
         trainProcs = int(trainOpts[npIndex + 1])
+    segOptIdx = -1
+    if "--segment" in args.trainOpts:
+        seIdx = trainOpts.index("--segment")
+        assert seIdx < len(trainOpts) - 1
+        segOptIdx = segIdx + 1
     evalOpts = args.evalOpts.split()
     if "--bed" in args.evalOpts:
         bedIdx = evalOpts.index("--bed")
@@ -100,6 +107,8 @@ def main(argv=None):
             for rep in xrange(args.reps):
                 outMod = os.path.join(args.outDir, "hmm_%d.%d.%d.mod" % (
                     trainingSize, int(numStates), int(rep)))
+                if segOptIdx != -1:
+                    trainOpts[segOptIdx] = trainingBed
                 trainCmd = "teHmmtrain.py %s %s %s %s" % (args.tracks, trainingBed,
                                                           outMod, " ".join(trainOpts))
                 trainCmds.append(trainCmd)
