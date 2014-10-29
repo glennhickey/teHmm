@@ -1,0 +1,161 @@
+#!/usr/bin/env python
+
+#Copyright (C) 2014 by Glenn Hickey
+#
+#Released under the MIT license, see LICENSE.txt
+import unittest
+import sys
+import os
+import argparse
+import logging
+import itertools
+import copy
+import numpy as np
+
+from teHmm.common import runShellCommand
+from teHmm.common import runParallelShellCommands
+from teHmm.track import TrackList
+from teHmm.trackIO import readBedIntervals
+from teHmm.common import addLoggingOptions, setLoggingFromOptions, logger
+from teHmm.common import getLogLevelString, setLogLevel
+from teHmm.common import initBedTool, cleanBedTool
+from teHmm.bin.compareBedStates import extractCompStatsFromFile
+from teHmm.track import TrackList
+from teHmm.bin.trackRanking import extractScore
+from teHmm.modelIO import loadModel
+
+""" Thin wrapper of teHmmTrain.py and teHmmEval.py to generate a table of
+Number-of-HMM-states VS BIC. 
+"""
+
+def main(argv=None):
+    parser = argparse.ArgumentParser(
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+        description=" Thin wrapper of teHmmTrain.py and teHmmEval.py "
+        "to generate a table of Number-of-HMM-states VS BIC. Lower BIC"
+        " is better")
+
+    parser.add_argument("tracks", help="tracks xml used for training and eval")
+    parser.add_argument("trainingBeds", help="comma-separated list of training regions"
+                        " (training region size will be a variable in output table)")
+    parser.add_argument("evalBed", help="eval region")
+    parser.add_argument("trainOpts", help="all teHmmTrain options in quotes")
+    parser.add_argument("evalOpts", help="all teHmmEval options in quotes")
+    parser.add_argument("states", help="comma separated-list of numbers of states"
+                        " to try")
+    parser.add_argument("outDir", help="output directory")
+    parser.add_argument("--reps", help="number of replicates", type = int,
+                        default=1)
+    parser.add_argument("--proc", help="maximum number of processors to use"
+                        " in parallel", type = int, default = 1)
+
+    addLoggingOptions(parser)
+    args = parser.parse_args()
+    setLoggingFromOptions(args)
+    tempBedToolPath = initBedTool()
+    
+
+    if not os.path.isdir(args.outDir):
+        runShellCommand("mkdir %s" % args.outDir)
+
+    # get the sizes of the trianing beds
+    trainingSizes = []
+    trainingBeds = args.trainingBeds.split(",")
+    for bed in trainingBeds:
+        assert os.path.isfile(bed)
+        bedLen = 0
+        for interval in readBedIntervals(bed):
+            bedLen += interval[2] - interval[1]
+        trainingSizes.append(bedLen)
+
+    # make sure --bed not in teHmmEval options and --numStates not in train
+    # options
+    trainOpts = args.trainOpts.split()
+    if "--numStates" in args.trainOpts:
+        nsIdx = trainOpts.index("--numStates")
+        assert nsIdx < len(trainOpts) - 1
+        del trainOpts[nsIdx]
+        del trainOpts[nsIdx]
+    trainProcs = 1
+    if "--numThreads" in args.trainOpts:
+        npIdx = trainOpts.index("--numThreads")
+        assert npIdx < len(trainOpts) - 1
+        trainProcs = int(trainOpts[npIndex + 1])
+    evalOpts = args.evalOpts.split()
+    if "--bed" in args.evalOpts:
+        bedIdx = evalOpts.index("--bed")
+        assert bedIdx < len(evalOpts) - 1
+        del evalOpts[bedIdx]
+        del evalOpts[bedIdx]
+    if "--bic" in args.evalOpts:
+        bicIdx = evalOpts.index("--bic")
+        assert bicIdx < len(evalOpts) - 1
+        del evalOpts[bicIdx]
+        del evalOpts[bicIdx]
+
+    trainCmds = []
+    evalCmds = []
+    for trainingSize, trainingBed in zip(trainingSizes, trainingBeds):
+        for numStates in args.states.split(","):
+            for rep in xrange(args.reps):
+                outMod = os.path.join(args.outDir, "hmm_%d.%d.%d.mod" % (
+                    trainingSize, int(numStates), int(rep)))
+                trainCmd = "teHmmtrain.py %s %s %s %s" % (args.tracks, trainingBed,
+                                                          outMod, " ".join(trainOpts))
+                trainCmds.append(trainCmd)
+
+                outBic = outMod.replace(".mod", ".bic")
+                outBed = outMod.replace(".mod", "_eval.bed")
+                evalCmd = "teHmmEval.py %s %s %s --bed %s --bic %s %s" % (
+                    args.tracks, outMod, args.evalBed, outBed, outBic,
+                    " ".join(evalOpts))
+                evalCmds.append(evalCmd)
+            
+    # run the training            
+    runParallelShellCommands(trainCmds, max(1, args.proc / trainProcs))
+
+    # run the eval
+    runParallelShellCommands(evalCmds, args.proc)
+
+    # make the table header
+    tableFile = open(os.path.join(args.outDir, "bictable.csv"), "w")
+    tableFile.write("trainSize, states, meanBic, minBic, maxBic")
+    for i in xrange(args.reps):
+        tableFile.write(", bic.%d" % i)
+    tableFile.write("\n")
+
+    # make the table body
+    for (trainingSize,trainingBed) in zip(trainingSizes, trainingBeds):
+        for numStates in args.states.split(","):
+            bics = []
+            printBics = []
+            for rep in xrange(args.reps):
+                outMod = os.path.join(args.outDir, "hmm_%d.%d.%d.mod" % (
+                    trainingSize, int(numStates), int(rep)))
+                outBic = outMod.replace(".mod", ".bic")
+                try:
+                    with open(outBic, "r") as obFile:
+                        for line in obFile:
+                            bic = float(line.split()[0])
+                            break
+                    bics.append(bic)
+                    printBics.append(bic)
+                except:
+                    logger.warning("Coudn't find bic %s" % outBic)
+                    printBics.append("ERROR")
+            # write row
+            tableFile.write("%d, %d" % (int(trainingSize), int(numStates)))
+            if len(bics) > 0:
+                tableFile.write(", %f, %f, %f" % (np.mean(bics), np.min(bics),
+                                                  np.max(bics)))
+            else:
+                tableFile.write(", ERROR, ERROR, ERROR")
+            for pb in printBics:
+                tableFile.write(", %s" % pb)
+            tableFile.write("\n")
+    tableFile.close()
+            
+    cleanBedTool(tempBedToolPath)
+
+if __name__ == "__main__":
+    sys.exit(main())
