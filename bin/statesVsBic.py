@@ -62,7 +62,10 @@ def main(argv=None):
 
     # get the sizes of the trianing beds
     trainingSizes = []
-    trainingBeds = args.trainingBeds.split(",")
+    trainingBeds = []
+    for tb in  args.trainingBeds.split(","):
+        if len(tb) > 0:
+            trainingBeds.append(tb)
     for bed in trainingBeds:
         assert os.path.isfile(bed)
         bedLen = 0
@@ -82,11 +85,11 @@ def main(argv=None):
     if "--numThreads" in args.trainOpts:
         npIdx = trainOpts.index("--numThreads")
         assert npIdx < len(trainOpts) - 1
-        trainProcs = int(trainOpts[npIndex + 1])
+        trainProcs = int(trainOpts[npIdx + 1])
     segOptIdx = -1
     if "--segment" in args.trainOpts:
-        seIdx = trainOpts.index("--segment")
-        assert seIdx < len(trainOpts) - 1
+        segIdx = trainOpts.index("--segment")
+        assert segIdx < len(trainOpts) - 1
         segOptIdx = segIdx + 1
     evalOpts = args.evalOpts.split()
     if "--bed" in args.evalOpts:
@@ -102,15 +105,26 @@ def main(argv=None):
 
     trainCmds = []
     evalCmds = []
+    prevSize = -1
+    sameSizeCount = 0
     for trainingSize, trainingBed in zip(trainingSizes, trainingBeds):
+        # hack to take into account we may have different inputs with same
+        # same size, so their corresponding results need unique filenames
+        if trainingSize == prevSize:
+            sameSizeCount += 1
+        else:
+            sameSizeCount = 0
+        prevSize = trainingSize
+        print prevSize, trainingSize, sameSizeCount
         for numStates in args.states.split(","):
             for rep in xrange(args.reps):
-                outMod = os.path.join(args.outDir, "hmm_%d.%d.%d.mod" % (
-                    trainingSize, int(numStates), int(rep)))
+                outMod = os.path.join(args.outDir, "hmm_%d.%d.%d.%d.mod" % (
+                    trainingSize, sameSizeCount, int(numStates), int(rep)))
                 if segOptIdx != -1:
                     trainOpts[segOptIdx] = trainingBed
-                trainCmd = "teHmmtrain.py %s %s %s %s" % (args.tracks, trainingBed,
-                                                          outMod, " ".join(trainOpts))
+                trainCmd = "teHmmTrain.py %s %s %s %s --numStates %d" % (
+                    args.tracks, trainingBed, outMod, " ".join(trainOpts),
+                    int(numStates))
                 trainCmds.append(trainCmd)
 
                 outBic = outMod.replace(".mod", ".bic")
@@ -134,13 +148,22 @@ def main(argv=None):
     tableFile.write("\n")
 
     # make the table body
+    prevSize = -1
+    sameSizeCount = 0
     for (trainingSize,trainingBed) in zip(trainingSizes, trainingBeds):
+        # hack to take into account we may have different inputs with same
+        # same size, so their corresponding results need unique filenames
+        if trainingSize == prevSize:
+            sameSizeCount += 1
+        else:
+            sameSizeCount = 0
+        prevSize = trainingSize
         for numStates in args.states.split(","):
             bics = []
             printBics = []
             for rep in xrange(args.reps):
-                outMod = os.path.join(args.outDir, "hmm_%d.%d.%d.mod" % (
-                    trainingSize, int(numStates), int(rep)))
+                outMod = os.path.join(args.outDir, "hmm_%d.%d.%d.%d.mod" % (
+                    trainingSize, sameSizeCount, int(numStates), int(rep)))
                 outBic = outMod.replace(".mod", ".bic")
                 try:
                     with open(outBic, "r") as obFile:
