@@ -52,6 +52,10 @@ def main(argv=None):
                         " in parallel", type = int, default = 1)
     parser.add_argument("--resume", help="try not to rewrite existing files",
                         action="store_true", default=False)
+    parser.add_argument("--initTrans", help="the states argument is overridden"
+                        " to specify a list of transition initialization files "
+                        "instead of state numbers", action="store_true",
+                        default=False)
                         
 
     addLoggingOptions(parser)
@@ -84,6 +88,11 @@ def main(argv=None):
         assert nsIdx < len(trainOpts) - 1
         del trainOpts[nsIdx]
         del trainOpts[nsIdx]
+    if "--initTransProbs" in args.trainOpts:
+        tpIdx = trainOpts.index("--initTransProbs")
+        assert tpIdx < len(trainOpts) - 1
+        del trainOpts[tpIdx]
+        del trianOpts[tpIdx]
     trainProcs = 1
     if "--numThreads" in args.trainOpts:
         npIdx = trainOpts.index("--numThreads")
@@ -106,6 +115,24 @@ def main(argv=None):
         del evalOpts[bicIdx]
         del evalOpts[bicIdx]
 
+    # hack in support for --initTrans option by munging out model sizes
+    # from the text files
+    if args.initTrans is True:
+        transFiles = args.states.split(",")
+        states = []
+        for tf in transFiles:
+            stateSet = set()
+            with open(tf) as f:
+                for line in f:
+                    toks = line.split()
+                    print toks
+                    if len(toks) > 1 and toks[0][0] != "#":
+                        stateSet.add(toks[0])
+                        stateSet.add(toks[1])
+            states.append(len(stateSet))
+    else:
+        states = args.states.split()
+
     trainCmds = []
     evalCmds = []
     prevSize = -1
@@ -119,15 +146,19 @@ def main(argv=None):
             sameSizeCount = 0
         prevSize = trainingSize
         print prevSize, trainingSize, sameSizeCount
-        for numStates in args.states.split(","):
+        for numStates in states:
             for rep in xrange(args.reps):
                 outMod = os.path.join(args.outDir, "hmm_%d.%d.%d.%d.mod" % (
                     trainingSize, sameSizeCount, int(numStates), int(rep)))
                 if segOptIdx != -1:
                     trainOpts[segOptIdx] = trainingBed
-                trainCmd = "teHmmTrain.py %s %s %s %s --numStates %d" % (
+                if args.initTrans is True:
+                    statesOpt = "--initTransProbs %s" % transFiles[states.index(numStates)]
+                else:
+                    statesOpt = "--numStates %d" % int(numStates)
+                trainCmd = "teHmmTrain.py %s %s %s %s %s" % (
                     args.tracks, trainingBed, outMod, " ".join(trainOpts),
-                    int(numStates))
+                    statesOpt)
                 if not args.resume or not os.path.isfile(outMod) or \
                    os.path.getsize(outMod) < 100:
                     trainCmds.append(trainCmd)
@@ -165,7 +196,7 @@ def main(argv=None):
         else:
             sameSizeCount = 0
         prevSize = trainingSize
-        for numStates in args.states.split(","):
+        for numStates in states:
             bics = []
             printBics = []
             for rep in xrange(args.reps):
