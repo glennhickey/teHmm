@@ -148,6 +148,9 @@ class MultitrackHmm(BaseHMM):
         self.best_forward_log_prob = None
         self.bestCopy = None
         self.maxProbCut = maxProbCut
+        # keep track of free parameterse wrt user settings for bic computation
+        self.numZeroInitEdges = 0
+        self.numZeroInitStarts = 0
         
     def train(self, trackData):
         """ Use EM to estimate best parameters from scratch (unsupervised)"""
@@ -415,6 +418,13 @@ class MultitrackHmm(BaseHMM):
                     else:
                         transMat[fid, tid] *= (tgtTotal / curTotal)
 
+        # count 0 edges for bic
+        self.numZeroInitEdges = 0
+        for i in xrange(len(transMat)):
+            for j in xrange(len(transMat[i])):
+                if transMat[i,j] <= EPSILON:
+                    self.numZeroInitEdges += 1                
+
         # reset back to make sure logs get updated too
         self.transmat_ = transMat
 
@@ -469,6 +479,12 @@ class MultitrackHmm(BaseHMM):
                 else:
                     startProbs[state] *= (tgtTotal / curTotal)
 
+        # keep track of zero probs for bic
+        self.numZeroInitStarts = 0
+        for i in xrange(len(startProbs)):
+            if startProbs[i] < EPSILON:
+                self.numZeroInitStart += 1
+
         self.startprob_ = startProbs
 
     def getNumFreeParameters(self):
@@ -486,9 +502,9 @@ class MultitrackHmm(BaseHMM):
         numParams = 0
         numStates = self.emissionModel.getNumStates()
         if self.fixTrans is False:
-            numParams += numStates * numStates - 1
+            numParams += numStates * numStates - 1 - self.numZeroInitEdges
         if self.fixStart is False:
-            numParams += numStates - 1
+            numParams += numStates - 1 - self.numZeroInitStarts
         if self.fixEmission is False:
             for track in self.trackList:
                 trackNo = track.getNumber()
