@@ -50,6 +50,9 @@ def main(argv=None):
                         default=1)
     parser.add_argument("--proc", help="maximum number of processors to use"
                         " in parallel", type = int, default = 1)
+    parser.add_argument("--resume", help="try not to rewrite existing files",
+                        action="store_true", default=False)
+                        
 
     addLoggingOptions(parser)
     args = parser.parse_args()
@@ -125,14 +128,18 @@ def main(argv=None):
                 trainCmd = "teHmmTrain.py %s %s %s %s --numStates %d" % (
                     args.tracks, trainingBed, outMod, " ".join(trainOpts),
                     int(numStates))
-                trainCmds.append(trainCmd)
+                if not args.resume or not os.path.isfile(outMod) or \
+                   os.path.getsize(outMod) < 100:
+                    trainCmds.append(trainCmd)
 
                 outBic = outMod.replace(".mod", ".bic")
                 outBed = outMod.replace(".mod", "_eval.bed")
                 evalCmd = "teHmmEval.py %s %s %s --bed %s --bic %s %s" % (
                     args.tracks, outMod, args.evalBed, outBed, outBic,
                     " ".join(evalOpts))
-                evalCmds.append(evalCmd)
+                if not args.resume or not os.path.isfile(outBic) or \
+                   os.path.getsize(outBic) < 2:
+                    evalCmds.append(evalCmd)
             
     # run the training            
     runParallelShellCommands(trainCmds, max(1, args.proc / trainProcs))

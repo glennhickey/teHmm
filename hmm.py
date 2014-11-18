@@ -486,7 +486,7 @@ class MultitrackHmm(BaseHMM):
         numParams = 0
         numStates = self.emissionModel.getNumStates()
         if self.fixTrans is False:
-            numParams += numStates * numStates - 1
+            numParams += numStates * (numStates - 1)
         if self.fixStart is False:
             numParams += numStates - 1
         if self.fixEmission is False:
