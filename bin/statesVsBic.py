@@ -131,7 +131,7 @@ def main(argv=None):
                         stateSet.add(toks[1])
             states.append(len(stateSet))
     else:
-        states = args.states.split()
+        states = args.states.split(",")
 
     trainCmds = []
     evalCmds = []
