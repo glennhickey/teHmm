@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<teModelConfig>
+<track name="repbase"      path="/data/glenn.hickey/genomes/mm10/tracks/repbase/mm10.repbase.bed" distribution="multinomial"/>
+<track name="repeat_modeler" path="/data/glenn.hickey/genomes/mm10/tracks/repeatmodeler/mm10_chr1_repeatmodeler.bed" distribution="multinomial" preprocess="rm"/>
+<track name="genes"         path="/data/glenn.hickey/genomes/mm10/tracks/genes/mm10_refseq.bed" distribution="multinomial"/>
+
+<track name="ltr_finder"    path="/data/glenn.hickey/genomes/mm10/tracks/ltr_finder/mm10_chr1_ltrfinder.bed" distribution="multinomial" preprocess="ltr_finder"/>
+
+<track name="ltr_harvest"   path="/data/glenn.hickey/genomes/mm10/tracks/ltr_harvest/mm10_ltrharvest.bed" distribution="multinomial" preprocess="ltr_finder"/>
+
+<track name="gcpct"         path="/data/glenn.hickey/genomes/mm10/tracks/gcpct/mm10_gcPercentWin20.bw" distribution="gaussian" default="0"/>
+
+<track name="polyA"         path="/data/glenn.hickey/genomes/mm10/tracks/singleBaseRepeats/mm10_polya.bed" distribution="binary"/>
+<track name="polyN"         path="/data/glenn.hickey/genomes/mm10/tracks/singleBaseRepeats/mm10_polyn.bed" distribution="mask"/>
+
+<track name="sequence"      path="/data/glenn.hickey/genomes/mm10/sequence/mm10.fa" distribution="multinomial"/>
+</teModelConfig>
