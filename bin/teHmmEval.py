@@ -181,7 +181,7 @@ def main(argv=None):
             statesToBed(trackTable,
                         vitStates, vitOutFile, posteriors[i], posteriorsMask,
                         posteriorsFile, emProbs[i], emissionsMask, emissionsFile)
-            totalDatapoints += len(trackTable) * trackTable.getNumTracks()
+            totalDatapoints += len(vitStates) * trackTable.getNumTracks()
 
     print "Viterbi (log) score: %f" % totalScore
     if isinstance(model, MultitrackHmm) and model.current_iteration is not None:
@@ -206,6 +206,11 @@ def main(argv=None):
         n = float(totalDatapoints)
         bic = -2.0 * lnL + k * (np.log(n) + np.log(2 * np.pi))
         bicFile.write("%f\n" % bic)
+        bicFile.write("# = -2.0 * lnL + k * (lnN + ln(2 * np.pi))\n"
+                      "# where lnL=%f  k=%d (%d states)  N=%d (%d obs * %d tracks)  lnN=%f\n" % (
+            lnL, int(k), model.getEmissionModel().getNumStates(), int(totalDatapoints),
+            totalDatapoints / model.getEmissionModel().getNumTracks(),
+            model.getEmissionModel().getNumTracks(), np.log(n)))
         bicFile.close()
 
     cleanBedTool(tempBedToolPath)

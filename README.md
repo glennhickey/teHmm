@@ -300,6 +300,9 @@ In general, running any executable with `--help` will print a brief description 
 * **bootstrapModel.py** : Create transition and probability matrix files (like above) from an existing model.  Facilliates use of multiple rounds of training (say supervised then unsupervised).
 * **interpolateMaskedRegions.py** : If masking tracks are used, they will result in gaps in the HMM predictions.  This script can fill these gaps in as a postprocessing step using some simple heuristics.  
 
+**Parameter Selection**
+* **statesVsBic.py** : Compute a table of number of unsupervised states vs Bayesian Information Criterion.  
+
 **Track Name Munging**
 
 * **cleanRM.py** : Remove BED ID suffixes (ex. after pipe or slash) to attempt to map IDs to repeat families
@@ -353,8 +356,6 @@ In general, running any executable with `--help` will print a brief description 
 * **compareBedStates.py** : Compute base and interval-level precision and recall of one bed file vis-a-vis another.  Both files must cover exactly the same region.
 * **fitStateNames.py** : Assign predicted states names according to how well they match a given annotation.  Useful for generating meaningful names for states that were learned in a completely unsupervised manner. 
 * **trackRanking.py** : Iteratively call teHmmBenchmark to rank tracks based on their impact on accuracy
-* **numStatesRanking.py** : Iteratively call teHmmBenchmark with different numbers of (unsupervised) states, computing the BIC score and an accuracy score for each.  This information can be used to choose the best number of states.
-
 
 **Misc**
 * **trackDump.py** : Write an ASCII matrix of track data given an XML track listing and query BED.

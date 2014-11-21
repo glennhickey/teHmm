@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<teModelConfig>
+<track name="softmask"      path="/data/glenn.hickey/genomes/rice/tracks/softmaskRepeats/rice_softmaskRepeats.bed" distribution="multinomial"/>
+<track name="repeat_modeler" path="/data/glenn.hickey/genomes/rice/tracks/repeatmodeler/rice_repeatmodeler.bed" distribution="multinomial" preprocess="rm"/>
+<track name="genes"         path="/data/glenn.hickey/genomes/rice/tracks/genes/rice_genes.bed" distribution="multinomial"/>
+
+<track name="ltr_finder"    path="/data/glenn.hickey/genomes/rice/tracks/ltr_finder/rice_ltr_finder.bed" distribution="multinomial" preprocess="ltr_finder"/>
+
+<track name="ltr_harvest"   path="/data/glenn.hickey/genomes/rice/tracks/ltr_harvest/rice_ltrharvest.bed" distribution="multinomial" preprocess="ltr_finder"/>
+
+<track name="gcpct"         path="/data/glenn.hickey/genomes/rice/tracks/gcpct/rice_gcPercentWin20.bw" distribution="gaussian" default="0"/>
+
+<track name="polyA"         path="/data/glenn.hickey/genomes/rice/tracks/singleBaseRepeats/rice_polya.bed" distribution="binary"/>
+<track name="polyN"         path="/data/glenn.hickey/genomes/rice/tracks/singleBaseRepeats/rice_polyn.bed" distribution="mask"/>
+
+<track name="sequence"      path="/data/glenn.hickey/genomes/rice/sequence/rice.fa" distribution="multinomial"/>
+</teModelConfig>

@@ -25,27 +25,33 @@ def main(argv=None):
         "written this somewhere elsee")
     parser.add_argument("inBed", help="Input bed file")
     parser.add_argument("chunk", help="Chunk size", type=int)
-    wiggle = 0.5
+    parser.add_argument("--overlap", help="Fraction overlap [0-1]"
+                        " between adjacent chunks", type=float, default=0.)
     
     args = parser.parse_args()
     tempBedToolPath = initBedTool()
     assert os.path.exists(args.inBed)
+    assert args.overlap >= 0. and args.overlap <= 1.
+
+    wiggle = .2
+    step = args.chunk * (1. - args.overlap)
 
     for interval in BedTool(args.inBed):
         length = interval.end - interval.start
-        if length <= args.chunk:
-            sys.stdout.write(str(interval))
-        else:
-            numChunks = int(length / args.chunk)
-            if float(length % args.chunk) / float(args.chunk) > wiggle:
-                numChunks += 1
-            chunkSize = int(length / numChunks)
-            for i in xrange(numChunks):
-                outInterval = copy.deepcopy(interval)
-                outInterval.start = interval.start + chunkSize * i
-                if i < numChunks - 1:
-                    outInterval.end = outInterval.start + chunkSize
-                sys.stdout.write(str(outInterval))
+        total = 0
+        start = interval.start
+        while total < length:
+            outInterval = copy.deepcopy(interval)
+            assert start < interval.end
+            outInterval.start = start
+            outInterval.end = start + args.chunk
+            if interval.end - outInterval.end < wiggle * args.chunk or\
+              outInterval.end > interval.end:
+              outInterval.end = interval.end
+            total = outInterval.end
+            start += step
+            sys.stdout.write(str(outInterval))
+
     cleanBedTool(tempBedToolPath)
             
 if __name__ == "__main__":

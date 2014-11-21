@@ -26,27 +26,32 @@ def main(argv=None):
     parser.add_argument("minLength", help="Minimum interval length", type=int)
     parser.add_argument("--caseSensitive", help="Case sensitive comparison",
                         action="store_true", default=False)
-    parser.add_argument("--nuc", help="Nucleotide to consider",
+    parser.add_argument("--nuc", help="Commas-separated list of nucleotides "
+                        " to consider",
                         default="N")
     
     args = parser.parse_args()
     assert os.path.isfile(args.inputFa)
-    assert len(args.nuc) == 1
     faFile = open(args.inputFa, "r")
-    if args.caseSensitive is False:
-        args.nuc = args.nuc.upper()
+    nucs = set()
+    for nuc in args.nuc.split(","):
+        assert len(nuc) == 1
+        if args.caseSensitive is False:
+            nucs.add(nuc.upper())
+        else:
+            nucs.add(nuc)
         
     for seqName, seqString in fastaRead(faFile):
-        curInterval = [None, -2, -2]
+        curInterval = [None, -2, -2, None]
         for i in xrange(len(seqString)):
             
-            if seqString[i] == args.nuc or (args.caseSensitive is False and
-                                            seqString[i].upper() == args.nuc):
+            if seqString[i] in nucs or (args.caseSensitive is False and
+                                        seqString[i].upper() in nucs):
                 # print then re-init curInterval
                 if i != curInterval[2]:
                     if curInterval[0] is not None:
                         printInterval(sys.stdout, curInterval, args)
-                    curInterval = [seqName, i, i + 1]
+                    curInterval = [seqName, i, i + 1, seqString[i]]
                 # extend curInterval
                 else:
                     assert seqName == curInterval[0]
@@ -67,7 +72,7 @@ def printInterval(ofile, curInterval, args):
             curInterval[0],
             curInterval[1],
             curInterval[2],
-            args.nuc,
+            curInterval[3],
             l))
     
 if __name__ == "__main__":

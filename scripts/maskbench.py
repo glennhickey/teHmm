@@ -42,14 +42,14 @@ trainRegionPath = "train_region.bed"
 evalRegionPath = "eval_region.bed"
 
 modelerPath="../alyrata_repeatmodeler_clean_gapped_TE.bed"
-truthPaths=["../alyrata_chaux_clean_gapped_TE.bed", "../alyrata_hollister_clean_gapped_TE.bed", "../alyrata_repet_gapped_TE.bed"]
+truthPaths=["../alyrata_chaux_clean_gapped_TE.bed", "../alyrata_hollister_clean_gapped_TE.bed", "../alyrata_repet_gapped_TE.bed", "../alyrata_repet2_gapped_TE.bed"]
 truthNames=["chaux", "hollister", "repet"]
 assert len(truthPaths) == len(truthNames)
 
 # params ###########
-maskK = 10000
+maskK = 5000
 segOpts = "--cutMultinomial --thresh 2 --delMask %d %s" % (maskK, logOpts)
-segLen = 20
+segLen = 1
 numStates = 35
 threads = 5
 iter = 200
@@ -67,8 +67,10 @@ compIdx = 0 #base
 trainSegPath = "train_segments.bed"
 evalSegPath = "eval_segments.bed"
 if startPoint <= 1:
-    cmdTrain = "segmentTracks.py %s %s %s %s" % (segTracksPath, trainRegionPath, trainSegPath, segOpts)
-    cmdEval = "segmentTracks.py %s %s %s %s" % (segTracksPath, evalRegionPath, evalSegPath, segOpts)
+    cmdTrain = "segmentTracks.py %s %s %s %s --stats %s" % (segTracksPath, trainRegionPath, trainSegPath, segOpts,
+                                                            trainSegPath.replace(".bed", ".segStats"))
+    cmdEval = "segmentTracks.py %s %s %s %s --stats %s" % (segTracksPath, evalRegionPath, evalSegPath, segOpts,
+                                                           evalSegPath.replace(".bed", ".segStats"))
     runParallelShellCommands([cmdEval, cmdTrain], 2)
 
 # train ############

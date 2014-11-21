@@ -80,6 +80,17 @@ def main(argv=None):
                         " with a prediction that was processed with "
                         "interpolateMaskedRegions.py --max K",
                         type=int, default=0)
+    parser.add_argument("--window", help="A comma-delimited 5-tuple of "
+                        "windowSize,stateName,compType,score,outBed.  "
+                        "Where windowSize  is the sliding window size "
+                        "(overlap .5), stateName is target stateName,"
+                        " compType is in {base,interval,weighted}, sore is"
+                        " in {f1,precision,recall} and "
+                        "outBed is the path of a bedFile to write positional"
+                        " accuracy to.  For example, --window 1000000,TE,base,f1"
+                        ",acc.bed will write base-level f1 for 1MB sliding windows"
+                        " to acc.bed.  These can be viewed on the browser by first"
+                        " converting to BigWig.", default=None)
 
     args = parser.parse_args()
     tempBedToolPath = initBedTool()
@@ -91,6 +102,7 @@ def main(argv=None):
 
     assert args.col == 4 or args.col == 5
     print "Commandline %s" % " ".join(sys.argv)
+    origArgs = copy.deepcopy(args)
     
     tempFiles = []
     if args.tl is not None:
@@ -104,7 +116,10 @@ def main(argv=None):
             args.bed1 = cutBed1
             args.bed2 = cutBed2
 
-    checkExactOverlap(args.bed1, args.bed2)    
+    checkExactOverlap(args.bed1, args.bed2)
+
+    if args.window is not None:
+        runPositionalComparison(argv, origArgs)
 
     intervals1 = readBedIntervals(args.bed1, ncol = args.col)
     intervals2 = readBedIntervals(args.bed2, ncol = args.col)
@@ -660,7 +675,7 @@ def checkExactOverlap(bed1, bed2):
     size1 = os.path.getsize(bed1)
     size2 = os.path.getsize(bed2)
     if size1 == 0 or size2 == 0:
-        raise RuntimeError(errorMessage.replace("xxx", "one or both inputs empty" % bed1))
+        raise RuntimeError(errorMessage.replace("xxx", "one or both inputs empty"))
                             
 
     # test self-overlap and sorting
@@ -701,7 +716,79 @@ def checkExactOverlap(bed1, bed2):
         raise RuntimeError(errorMessage.replace(
             "xxx", "Input2 covers regions outside input1"))
     runShellCommand("rm -f %s" % tempFile)
+
     
-                
+def runPositionalComparison(argv, args):
+    """ hack to recursively exectute compareBedStates.py on a sliding window of the two
+    inputs and report accuracy in a BED file """
+    try:
+        windowToks = args.window.split(",")
+        assert len(windowToks) == 5
+        windowSize = int(windowToks[0])
+        stateName = windowToks[1]
+        compType = windowToks[2]
+        score = windowToks[3]
+        outBed = windowToks[4]
+    except:
+        raise RuntimeError("value passed to --window is not in valid format")
+    if compType == "base":
+        compIdx = 0
+    elif compType == "interval":
+        compIdx = 1
+    elif compType == "weighted":
+        compIdx = 2
+    else:
+        raise RuntimeError("invalid compType, %s, passed to --window" % compType)
+    if score != "f1" and score != "precision" and score != "recall":
+        raise RuntimeError("invalid score, %s, passed to --window" % score)
+    try:
+        outFile = open(outBed, "w")
+    except:
+        raise RuntimeError("invalid outBed, %s, passed to --window" % outBed)
+
+    tempBed = getLocalTempPath("Temp_region", ".bed")
+    runShellCommand("mergeBed -i %s > %s" % (args.bed1, tempBed))
+    chunkBed = getLocalTempPath("Temp_chunkBed", ".bed")
+    runShellCommand("chunkBedRegions.py %s %d --overlap .5 > %s" % (
+        tempBed, windowSize, chunkBed))
+    window = getLocalTempPath("Temp_window", ".bed")
+    slice1 = getLocalTempPath("Temp_slice1", ".bed")
+    slice2 = getLocalTempPath("Temp_slice2", ".bed")
+    compFile = getLocalTempPath("Temp_compFile", ".bed")
+    compOpts = ""
+    winIdx = argv.index("--window")
+    assert winIdx > 0 and winIdx < len(argv) -1 and argv[winIdx + 1] == args.window
+    for i in xrange(3, len(argv)):
+        if i != winIdx and i != winIdx + 1:
+            compOpts += " " + argv[i]
+    
+    for chunk in readBedIntervals(chunkBed):
+        runShellCommand("echo \"%s\t%d\t%d\" > %s" % (chunk[0], chunk[1], chunk[2],
+                                                   window))
+        runShellCommand("intersectBed -a %s -b %s | sortBed > %s" % (
+            args.bed1, window, slice1))
+        runShellCommand("intersectBed -a %s -b %s | sortBed > %s" % (
+            args.bed2, window, slice2))
+        runShellCommand("compareBedStates.py %s %s %s > %s" % (
+            slice1, slice2, compOpts, compFile))
+        stats = extractCompStatsFromFile(compFile)[compIdx]
+        if stateName not in stats:
+            stats[stateName] = (0,0)
+        f1 = 0.
+        prec, rec = stats[stateName]
+        if prec + rec > 0:
+            f1 = (2. * prec * rec) / (prec + rec)
+        val = f1
+        if score == "precision":
+            val = prec
+        elif score == "recall":
+            val = rec
+        outFile.write("%s\t%d\t%d\t%f\n" % (chunk[0], chunk[1], chunk[2], val))
+
+    runShellCommand("rm -f %s %s %s %s %s %s" % (tempBed, chunkBed, window,
+                                                 slice1, slice2, compFile))
+    outFile.close()
+                                                
+                    
 if __name__ == "__main__":
     sys.exit(main())
