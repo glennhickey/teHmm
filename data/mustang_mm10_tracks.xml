@@ -8,6 +8,8 @@
 
 <track name="ltr_harvest"   path="/data/glenn.hickey/genomes/mm10/tracks/ltr_harvest/mm10_ltrharvest.bed" distribution="multinomial" preprocess="ltr_finder"/>
 
+<track name="phyloP"        path="/data/glenn.hickey/genomes/mm10/tracks/cons/mm10.phyloP60way.bw" distribution="gaussian" default="0"/>
+<track name="trf"           path="/data/glenn.hickey/genomes/mm10/tracks/trf/mm10.trf.bed" distribution="mask"/>
 <track name="gcpct"         path="/data/glenn.hickey/genomes/mm10/tracks/gcpct/mm10_gcPercentWin20.bw" distribution="gaussian" default="0"/>
 
 <track name="polyA"         path="/data/glenn.hickey/genomes/mm10/tracks/singleBaseRepeats/mm10_polya.bed" distribution="binary"/>
