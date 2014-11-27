@@ -56,13 +56,21 @@ def main(argv=None):
                         " to specify a list of transition initialization files "
                         "instead of state numbers", action="store_true",
                         default=False)
+    parser.add_argument("--numReps", help="the states argument is overridden"
+                        " to specifiy a list of replicate numbers (--reps)"
+                        " arguments", action="store_true", default=False)
+    parser.add_argument("--numIter", help="the states argument is overridden"
+                        " to specifiy a list of iteration counts (--iter)"
+                        " arugments", action="store_true", default=False)
                         
-
     addLoggingOptions(parser)
     args = parser.parse_args()
     setLoggingFromOptions(args)
     tempBedToolPath = initBedTool()
-    
+
+    if sum([int(i) for i in [args.initTrans, args.numReps, args.numIter]]) > 1:
+        raise RuntimeError("only one of {--initTrans, --numReps, --numIter} "
+                           "can be used at a time")
 
     if not os.path.isdir(args.outDir):
         runShellCommand("mkdir %s" % args.outDir)
@@ -83,7 +91,7 @@ def main(argv=None):
     # make sure --bed not in teHmmEval options and --numStates not in train
     # options
     trainOpts = args.trainOpts.split()
-    if "--numStates" in args.trainOpts:
+    if "--numStates" in args.trainOpts and not args.numReps and not args.numIter:
         nsIdx = trainOpts.index("--numStates")
         assert nsIdx < len(trainOpts) - 1
         del trainOpts[nsIdx]
@@ -103,6 +111,16 @@ def main(argv=None):
         segIdx = trainOpts.index("--segment")
         assert segIdx < len(trainOpts) - 1
         segOptIdx = segIdx + 1
+    if args.numReps and "--reps" in args.trainOpts:
+        repsIdx = trainOpts.index("--reps")
+        assert repsIdx < len(trainOpts) - 1
+        del trainOpts[repsIdx]
+        del trainOpts[repsIdx]
+    if args.numIter and "--iter" in args.trainOpts:
+        iterIdx = trainOpts.index("--iter")
+        assert iterIdx < len(trainOpts) - 1
+        del trainOpts[iterIdx]
+        del trainOpts[iterIdx]
     evalOpts = args.evalOpts.split()
     if "--bed" in args.evalOpts:
         bedIdx = evalOpts.index("--bed")
@@ -154,6 +172,12 @@ def main(argv=None):
                     trainOpts[segOptIdx] = trainingBed
                 if args.initTrans is True:
                     statesOpt = "--initTransProbs %s" % transFiles[states.index(numStates)]
+                elif args.numIter is True:
+                    # states argument overridden by iterations
+                    statesOpt = "--iter %d" % int(numStates)
+                elif args.numReps is True:
+                    # states argument overridden by reps
+                    statesOpt = "--reps %d" % int(numStates)
                 else:
                     statesOpt = "--numStates %d" % int(numStates)
                 trainCmd = "teHmmTrain.py %s %s %s %s %s" % (
@@ -180,7 +204,12 @@ def main(argv=None):
 
     # make the table header
     tableFile = open(os.path.join(args.outDir, "bictable.csv"), "w")
-    tableFile.write("trainSize, states, meanBic, minBic, maxBic")
+    stateColName = "states"
+    if args.numIter is True:
+        statesColName = "iter"
+    elif args.numReps is True:
+        statesColName = "reps"
+    tableFile.write("trainSize, %s, meanBic, minBic, maxBic" % statesColName)
     for i in xrange(args.reps):
         tableFile.write(", bic.%d" % i)
     tableFile.write("\n")
