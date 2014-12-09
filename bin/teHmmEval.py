@@ -52,6 +52,9 @@ def main(argv=None):
                         " for evaluattion.  Note the model should have been"
                         " trained with the --segment option pointing to this"
                         " same bed file.", action="store_true", default=False)
+    parser.add_argument("--segLen", help="Effective segment length used for"
+                        " normalizing input segments (specifying 0 means no"
+                        " normalization applied)", type=int, default=0)    
     parser.add_argument("--maxPost", help="Use maximum posterior decoding instead"
                         " of Viterbi for evaluation", action="store_true",
                         default=False)
@@ -102,6 +105,11 @@ def main(argv=None):
     if isinstance(model, MultitrackCfg):
         if args.maxPost is True:
            raise RuntimeErorr("--post not supported on CFG models")
+
+    # apply the effective segment length
+    if args.segLen > 0:
+        assert args.segment is True
+        model.getEmissionModel().effectiveSegmentLength = args.segLen
         
     # read intervals from the bed file
     logger.info("loading target intervals from %s" % args.bedRegions)
