@@ -19,6 +19,7 @@ import random
 from argparse import ArgumentParser
 from optparse import OptionParser, OptionContainer, OptionGroup
 import pybedtools
+from pkg_resources import parse_version
 
 LOGZERO = -1e100
 EPSILON = np.finfo(float).eps
@@ -147,7 +148,7 @@ def checkRequirements():
     except:
         raise RuntimeError("Cython not installed")
     
-    if version < "0.19.2":
+    if parse_version(version) < parse_version("0.19.2"):
         raise RuntimeError("Cython version >= 0.19.2 required (%s detected)" %
                            version)
 
@@ -155,7 +156,7 @@ def checkRequirements():
         raise RuntimeError("Python version >= 2.7 required (%s detected)" %
                            "%d.%d" % (sys.version_info[0], sys.version_info[1]))
 
-    if np.version.version < "1.7":
+    if parse_version(np.version.version) < parse_version("1.7"):
         raise RuntimeError("Numpy version >= 1.7 required (%s detected)" %
                            np.version.version)
 
@@ -163,7 +164,7 @@ def checkRequirements():
         from pybedtools import __version__ as pbt_version
     except:
         raise RuntimeError("Unable to detect pybedtools version")
-    if pbt_version < "0.6.7":
+    if parse_version(pbt_version) < parse_version("0.6.7"):
         raise RuntimeError("Pybedtools version >= 0.6.7 required (%s detected)" %
                            pbt_version)
             

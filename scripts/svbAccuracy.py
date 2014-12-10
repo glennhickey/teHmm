@@ -33,6 +33,7 @@ def main(argv=None):
     parser.add_argument("beds", help="one or more bed files to evaluate", nargs="*")
     parser.add_argument("--proc", help="number of parallel processes", type=int, default=1)
     parser.add_argument("--maskGap", help="interpolate masked gaps smaller than this", type=int, default=5000)
+    parser.add_argument("--exploreFdr", help="try a bunch of fdr values", action="store_true", default=False)
 
     args = parser.parse_args()
 
@@ -46,17 +47,23 @@ def main(argv=None):
 
     outFile = open(os.path.join(args.outDir, "accuracy.csv"), "w")
 
+    if args.exploreFdr is True:
+        fdrs = [0, .5, .1, .15, .20, .25, .30, .35, .40, .45, .50, .55, .60, .65, .70, .75, .80, .85, .90, .95, 1]
+    else:
+        fdrs = [.65]
+
     # do two kinds of fitting vs modeer
     fitCmds = []
     for bed in args.beds:
         toks = "_".join(os.path.basename(bed).split(".")).split("_")
         tSize, nStates = int(toks[1]), int(toks[3])
         fitOut = os.path.join(args.outDir, os.path.basename(bed).replace(".bed", "_fit.bed"))
-        fitOutFdr = fitOut.replace(".bed", "Fdr.bed")
-        cmd = "fitStateNames.py %s %s %s --tl %s --tgt TE" % (args.fitBed, bed, fitOut, args.tracksList)
+        cmd = "fitStateNames.py %s %s %s --tl %s --tgt TE --qualThresh 0.1" % (args.fitBed, bed, fitOut, args.tracksList)
         fitCmds.append(cmd)
-        cmdFdr = "fitStateNames.py %s %s %s --tl %s --tgt TE --fdr 0.65" % (args.fitBed, bed, fitOutFdr, args.tracksList)
-        fitCmds.append(cmdFdr)
+        for fdr in fdrs:
+            fitOutFdr = fitOut.replace(".bed", "Fdr%f.bed" % fdr)
+            cmdFdr = "fitStateNames.py %s %s %s --tl %s --tgt TE --fdr %f" % (args.fitBed, bed, fitOutFdr, args.tracksList, fdr)
+            fitCmds.append(cmdFdr)
 
     # interpolate the gaps
     interpolateCmds = []
@@ -64,13 +71,15 @@ def main(argv=None):
         toks = "_".join(os.path.basename(bed).split(".")).split("_")
         tSize, nStates = int(toks[1]), int(toks[3])
         fitOut = os.path.join(args.outDir, os.path.basename(bed).replace(".bed", "_fit.bed"))
-        fitOutFdr = fitOut.replace(".bed", "Fdr.bed")        
         fitOutMI = os.path.join(args.outDir, os.path.basename(bed).replace(".bed", "_fitMI.bed"))
-        fitOutFdrMI = fitOutMI.replace(".bed", "Fdir.bed")
         cmd = "interpolateMaskedRegions.py %s %s %s %s --maxLen %d" % (args.tracksList, args.truthBed, fitOut, fitOutMI, args.maskGap)
         interpolateCmds.append(cmd)
-        cmdFdr = "interpolateMaskedRegions.py %s %s %s %s --maxLen %d" % (args.tracksList, args.truthBed, fitOutFdr, fitOutFdrMI, args.maskGap)
-        interpolateCmds.append(cmdFdr)
+
+        for fdr in fdrs:
+            fitOutFdr = fitOut.replace(".bed", "Fdr%f.bed" % fdr)        
+            fitOutFdrMI = fitOutMI.replace(".bed", "Fdr%f.bed" % fdr)
+            cmdFdr = "interpolateMaskedRegions.py %s %s %s %s --maxLen %d" % (args.tracksList, args.truthBed, fitOutFdr, fitOutFdrMI, args.maskGap)
+            interpolateCmds.append(cmdFdr)
 
     # run the comparison
     compareCmds = []
@@ -78,17 +87,21 @@ def main(argv=None):
         toks = "_".join(os.path.basename(bed).split(".")).split("_")
         tSize, nStates = int(toks[1]), int(toks[3])
         fitOutMI = os.path.join(args.outDir, os.path.basename(bed).replace(".bed", "_fitMI.bed"))
-        fitOutFdrMI = fitOutMI.replace(".bed", "Fdir.bed")
         comp = os.path.join(args.outDir, os.path.basename(bed).replace(".bed", "_comp.txt"))
-        compFdr = comp.replace(".txt", "Fdr.txt")
         cmd = "compareBedStates.py %s %s --tl %s --delMask %d > %s" % (args.truthBed, fitOutMI, args.tracksList, args.maskGap, comp)
         compareCmds.append(cmd)
-        cmdFdr = "compareBedStates.py %s %s --tl %s --delMask %d > %s" % (args.truthBed, fitOutFdrMI, args.tracksList, args.maskGap, compFdr)
-        compareCmds.append(cmdFdr)
+        for fdr in fdrs:
+            fitOutFdrMI = fitOutMI.replace(".bed", "Fdr%f.bed" % fdr)
+            compFdr = comp.replace(".txt", "Fdr%f.txt" % fdr)
+            cmdFdr = "compareBedStates.py %s %s --tl %s --delMask %d > %s" % (args.truthBed, fitOutFdrMI, args.tracksList, args.maskGap, compFdr)
+            compareCmds.append(cmdFdr)
     
     runParallelShellCommands(fitCmds, args.proc)
     runParallelShellCommands(interpolateCmds, args.proc)
     runParallelShellCommands(compareCmds, args.proc)
+    # got a weird crash before where comp file wasn't found
+    # maybe this will help?
+    runShellCommand("sleep 10")
 
     # munging ############
     def prettyAcc((prec, rec)):
@@ -97,21 +110,31 @@ def main(argv=None):
             f1 = (2. * prec * rec) / (prec + rec)
         return "%.4f, %.4f, %.4f" % (prec, rec, f1)
 
-    header = "states, trainSize, precision, recall, f1, fdrfit_precision, fdrfit_recall, fdrfit_f1"
+    header = "states, trainSize, precision, recall, f1"
+    for fdr in fdrs:
+        header += ", fdrfit%.3f_precision, fdrfit%.3f_recall, fdrfit%.3f_f1" % (fdr, fdr, fdr)
+    if len(fdrs) > 1:
+        header += "\n,,,,"
+        for fdr in fdrs:
+            header += ", %.3f, %.3f, %.3f" % (fdr, fdr, fdr)
     outFile.write(header + "\n")
 
     for bed in args.beds:
         toks = "_".join(os.path.basename(bed).split(".")).split("_")
         tSize, nStates = int(toks[1]), int(toks[3])
         comp = os.path.join(args.outDir, os.path.basename(bed).replace(".bed", "_comp.txt"))
-        compFdr = comp.replace(".txt", "Fdr.txt")
         stats = extractCompStatsFromFile(comp)[0]
-        statsFdr = extractCompStatsFromFile(compFdr)[0]
         if "TE" not in stats:
             stats["TE"] = (0,0)
-        if "TE" not in statsFdr:
-            statsFdr["TE"] = (0,0)
-        line = "%d, %d" % (nStates, tSize) + "," + prettyAcc(stats["TE"]) + ", " + prettyAcc(statsFdr["TE"]) + "\n" 
+        line = "%d, %d" % (nStates, tSize) + "," + prettyAcc(stats["TE"]) 
+        for fdr in fdrs:
+            compFdr = comp.replace(".txt", "Fdr%f.txt" % fdr)
+            statsFdr = extractCompStatsFromFile(compFdr)[0]
+            if "TE" not in statsFdr:
+                statsFdr["TE"] = (0,0)
+            line += ", " + prettyAcc(statsFdr["TE"])
+        line += "\n"
+
         outFile.write(line)
 
     outFile.close()

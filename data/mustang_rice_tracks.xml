@@ -8,6 +8,17 @@
 
 <track name="ltr_harvest"   path="/data/glenn.hickey/genomes/rice/tracks/ltr_harvest/rice_ltrharvest.bed" distribution="multinomial" preprocess="ltr_finder"/>
 
+<track name="cov_80-"          path="/data/glenn.hickey/genomes/rice/tracks/copynum/coverage.cov.80-.bw" default="0.0" distribution="gaussian"/>
+<track name="left_peak_80-"    path="/data/glenn.hickey/genomes/rice/tracks/copynum/coverage.left.80-.bw" default="0.0" distribution="gaussian"/>
+<track name="right_peak_80-"   path="/data/glenn.hickey/genomes/rice/tracks/copynum/coverage.right.80-.bw" default="0.0" distribution="gaussian"/>
+<track name="cov_80-90"        path="/data/glenn.hickey/genomes/rice/tracks/copynum/coverage.cov.80-90.bw" default="0.0" distribution="gaussian"/>
+<track name="left_peak_80-90"  path="/data/glenn.hickey/genomes/rice/tracks/copynum/coverage.left.80-90.bw" default="0.0" distribution="gaussian"/>
+<track name="right_peak_80-90" path="/data/glenn.hickey/genomes/rice/tracks/copynum/coverage.right.80-90.bw" default="0.0" distribution="gaussian"/>
+<track name="cov_90+"          path="/data/glenn.hickey/genomes/rice/tracks/copynum/coverage.cov.90+.bw" default="0.0" distribution="gaussian"/>
+<track name="left_peak_90+"    path="/data/glenn.hickey/genomes/rice/tracks/copynum/coverage.left.90+.bw" default="0.0" distribution="gaussian"/>
+<track name="right_peak_90+"   path="/data/glenn.hickey/genomes/rice/tracks/copynum/coverage.right.90+.bw" default="0.0" distribution="gaussian"/>
+<track name="cov_maxPId"       path="/data/glenn.hickey/genomes/rice/tracks/copynum/coverage.maxPId.bw" default="0.0" distribution="gaussian"/>
+
 <track name="gcpct"         path="/data/glenn.hickey/genomes/rice/tracks/gcpct/rice_gcPercentWin20.bw" distribution="gaussian" default="0"/>
 
 <track name="polyA"         path="/data/glenn.hickey/genomes/rice/tracks/singleBaseRepeats/rice_polya.bed" distribution="binary"/>
