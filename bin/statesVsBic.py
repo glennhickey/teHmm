@@ -208,8 +208,8 @@ def main(argv=None):
     if args.numIter is True:
         statesColName = "iter"
     elif args.numReps is True:
-        statesColName = "reps"
-    tableFile.write("trainSize, %s, meanBic, minBic, maxBic" % statesColName)
+        stateColName = "reps"
+    tableFile.write("trainFile, trainSize, %s, meanBic, minBic, maxBic" % stateColName)
     for i in xrange(args.reps):
         tableFile.write(", bic.%d" % i)
     tableFile.write("\n")
@@ -243,7 +243,7 @@ def main(argv=None):
                     logger.warning("Coudn't find bic %s" % outBic)
                     printBics.append("ERROR")
             # write row
-            tableFile.write("%d, %d" % (int(trainingSize), int(numStates)))
+            tableFile.write("%d, %d, %d" % (trainingBed, int(trainingSize), int(numStates)))
             if len(bics) > 0:
                 tableFile.write(", %f, %f, %f" % (np.mean(bics), np.min(bics),
                                                   np.max(bics)))
