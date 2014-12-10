@@ -1,9 +1,9 @@
-teHmm
+teHmm v0.1
 =====
 Copyright (C) 2013 - 2014 by Glenn Hickey (glenn.hickey@gmail.com)
 Released under the MIT license, see LICENSE.txt
 
-Prototype code for identification of transposable elements in annotated DNA sequence using a HMM.  The model slightly generalizes a classical HMM by allowing emission of *k*-dimensional vectors, where each value drawn from an *independent* multinomial distribution.   Maximum likelihood estimates of parameters can be learned directly from a gold standard, or using the Baum Welch algorithm.   A Stochastic Context Free Grammar is also provided, but is still in an early stage. 
+Prototype code for identification of transposable elements in annotated DNA sequence using a multivariate HMM.  The model slightly generalizes a classical HMM by allowing emission of *k*-dimensional vectors, where each value drawn from an *independent* multinomial distribution.   Maximum likelihood estimates of parameters can be learned directly from a gold standard, or using the Baum Welch algorithm, or a combination of the two.   The model is trained on genome annotation tracks specifed in UCSC formats (BED, BIGBED, BIGWIG).
 
 Code Contributors
 -----
@@ -43,11 +43,16 @@ It's also a good idea to add teHmm to your PATH and PYTHON path.  If you cloned 
      export PATH=/home/tools/teHmm/bin:${PATH}
      export PYTHONPATH=/home/tools/:${PYTHONPATH}
 
+Testing
+-
+
+Unit tests can be performed by running `./allTests.py` *from the teHmm/ directory*.  If these don't run successfully it's unlikely any of the examples below will either. 
+
 
 Annotation Tracks
 -----
 
-Genome annotation tracks are specified in files in [BED](http://genome.ucsc.edu/FAQ/FAQformat.html#format1),  [BigWig](http://genome.ucsc.edu/goldenPath/help/bigWig.html) or [Fasta](http://en.wikipedia.org/wiki/FASTA_format) format.  Each track should be in a single file.  In general, BED files should be sorted and not contain any overlapping intervals.  A script is included to do both these operations:
+Genome annotation tracks are specified in files in [BED](http://genome.ucsc.edu/FAQ/FAQformat.html#format1),  [BigBed](http://genome.ucsc.edu/FAQ/FAQformat.html#format1.5), ([BigWig](http://genome.ucsc.edu/goldenPath/help/bigWig.html) or [Fasta](http://en.wikipedia.org/wiki/FASTA_format) format.  Each track should be in a single file.  In general, BED files should be sorted and not contain any overlapping intervals.  A script is included to do both these operations:
 
      removeBedOverlaps.py rawBed.bed > cleanBed.bed
 
@@ -80,11 +85,6 @@ operation is performed before scaling.  Note, since deltas can be negative this 
   * *overlap*: Apply `removeBedOverlaps.y`
 
 *Note on BED-12 format* By default, only the start and end coordinate (2nd and 3rd BED) column are used.  This may not be desired behaviour for files in BED-12 format, such as gene annotations with the exons in blocks (columns 10-12).   In this case, please see the `cleanGenes.py` script as a potential preprocessing step to convert a gene annotation into a flattened BED file more suitable for the HMM.
-
-Testing
--
-
-Unit tests can be performed by running `./allTests.py` *from the teHmm/ directory*.  If these don't run successfully it's unlikely any of the examples below will either. 
 
 Logging
 -
