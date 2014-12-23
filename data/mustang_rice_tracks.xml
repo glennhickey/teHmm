@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <teModelConfig>
+<track name="tigr-repeats"  path="/data/douglas.hoen/piatea/genomes/rice/tracks/tigr_repeats-repeatmasker/rice.tigr_repeats-repeatmasker.preliminary.bed"/>
+<track name="transposonpsi" path="/data/douglas.hoen/piatea/genomes/rice/tracks/transposonpsi/rice_transposonpsi.bed" distribution="multinomial" preprocess="rmu"/>
 <track name="softmask"      path="/data/glenn.hickey/genomes/rice/tracks/softmaskRepeats/rice_softmaskRepeats.bed" distribution="multinomial"/>
 <track name="repeat_modeler" path="/data/glenn.hickey/genomes/rice/tracks/repeatmodeler/rice_repeatmodeler.bed" distribution="multinomial" preprocess="rm"/>
 <track name="genes"         path="/data/glenn.hickey/genomes/rice/tracks/genes/rice_genes.bed" distribution="multinomial"/>
@@ -23,6 +25,12 @@
 
 <track name="polyA"         path="/data/glenn.hickey/genomes/rice/tracks/singleBaseRepeats/rice_polya.bed" distribution="binary"/>
 <track name="polyN"         path="/data/glenn.hickey/genomes/rice/tracks/singleBaseRepeats/rice_polyn.bed" distribution="mask"/>
+
+<track name="dustmasker"    path="/data/douglas.hoen/piatea/genomes/rice/tracks/dustmasker/rice_dustmasker.bb" distribution="binary"/>
+<track name="windowmasker"  path="/data/douglas.hoen/piatea/genomes/rice/tracks/windowmasker/rice_windowmasker.bb" distribution="binary"/>
+<track name="helitronscanner"  path="/data/douglas.hoen/piatea/genomes/rice/tracks/helitronscanner/rice_helitronscanner.bed" distribution="binary"/>
+<track name="irf"           path="/data/douglas.hoen/piatea/genomes/rice/tracks/irf/rice_irf.bed" distribution="multinomial"/>
+<track name="mitehunter"    path="/data/douglas.hoen/piatea/genomes/rice/tracks/mitehunter/rice_mitehunter.bed" distribution="binary"/>
 
 <track name="sequence"      path="/data/glenn.hickey/genomes/rice/sequence/rice.fa" distribution="multinomial"/>
 </teModelConfig>
