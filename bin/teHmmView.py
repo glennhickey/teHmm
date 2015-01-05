@@ -42,11 +42,16 @@ def main(argv=None):
     parser.add_argument("--t", help="Print transition matrix to given"
                         " file in GRAPHVIZ DOT format.  Convert to PDF with "
                         " dot <file> -Tpdf > <outFile>", default=None)
+    parser.add_argument("--teStates", help="comma-separated list of state names"
+                        " to consider TE-1, TE-2, ... etc", default=None)
     
     args = parser.parse_args()
 
     # load model created with teHmmTrain.py
     model = loadModel(args.inputModel)
+
+    if args.teStates is not None:
+        args.teStates = set(x for x in args.teStates.split(","))
 
     # crappy print method
     print model
@@ -89,12 +94,17 @@ def writeEmissionClusters(model, args):
     state is a point represented by its distribution for that track)"""
     trackList = model.getTrackList()
     stateNameMap = model.getStateNameMap()
+
     emission = model.getEmissionModel()
     # [TRACK][STATE][SYMBOL]
     emissionDist = np.exp(emission.getLogProbs())
 
     # leaf names of our clusters are the states
-    stateNames = map(stateNameMap.getMapBack, xrange(len(stateNameMap)))
+    if stateNameMap is not None:
+        stateNames = map(stateNameMap.getMapBack, xrange(len(stateNameMap)))
+    else:
+        stateNames = [str(x) for x in xrange(model.n_components)]
+    stateNames = applyTEStateNaming(args.teStates, stateNames)
     N = len(stateNames)
 
     # cluster for each track
@@ -135,7 +145,12 @@ def writeEmissionScatters(model, args):
     emissionDist = np.exp(emission.getLogProbs())
 
     # leaf names of our clusters are the states
-    stateNames = map(stateNameMap.getMapBack, xrange(len(stateNameMap)))
+    if stateNameMap is not None:
+        stateNames = map(stateNameMap.getMapBack, xrange(len(stateNameMap)))
+    else:
+        stateNames = [str(x) for x in xrange(model.n_components)]
+    stateNames = applyTEStateNaming(args.teStates, stateNames)
+
     N = len(stateNames)
 
     # scatter for each track
@@ -174,7 +189,12 @@ def writeEmissionHeatMap(model, args):
     emissionDist = np.exp(emission.getLogProbs())
 
     # leaf names of our clusters are the states
-    stateNames = map(stateNameMap.getMapBack, xrange(len(stateNameMap)))
+    if stateNameMap is not None:
+        stateNames = map(stateNameMap.getMapBack, xrange(len(stateNameMap)))
+    else:
+        stateNames = [str(x) for x in xrange(model.n_components)]
+    stateNames = applyTEStateNaming(args.teStates, stateNames)
+    
     N = len(stateNames)
     emProbs = emission.getLogProbs()
 
@@ -239,7 +259,11 @@ def writeTransitionGraph(model, args):
     """ write a graphviz text file """
     trackList = model.getTrackList()
     stateNameMap = model.getStateNameMap()
-    stateNames = map(stateNameMap.getMapBack, xrange(len(stateNameMap)))
+    if stateNameMap is not None:
+        stateNames = map(stateNameMap.getMapBack, xrange(len(stateNameMap)))
+    else:
+        stateNames = [str(x) for x in xrange(model.n_components)]
+    stateNames = applyTEStateNaming(args.teStates, stateNames)
     stateNames = map(lambda x: x.replace("-", "_"), stateNames)
     stateNames = map(lambda x: x.replace("|", "_"), stateNames)
     
@@ -255,6 +279,26 @@ def writeTransitionGraph(model, args):
                 f.write("%s -> %s [%s,%s];\n" % (state, toState, label, width))
     f.write("}\n")
     f.close()
+
+def applyTEStateNaming(teStates, states):
+    if teStates is None or len(teStates) is 0:
+        return states
     
+    teCount = 0
+    otherCount = 0
+    output = []
+    for state in states:
+        if state in teStates:
+            output.append("TE-%d" % teCount)
+            teCount += 1
+        else:
+            output.append("Other-%d" % otherCount)
+            otherCount += 1
+
+    if teCount + otherCount == 0:
+        return states
+    return output
+
+
 if __name__ == "__main__":
     sys.exit(main())
