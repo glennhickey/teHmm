@@ -43,6 +43,12 @@ def main(argv=None):
                         "histogram", action="store_true", default=False)
     parser.add_argument("--histRange", help="Histogram range as comma-"
                         "separated pair of numbers", default=None)
+    parser.add_argument("--noHist", help="skip hisograms", action="store_true",
+                        default=False)
+    parser.add_argument("--noScore", help="Just do length stats",
+                        action="store_true", default=False)
+    parser.add_argument("--noLen", help="Just do score stats",
+                        action="store_true", default=False)
 
     addLoggingOptions(parser)
     args = parser.parse_args()
@@ -59,15 +65,18 @@ def main(argv=None):
 
     intervals = readBedIntervals(args.inBed, ncol = 5)
 
+    csvStats = ""
     # length stats
-    csvStats = makeCSV(intervals, args, lambda x : int(x[2])-int(x[1]),
-                        "Length")
+    if args.noLength is False:
+        csvStats = makeCSV(intervals, args, lambda x : int(x[2])-int(x[1]),
+                           "Length")
     # score stats
     try:
-        csvStats += "\n" + makeCSV(intervals, args, lambda x : float(x[4]),
-                                   "Score")
-        csvStats += "\n" + makeCSV(intervals, args, lambda x : float(x[4]) * (
-            float(x[2]) - float(x[1])), "Score*Length")
+        if args.noScore is False:
+            csvStats += "\n" + makeCSV(intervals, args, lambda x : float(x[4]),
+                                       "Score")
+            csvStats += "\n" + makeCSV(intervals, args, lambda x : float(x[4]) * (
+                float(x[2]) - float(x[1])), "Score*Length")
     except Exception as e:
         logger.warning("Couldn't make score stats because %s" % str(e))
     outFile.write(csvStats)
@@ -97,7 +106,6 @@ def makeCSV(intervals, args, dataFn, sectionName):
     csv += "Total" + "," + ",".join([str(x) for x in data]) + "\n"
         
     # histogram
-    csv += "\n%s HistogramStats,\n" % sectionName
     start = min(0, summaryData[totalTok][0])
     end = max(start, summaryData[totalTok][1]) + 1
     if args.histRange is not None:
@@ -120,8 +128,10 @@ def makeCSV(intervals, args, dataFn, sectionName):
     # bad that you can't make a chart out of row-data in any way)
     rows = len(histTable)
     cols = len(histTable[0])
-    for col in xrange(cols):
-        csv += ",".join([histTable[x][col] for x in xrange(rows)]) + "\n"
+    if args.noHist is False:
+        csv += "\n%s HistogramStats,\n" % sectionName
+        for col in xrange(cols):
+            csv += ",".join([histTable[x][col] for x in xrange(rows)]) + "\n"
     return csv
     
     
