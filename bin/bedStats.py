@@ -67,7 +67,7 @@ def main(argv=None):
 
     csvStats = ""
     # length stats
-    if args.noLength is False:
+    if args.noLen is False:
         csvStats = makeCSV(intervals, args, lambda x : int(x[2])-int(x[1]),
                            "Length")
     # score stats

@@ -1,6 +1,6 @@
 teHmm v0.1
 =====
-Copyright (C) 2013 - 2014 by Glenn Hickey (glenn.hickey@gmail.com)
+Copyright (C) 2013 - 2015 by Glenn Hickey (glenn.hickey@gmail.com)
 Released under the MIT license, see LICENSE.txt
 
 Prototype code for identification of transposable elements in annotated DNA sequence using a multivariate HMM.  The model slightly generalizes a classical HMM by allowing emission of *k*-dimensional vectors, where each value drawn from an *independent* multinomial distribution.   Maximum likelihood estimates of parameters can be learned directly from a gold standard, or using the Baum Welch algorithm, or a combination of the two.   The model is trained on genome annotation tracks specifed in UCSC formats (BED, BIGBED, BIGWIG).

@@ -13,6 +13,7 @@ from teHmm.track import TrackData
 from teHmm.hmm import MultitrackHmm
 from teHmm.cfg import MultitrackCfg
 from teHmm.modelIO import loadModel
+from teHmm.common import EPSILON
 try:
     from teHmm.parameterAnalysis import plotHierarchicalClusters
     from teHmm.parameterAnalysis import hierarchicalCluster, rankHierarchies
@@ -42,6 +43,9 @@ def main(argv=None):
     parser.add_argument("--t", help="Print transition matrix to given"
                         " file in GRAPHVIZ DOT format.  Convert to PDF with "
                         " dot <file> -Tpdf > <outFile>", default=None)
+    parser.add_argument("--minTP", help="Minimum tranisition probability "
+                        "to include in transition matrix output from --t option.",
+                        type=float, default=EPSILON)
     parser.add_argument("--teStates", help="comma-separated list of state names"
                         " to consider TE-1, TE-2, ... etc", default=None)
     
@@ -273,7 +277,7 @@ def writeTransitionGraph(model, args):
     for i, state in enumerate(stateNames):
         for j, toState in enumerate(stateNames):
             tp = model.getTransitionProbs()[i, j]
-            if tp > 0. and i != j:
+            if tp > args.minTP and i != j:
                 label = "label=\"%.2f\"" % (tp * 100.)
                 width = "penwidth=%d" % (1 + int(tp / 20))
                 f.write("%s -> %s [%s,%s];\n" % (state, toState, label, width))

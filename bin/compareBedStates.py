@@ -575,10 +575,12 @@ def getStateMapFromConfMatrix(reverseMatrix, truthTgt, truthIgnore, predIgnore, 
             candidateSet = list(candidateSetIter) + sureBets
             # compute the f1 score of this mapping
             p, r, f1, tp, fp, fn = 0.,0.,0.,0.,0., float(truthStateSizes[truthState])
+            bsSortMap = dict()
             for predState in candidateSet:
                 overlap = reverseMatrix[truthState][predState]
                 tp += overlap
                 fp += predStateSizes[predState] - overlap
+                bsSortMap[predState] = tp + fp
                 fn -= overlap
             if tp > 0.:
                 p = tp / (tp + fp)
@@ -586,7 +588,9 @@ def getStateMapFromConfMatrix(reverseMatrix, truthTgt, truthIgnore, predIgnore, 
                 f1 = (2. * p * r) / (p + r)
             #print f1, p, r, tp, fp, fn, str(candidateSet)
             if f1 > bestF1:
-                bestF1, bestMapSet = f1, candidateSet
+                # sort by total number of bases 
+                bestF1, bestMapSet = f1, sorted(candidateSet, reverse=True,
+                                                key = lambda x : bsSortMap[x])
                 
         # add best candidate set to prediction state name map
         for predState in bestMapSet:

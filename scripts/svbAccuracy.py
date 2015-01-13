@@ -58,11 +58,13 @@ def main(argv=None):
         toks = "_".join(os.path.basename(bed).split(".")).split("_")
         tSize, nStates = int(toks[1]), int(toks[3])
         fitOut = os.path.join(args.outDir, os.path.basename(bed).replace(".bed", "_fit.bed"))
-        cmd = "fitStateNames.py %s %s %s --tl %s --tgt TE --qualThresh 0.1" % (args.fitBed, bed, fitOut, args.tracksList)
+        fitLog = fitOut.replace(".bed", "_log.txt")
+        cmd = "fitStateNames.py %s %s %s --tl %s --tgt TE --qualThresh 0.1 --logDebug --logFile %s" % (args.fitBed, bed, fitOut, args.tracksList, fitLog)
         fitCmds.append(cmd)
         for fdr in fdrs:
             fitOutFdr = fitOut.replace(".bed", "Fdr%f.bed" % fdr)
-            cmdFdr = "fitStateNames.py %s %s %s --tl %s --tgt TE --fdr %f" % (args.fitBed, bed, fitOutFdr, args.tracksList, fdr)
+            fitLogFdr = fitOutFdr.replace(".bed", "_log.txt")
+            cmdFdr = "fitStateNames.py %s %s %s --tl %s --tgt TE --fdr %f --logDebug --logFile %s" % (args.fitBed, bed, fitOutFdr, args.tracksList, fdr, fitLogFdr)
             fitCmds.append(cmdFdr)
 
     # interpolate the gaps

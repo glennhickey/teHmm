@@ -90,7 +90,7 @@ def plotHierarchicalClusters(hcList, titles, leafNames, outFile):
 #            truncate_mode='lastp')
         plt.title(titles[i])
         plt.setp(plt.xticks()[1], rotation=-90, fontsize=10)
-        ax.set_ylim((0.,0.5))
+#        ax.set_ylim((0.,0.5))
     fig.tight_layout()
     fig.savefig(pdf, format = 'pdf')
     pdf.close()
