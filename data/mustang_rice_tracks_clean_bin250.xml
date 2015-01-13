@@ -27,4 +27,5 @@
 	<track distribution="multinomial" name="sequence" path="/data/glenn.hickey/genomes/rice/sequence/rice.fa" valCol="3"/>
 	<track distribution="multinomial" name="tsd" path="/data/glenn.hickey/genomes/rice/clean/repeat_modeler_tsd.bed" valCol="3"/>
 	<track distribution="mask" name="polyN" path="/data/glenn.hickey/genomes/rice/tracks/singleBaseRepeats/rice_polyn.bed" valCol="0"/>
+   <track distribution="mask" name="trf" path="/data/glenn.hickey/genomes/rice/tracks/trf/rice_trf.bed" valCol="0"/>
 </teModelConfig>

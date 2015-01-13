@@ -25,6 +25,7 @@
 
 <track name="polyA"         path="/data/glenn.hickey/genomes/rice/tracks/singleBaseRepeats/rice_polya.bed" distribution="binary"/>
 <track name="polyN"         path="/data/glenn.hickey/genomes/rice/tracks/singleBaseRepeats/rice_polyn.bed" distribution="mask"/>
+<track name="trf"           path="/data/glenn.hickey/genomes/rice/tracks/trf/rice_trf.bed" distribution="mask"/>
 
 <track name="dustmasker"    path="/data/douglas.hoen/piatea/genomes/rice/tracks/dustmasker/rice_dustmasker.bb" distribution="binary"/>
 <track name="windowmasker"  path="/data/douglas.hoen/piatea/genomes/rice/tracks/windowmasker/rice_windowmasker.bb" distribution="binary"/>
