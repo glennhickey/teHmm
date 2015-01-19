@@ -1,0 +1,29 @@
+<?xml version="1.0" ?>
+<teModelConfig>
+	<track distribution="multinomial" name="repbase" path="/data/glenn.hickey/genomes/mm10/tracks/repbase/mm10.repbase.bed" valCol="3"/>
+	<track distribution="multinomial" name="repeat_modeler" path="/data/glenn.hickey/genomes/mm10/tracks/clean/mm10_chr1_repeatmodeler_clean.bed" preprocess="rm" valCol="3"/>
+	<track distribution="multinomial" name="genes" path="/data/glenn.hickey/genomes/mm10/tracks/genes/mm10_refseq.bed" valCol="3"/>
+	<track default="0" distribution="gaussian" logScale="1.6683" name="alignment_depth" path="/data/glenn.hickey/genomes/mm10/tracks/alignment_depth/mm10.chr1.alignability.bw" shift="1.0" valCol="3"/>
+	<track distribution="multinomial" name="ltr_finder" path="/data/glenn.hickey/genomes/mm10/tracks/clean/mm10_chr1_ltrfinder_clean.bed" preprocess="ltr_finder" valCol="3"/>
+	<track distribution="multinomial" name="ltr_harvest" path="/data/glenn.hickey/genomes/mm10/tracks/clean/mm10_ltrharvest_clean.bed" preprocess="ltr_finder" valCol="3"/>
+	<track distribution="multinomial" name="ltr_termini" path="/data/glenn.hickey/genomes/mm10/tracks/clean/mm10.LTR_clean.bed" preprocess="termini" valCol="3"/>
+	<track distribution="multinomial" name="tir_termini" path="/data/glenn.hickey/genomes/mm10/tracks/clean/mm10.TIR_clean.bed" preprocess="termini" valCol="3"/>
+	<track distribution="multinomial" name="palindrome" path="/data/glenn.hickey/genomes/mm10/tracks/clean/mm10.palindrome_clean.bed" preprocess="termini" valCol="3"/>
+	<track distribution="multinomial" name="overlap" path="/data/glenn.hickey/genomes/mm10/tracks/clean/mm10.TIR_clean.bed" preprocess="termini" valCol="3"/>
+	<track default="0.0" distribution="gaussian" logScale="4.6262" name="cov_80-" path="/data/glenn.hickey/genomes/mm10/tracks/copynum/coverage.cov.80-.bw" shift="1.0" valCol="3"/>
+	<track default="0.0" distribution="gaussian" logScale="4.0143" name="left_peak_80-" path="/data/glenn.hickey/genomes/mm10/tracks/copynum/coverage.left.80-.bw" shift="1.0" valCol="3"/>
+	<track default="0.0" distribution="gaussian" logScale="3.776" name="right_peak_80-" path="/data/glenn.hickey/genomes/mm10/tracks/copynum/coverage.right.80-.bw" shift="1.0" valCol="3"/>
+	<track default="0.0" distribution="gaussian" logScale="3.7848" name="cov_80-90" path="/data/glenn.hickey/genomes/mm10/tracks/copynum/coverage.cov.80-90.bw" shift="1.0" valCol="3"/>
+	<track default="0.0" distribution="gaussian" logScale="3.6657" name="left_peak_80-90" path="/data/glenn.hickey/genomes/mm10/tracks/copynum/coverage.left.80-90.bw" shift="1.0" valCol="3"/>
+	<track default="0.0" distribution="gaussian" logScale="3.6653" name="right_peak_80-90" path="/data/glenn.hickey/genomes/mm10/tracks/copynum/coverage.right.80-90.bw" shift="1.0" valCol="3"/>
+	<track default="0.0" distribution="gaussian" logScale="3.5097" name="cov_90+" path="/data/glenn.hickey/genomes/mm10/tracks/copynum/coverage.cov.90+.bw" shift="1.0" valCol="3"/>
+	<track default="0.0" distribution="gaussian" logScale="3.2779" name="left_peak_90+" path="/data/glenn.hickey/genomes/mm10/tracks/copynum/coverage.left.90+.bw" shift="1.0" valCol="3"/>
+	<track default="0.0" distribution="gaussian" logScale="3.4346" name="right_peak_90+" path="/data/glenn.hickey/genomes/mm10/tracks/copynum/coverage.right.90+.bw" shift="1.0" valCol="3"/>
+	<track default="0.0" distribution="gaussian" name="cov_maxPId" path="/data/glenn.hickey/genomes/mm10/tracks/copynum/coverage.maxPId.bw" scale="0.08" shift="0.0" valCol="3"/>
+	<track default="0" distribution="gaussian" name="phyloP" path="/data/glenn.hickey/genomes/mm10/tracks/cons/mm10.phyloP60way.bw" scale="0.4291" shift="0.0" valCol="3"/>
+	<track default="0" distribution="gaussian" name="gcpct" path="/data/glenn.hickey/genomes/mm10/tracks/gcpct/mm10_gcPercentWin20.bw" scale="0.08" shift="0.0" valCol="3"/>
+	<track distribution="binary" name="polyA" path="/data/glenn.hickey/genomes/mm10/tracks/singleBaseRepeats/mm10_polya.bed" valCol="0"/>
+	<track distribution="multinomial" name="sequence" path="/data/glenn.hickey/genomes/mm10/sequence/mm10.fa" valCol="3"/>
+	<track distribution="mask" name="trf" path="/data/glenn.hickey/genomes/mm10/tracks/trf/mm10.trf.bed" valCol="0"/>
+	<track distribution="mask" name="polyN" path="/data/glenn.hickey/genomes/mm10/tracks/singleBaseRepeats/mm10_polyn.bed" valCol="0"/>
+</teModelConfig>

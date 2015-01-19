@@ -1,14 +1,20 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <teModelConfig>
-<track name="tigr-repeats"  path="/data/douglas.hoen/piatea/genomes/rice/tracks/tigr_repeats-repeatmasker/rice.tigr_repeats-repeatmasker.preliminary.bed"/>
+<track name="tigr-repeats"  path="/data/glenn.hickey/genomes/rice/tracks/oryzaRepeatDb/rice_tigr.bed"/>
 <track name="transposonpsi" path="/data/douglas.hoen/piatea/genomes/rice/tracks/transposonpsi/rice_transposonpsi.bed" distribution="multinomial" preprocess="rmu"/>
 <track name="softmask"      path="/data/glenn.hickey/genomes/rice/tracks/softmaskRepeats/rice_softmaskRepeats.bed" distribution="multinomial"/>
 <track name="repeat_modeler" path="/data/glenn.hickey/genomes/rice/tracks/repeatmodeler/rice_repeatmodeler.bed" distribution="multinomial" preprocess="rm"/>
 <track name="genes"         path="/data/glenn.hickey/genomes/rice/tracks/genes/rice_genes.bed" distribution="multinomial"/>
 
+<track name="srna"          path="/data/douglas.hoen/piatea/genomes/rice/tracks/meng-srna/meng-srna.bed" distribution="binary"/>
 <track name="ltr_finder"    path="/data/glenn.hickey/genomes/rice/tracks/ltr_finder/rice_ltr_finder.bed" distribution="multinomial" preprocess="ltr_finder"/>
 
 <track name="ltr_harvest"   path="/data/glenn.hickey/genomes/rice/tracks/ltr_harvest/rice_ltrharvest.bed" distribution="multinomial" preprocess="ltr_finder"/>
+
+<track name="ltr_termini"       path="/data/douglas.hoen/piatea/genomes/rice/tracks/terminisearch/rice.LTR.bed" distribution="multinomial" preprocess="termini"/>
+<track name="tir_termini"       path="/data/douglas.hoen/piatea/genomes/rice/tracks/terminisearch/rice.TIR.bed" distribution="multinomial" preprocess="termini"/>
+<track name="palindrome"        path="/data/douglas.hoen/piatea/genomes/rice/tracks/terminisearch/rice.palindrome.bed" distribution="multinomial" preprocess="termini"/>
+<track name="overlap"           path="/data/douglas.hoen/piatea/genomes/rice/tracks/terminisearch/rice.TIR.bed" distribution="multinomial" preprocess="termini"/>
 
 <track name="cov_80-"          path="/data/glenn.hickey/genomes/rice/tracks/copynum/coverage.cov.80-.bw" default="0.0" distribution="gaussian"/>
 <track name="left_peak_80-"    path="/data/glenn.hickey/genomes/rice/tracks/copynum/coverage.left.80-.bw" default="0.0" distribution="gaussian"/>

@@ -1,12 +1,17 @@
 <?xml version="1.0" ?>
 <teModelConfig>
-	<track distribution="multinomial" name="tigr-repeats" path="/data/douglas.hoen/piatea/genomes/rice/tracks/tigr_repeats-repeatmasker/rice.tigr_repeats-repeatmasker.preliminary.bed" valCol="3"/>
-	<track distribution="multinomial" name="transposonpsi" path="/data/glenn.hickey/genomes/rice/clean/rice_transposonpsi_clean.bed" preprocess="rmu" valCol="3"/>
+	<track distribution="multinomial" name="tigr-repeats" path="/data/glenn.hickey/genomes/rice/tracks/oryzaRepeatDb/rice_tigr.bed" valCol="3"/>
+	<track distribution="multinomial" name="transposonpsi" path="/data/glenn.hickey/genomes/rice/tracks/clean/rice_transposonpsi_clean.bed" preprocess="rmu" valCol="3"/>
 	<track distribution="multinomial" name="softmask" path="/data/glenn.hickey/genomes/rice/tracks/softmaskRepeats/rice_softmaskRepeats.bed" valCol="3"/>
-	<track distribution="multinomial" name="repeat_modeler" path="/data/glenn.hickey/genomes/rice/clean/rice_repeatmodeler_clean.bed" preprocess="rm" valCol="3"/>
+	<track distribution="multinomial" name="repeat_modeler" path="/data/glenn.hickey/genomes/rice/tracks/clean/rice_repeatmodeler_clean.bed" preprocess="rm" valCol="3"/>
 	<track distribution="multinomial" name="genes" path="/data/glenn.hickey/genomes/rice/tracks/genes/rice_genes.bed" valCol="3"/>
-	<track distribution="multinomial" name="ltr_finder" path="/data/glenn.hickey/genomes/rice/clean/rice_ltr_finder_clean.bed" preprocess="ltr_finder" valCol="3"/>
-	<track distribution="multinomial" name="ltr_harvest" path="/data/glenn.hickey/genomes/rice/clean/rice_ltrharvest_clean.bed" preprocess="ltr_finder" valCol="3"/>
+	<track distribution="binary" name="srna" path="/data/douglas.hoen/piatea/genomes/rice/tracks/meng-srna/meng-srna.bed" valCol="0"/>
+	<track distribution="multinomial" name="ltr_finder" path="/data/glenn.hickey/genomes/rice/tracks/clean/rice_ltr_finder_clean.bed" preprocess="ltr_finder" valCol="3"/>
+	<track distribution="multinomial" name="ltr_harvest" path="/data/glenn.hickey/genomes/rice/tracks/clean/rice_ltrharvest_clean.bed" preprocess="ltr_finder" valCol="3"/>
+	<track distribution="multinomial" name="ltr_termini" path="/data/glenn.hickey/genomes/rice/tracks/clean/rice.LTR_clean.bed" preprocess="termini" valCol="3"/>
+	<track distribution="multinomial" name="tir_termini" path="/data/glenn.hickey/genomes/rice/tracks/clean/rice.TIR_clean.bed" preprocess="termini" valCol="3"/>
+	<track distribution="multinomial" name="palindrome" path="/data/glenn.hickey/genomes/rice/tracks/clean/rice.palindrome_clean.bed" preprocess="termini" valCol="3"/>
+	<track distribution="multinomial" name="overlap" path="/data/glenn.hickey/genomes/rice/tracks/clean/rice.TIR_clean.bed" preprocess="termini" valCol="3"/>
 	<track default="0.0" distribution="gaussian" logScale="3.9934" name="cov_80-" path="/data/glenn.hickey/genomes/rice/tracks/copynum/coverage.cov.80-.bw" shift="1.0" valCol="3"/>
 	<track default="0.0" distribution="gaussian" logScale="3.5256" name="left_peak_80-" path="/data/glenn.hickey/genomes/rice/tracks/copynum/coverage.left.80-.bw" shift="1.0" valCol="3"/>
 	<track default="0.0" distribution="gaussian" logScale="3.5333" name="right_peak_80-" path="/data/glenn.hickey/genomes/rice/tracks/copynum/coverage.right.80-.bw" shift="1.0" valCol="3"/>
@@ -25,7 +30,6 @@
 	<track distribution="multinomial" name="irf" path="/data/douglas.hoen/piatea/genomes/rice/tracks/irf/rice_irf.bed" valCol="3"/>
 	<track distribution="binary" name="mitehunter" path="/data/douglas.hoen/piatea/genomes/rice/tracks/mitehunter/rice_mitehunter.bed" valCol="0"/>
 	<track distribution="multinomial" name="sequence" path="/data/glenn.hickey/genomes/rice/sequence/rice.fa" valCol="3"/>
-	<track distribution="multinomial" name="tsd" path="/data/glenn.hickey/genomes/rice/clean/repeat_modeler_tsd.bed" valCol="3"/>
 	<track distribution="mask" name="polyN" path="/data/glenn.hickey/genomes/rice/tracks/singleBaseRepeats/rice_polyn.bed" valCol="0"/>
-   <track distribution="mask" name="trf" path="/data/glenn.hickey/genomes/rice/tracks/trf/rice_trf.bed" valCol="0"/>
+	<track distribution="mask" name="trf" path="/data/glenn.hickey/genomes/rice/tracks/trf/rice_trf.bed" valCol="0"/>
 </teModelConfig>
