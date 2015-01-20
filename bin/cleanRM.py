@@ -10,6 +10,7 @@ import re
 
 from pybedtools import BedTool, Interval
 from teHmm.common import myLog, EPSILON, initBedTool, cleanBedTool
+from teHmm.common import runShellCommand, getLocalTempPath
 
 """
 Remove everything past the first occurence of | / ? _ in the name column
@@ -54,14 +55,10 @@ def main(argv=None):
     assert args.minScore <= args.maxScore
     tempBedToolPath = initBedTool()
 
-    if not args.overlap:
-        tempPath1 = getLocalTempPath("Temp1_", ".bed")
-        tempPath2 = getLocalTempPath("Temp2_", ".bed")
-        runShellCommand("sortBed -i %s > %s" % (args.inBed, tempPath1))
-        runShellCommand("removeBedOverlaps.py %s --rm > %s" % (tempPath1,
-                                                               tempPath2))
-        args.inBed = tempPath2
-
+    tempPath = getLocalTempPath("Temp_cleanOut", ".bed")
+    tempPath2 = getLocalTempPath("Temp2_", ".bed")
+    tempFile = open(tempPath, "w")
+    
     for interval in BedTool(args.inBed).sort():
         # filter score if exists
         try:
@@ -94,9 +91,20 @@ def main(argv=None):
                 if m is not None:
                     interval.name = interval.name[:m.start()]
         
-        sys.stdout.write(str(interval))
+        tempFile.write(str(interval))
+
+    tempFile.close()
     if not args.overlap:
-        runShellCommand("rm -f %s %s" % (tempPath1, tempPath2))
+        runShellCommand("removeBedOverlaps.py %s --rm > %s" % (tempPath,
+                                                               tempPath2))
+        tempPath, tempPath2, = tempPath2, tempPath
+
+    tempFile = open(tempPath, "r")
+    for line in tempFile:
+        sys.stdout.write(line)
+    tempFile.close()
+    
+    runShellCommand("rm -f %s %s" % (tempPath, tempPath2))
     cleanBedTool(tempBedToolPath)
 
 # should be a prefix tree...
