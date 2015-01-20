@@ -46,11 +46,21 @@ def main(argv=None):
                         " out", default=-sys.maxint, type=float)
     parser.add_argument("--maxScore", help="Maximum score value to not filter"
                         " out", default=sys.maxint, type=float)
+    parser.add_argument("--overlap", help="Dont run removeBedOverlaps.py",
+                        action="store_true", default=False)
 
     args = parser.parse_args()
     assert os.path.exists(args.inBed)
     assert args.minScore <= args.maxScore
     tempBedToolPath = initBedTool()
+
+    if not args.overlap:
+        tempPath1 = getLocalTempPath("Temp1_", ".bed")
+        tempPath2 = getLocalTempPath("Temp2_", ".bed")
+        runShellCommand("sortBed -i %s > %s" % (args.inBed, tempPath1))
+        runShellCommand("removeBedOverlaps.py %s --rm > %s" % (tempPath1,
+                                                               tempPath2))
+        args.inBed = tempPath2
 
     for interval in BedTool(args.inBed).sort():
         # filter score if exists
@@ -85,6 +95,8 @@ def main(argv=None):
                     interval.name = interval.name[:m.start()]
         
         sys.stdout.write(str(interval))
+    if not args.overlap:
+        runShellCommand("rm -f %s %s" % (tempPath1, tempPath2))
     cleanBedTool(tempBedToolPath)
 
 # should be a prefix tree...
