@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <teModelConfig>
+<track name="repet"         path="/data/glenn.hickey/genomes/rice/tracks/repet/Rice_REPETv22_SuperfamilyOnly_renamed_clean.bed" distribution="multinomial"/>
 <track name="tigr-repeats"  path="/data/glenn.hickey/genomes/rice/tracks/oryzaRepeatDb/rice_tigr.bed"/>
 <track name="transposonpsi" path="/data/douglas.hoen/piatea/genomes/rice/tracks/transposonpsi/rice_transposonpsi.bed" distribution="multinomial" preprocess="rmu"/>
 <track name="softmask"      path="/data/glenn.hickey/genomes/rice/tracks/softmaskRepeats/rice_softmaskRepeats.bed" distribution="multinomial"/>
