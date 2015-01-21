@@ -37,6 +37,8 @@ def main(argv=None):
     parser.add_argument("--sizes", help="bedFile to use for computing state numbering"
                         " by using decreasing order in total coverage (only works"
                         " with --teNumbers)", default=None)
+    parser.add_argument("--noMerge", help="dont merge adjacent intervals with same"
+                        " name with --bed option", action="store_true",default=False)
     
 
     args = parser.parse_args()
@@ -91,13 +93,28 @@ def main(argv=None):
 
     # process optional bed file
     if args.bed is not None:
+        prevInterval = None
         bedIntervals = readBedIntervals(args.bed, ncol=4)
         for interval in bedIntervals:
             oldName = interval[3]
             newName = names[int(oldName)]
             newInterval = list(interval)
             newInterval[3] = newName
+            if not args.noMerge and\
+              prevInterval is not None and\
+              newInterval[3] == prevInterval[3] and\
+              newInterval[0] == prevInterval[0] and\
+              newInterval[1] == prevInterval[2]:
+                # glue onto prev interval
+                prevInterval[2] = outInterval[2]
+            else:
+                # write and update prev
+                if prevInterval is not None:
+                    print "\t".join(str(x) for x in newInterval)
+                prevInterval = newInterval
+        if prevInterval is not None:
             print "\t".join(str(x) for x in newInterval)
-    
+
+
 if __name__ == "__main__":
     sys.exit(main())
