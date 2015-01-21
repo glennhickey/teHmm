@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <teModelConfig>
-<track name="repbase"      path="/data/glenn.hickey/genomes/mm10/tracks/repbase/mm10.repbase.bed" distribution="multinomial"/>
+<track name="repbase"      path="/data/glenn.hickey/genomes/mm10/tracks/repbase/mm10.repbase.bed" distribution="multinomial preprocess="rm"/>
 <track name="repeat_modeler" path="/data/glenn.hickey/genomes/mm10/tracks/repeatmodeler/mm10_chr1_repeatmodeler.bed" distribution="multinomial" preprocess="rm"/>
 <track name="genes"         path="/data/glenn.hickey/genomes/mm10/tracks/genes/mm10_refseq.bed" distribution="multinomial"/>
 <track name="alignment_depth" path="/data/glenn.hickey/genomes/mm10/tracks/alignment_depth/mm10.chr1.alignability.bw" distribution="gaussian" default="0"/>
