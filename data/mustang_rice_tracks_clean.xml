@@ -6,7 +6,8 @@
 	<track distribution="multinomial" name="softmask" path="/data/glenn.hickey/genomes/rice/tracks/softmaskRepeats/rice_softmaskRepeats.bed" valCol="3"/>
 	<track distribution="multinomial" name="repeat_modeler" path="/data/glenn.hickey/genomes/rice/tracks/clean/rice_repeatmodeler_clean.bed" preprocess="rm" valCol="3"/>
 	<track distribution="multinomial" name="genes" path="/data/glenn.hickey/genomes/rice/tracks/genes/rice_genes.bed" valCol="3"/>
-	<track distribution="binary" name="srna" path="/data/douglas.hoen/piatea/genomes/rice/tracks/meng-srna/meng-srna.bed" valCol="0"/>
+<track name="chain_depth"   path="/data/glenn.hickey/genomes/rice/tracks/chain_depth/rice_chain_depth.bb" distribution="gaussian" default="0.0"/>
+	<track default="0.0" distribution="gaussian" logScale="2.3998" name="srna" path="/data/douglas.hoen/piatea/genomes/rice/tracks/jeong-srna/seedling_controls.bw" shift="1.0" valCol="3"/>
 	<track distribution="multinomial" name="ltr_finder" path="/data/glenn.hickey/genomes/rice/tracks/clean/rice_ltr_finder_clean.bed" preprocess="ltr_finder" valCol="3"/>
 	<track distribution="multinomial" name="ltr_harvest" path="/data/glenn.hickey/genomes/rice/tracks/clean/rice_ltrharvest_clean.bed" preprocess="ltr_finder" valCol="3"/>
 	<track distribution="multinomial" name="ltr_termini" path="/data/glenn.hickey/genomes/rice/tracks/clean/rice.LTR_clean.bed" preprocess="termini" valCol="3"/>

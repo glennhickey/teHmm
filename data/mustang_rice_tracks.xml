@@ -8,8 +8,9 @@
 <track name="softmask"      path="/data/glenn.hickey/genomes/rice/tracks/softmaskRepeats/rice_softmaskRepeats.bed" distribution="multinomial"/>
 <track name="repeat_modeler" path="/data/glenn.hickey/genomes/rice/tracks/repeatmodeler/rice_repeatmodeler.bed" distribution="multinomial" preprocess="rm"/>
 <track name="genes"         path="/data/glenn.hickey/genomes/rice/tracks/genes/rice_genes.bed" distribution="multinomial"/>
+<track name="chain_depth"   path="/data/glenn.hickey/genomes/rice/tracks/chain_depth/rice_chain_depth.bb" distribution="gaussian" default="0.0"/>
 
-<track name="srna"          path="/data/douglas.hoen/piatea/genomes/rice/tracks/meng-srna/meng-srna.bed" distribution="binary"/>
+<track name="srna"          path="/data/douglas.hoen/piatea/genomes/rice/tracks/jeong-srna/seedling_controls.bw" distribution="gaussian" default="0.0"/>
 <track name="ltr_finder"    path="/data/glenn.hickey/genomes/rice/tracks/ltr_finder/rice_ltr_finder.bed" distribution="multinomial" preprocess="ltr_finder"/>
 
 <track name="ltr_harvest"   path="/data/glenn.hickey/genomes/rice/tracks/ltr_harvest/rice_ltrharvest.bed" distribution="multinomial" preprocess="ltr_finder"/>
