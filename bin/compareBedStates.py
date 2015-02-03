@@ -657,7 +657,7 @@ def extract2ClassSpecificityFromFile(dumpPath, state):
     countTable = extractCompCountsFromFile(dumpPath)
     totalBases = 0
     # count the total number of bases
-    for state, value in countTable.itmes():
+    for name, value in countTable.items():
         fn, fp, tp = value[0], value[1], value[2]
         totalBases += tp + fn
     if state not in countTable:

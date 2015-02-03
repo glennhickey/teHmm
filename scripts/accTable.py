@@ -93,7 +93,7 @@ def main(argv=None):
     for name in truthNames:
         header += ", F1 " + name
     for name in truthNames:
-        header += ", Prec " + name  + ", Rec " + name + ", Spec"
+        header += ", Prec " + name  + ", Rec " + name + ", Spec " + name
     csvFile.write(header + "\n")
 
     for i in xrange(len(tests)):

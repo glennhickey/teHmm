@@ -48,7 +48,7 @@ def main(argv=None):
     outFile = open(os.path.join(args.outDir, "accuracy.csv"), "w")
 
     if args.exploreFdr is True:
-        fdrs = [0, .5, .1, .15, .20, .25, .30, .35, .40, .45, .50, .55, .60, .65, .70, .75, .80, .85, .90, .95, 1]
+        fdrs = [0, .05, .1, .15, .20, .25, .30, .35, .40, .45, .50, .55, .60, .65, .70, .75, .80, .85, .90, .95, 1]
     else:
         fdrs = [.65]
 
@@ -110,11 +110,11 @@ def main(argv=None):
         f1 = 0.
         if prec + rec > 0:
             f1 = (2. * prec * rec) / (prec + rec)        
-        return ("%.4f" % prec, "%.4f" % rec, "%.4f" % f1, "%.4f" % spec)
+        return "%.4f, %.4f, %.4f, %.4f" % (prec, rec, f1, spec)
 
     header = "states, trainSize, precision, recall, f1, specificity"
     for fdr in fdrs:
-        header += ", fdrfit%.3f_precision, fdrfit%.3f_recall, fdrfit%.3f_f1, fdrfit$.3f_specificity" % (fdr, fdr, fdr, fdr)
+        header += ", fdrfit%.3f_precision, fdrfit%.3f_recall, fdrfit%.3f_f1, fdrfit%.3f_specificity" % (fdr, fdr, fdr, fdr)
     if len(fdrs) > 1:
         header += "\n,,,,"
         for fdr in fdrs:
@@ -133,17 +133,17 @@ def main(argv=None):
         for fdr in fdrs:
             compFdr = comp.replace(".txt", "Fdr%f.txt" % fdr)
             statsFdr = extractCompStatsFromFile(compFdr)[0]
+            specFdr = extract2ClassSpecificityFromFile(compFdr, "TE")
             if "TE" not in statsFdr:
                 statsFdr["TE"] = (0,0)
-            line += ", " + prettyAcc(statsFdr["TE"])
+            line += ", " + prettyAcc(statsFdr["TE"], specFdr)
         line += "\n"
 
         outFile.write(line)
 
     # tack on some roc plots
     for bed in args.beds:
-        outFile.write("\n%s\n" % bed)
-        header = "fdr, prec, rec, f1, spec, 1-spec\n"
+        header = "\n%s ROC\nfdr, prec, rec, f1, spec, 1-spec, sens" % bed
         outFile.write(header + "\n")
         for fdr in fdrs:
             line = "%.3f" % fdr            
@@ -156,6 +156,7 @@ def main(argv=None):
             if "TE" not in statsFdr:
                 statsFdr["TE"] = (0,0)
             line += ", " + prettyAcc(statsFdr["TE"], specificity) + ", %.4f" % (1-specificity)
+            line += ", %.4f" % statsFdr["TE"][1]
             line += "\n"
             outFile.write(line)
 
