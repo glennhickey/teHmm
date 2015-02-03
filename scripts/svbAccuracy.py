@@ -106,19 +106,19 @@ def main(argv=None):
     runShellCommand("sleep 10")
 
     # munging ############
-    def prettyAcc((prec, rec)):
+    def prettyAcc((prec, rec), spec):
         f1 = 0.
         if prec + rec > 0:
-            f1 = (2. * prec * rec) / (prec + rec)
-        return "%.4f, %.4f, %.4f" % (prec, rec, f1)
+            f1 = (2. * prec * rec) / (prec + rec)        
+        return ("%.4f" % prec, "%.4f" % rec, "%.4f" % f1, "%.4f" % spec)
 
-    header = "states, trainSize, precision, recall, f1"
+    header = "states, trainSize, precision, recall, f1, specificity"
     for fdr in fdrs:
-        header += ", fdrfit%.3f_precision, fdrfit%.3f_recall, fdrfit%.3f_f1" % (fdr, fdr, fdr)
+        header += ", fdrfit%.3f_precision, fdrfit%.3f_recall, fdrfit%.3f_f1, fdrfit$.3f_specificity" % (fdr, fdr, fdr, fdr)
     if len(fdrs) > 1:
         header += "\n,,,,"
         for fdr in fdrs:
-            header += ", %.3f, %.3f, %.3f" % (fdr, fdr, fdr)
+            header += ", %.3f, %.3f, %.3f, %.3f" % (fdr, fdr, fdr, fdr)
     outFile.write(header + "\n")
 
     for bed in args.beds:

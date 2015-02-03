@@ -128,6 +128,7 @@ def main(argv=None):
         stats = compareBaseLevel(intervals1, intervals2, args.col - 1)[0]
 
         totalRight, totalWrong, accMap = summarizeBaseComparision(stats, args.ignore)
+        print "Base counts [False Negatives, False Positives, True Positives]:"
         print stats
         totalBoth = totalRight + totalWrong
         accuracy = float(totalRight) / float(totalBoth)
@@ -632,8 +633,45 @@ def extractCompStatsFromFile(dumpPath):
         if baseStats is not None and intervalStats is not None and\
           weightedStats is not None:
           break
-    return baseStats, intervalStats, weightedStats
     dumpFile.close()
+    return baseStats, intervalStats, weightedStats
+
+def extractCompCountsFromFile(dumpPath):
+    """ like above, but return the first dictionary with counts instead of
+    precision recall. this is a little hack to play with computation of
+    sensitivity / specificity for two-class cases. """
+    dumpFile = open(dumpPath, "r")
+    counts = None
+    mode = None
+    for line in dumpFile:
+        if line.find("Base counts") == 0:
+            mode = "counts"
+        elif mode == "counts":
+            counts = ast.literal_eval(line)
+            break
+    dumpFile.close()
+    return counts
+
+def extract2ClassSpecificityFromFile(dumpPath, state):
+    """ Compute specificity for just one state name vs everything else """
+    countTable = extractCompCountsFromFile(dumpPath)
+    totalBases = 0
+    # count the total number of bases
+    for state, value in countTable.itmes():
+        fn, fp, tp = value[0], value[1], value[2]
+        totalBases += tp + fn
+    if state not in countTable:
+        fn, fp, tp = 0, 0, 0
+    else:
+        fn, fp, tp = countTable[state]
+    # are true negatives are everything but false pos/neg and true pos for the
+    # state in question
+    tn = totalBases - (fp + tp + fn)
+    if fp + tn == 0:
+        spec = 0.
+    else:
+        spec = float(tn) / (float(fp) + float(tn))
+    return spec
 
 def cutOutMaskIntervals(inBed, minLength, maxLength, tracksInfoPath):
     """ Filter out intervals of mask tracks from inBed with lengths

@@ -14,7 +14,7 @@ import numpy as np
 
 from teHmm.common import runShellCommand
 from teHmm.common import runParallelShellCommands
-from teHmm.bin.compareBedStates import extractCompStatsFromFile
+from teHmm.bin.compareBedStates import extractCompStatsFromFile, extract2ClassSpecificityFromFile
 
 """ another wrapper for compareBedStates.py that will compare many files
 and make a decent table output
@@ -70,12 +70,12 @@ def main(argv=None):
     runParallelShellCommands(compCmds, args.proc)
 
     # munging ############
-    def prettyAcc((prec, rec)):
+    def prettyAcc((prec, rec), spec):
         f1 = 0.
         if prec + rec > 0:
-            f1 = (2. * prec * rec) / (prec + rec)
-        return ("%.4f" % prec, "%.4f" % rec, "%.4f" % f1)
-
+            f1 = (2. * prec * rec) / (prec + rec)        
+        return ("%.4f" % prec, "%.4f" % rec, "%.4f" % f1, "%.4f" % spec)
+    
     #table in memory
     table = dict()
     for i in xrange(len(tests)):
@@ -84,7 +84,8 @@ def main(argv=None):
             stats = extractCompStatsFromFile(opath)[0]
             if args.state not in stats:
                 stats[args.state] = (0,0)
-            table[(i, j)] = prettyAcc(stats[args.state])
+            specificity = extract2ClassSpecificityFromFile(opath, args.state)
+            table[(i, j)] = prettyAcc(stats[args.state], specificity)
 
     csvFile = open(args.outCSV, "w")
     
@@ -92,17 +93,17 @@ def main(argv=None):
     for name in truthNames:
         header += ", F1 " + name
     for name in truthNames:
-        header += ", Prec " + name  + ", Rec " + name
+        header += ", Prec " + name  + ", Rec " + name + ", Spec"
     csvFile.write(header + "\n")
 
     for i in xrange(len(tests)):
         line = testNames[i]
         for j in xrange(len(truths)):
-            prec, rec, f1 = table[(i, j)]
+            prec, rec, f1, spec = table[(i, j)]
             line += ", " + f1
         for j in xrange(len(truths)):
-            prec, rec, f1 = table[(i, j)]
-            line += ", " + prec + ", " + rec
+            prec, rec, f1, spec = table[(i, j)]
+            line += ", " + prec + ", " + rec + ", " + spec
         csvFile.write(line + "\n")
 
     csvFile.close()        
