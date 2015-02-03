@@ -14,7 +14,7 @@ import numpy as np
 
 from teHmm.common import runShellCommand
 from teHmm.common import runParallelShellCommands
-from teHmm.bin.compareBedStates import extractCompStatsFromFile
+from teHmm.bin.compareBedStates import extractCompStatsFromFile, extract2ClassSpecificityFromFile
 
 """ Generate some accuracy results.  To be used on output of statesVsBic.py
 (or some set of hmm prediction beds of the form *_trainsize.stateNum.bed
@@ -128,7 +128,8 @@ def main(argv=None):
         stats = extractCompStatsFromFile(comp)[0]
         if "TE" not in stats:
             stats["TE"] = (0,0)
-        line = "%d, %d" % (nStates, tSize) + "," + prettyAcc(stats["TE"]) 
+        specificity = extract2ClassSpecificityFromFile(comp, "TE")
+        line = "%d, %d" % (nStates, tSize) + "," + prettyAcc(stats["TE"], specificity) 
         for fdr in fdrs:
             compFdr = comp.replace(".txt", "Fdr%f.txt" % fdr)
             statsFdr = extractCompStatsFromFile(compFdr)[0]
@@ -138,6 +139,26 @@ def main(argv=None):
         line += "\n"
 
         outFile.write(line)
+
+    # tack on some roc plots
+    for bed in args.beds:
+        outFile.write("\n%s\n" % bed)
+        header = "fdr, prec, rec, f1, spec, 1-spec\n"
+        outFile.write(header + "\n")
+        for fdr in fdrs:
+            line = "%.3f" % fdr            
+            toks = "_".join(os.path.basename(bed).split(".")).split("_")
+            tSize, nStates = int(toks[1]), int(toks[3])
+            comp = os.path.join(args.outDir, os.path.basename(bed).replace(".bed", "_comp.txt"))
+            compFdr = comp.replace(".txt", "Fdr%f.txt" % fdr)
+            statsFdr = extractCompStatsFromFile(compFdr)[0]
+            specificity = extract2ClassSpecificityFromFile(compFdr, "TE")
+            if "TE" not in statsFdr:
+                statsFdr["TE"] = (0,0)
+            line += ", " + prettyAcc(statsFdr["TE"], specificity) + ", %.4f" % (1-specificity)
+            line += "\n"
+            outFile.write(line)
+
 
     outFile.close()
 
