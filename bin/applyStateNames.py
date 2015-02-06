@@ -100,20 +100,24 @@ def main(argv=None):
             newName = names[int(oldName)]
             newInterval = list(interval)
             newInterval[3] = newName
-            if not args.noMerge and\
-              prevInterval is not None and\
-              newInterval[3] == prevInterval[3] and\
-              newInterval[0] == prevInterval[0] and\
-              newInterval[1] == prevInterval[2]:
-                # glue onto prev interval
-                prevInterval[2] = outInterval[2]
+            if args.noMerge:
+                # write interval
+                print "\t".join(str(x) for x in newInterval)
             else:
-                # write and update prev
-                if prevInterval is not None:
-                    print "\t".join(str(x) for x in newInterval)
-                prevInterval = newInterval
+                if prevInterval is None:
+                    # update prev interval first time
+                    prevInterval = newInterval
+                elif newInterval[3] == prevInterval[3] and\
+                         newInterval[0] == prevInterval[0] and\
+                         newInterval[1] == prevInterval[2]:
+                    # glue onto prev interval
+                    prevInterval[2] = newInterval[2]
+                else:
+                    # write and update prev
+                    print "\t".join(str(x) for x in prevInterval)
+                    prevInterval = newInterval
         if prevInterval is not None:
-            print "\t".join(str(x) for x in newInterval)
+            print "\t".join(str(x) for x in prevInterval)
 
 
 if __name__ == "__main__":

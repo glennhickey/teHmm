@@ -552,8 +552,12 @@ def getStateMapFromConfMatrix(reverseMatrix, truthTgt, truthIgnore, predIgnore, 
                         sureBets.append(predState)
                     else:
                         predCandidates.append(predState)
-                if fdr is not None and predFrac >= 1. - fdr:
-                    fdrSureBets.append(predState)
+                if fdr is not None:
+                    # above calculation of predFrac is effective heuristic but
+                    # runs against definition of fdr
+                    predFrac = float(overlap) / float(predStateSizes[predState])
+                    if predFrac >= 1. - fdr:
+                        fdrSureBets.append(predState)
             else:
                 logger.debug("state mapper skipping %s with othresh %f" % (
                     predState, float(overlap) / float(min(truthSize,

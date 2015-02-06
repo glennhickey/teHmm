@@ -34,6 +34,7 @@ def main(argv=None):
     parser.add_argument("--proc", help="number of parallel processes", type=int, default=1)
     parser.add_argument("--maskGap", help="interpolate masked gaps smaller than this", type=int, default=5000)
     parser.add_argument("--exploreFdr", help="try a bunch of fdr values", action="store_true", default=False)
+    parser.add_argument("--compWindow", help="intersect with this file before running comparison", default=None)
 
     args = parser.parse_args()
 
@@ -46,6 +47,11 @@ def main(argv=None):
         runShellCommand("mkdir %s" % args.outDir)
 
     outFile = open(os.path.join(args.outDir, "accuracy.csv"), "w")
+
+    truthBed = args.truthBed
+    if args.compWindow is not None:
+        truthBed = os.path.join(args.outDir, "clippedTruth.bed")
+        runShellCommand("intersectBed -a %s -b %s | sortBed > %s" % (args.truthBed, args.compWindow, truthBed))
 
     if args.exploreFdr is True:
         fdrs = [0, .05, .1, .15, .20, .25, .30, .35, .40, .45, .50, .55, .60, .65, .70, .75, .80, .85, .90, .95, 1]
@@ -90,12 +96,22 @@ def main(argv=None):
         tSize, nStates = int(toks[1]), int(toks[3])
         fitOutMI = os.path.join(args.outDir, os.path.basename(bed).replace(".bed", "_fitMI.bed"))
         comp = os.path.join(args.outDir, os.path.basename(bed).replace(".bed", "_comp.txt"))
-        cmd = "compareBedStates.py %s %s --tl %s --delMask %d > %s" % (args.truthBed, fitOutMI, args.tracksList, args.maskGap, comp)
+        cmd = ""
+        fitOutMIClipped = fitOutMI
+        if args.compWindow is not None:
+            fitOutMIClipped = fitOutMI.replace(".bed", "_clipped.bed")
+            cmd += "intersectBed -a %s -b %s | sortBed > %s && " % (fitOutMI, args.compWindow, fitOutMIClipped)
+        cmd += "compareBedStates.py %s %s --tl %s --delMask %d > %s" % (args.truthBed, fitOutMIClipped, args.tracksList, args.maskGap, comp)
         compareCmds.append(cmd)
         for fdr in fdrs:
             fitOutFdrMI = fitOutMI.replace(".bed", "Fdr%f.bed" % fdr)
             compFdr = comp.replace(".txt", "Fdr%f.txt" % fdr)
-            cmdFdr = "compareBedStates.py %s %s --tl %s --delMask %d > %s" % (args.truthBed, fitOutFdrMI, args.tracksList, args.maskGap, compFdr)
+            cmdFdr = ""
+            fitOutFdrMIClipped = fitOutFdrMI
+            if args.compWindow is not None:
+                fitOutFdrMIClipped = fitOutFdrMI.replace(".bed", "_clipped.bed")
+                cmdFdr += "intersectBed -a %s -b %s | sortBed > %s &&" % (fitOutFdrMI, args.compWindow, fitOutFdrMIClipped)
+            cmdFdr += "compareBedStates.py %s %s --tl %s --delMask %d > %s" % (args.truthBed, fitOutFdrMIClipped, args.tracksList, args.maskGap, compFdr)
             compareCmds.append(cmdFdr)
     
     runParallelShellCommands(fitCmds, args.proc)

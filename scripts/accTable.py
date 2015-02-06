@@ -92,8 +92,6 @@ def main(argv=None):
     header = "test"
     for name in truthNames:
         header += ", F1 " + name
-    for name in truthNames:
-        header += ", Prec " + name  + ", Rec " + name + ", Spec " + name
     csvFile.write(header + "\n")
 
     for i in xrange(len(tests)):
@@ -101,9 +99,18 @@ def main(argv=None):
         for j in xrange(len(truths)):
             prec, rec, f1, spec = table[(i, j)]
             line += ", " + f1
+        csvFile.write(line + "\n")
+
+    header = "\ntest"
+    for name in truthNames:
+        header += ", F1 " + name + ", Prec " + name  + ", Rec " + name + ", Spec " + name + ", 1-Spec " + name + ", Sens " + name + ", "
+    csvFile.write(header + "\n")
+
+    for i in xrange(len(tests)):
+        line = testNames[i]
         for j in xrange(len(truths)):
             prec, rec, f1, spec = table[(i, j)]
-            line += ", " + prec + ", " + rec + ", " + spec
+            line += ", %s, %s, %s, %s, %s, %s," % (f1, prec, rec, spec, str(1. - float(spec)), rec)
         csvFile.write(line + "\n")
 
     csvFile.close()        
