@@ -198,7 +198,11 @@ def writeEmissionHeatMap(model, args):
     else:
         stateNames = [str(x) for x in xrange(model.n_components)]
     stateNames = applyTEStateNaming(args.teStates, stateNames)
-    
+
+    sortedStateNames = sorted(stateNames)
+    stateRanks = [sortedStateNames.index(state) for state in stateNames]
+    stateNames = sortedStateNames
+
     N = len(stateNames)
     emProbs = emission.getLogProbs()
 
@@ -214,35 +218,39 @@ def writeEmissionHeatMap(model, args):
         trackNo = track.getNumber()
         nameMap = track.getValueMap()
         trackMeans = np.zeros((emission.getNumStates()))
-#        if len([x for x in emission.getTrackSymbols(trackNo)]) is not 2:
-#            continue
-        for state in xrange(emission.getNumStates()):
-            mean = 0.0
-            minVal = float(10e10)
-            maxVal = float(-10e10)
 
-            print state            
-            for symbol in emission.getTrackSymbols(trackNo):
-                # do we need to check for missing value here???
-                val = nameMap.getMapBack(symbol)
-                try:
-                    val = float(val)
-                except:
-                    nonNumeric = True
-                    break        
-                prob = np.exp(emProbs[trackNo][state][symbol])
-                print "%f += %f * %f = %f" % (mean, val, prob, mean + val * prob)
-                mean += val * prob
-                minVal, maxVal = min(val, minVal), max(val, maxVal)
-            if nonNumeric is False:
-                # normalize the mean
-                if maxVal > minVal:
-                    mean = (mean - minVal) / (maxVal - minVal)
-                # hacky cutoff
-                mean = min(0.23, mean)
+        for state in stateRanks:
+            if track.getDist() == "gaussian":
+                mean, stddev = emission.getGaussianParams(trackNo, state)
+            else:
+                mean = 0.0                
+                for symbol in emission.getTrackSymbols(trackNo):
+                    # do we need to check for missing value here???
+                    val = nameMap.getMapBack(symbol)
+                    try:
+                        val = float(val)
+                    except:
+                        nonNumeric = True
+                        break        
+                    prob = np.exp(emProbs[trackNo][state][symbol])
+                    assert prob >= 0. and prob <= 1.
+                    mean += val * prob                
+
+            if nonNumeric is False:            
                 trackMeans[state] = mean
             else:
                 break
+
+        if nonNumeric is False:
+            means = [trackMeans[state] for state in xrange(emission.getNumStates())]
+            minVal = min(means)
+            maxVal = max(means)
+            for state in xrange(emission.getNumStates()):
+                mean = trackMeans[state]
+                # normalize mean
+                trackMeans[state] = (mean - minVal) / (maxVal - minVal)
+                #hacky cutoff
+                #mean = min(0.23, mean)
         if nonNumeric is False:
             meanArray.append(trackMeans)
             trackNames.append(track.getName())

@@ -72,10 +72,10 @@ def main(argv=None):
         names = [""] * numStates
         for i in stateNumbers:
             if i in teNos:
-                name = "TE-%d" % teCount
+                name = "TE-%.2d" % teCount
                 teCount += 1
             else:
-                name = "Other-%d" % otherCount
+                name = "Other-%.2d" % otherCount
                 otherCount += 1
             names[i] = name
         assert teCount == len(teNos) and teCount + otherCount == len(names)
