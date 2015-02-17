@@ -5,6 +5,7 @@
 	<track distribution="multinomial" name="RM-RepBase-deLaChaux" path="/data/glenn.hickey/genomes/alyrata/tracks/clean/alyrata_chaux_clean.bed" valCol="3"/>
 	<track distribution="multinomial" name="RM-RepBase-Hollister" path="/data/glenn.hickey/genomes/alyrata/tracks/clean/alyrata_hollister_v2_clean.bed" valCol="3"/>
 	<track distribution="multinomial" name="REPET" path="/data/glenn.hickey/genomes/alyrata/tracks/repet/alyrata_repet_clean.bed" valCol="3"/>
+	<track distribution="multinomial" name="TE-Domains" path="/data/douglas.hoen/sharebrowser/tracks/alyrata/permanent/domains/TE_domains.bed" valCol="3"/>
 	<track default="0.0" distribution="gaussian" name="Alignment-Depth" path="/data/douglas.hoen/piatea/genomes/alyrata/tracks/misc/alyrata_orthodepth.bw" scale="0.8889" shift="0.0" valCol="3"/>
 	<track default="0.0" distribution="gaussian" name="GC" path="/data/glenn.hickey/genomes/alyrata/tracks/gc/gcPercentWin20.bw" scale="0.08" shift="0.0" valCol="3"/>
 	<track distribution="multinomial" name="Genes" path="/data/douglas.hoen/piatea/genomes/alyrata/tracks/misc/alyrata_fgenesh.bed" valCol="3"/>
@@ -30,6 +31,5 @@
 	<track default="0.0" distribution="gaussian" logScale="4.4961" name="mRNA" path="/data/douglas.hoen/piatea/genomes/alyrata/tracks/misc/alyrata_mrna.bw" shift="1.0" valCol="3"/>
 	<track distribution="multinomial" name="sequence" path="/data/douglas.hoen/piatea/genomes/alyrata/sequence/alyrata_scaffolds1to8.fas" valCol="3"/>
 	<track default="0.0" distribution="gaussian" logScale="4.0307" name="sRNA" path="/data/douglas.hoen/piatea/genomes/alyrata/tracks/misc/alyrata_srna.bw" shift="1.0" valCol="3"/>
-	<track distribution="multinomial" name="TE-Domains" path="/data/douglas.hoen/sharebrowser/tracks/alyrata/permanent/domains/TE_domains.bed" valCol="3"/>
 	<track distribution="binary" name="WindowMasker" path="/data/douglas.hoen/piatea/genomes/alyrata/tracks/windowmasker/alyrata_windowmasker.bb" valCol="0"/>
 </teModelConfig>
