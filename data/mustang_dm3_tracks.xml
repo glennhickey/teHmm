@@ -14,8 +14,8 @@
 	<track distribution="multinomial" name="lastz-Palindrome" path="/data/glenn.hickey/genomes/dm3/tracks/terminisearch/dm3.palindrome.bed" preprocess="termini" valCol="3"/>
 	<track default="0.0" distribution="gaussian" name="lastz-SelfHighId" path="/data/glenn.hickey/genomes/dm3/tracks/copynum/drosophila_coverage.cov.90+.bw" valCol="3"/>
 	<track default="0.0" distribution="gaussian" name="lastz-SelfLowId" path="/data/glenn.hickey/genomes/dm3/tracks/copynum/drosophila_coverage.cov.80-.bw" valCol="3"/>
-	<track default="0.0" distribution="gaussian" name="lastz-SelfMaxPctId" path="/data/glenn.hickey/genomes/dm3/tracks/copynum/drosophila_coverage.maxPId.bw" valCol="3"/>
 	<track default="0.0" distribution="gaussian" name="lastz-SelfMedId" path="/data/glenn.hickey/genomes/dm3/tracks/copynum/drosophila_coverage.cov.80-90.bw" valCol="3"/>
+	<track default="0.0" distribution="gaussian" name="lastz-SelfPctMaxId" path="/data/glenn.hickey/genomes/dm3/tracks/copynum/drosophila_coverage.maxPId.bw" valCol="3"/>
 	<track default="0.0" distribution="gaussian" name="lastz-SelfPeakLeftHigh" path="/data/glenn.hickey/genomes/dm3/tracks/copynum/drosophila_coverage.left.90+.bw" valCol="3"/>
 	<track default="0.0" distribution="gaussian" name="lastz-SelfPeakLeftLow" path="/data/glenn.hickey/genomes/dm3/tracks/copynum/drosophila_coverage.left.80-.bw" valCol="3"/>
 	<track default="0.0" distribution="gaussian" name="lastz-SelfPeakLeftMed" path="/data/glenn.hickey/genomes/dm3/tracks/copynum/drosophila_coverage.left.80-90.bw" valCol="3"/>

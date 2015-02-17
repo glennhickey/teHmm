@@ -13,8 +13,8 @@
 	<track distribution="multinomial" name="lastz-Palindrome" path="/data/glenn.hickey/genomes/mm10/tracks/clean/mm10.palindrome_clean.bed" preprocess="termini" valCol="3"/>
 	<track default="0.0" distribution="gaussian" logScale="1.0413" name="lastz-SelfHighId" path="/data/glenn.hickey/genomes/mm10/tracks/copynum/coverage.cov.90+.bw" shift="1.0" valCol="3"/>
 	<track default="0.0" distribution="gaussian" logScale="1.0507" name="lastz-SelfLowId" path="/data/glenn.hickey/genomes/mm10/tracks/copynum/coverage.cov.80-.bw" shift="1.0" valCol="3"/>
-	<track default="0.0" distribution="gaussian" name="lastz-SelfMaxPctId" path="/data/glenn.hickey/genomes/mm10/tracks/copynum/coverage.maxPId.bw" scale="2.48" shift="0.0" valCol="3"/>
 	<track default="0.0" distribution="gaussian" logScale="1.0439" name="lastz-SelfMedId" path="/data/glenn.hickey/genomes/mm10/tracks/copynum/coverage.cov.80-90.bw" shift="1.0" valCol="3"/>
+	<track default="0.0" distribution="gaussian" name="lastz-SelfPctMaxId" path="/data/glenn.hickey/genomes/mm10/tracks/copynum/coverage.maxPId.bw" scale="2.48" shift="0.0" valCol="3"/>
 	<track default="0.0" distribution="gaussian" logScale="1.039" name="lastz-SelfPeakLeftHigh" path="/data/glenn.hickey/genomes/mm10/tracks/copynum/coverage.left.90+.bw" shift="1.0" valCol="3"/>
 	<track default="0.0" distribution="gaussian" logScale="1.0459" name="lastz-SelfPeakLeftLow" path="/data/glenn.hickey/genomes/mm10/tracks/copynum/coverage.left.80-.bw" shift="1.0" valCol="3"/>
 	<track default="0.0" distribution="gaussian" logScale="1.0428" name="lastz-SelfPeakLeftMed" path="/data/glenn.hickey/genomes/mm10/tracks/copynum/coverage.left.80-90.bw" shift="1.0" valCol="3"/>

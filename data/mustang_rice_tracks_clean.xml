@@ -15,8 +15,8 @@
 	<track distribution="multinomial" name="lastz-Palindrome" path="/data/glenn.hickey/genomes/rice/tracks/clean/rice.palindrome_clean.bed" preprocess="termini" valCol="3"/>
 	<track default="0.0" distribution="gaussian" logScale="3.1835" name="lastz-SelfHighId" path="/data/glenn.hickey/genomes/rice/tracks/copynum/coverage.cov.90+.bw" shift="1.0" valCol="3"/>
 	<track default="0.0" distribution="gaussian" logScale="3.9934" name="lastz-SelfLowId" path="/data/glenn.hickey/genomes/rice/tracks/copynum/coverage.cov.80-.bw" shift="1.0" valCol="3"/>
-	<track default="0.0" distribution="gaussian" name="lastz-SelfMaxPctId" path="/data/glenn.hickey/genomes/rice/tracks/copynum/coverage.maxPId.bw" scale="0.08" shift="0.0" valCol="3"/>
 	<track default="0.0" distribution="gaussian" logScale="3.8255" name="lastz-SelfMedId" path="/data/glenn.hickey/genomes/rice/tracks/copynum/coverage.cov.80-90.bw" shift="1.0" valCol="3"/>
+	<track default="0.0" distribution="gaussian" name="lastz-SelfPctMaxId" path="/data/glenn.hickey/genomes/rice/tracks/copynum/coverage.maxPId.bw" scale="0.08" shift="0.0" valCol="3"/>
 	<track default="0.0" distribution="gaussian" logScale="2.9623" name="lastz-SelfPeakLeftHigh" path="/data/glenn.hickey/genomes/rice/tracks/copynum/coverage.left.90+.bw" shift="1.0" valCol="3"/>
 	<track default="0.0" distribution="gaussian" logScale="3.5256" name="lastz-SelfPeakLeftLow" path="/data/glenn.hickey/genomes/rice/tracks/copynum/coverage.left.80-.bw" shift="1.0" valCol="3"/>
 	<track default="0.0" distribution="gaussian" logScale="3.4825" name="lastz-SelfPeakLeftMed" path="/data/glenn.hickey/genomes/rice/tracks/copynum/coverage.left.80-90.bw" shift="1.0" valCol="3"/>

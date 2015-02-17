@@ -12,8 +12,8 @@
 	<track distribution="binary" name="HelitronScanner" path="/data/douglas.hoen/piatea/genomes/human/hg19/tracks/helitronscanner/hg19_helitronscanner.bed" valCol="0"/>
 	<track default="0.0" distribution="gaussian" logScale="4.9714" name="lastz-SelfHighId" path="/data/glenn.hickey/genomes/hg19/tracks/copynum/coverage_hg19.fa.chr22.cov.90+.bw" shift="1.0" valCol="3"/>
 	<track default="0.0" distribution="gaussian" logScale="7.1832" name="lastz-SelfLowId" path="/data/glenn.hickey/genomes/hg19/tracks/copynum/coverage_hg19.fa.chr22.cov.80-.bw" shift="1.0" valCol="3"/>
-	<track default="0.0" distribution="gaussian" name="lastz-SelfMaxPctId" path="/data/glenn.hickey/genomes/hg19/tracks/copynum/coverage_hg19.fa.chr22.maxPId.bw" scale="0.08" shift="0.0" valCol="3"/>
 	<track default="0.0" distribution="gaussian" logScale="6.4523" name="lastz-SelfMedId" path="/data/glenn.hickey/genomes/hg19/tracks/copynum/coverage_hg19.fa.chr22.cov.80-90.bw" shift="1.0" valCol="3"/>
+	<track default="0.0" distribution="gaussian" name="lastz-SelfPctMaxId" path="/data/glenn.hickey/genomes/hg19/tracks/copynum/coverage_hg19.fa.chr22.maxPId.bw" scale="0.08" shift="0.0" valCol="3"/>
 	<track default="0.0" distribution="gaussian" logScale="4.7004" name="lastz-SelfPeakLeftHigh" path="/data/glenn.hickey/genomes/hg19/tracks/copynum/coverage_hg19.fa.chr22.left.90+.bw" shift="1.0" valCol="3"/>
 	<track default="0.0" distribution="gaussian" logScale="6.4781" name="lastz-SelfPeakLeftLow" path="/data/glenn.hickey/genomes/hg19/tracks/copynum/coverage_hg19.fa.chr22.left.80-.bw" shift="1.0" valCol="3"/>
 	<track default="0.0" distribution="gaussian" logScale="6.2585" name="lastz-SelfPeakLeftMed" path="/data/glenn.hickey/genomes/hg19/tracks/copynum/coverage_hg19.fa.chr22.left.80-90.bw" shift="1.0" valCol="3"/>
