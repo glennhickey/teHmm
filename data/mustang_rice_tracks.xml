@@ -1,47 +1,33 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" ?>
 <teModelConfig>
-<track name="repbase"       path="/data/glenn.hickey/genomes/rice/tracks/rice.repbase.bed" distribution="multinomial" preprocess="rm"/>
-<track name="repbase_default"       path="/data/glenn.hickey/genomes/rice/tracks/rice.repbase_default.bed" distribution="multinomial" preprocess="rm"/>
-<track name="repet"         path="/data/glenn.hickey/genomes/rice/tracks/repet/rice_repet_clean.bed" distribution="multinomial"/>
-<track name="tigr-repeats"  path="/data/glenn.hickey/genomes/rice/tracks/oryzaRepeatDb/rice_tigr_clean.bed" disbribution="multinomial"/>
-<track name="transposonpsi" path="/data/douglas.hoen/piatea/genomes/rice/tracks/transposonpsi/rice_transposonpsi.bed" distribution="multinomial" preprocess="rmu"/>
-<track name="softmask"      path="/data/glenn.hickey/genomes/rice/tracks/softmaskRepeats/rice_softmaskRepeats.bed" distribution="multinomial"/>
-<track name="repeat_modeler" path="/data/glenn.hickey/genomes/rice/tracks/repeatmodeler/rice_repeatmodeler.bed" distribution="multinomial" preprocess="rm"/>
-<track name="genes"         path="/data/glenn.hickey/genomes/rice/tracks/genes/rice_genes.bed" distribution="multinomial"/>
-<track name="chain_depth"   path="/data/glenn.hickey/genomes/rice/tracks/chain_depth/rice_chain_depth.bb" distribution="gaussian" default="0.0"/>
-
-<track name="srna"          path="/data/douglas.hoen/piatea/genomes/rice/tracks/jeong-srna/seedling_controls.bw" distribution="gaussian" default="0.0"/>
-<track name="ltr_finder"    path="/data/glenn.hickey/genomes/rice/tracks/ltr_finder/rice_ltr_finder.bed" distribution="multinomial" preprocess="ltr_finder"/>
-
-<track name="ltr_harvest"   path="/data/glenn.hickey/genomes/rice/tracks/ltr_harvest/rice_ltrharvest.bed" distribution="multinomial" preprocess="ltr_finder"/>
-
-<track name="ltr_termini"       path="/data/douglas.hoen/piatea/genomes/rice/tracks/terminisearch/rice.LTR.bed" distribution="multinomial" preprocess="termini"/>
-<track name="tir_termini"       path="/data/douglas.hoen/piatea/genomes/rice/tracks/terminisearch/rice.TIR.bed" distribution="multinomial" preprocess="termini"/>
-<track name="palindrome"        path="/data/douglas.hoen/piatea/genomes/rice/tracks/terminisearch/rice.palindrome.bed" distribution="multinomial" preprocess="termini"/>
-<track name="overlap"           path="/data/douglas.hoen/piatea/genomes/rice/tracks/terminisearch/rice.TIR.bed" distribution="multinomial" preprocess="termini"/>
-
-<track name="cov_80-"          path="/data/glenn.hickey/genomes/rice/tracks/copynum/coverage.cov.80-.bw" default="0.0" distribution="gaussian"/>
-<track name="left_peak_80-"    path="/data/glenn.hickey/genomes/rice/tracks/copynum/coverage.left.80-.bw" default="0.0" distribution="gaussian"/>
-<track name="right_peak_80-"   path="/data/glenn.hickey/genomes/rice/tracks/copynum/coverage.right.80-.bw" default="0.0" distribution="gaussian"/>
-<track name="cov_80-90"        path="/data/glenn.hickey/genomes/rice/tracks/copynum/coverage.cov.80-90.bw" default="0.0" distribution="gaussian"/>
-<track name="left_peak_80-90"  path="/data/glenn.hickey/genomes/rice/tracks/copynum/coverage.left.80-90.bw" default="0.0" distribution="gaussian"/>
-<track name="right_peak_80-90" path="/data/glenn.hickey/genomes/rice/tracks/copynum/coverage.right.80-90.bw" default="0.0" distribution="gaussian"/>
-<track name="cov_90+"          path="/data/glenn.hickey/genomes/rice/tracks/copynum/coverage.cov.90+.bw" default="0.0" distribution="gaussian"/>
-<track name="left_peak_90+"    path="/data/glenn.hickey/genomes/rice/tracks/copynum/coverage.left.90+.bw" default="0.0" distribution="gaussian"/>
-<track name="right_peak_90+"   path="/data/glenn.hickey/genomes/rice/tracks/copynum/coverage.right.90+.bw" default="0.0" distribution="gaussian"/>
-<track name="cov_maxPId"       path="/data/glenn.hickey/genomes/rice/tracks/copynum/coverage.maxPId.bw" default="0.0" distribution="gaussian"/>
-
-<track name="gcpct"         path="/data/glenn.hickey/genomes/rice/tracks/gcpct/rice_gcPercentWin20.bw" distribution="gaussian" default="0"/>
-
-<track name="polyA"         path="/data/glenn.hickey/genomes/rice/tracks/singleBaseRepeats/rice_polya.bed" distribution="binary"/>
-<track name="polyN"         path="/data/glenn.hickey/genomes/rice/tracks/singleBaseRepeats/rice_polyn.bed" distribution="mask"/>
-<track name="trf"           path="/data/glenn.hickey/genomes/rice/tracks/trf/rice_trf.bed" distribution="mask"/>
-
-<track name="dustmasker"    path="/data/douglas.hoen/piatea/genomes/rice/tracks/dustmasker/rice_dustmasker.bb" distribution="binary"/>
-<track name="windowmasker"  path="/data/douglas.hoen/piatea/genomes/rice/tracks/windowmasker/rice_windowmasker.bb" distribution="binary"/>
-<track name="helitronscanner"  path="/data/douglas.hoen/piatea/genomes/rice/tracks/helitronscanner/rice_helitronscanner.bed" distribution="binary"/>
-<track name="irf"           path="/data/douglas.hoen/piatea/genomes/rice/tracks/irf/rice_irf.bed" distribution="multinomial"/>
-<track name="mitehunter"    path="/data/douglas.hoen/piatea/genomes/rice/tracks/mitehunter/rice_mitehunter.bed" distribution="binary"/>
-
-<track name="sequence"      path="/data/glenn.hickey/genomes/rice/sequence/rice.fa" distribution="multinomial"/>
+	<track distribution="multinomial" name="RM-RepeatModeler" path="/data/glenn.hickey/genomes/rice/tracks/repeatmodeler/rice_repeatmodeler.bed" preprocess="rm" valCol="3"/>
+	<track distribution="multinomial" name="RM-RepBase" path="/data/glenn.hickey/genomes/rice/tracks/rice.repbase.bed" preprocess="rm" valCol="3"/>
+	<track distribution="multinomial" name="REPET" path="/data/glenn.hickey/genomes/rice/tracks/repet/rice_repet_clean.bed" valCol="3"/>
+	<track distribution="multinomial" name="softmask" path="/data/glenn.hickey/genomes/rice/tracks/softmaskRepeats/rice_softmaskRepeats.bed" valCol="3"/>
+	<track distribution="multinomial" name="tigr-repeats" path="/data/glenn.hickey/genomes/rice/tracks/oryzaRepeatDb/rice_tigr_clean.bed" valCol="3"/>
+	<track default="0.0" distribution="gaussian" name="Alignment-Depth" path="/data/glenn.hickey/genomes/rice/tracks/chain_depth/rice_chain_depth.bb" valCol="3"/>
+	<track default="0" distribution="gaussian" name="GC" path="/data/glenn.hickey/genomes/rice/tracks/gcpct/rice_gcPercentWin20.bw" valCol="3"/>
+	<track distribution="multinomial" name="Genes" path="/data/glenn.hickey/genomes/rice/tracks/genes/rice_genes.bed" valCol="3"/>
+	<track distribution="binary" name="HelitronScanner" path="/data/douglas.hoen/piatea/genomes/rice/tracks/helitronscanner/rice_helitronscanner.bed" valCol="0"/>
+	<track distribution="multinomial" name="IRF" path="/data/douglas.hoen/piatea/genomes/rice/tracks/irf/rice_irf.bed" valCol="3"/>
+	<track distribution="multinomial" name="lastz-InvTermini" path="/data/douglas.hoen/piatea/genomes/rice/tracks/terminisearch/rice.TIR.bed" preprocess="termini" valCol="3"/>
+	<track distribution="multinomial" name="lastz-Overlap" path="/data/douglas.hoen/piatea/genomes/rice/tracks/terminisearch/rice.TIR.bed" preprocess="termini" valCol="3"/>
+	<track distribution="multinomial" name="lastz-Palindrome" path="/data/douglas.hoen/piatea/genomes/rice/tracks/terminisearch/rice.palindrome.bed" preprocess="termini" valCol="3"/>
+	<track default="0.0" distribution="gaussian" name="lastz-SelfHighId" path="/data/glenn.hickey/genomes/rice/tracks/copynum/coverage.cov.90+.bw" valCol="3"/>
+	<track default="0.0" distribution="gaussian" name="lastz-SelfHighLeftPeak" path="/data/glenn.hickey/genomes/rice/tracks/copynum/coverage.left.90+.bw" valCol="3"/>
+	<track default="0.0" distribution="gaussian" name="lastz-SelfHighRightPeak" path="/data/glenn.hickey/genomes/rice/tracks/copynum/coverage.right.90+.bw" valCol="3"/>
+	<track default="0.0" distribution="gaussian" name="lastz-SelfLowId" path="/data/glenn.hickey/genomes/rice/tracks/copynum/coverage.cov.80-.bw" valCol="3"/>
+	<track default="0.0" distribution="gaussian" name="lastz-SelfLowLeftPeak" path="/data/glenn.hickey/genomes/rice/tracks/copynum/coverage.left.80-.bw" valCol="3"/>
+	<track default="0.0" distribution="gaussian" name="lastz-SelfLowRightPeak" path="/data/glenn.hickey/genomes/rice/tracks/copynum/coverage.right.80-.bw" valCol="3"/>
+	<track default="0.0" distribution="gaussian" name="lastz-SelfMaxPctId" path="/data/glenn.hickey/genomes/rice/tracks/copynum/coverage.maxPId.bw" valCol="3"/>
+	<track default="0.0" distribution="gaussian" name="lastz-SelfMedId" path="/data/glenn.hickey/genomes/rice/tracks/copynum/coverage.cov.80-90.bw" valCol="3"/>
+	<track default="0.0" distribution="gaussian" name="lastz-SelfMedLeftPeak" path="/data/glenn.hickey/genomes/rice/tracks/copynum/coverage.left.80-90.bw" valCol="3"/>
+	<track default="0.0" distribution="gaussian" name="lastz-SelfMedRightPeak" path="/data/glenn.hickey/genomes/rice/tracks/copynum/coverage.right.80-90.bw" valCol="3"/>
+	<track distribution="multinomial" name="lastz-Termini" path="/data/douglas.hoen/piatea/genomes/rice/tracks/terminisearch/rice.LTR.bed" preprocess="termini" valCol="3"/>
+	<track distribution="multinomial" name="LTR_FINDER" path="/data/glenn.hickey/genomes/rice/tracks/ltr_finder/rice_ltr_finder.bed" preprocess="ltr_finder" valCol="3"/>
+	<track distribution="multinomial" name="LTR_Harvest" path="/data/glenn.hickey/genomes/rice/tracks/ltr_harvest/rice_ltrharvest.bed" preprocess="ltr_finder" valCol="3"/>
+	<track distribution="binary" name="MITE-Hunter" path="/data/douglas.hoen/piatea/genomes/rice/tracks/mitehunter/rice_mitehunter.bed" valCol="0"/>
+	<track distribution="multinomial" name="sequence" path="/data/glenn.hickey/genomes/rice/sequence/rice.fa" valCol="3"/>
+	<track default="0.0" distribution="gaussian" name="sRNA" path="/data/douglas.hoen/piatea/genomes/rice/tracks/jeong-srna/seedling_controls.bw" valCol="3"/>
+	<track distribution="binary" name="WindowMasker" path="/data/douglas.hoen/piatea/genomes/rice/tracks/windowmasker/rice_windowmasker.bb" valCol="0"/>
 </teModelConfig>

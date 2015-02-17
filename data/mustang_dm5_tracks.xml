@@ -1,15 +1,14 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" ?>
 <teModelConfig>
-
-<track name="repbase"       path="/data/glenn.hickey/genomes/dm5/tracks/repbase_repeats/dm5.repbase.bed"/>
-<track name="flybase"   path="/data/glenn.hickey/genomes/dm5/tracks/flybase_repeats/dm5.flybase.bed"/>
-<track name="repeat_modeler" path="/data/glenn.hickey/genomes/dm5/tracks/modeler/dm5.modeler.bed"/>
-<track name="ltr_finder"    path="/data/glenn.hickey/genomes/dm5/tracks/ltr_finder/dm5.ltr_finder.bed"/>
-<track name="ltr_harvest"   path="/data/glenn.hickey/genomes/dm5/tracks/ltr_harvest/dm5.ltr_harvest.bed"/>
-<track name="trf"           path="/data/glenn.hickey/genomes/dm5/tracks/trf/dmel.trfBig.bed" distribution="binary"/>
-<track name="gcpct"         path="/data/glenn.hickey/genomes/dm5/tracks/gc/dm5_gcPercentWin20.bw" distribution="gaussian" default="0"/>
-<track name="copy"          path="/data/glenn.hickey/genomes/dm5/tracks/copy/dm5_cov.bw" distribution="gaussian" default="0"/>
-<track name="left_peak"     path="/data/glenn.hickey/genomes/dm5/tracks/copy/dm5_left.bw" distribution="gaussian" default="0"/>
-<track name="right_peak"    path="/data/glenn.hickey/genomes/dm5/tracks/copy/dm5_right.bw" distribution="gaussian" default="0"/>
-<track name="sequence"      path="/data/glenn.hickey/genomes/dm5/sequence/dmel-all-chromosome-r5.57.fasta"/>
+	<track distribution="multinomial" name="RM-RepeatModeler" path="/data/glenn.hickey/genomes/dm5/tracks/modeler/dm5.modeler.bed" valCol="3"/>
+	<track distribution="multinomial" name="RM-RepBase" path="/data/glenn.hickey/genomes/dm5/tracks/repbase_repeats/dm5.repbase.bed" valCol="3"/>
+	<track default="0" distribution="gaussian" name="copy" path="/data/glenn.hickey/genomes/dm5/tracks/copy/dm5_cov.bw" valCol="3"/>
+	<track distribution="multinomial" name="flybase" path="/data/glenn.hickey/genomes/dm5/tracks/flybase_repeats/dm5.flybase.bed" valCol="3"/>
+	<track default="0" distribution="gaussian" name="GC" path="/data/glenn.hickey/genomes/dm5/tracks/gc/dm5_gcPercentWin20.bw" valCol="3"/>
+	<track default="0" distribution="gaussian" name="left_peak" path="/data/glenn.hickey/genomes/dm5/tracks/copy/dm5_left.bw" valCol="3"/>
+	<track distribution="multinomial" name="LTR_FINDER" path="/data/glenn.hickey/genomes/dm5/tracks/ltr_finder/dm5.ltr_finder.bed" valCol="3"/>
+	<track distribution="multinomial" name="LTR_Harvest" path="/data/glenn.hickey/genomes/dm5/tracks/ltr_harvest/dm5.ltr_harvest.bed" valCol="3"/>
+	<track default="0" distribution="gaussian" name="right_peak" path="/data/glenn.hickey/genomes/dm5/tracks/copy/dm5_right.bw" valCol="3"/>
+	<track distribution="multinomial" name="sequence" path="/data/glenn.hickey/genomes/dm5/sequence/dmel-all-chromosome-r5.57.fasta" valCol="3"/>
+	<track distribution="binary" name="TRF" path="/data/glenn.hickey/genomes/dm5/tracks/trf/dmel.trfBig.bed" valCol="0"/>
 </teModelConfig>

@@ -1,35 +1,28 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" ?>
 <teModelConfig>
-<track name="repbase"      path="/data/glenn.hickey/genomes/mm10/tracks/repbase/mm10.repbase.bed" distribution="multinomial preprocess="rm"/>
-<track name="repeat_modeler" path="/data/glenn.hickey/genomes/mm10/tracks/repeatmodeler/mm10_chr1_repeatmodeler.bed" distribution="multinomial" preprocess="rm"/>
-<track name="genes"         path="/data/glenn.hickey/genomes/mm10/tracks/genes/mm10_refseq.bed" distribution="multinomial"/>
-<track name="alignment_depth" path="/data/glenn.hickey/genomes/mm10/tracks/alignment_depth/mm10.chr1.alignability.bw" distribution="gaussian" default="0"/>
-
-<track name="ltr_finder"    path="/data/glenn.hickey/genomes/mm10/tracks/ltr_finder/mm10_chr1_ltrfinder.bed" distribution="multinomial" preprocess="ltr_finder"/>
-<track name="ltr_harvest"   path="/data/glenn.hickey/genomes/mm10/tracks/ltr_harvest/mm10_ltrharvest.bed" distribution="multinomial" preprocess="ltr_finder"/>
-
-<track name="ltr_termini"       path="/data/glenn.hickey/genomes/mm10/tracks/terminisearch/mm10.LTR.bed" distribution="multinomial" preprocess="termini"/>
-<track name="tir_termini"       path="/data/glenn.hickey/genomes/mm10/tracks/terminisearch/mm10.TIR.bed" distribution="multinomial" preprocess="termini"/>
-<track name="palindrome"        path="/data/glenn.hickey/genomes/mm10/tracks/terminisearch/mm10.palindrome.bed" distribution="multinomial" preprocess="termini"/>
-<track name="overlap"           path="/data/glenn.hickey/genomes/mm10/tracks/terminisearch/mm10.TIR.bed" distribution="multinomial" preprocess="termini"/>
-
-<track name="cov_80-"          path="/data/glenn.hickey/genomes/mm10/tracks/copynum/coverage.cov.80-.bw" default="0.0" distribution="gaussian"/>
-<track name="left_peak_80-"    path="/data/glenn.hickey/genomes/mm10/tracks/copynum/coverage.left.80-.bw" default="0.0" distribution="gaussian"/>
-<track name="right_peak_80-"   path="/data/glenn.hickey/genomes/mm10/tracks/copynum/coverage.right.80-.bw" default="0.0" distribution="gaussian"/>
-<track name="cov_80-90"        path="/data/glenn.hickey/genomes/mm10/tracks/copynum/coverage.cov.80-90.bw" default="0.0" distribution="gaussian"/>
-<track name="left_peak_80-90"  path="/data/glenn.hickey/genomes/mm10/tracks/copynum/coverage.left.80-90.bw" default="0.0" distribution="gaussian"/>
-<track name="right_peak_80-90" path="/data/glenn.hickey/genomes/mm10/tracks/copynum/coverage.right.80-90.bw" default="0.0" distribution="gaussian"/>
-<track name="cov_90+"          path="/data/glenn.hickey/genomes/mm10/tracks/copynum/coverage.cov.90+.bw" default="0.0" distribution="gaussian"/>
-<track name="left_peak_90+"    path="/data/glenn.hickey/genomes/mm10/tracks/copynum/coverage.left.90+.bw" default="0.0" distribution="gaussian"/>
-<track name="right_peak_90+"   path="/data/glenn.hickey/genomes/mm10/tracks/copynum/coverage.right.90+.bw" default="0.0" distribution="gaussian"/>
-<track name="cov_maxPId"       path="/data/glenn.hickey/genomes/mm10/tracks/copynum/coverage.maxPId.bw" default="0.0" distribution="gaussian"/>
-
-<track name="phyloP"        path="/data/glenn.hickey/genomes/mm10/tracks/cons/mm10.phyloP60way.bw" distribution="gaussian" default="0"/>
-<track name="trf"           path="/data/glenn.hickey/genomes/mm10/tracks/trf/mm10.trf.bed" distribution="mask"/>
-<track name="gcpct"         path="/data/glenn.hickey/genomes/mm10/tracks/gcpct/mm10_gcPercentWin20.bw" distribution="gaussian" default="0"/>
-
-<track name="polyA"         path="/data/glenn.hickey/genomes/mm10/tracks/singleBaseRepeats/mm10_polya.bed" distribution="binary"/>
-<track name="polyN"         path="/data/glenn.hickey/genomes/mm10/tracks/singleBaseRepeats/mm10_polyn.bed" distribution="mask"/>
-
-<track name="sequence"      path="/data/glenn.hickey/genomes/mm10/sequence/mm10.fa" distribution="multinomial"/>
+	<track distribution="multinomial" name="RM-RepeatModeler" path="/data/glenn.hickey/genomes/mm10/tracks/repeatmodeler/mm10_chr1_repeatmodeler.bed" preprocess="rm" valCol="3"/>
+	<track distribution="multinomial" name="RM-RepBase" path="/data/glenn.hickey/genomes/mm10/tracks/repbase/mm10.repbase.bed" preprocess="rm" valCol="3"/>
+	<track default="0" distribution="gaussian" name="Alignment-Depth" path="/data/glenn.hickey/genomes/mm10/tracks/alignment_depth/mm10.chr1.alignability.bw" valCol="3"/>
+	<track default="0" distribution="gaussian" name="Conservation" path="/data/glenn.hickey/genomes/mm10/tracks/cons/mm10.phyloP60way.bw" valCol="3"/>
+	<track default="0" distribution="gaussian" name="GC" path="/data/glenn.hickey/genomes/mm10/tracks/gcpct/mm10_gcPercentWin20.bw" valCol="3"/>
+	<track distribution="multinomial" name="Genes" path="/data/glenn.hickey/genomes/mm10/tracks/genes/mm10_refseq.bed" valCol="3"/>
+	<track distribution="binary" name="HelitronScanner" path="/data/glenn.hickey/genomes/mm10/tracks/helitronscanner/mm10_helitronscanner.bed" valCol="0"/>
+	<track distribution="multinomial" name="lastz-InvTermini" path="/data/glenn.hickey/genomes/mm10/tracks/terminisearch/mm10.TIR.bed" preprocess="termini" valCol="3"/>
+	<track distribution="multinomial" name="lastz-Overlap" path="/data/glenn.hickey/genomes/mm10/tracks/terminisearch/mm10.TIR.bed" preprocess="termini" valCol="3"/>
+	<track distribution="multinomial" name="lastz-Palindrome" path="/data/glenn.hickey/genomes/mm10/tracks/terminisearch/mm10.palindrome.bed" preprocess="termini" valCol="3"/>
+	<track default="0.0" distribution="gaussian" name="lastz-SelfHighId" path="/data/glenn.hickey/genomes/mm10/tracks/copynum/coverage.cov.90+.bw" valCol="3"/>
+	<track default="0.0" distribution="gaussian" name="lastz-SelfHighLeftPeak" path="/data/glenn.hickey/genomes/mm10/tracks/copynum/coverage.left.90+.bw" valCol="3"/>
+	<track default="0.0" distribution="gaussian" name="lastz-SelfHighRightPeak" path="/data/glenn.hickey/genomes/mm10/tracks/copynum/coverage.right.90+.bw" valCol="3"/>
+	<track default="0.0" distribution="gaussian" name="lastz-SelfLowId" path="/data/glenn.hickey/genomes/mm10/tracks/copynum/coverage.cov.80-.bw" valCol="3"/>
+	<track default="0.0" distribution="gaussian" name="lastz-SelfLowLeftPeak" path="/data/glenn.hickey/genomes/mm10/tracks/copynum/coverage.left.80-.bw" valCol="3"/>
+	<track default="0.0" distribution="gaussian" name="lastz-SelfLowRightPeak" path="/data/glenn.hickey/genomes/mm10/tracks/copynum/coverage.right.80-.bw" valCol="3"/>
+	<track default="0.0" distribution="gaussian" name="lastz-SelfMaxPctId" path="/data/glenn.hickey/genomes/mm10/tracks/copynum/coverage.maxPId.bw" valCol="3"/>
+	<track default="0.0" distribution="gaussian" name="lastz-SelfMedId" path="/data/glenn.hickey/genomes/mm10/tracks/copynum/coverage.cov.80-90.bw" valCol="3"/>
+	<track default="0.0" distribution="gaussian" name="lastz-SelfMedLeftPeak" path="/data/glenn.hickey/genomes/mm10/tracks/copynum/coverage.left.80-90.bw" valCol="3"/>
+	<track default="0.0" distribution="gaussian" name="lastz-SelfMedRightPeak" path="/data/glenn.hickey/genomes/mm10/tracks/copynum/coverage.right.80-90.bw" valCol="3"/>
+	<track distribution="multinomial" name="lastz-Termini" path="/data/glenn.hickey/genomes/mm10/tracks/terminisearch/mm10.LTR.bed" preprocess="termini" valCol="3"/>
+	<track distribution="multinomial" name="LTR_FINDER" path="/data/glenn.hickey/genomes/mm10/tracks/ltr_finder/mm10_chr1_ltrfinder.bed" preprocess="ltr_finder" valCol="3"/>
+	<track distribution="multinomial" name="LTR_Harvest" path="/data/glenn.hickey/genomes/mm10/tracks/ltr_harvest/mm10_ltrharvest.bed" preprocess="ltr_finder" valCol="3"/>
+	<track distribution="multinomial" name="sequence" path="/data/glenn.hickey/genomes/mm10/sequence/mm10.fa" valCol="3"/>
+	<track distribution="binary" name="WindowMasker" path="/data/glenn.hickey/genomes/mm10/tracks/windowmasker/mm10.windowmasker.bb" valCol="0"/>
 </teModelConfig>
