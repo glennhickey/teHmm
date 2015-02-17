@@ -11,15 +11,15 @@
 	<track distribution="multinomial" name="Genes" path="/data/glenn.hickey/genomes/hg19/tracks/genes/hg19.refseq_clean.bed" valCol="3"/>
 	<track distribution="binary" name="HelitronScanner" path="/data/douglas.hoen/piatea/genomes/human/hg19/tracks/helitronscanner/hg19_helitronscanner.bed" valCol="0"/>
 	<track default="0.0" distribution="gaussian" logScale="4.9714" name="lastz-SelfHighId" path="/data/glenn.hickey/genomes/hg19/tracks/copynum/coverage_hg19.fa.chr22.cov.90+.bw" shift="1.0" valCol="3"/>
-	<track default="0.0" distribution="gaussian" logScale="4.7004" name="lastz-SelfHighLeftPeak" path="/data/glenn.hickey/genomes/hg19/tracks/copynum/coverage_hg19.fa.chr22.left.90+.bw" shift="1.0" valCol="3"/>
-	<track default="0.0" distribution="gaussian" logScale="4.4575" name="lastz-SelfHighRightPeak" path="/data/glenn.hickey/genomes/hg19/tracks/copynum/coverage_hg19.fa.chr22.right.90+.bw" shift="1.0" valCol="3"/>
 	<track default="0.0" distribution="gaussian" logScale="7.1832" name="lastz-SelfLowId" path="/data/glenn.hickey/genomes/hg19/tracks/copynum/coverage_hg19.fa.chr22.cov.80-.bw" shift="1.0" valCol="3"/>
-	<track default="0.0" distribution="gaussian" logScale="6.4781" name="lastz-SelfLowLeftPeak" path="/data/glenn.hickey/genomes/hg19/tracks/copynum/coverage_hg19.fa.chr22.left.80-.bw" shift="1.0" valCol="3"/>
-	<track default="0.0" distribution="gaussian" logScale="6.5057" name="lastz-SelfLowRightPeak" path="/data/glenn.hickey/genomes/hg19/tracks/copynum/coverage_hg19.fa.chr22.right.80-.bw" shift="1.0" valCol="3"/>
 	<track default="0.0" distribution="gaussian" name="lastz-SelfMaxPctId" path="/data/glenn.hickey/genomes/hg19/tracks/copynum/coverage_hg19.fa.chr22.maxPId.bw" scale="0.08" shift="0.0" valCol="3"/>
 	<track default="0.0" distribution="gaussian" logScale="6.4523" name="lastz-SelfMedId" path="/data/glenn.hickey/genomes/hg19/tracks/copynum/coverage_hg19.fa.chr22.cov.80-90.bw" shift="1.0" valCol="3"/>
-	<track default="0.0" distribution="gaussian" logScale="6.2585" name="lastz-SelfMedLeftPeak" path="/data/glenn.hickey/genomes/hg19/tracks/copynum/coverage_hg19.fa.chr22.left.80-90.bw" shift="1.0" valCol="3"/>
-	<track default="0.0" distribution="gaussian" logScale="6.115" name="lastz-SelfMedRightPeak" path="/data/glenn.hickey/genomes/hg19/tracks/copynum/coverage_hg19.fa.chr22.right.80-90.bw" shift="1.0" valCol="3"/>
+	<track default="0.0" distribution="gaussian" logScale="4.7004" name="lastz-SelfPeakLeftHigh" path="/data/glenn.hickey/genomes/hg19/tracks/copynum/coverage_hg19.fa.chr22.left.90+.bw" shift="1.0" valCol="3"/>
+	<track default="0.0" distribution="gaussian" logScale="6.4781" name="lastz-SelfPeakLeftLow" path="/data/glenn.hickey/genomes/hg19/tracks/copynum/coverage_hg19.fa.chr22.left.80-.bw" shift="1.0" valCol="3"/>
+	<track default="0.0" distribution="gaussian" logScale="6.2585" name="lastz-SelfPeakLeftMed" path="/data/glenn.hickey/genomes/hg19/tracks/copynum/coverage_hg19.fa.chr22.left.80-90.bw" shift="1.0" valCol="3"/>
+	<track default="0.0" distribution="gaussian" logScale="4.4575" name="lastz-SelfPeakRightHigh" path="/data/glenn.hickey/genomes/hg19/tracks/copynum/coverage_hg19.fa.chr22.right.90+.bw" shift="1.0" valCol="3"/>
+	<track default="0.0" distribution="gaussian" logScale="6.5057" name="lastz-SelfPeakRightLow" path="/data/glenn.hickey/genomes/hg19/tracks/copynum/coverage_hg19.fa.chr22.right.80-.bw" shift="1.0" valCol="3"/>
+	<track default="0.0" distribution="gaussian" logScale="6.115" name="lastz-SelfPeakRightMed" path="/data/glenn.hickey/genomes/hg19/tracks/copynum/coverage_hg19.fa.chr22.right.80-90.bw" shift="1.0" valCol="3"/>
 	<track distribution="multinomial" name="LTR_FINDER" path="/data/glenn.hickey/genomes/hg19/tracks/clean/hg19.ltr_finder_clean.bed" valCol="3"/>
 	<track distribution="multinomial" name="LTR_Harvest" path="/data/glenn.hickey/genomes/hg19/tracks/clean/hg19.ltrharvest_clean.bed" valCol="3"/>
 	<track default="0" distribution="gaussian" logScale="1.0905" name="mappability" path="/data/glenn.hickey/genomes/hg19/tracks/mappability/H.sapiens.genome.hg19.main.mappability-24.bw" shift="1.0" valCol="3"/>

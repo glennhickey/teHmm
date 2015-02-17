@@ -11,19 +11,19 @@
 	<track distribution="binary" name="HelitronScanner" path="/data/douglas.hoen/piatea/genomes/rice/tracks/helitronscanner/rice_helitronscanner.bed" valCol="0"/>
 	<track distribution="multinomial" name="IRF" path="/data/douglas.hoen/piatea/genomes/rice/tracks/irf/rice_irf.bed" valCol="3"/>
 	<track distribution="multinomial" name="lastz-InvTermini" path="/data/douglas.hoen/piatea/genomes/rice/tracks/terminisearch/rice.TIR.bed" preprocess="termini" valCol="3"/>
+	<track distribution="multinomial" name="lastz-LTRTermini" path="/data/douglas.hoen/piatea/genomes/rice/tracks/terminisearch/rice.LTR.bed" preprocess="termini" valCol="3"/>
 	<track distribution="multinomial" name="lastz-Overlap" path="/data/douglas.hoen/piatea/genomes/rice/tracks/terminisearch/rice.TIR.bed" preprocess="termini" valCol="3"/>
 	<track distribution="multinomial" name="lastz-Palindrome" path="/data/douglas.hoen/piatea/genomes/rice/tracks/terminisearch/rice.palindrome.bed" preprocess="termini" valCol="3"/>
 	<track default="0.0" distribution="gaussian" name="lastz-SelfHighId" path="/data/glenn.hickey/genomes/rice/tracks/copynum/coverage.cov.90+.bw" valCol="3"/>
-	<track default="0.0" distribution="gaussian" name="lastz-SelfHighLeftPeak" path="/data/glenn.hickey/genomes/rice/tracks/copynum/coverage.left.90+.bw" valCol="3"/>
-	<track default="0.0" distribution="gaussian" name="lastz-SelfHighRightPeak" path="/data/glenn.hickey/genomes/rice/tracks/copynum/coverage.right.90+.bw" valCol="3"/>
 	<track default="0.0" distribution="gaussian" name="lastz-SelfLowId" path="/data/glenn.hickey/genomes/rice/tracks/copynum/coverage.cov.80-.bw" valCol="3"/>
-	<track default="0.0" distribution="gaussian" name="lastz-SelfLowLeftPeak" path="/data/glenn.hickey/genomes/rice/tracks/copynum/coverage.left.80-.bw" valCol="3"/>
-	<track default="0.0" distribution="gaussian" name="lastz-SelfLowRightPeak" path="/data/glenn.hickey/genomes/rice/tracks/copynum/coverage.right.80-.bw" valCol="3"/>
 	<track default="0.0" distribution="gaussian" name="lastz-SelfMaxPctId" path="/data/glenn.hickey/genomes/rice/tracks/copynum/coverage.maxPId.bw" valCol="3"/>
 	<track default="0.0" distribution="gaussian" name="lastz-SelfMedId" path="/data/glenn.hickey/genomes/rice/tracks/copynum/coverage.cov.80-90.bw" valCol="3"/>
-	<track default="0.0" distribution="gaussian" name="lastz-SelfMedLeftPeak" path="/data/glenn.hickey/genomes/rice/tracks/copynum/coverage.left.80-90.bw" valCol="3"/>
-	<track default="0.0" distribution="gaussian" name="lastz-SelfMedRightPeak" path="/data/glenn.hickey/genomes/rice/tracks/copynum/coverage.right.80-90.bw" valCol="3"/>
-	<track distribution="multinomial" name="lastz-Termini" path="/data/douglas.hoen/piatea/genomes/rice/tracks/terminisearch/rice.LTR.bed" preprocess="termini" valCol="3"/>
+	<track default="0.0" distribution="gaussian" name="lastz-SelfPeakLeftHigh" path="/data/glenn.hickey/genomes/rice/tracks/copynum/coverage.left.90+.bw" valCol="3"/>
+	<track default="0.0" distribution="gaussian" name="lastz-SelfPeakLeftLow" path="/data/glenn.hickey/genomes/rice/tracks/copynum/coverage.left.80-.bw" valCol="3"/>
+	<track default="0.0" distribution="gaussian" name="lastz-SelfPeakLeftMed" path="/data/glenn.hickey/genomes/rice/tracks/copynum/coverage.left.80-90.bw" valCol="3"/>
+	<track default="0.0" distribution="gaussian" name="lastz-SelfPeakRightHigh" path="/data/glenn.hickey/genomes/rice/tracks/copynum/coverage.right.90+.bw" valCol="3"/>
+	<track default="0.0" distribution="gaussian" name="lastz-SelfPeakRightLow" path="/data/glenn.hickey/genomes/rice/tracks/copynum/coverage.right.80-.bw" valCol="3"/>
+	<track default="0.0" distribution="gaussian" name="lastz-SelfPeakRightMed" path="/data/glenn.hickey/genomes/rice/tracks/copynum/coverage.right.80-90.bw" valCol="3"/>
 	<track distribution="multinomial" name="LTR_FINDER" path="/data/glenn.hickey/genomes/rice/tracks/ltr_finder/rice_ltr_finder.bed" preprocess="ltr_finder" valCol="3"/>
 	<track distribution="multinomial" name="LTR_Harvest" path="/data/glenn.hickey/genomes/rice/tracks/ltr_harvest/rice_ltrharvest.bed" preprocess="ltr_finder" valCol="3"/>
 	<track distribution="binary" name="MITE-Hunter" path="/data/douglas.hoen/piatea/genomes/rice/tracks/mitehunter/rice_mitehunter.bed" valCol="0"/>

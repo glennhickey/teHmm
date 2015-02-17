@@ -8,19 +8,19 @@
 	<track distribution="multinomial" name="Genes" path="/data/glenn.hickey/genomes/mm10/tracks/genes/mm10_refseq.bed" valCol="3"/>
 	<track distribution="binary" name="HelitronScanner" path="/data/glenn.hickey/genomes/mm10/tracks/helitronscanner/mm10_helitronscanner.bed" valCol="0"/>
 	<track distribution="multinomial" name="lastz-InvTermini" path="/data/glenn.hickey/genomes/mm10/tracks/terminisearch/mm10.TIR.bed" preprocess="termini" valCol="3"/>
+	<track distribution="multinomial" name="lastz-LTRTermini" path="/data/glenn.hickey/genomes/mm10/tracks/terminisearch/mm10.LTR.bed" preprocess="termini" valCol="3"/>
 	<track distribution="multinomial" name="lastz-Overlap" path="/data/glenn.hickey/genomes/mm10/tracks/terminisearch/mm10.TIR.bed" preprocess="termini" valCol="3"/>
 	<track distribution="multinomial" name="lastz-Palindrome" path="/data/glenn.hickey/genomes/mm10/tracks/terminisearch/mm10.palindrome.bed" preprocess="termini" valCol="3"/>
 	<track default="0.0" distribution="gaussian" name="lastz-SelfHighId" path="/data/glenn.hickey/genomes/mm10/tracks/copynum/coverage.cov.90+.bw" valCol="3"/>
-	<track default="0.0" distribution="gaussian" name="lastz-SelfHighLeftPeak" path="/data/glenn.hickey/genomes/mm10/tracks/copynum/coverage.left.90+.bw" valCol="3"/>
-	<track default="0.0" distribution="gaussian" name="lastz-SelfHighRightPeak" path="/data/glenn.hickey/genomes/mm10/tracks/copynum/coverage.right.90+.bw" valCol="3"/>
 	<track default="0.0" distribution="gaussian" name="lastz-SelfLowId" path="/data/glenn.hickey/genomes/mm10/tracks/copynum/coverage.cov.80-.bw" valCol="3"/>
-	<track default="0.0" distribution="gaussian" name="lastz-SelfLowLeftPeak" path="/data/glenn.hickey/genomes/mm10/tracks/copynum/coverage.left.80-.bw" valCol="3"/>
-	<track default="0.0" distribution="gaussian" name="lastz-SelfLowRightPeak" path="/data/glenn.hickey/genomes/mm10/tracks/copynum/coverage.right.80-.bw" valCol="3"/>
 	<track default="0.0" distribution="gaussian" name="lastz-SelfMaxPctId" path="/data/glenn.hickey/genomes/mm10/tracks/copynum/coverage.maxPId.bw" valCol="3"/>
 	<track default="0.0" distribution="gaussian" name="lastz-SelfMedId" path="/data/glenn.hickey/genomes/mm10/tracks/copynum/coverage.cov.80-90.bw" valCol="3"/>
-	<track default="0.0" distribution="gaussian" name="lastz-SelfMedLeftPeak" path="/data/glenn.hickey/genomes/mm10/tracks/copynum/coverage.left.80-90.bw" valCol="3"/>
-	<track default="0.0" distribution="gaussian" name="lastz-SelfMedRightPeak" path="/data/glenn.hickey/genomes/mm10/tracks/copynum/coverage.right.80-90.bw" valCol="3"/>
-	<track distribution="multinomial" name="lastz-Termini" path="/data/glenn.hickey/genomes/mm10/tracks/terminisearch/mm10.LTR.bed" preprocess="termini" valCol="3"/>
+	<track default="0.0" distribution="gaussian" name="lastz-SelfPeakLeftHigh" path="/data/glenn.hickey/genomes/mm10/tracks/copynum/coverage.left.90+.bw" valCol="3"/>
+	<track default="0.0" distribution="gaussian" name="lastz-SelfPeakLeftLow" path="/data/glenn.hickey/genomes/mm10/tracks/copynum/coverage.left.80-.bw" valCol="3"/>
+	<track default="0.0" distribution="gaussian" name="lastz-SelfPeakLeftMed" path="/data/glenn.hickey/genomes/mm10/tracks/copynum/coverage.left.80-90.bw" valCol="3"/>
+	<track default="0.0" distribution="gaussian" name="lastz-SelfPeakRightHigh" path="/data/glenn.hickey/genomes/mm10/tracks/copynum/coverage.right.90+.bw" valCol="3"/>
+	<track default="0.0" distribution="gaussian" name="lastz-SelfPeakRightLow" path="/data/glenn.hickey/genomes/mm10/tracks/copynum/coverage.right.80-.bw" valCol="3"/>
+	<track default="0.0" distribution="gaussian" name="lastz-SelfPeakRightMed" path="/data/glenn.hickey/genomes/mm10/tracks/copynum/coverage.right.80-90.bw" valCol="3"/>
 	<track distribution="multinomial" name="LTR_FINDER" path="/data/glenn.hickey/genomes/mm10/tracks/ltr_finder/mm10_chr1_ltrfinder.bed" preprocess="ltr_finder" valCol="3"/>
 	<track distribution="multinomial" name="LTR_Harvest" path="/data/glenn.hickey/genomes/mm10/tracks/ltr_harvest/mm10_ltrharvest.bed" preprocess="ltr_finder" valCol="3"/>
 	<track distribution="multinomial" name="sequence" path="/data/glenn.hickey/genomes/mm10/sequence/mm10.fa" valCol="3"/>

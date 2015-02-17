@@ -11,19 +11,19 @@
 	<track distribution="binary" name="HelitronScanner" path="/data/douglas.hoen/piatea/genomes/alyrata/tracks/helitronscanner/alyrata_helitronscanner.bed" valCol="0"/>
 	<track distribution="multinomial" name="IRF" path="/data/glenn.hickey/genomes/alyrata/tracks/clean/alyrata_irf_clean.bed" valCol="3"/>
 	<track distribution="multinomial" name="lastz-InvTermini" path="/data/glenn.hickey/genomes/alyrata/tracks/clean/all_scaffolds.termini_search.filter_2.tir.sorted_clean.bed" valCol="3"/>
+	<track distribution="multinomial" name="lastz-LTRTermini" path="/data/glenn.hickey/genomes/alyrata/tracks/clean/all_scaffolds.termini_search.filter_2.ltr.sorted_clean.bed" valCol="3"/>
 	<track distribution="multinomial" name="lastz-Overlap" path="/data/glenn.hickey/genomes/alyrata/tracks/clean/alyrata_directoverlap_clean.bed" valCol="3"/>
 	<track distribution="multinomial" name="lastz-Palindrome" path="/data/glenn.hickey/genomes/alyrata/tracks/clean/alyrata_palindrome_clean.bed" valCol="3"/>
 	<track default="0.0" distribution="gaussian" logScale="2.7237" name="lastz-SelfHighId" path="/data/glenn.hickey/genomes/alyrata/tracks/copynum/coverage.cov.90+.bw" shift="1.0" valCol="3"/>
-	<track default="0.0" distribution="gaussian" logScale="2.5232" name="lastz-SelfHighLeftPeak" path="/data/glenn.hickey/genomes/alyrata/tracks/copynum/coverage.left.90+.bw" shift="1.0" valCol="3"/>
-	<track default="0.0" distribution="gaussian" logScale="2.4542" name="lastz-SelfHighRightPeak" path="/data/glenn.hickey/genomes/alyrata/tracks/copynum/coverage.right.90+.bw" shift="1.0" valCol="3"/>
 	<track default="0.0" distribution="gaussian" logScale="4.2136" name="lastz-SelfLowId" path="/data/glenn.hickey/genomes/alyrata/tracks/copynum/coverage.cov.80-.bw" shift="1.0" valCol="3"/>
-	<track default="0.0" distribution="gaussian" logScale="3.9939" name="lastz-SelfLowLeftPeak" path="/data/glenn.hickey/genomes/alyrata/tracks/copynum/coverage.left.80-.bw" shift="1.0" valCol="3"/>
-	<track default="0.0" distribution="gaussian" logScale="3.9474" name="lastz-SelfLowRightPeak" path="/data/glenn.hickey/genomes/alyrata/tracks/copynum/coverage.right.80-.bw" shift="1.0" valCol="3"/>
 	<track default="0.0" distribution="gaussian" name="lastz-SelfMaxPctId" path="/data/glenn.hickey/genomes/alyrata/tracks/copynum/coverage.maxPId.bw" scale="0.08" shift="0.0" valCol="3"/>
 	<track default="0.0" distribution="gaussian" logScale="3.4374" name="lastz-SelfMedId" path="/data/glenn.hickey/genomes/alyrata/tracks/copynum/coverage.cov.80-90.bw" shift="1.0" valCol="3"/>
-	<track default="0.0" distribution="gaussian" logScale="3.0401" name="lastz-SelfMedLeftPeak" path="/data/glenn.hickey/genomes/alyrata/tracks/copynum/coverage.left.80-90.bw" shift="1.0" valCol="3"/>
-	<track default="0.0" distribution="gaussian" logScale="2.6847" name="lastz-SelfMedRightPeak" path="/data/glenn.hickey/genomes/alyrata/tracks/copynum/coverage.right.80-90.bw" shift="1.0" valCol="3"/>
-	<track distribution="multinomial" name="lastz-Termini" path="/data/glenn.hickey/genomes/alyrata/tracks/clean/all_scaffolds.termini_search.filter_2.ltr.sorted_clean.bed" valCol="3"/>
+	<track default="0.0" distribution="gaussian" logScale="2.5232" name="lastz-SelfPeakLeftHigh" path="/data/glenn.hickey/genomes/alyrata/tracks/copynum/coverage.left.90+.bw" shift="1.0" valCol="3"/>
+	<track default="0.0" distribution="gaussian" logScale="3.9939" name="lastz-SelfPeakLeftLow" path="/data/glenn.hickey/genomes/alyrata/tracks/copynum/coverage.left.80-.bw" shift="1.0" valCol="3"/>
+	<track default="0.0" distribution="gaussian" logScale="3.0401" name="lastz-SelfPeakLeftMed" path="/data/glenn.hickey/genomes/alyrata/tracks/copynum/coverage.left.80-90.bw" shift="1.0" valCol="3"/>
+	<track default="0.0" distribution="gaussian" logScale="2.4542" name="lastz-SelfPeakRightHigh" path="/data/glenn.hickey/genomes/alyrata/tracks/copynum/coverage.right.90+.bw" shift="1.0" valCol="3"/>
+	<track default="0.0" distribution="gaussian" logScale="3.9474" name="lastz-SelfPeakRightLow" path="/data/glenn.hickey/genomes/alyrata/tracks/copynum/coverage.right.80-.bw" shift="1.0" valCol="3"/>
+	<track default="0.0" distribution="gaussian" logScale="2.6847" name="lastz-SelfPeakRightMed" path="/data/glenn.hickey/genomes/alyrata/tracks/copynum/coverage.right.80-90.bw" shift="1.0" valCol="3"/>
 	<track distribution="multinomial" name="LTR_FINDER" path="/data/glenn.hickey/genomes/alyrata/tracks/clean/alyrata_ltrfinder_clean.bed" valCol="3"/>
 	<track distribution="multinomial" name="LTR_Harvest" path="/data/glenn.hickey/genomes/alyrata/tracks/clean/alyrata_ltrharvest_clean.bed" valCol="3"/>
 	<track distribution="binary" name="MITE-Hunter" path="/data/douglas.hoen/piatea/genomes/alyrata/tracks/mitehunter/alyrata_mitehunter.bed" valCol="0"/>

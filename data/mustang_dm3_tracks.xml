@@ -9,19 +9,19 @@
 	<track distribution="binary" name="HelitronScanner" path="/data/douglas.hoen/piatea/genomes/drosophila/tracks/helitronscanner/dm3_helitronscanner.bed" valCol="0"/>
 	<track distribution="multinomial" name="IRF" path="/data/douglas.hoen/piatea/genomes/drosophila/tracks/irf/dm3_irf.bed" valCol="0"/>
 	<track distribution="multinomial" name="lastz-InvTermini" path="/data/glenn.hickey/genomes/dm3/tracks/terminisearch/dm3.TIR.bed" preprocess="termini" valCol="3"/>
+	<track distribution="multinomial" name="lastz-LTRTermini" path="/data/glenn.hickey/genomes/dm3/tracks/terminisearch/dm3.LTR.bed" preprocess="termini" valCol="3"/>
 	<track distribution="multinomial" name="lastz-Overlap" path="/data/glenn.hickey/genomes/dm3/tracks/terminisearch/dm3.TIR.bed" preprocess="termini" valCol="3"/>
 	<track distribution="multinomial" name="lastz-Palindrome" path="/data/glenn.hickey/genomes/dm3/tracks/terminisearch/dm3.palindrome.bed" preprocess="termini" valCol="3"/>
 	<track default="0.0" distribution="gaussian" name="lastz-SelfHighId" path="/data/glenn.hickey/genomes/dm3/tracks/copynum/drosophila_coverage.cov.90+.bw" valCol="3"/>
-	<track default="0.0" distribution="gaussian" name="lastz-SelfHighLeftPeak" path="/data/glenn.hickey/genomes/dm3/tracks/copynum/drosophila_coverage.left.90+.bw" valCol="3"/>
-	<track default="0.0" distribution="gaussian" name="lastz-SelfHighRightPeak" path="/data/glenn.hickey/genomes/dm3/tracks/copynum/drosophila_coverage.right.90+.bw" valCol="3"/>
 	<track default="0.0" distribution="gaussian" name="lastz-SelfLowId" path="/data/glenn.hickey/genomes/dm3/tracks/copynum/drosophila_coverage.cov.80-.bw" valCol="3"/>
-	<track default="0.0" distribution="gaussian" name="lastz-SelfLowLeftPeak" path="/data/glenn.hickey/genomes/dm3/tracks/copynum/drosophila_coverage.left.80-.bw" valCol="3"/>
-	<track default="0.0" distribution="gaussian" name="lastz-SelfLowRightPeak" path="/data/glenn.hickey/genomes/dm3/tracks/copynum/drosophila_coverage.right.80-.bw" valCol="3"/>
 	<track default="0.0" distribution="gaussian" name="lastz-SelfMaxPctId" path="/data/glenn.hickey/genomes/dm3/tracks/copynum/drosophila_coverage.maxPId.bw" valCol="3"/>
 	<track default="0.0" distribution="gaussian" name="lastz-SelfMedId" path="/data/glenn.hickey/genomes/dm3/tracks/copynum/drosophila_coverage.cov.80-90.bw" valCol="3"/>
-	<track default="0.0" distribution="gaussian" name="lastz-SelfMedLeftPeak" path="/data/glenn.hickey/genomes/dm3/tracks/copynum/drosophila_coverage.left.80-90.bw" valCol="3"/>
-	<track default="0.0" distribution="gaussian" name="lastz-SelfMedRightPeak" path="/data/glenn.hickey/genomes/dm3/tracks/copynum/drosophila_coverage.right.80-90.bw" valCol="3"/>
-	<track distribution="multinomial" name="lastz-Termini" path="/data/glenn.hickey/genomes/dm3/tracks/terminisearch/dm3.LTR.bed" preprocess="termini" valCol="3"/>
+	<track default="0.0" distribution="gaussian" name="lastz-SelfPeakLeftHigh" path="/data/glenn.hickey/genomes/dm3/tracks/copynum/drosophila_coverage.left.90+.bw" valCol="3"/>
+	<track default="0.0" distribution="gaussian" name="lastz-SelfPeakLeftLow" path="/data/glenn.hickey/genomes/dm3/tracks/copynum/drosophila_coverage.left.80-.bw" valCol="3"/>
+	<track default="0.0" distribution="gaussian" name="lastz-SelfPeakLeftMed" path="/data/glenn.hickey/genomes/dm3/tracks/copynum/drosophila_coverage.left.80-90.bw" valCol="3"/>
+	<track default="0.0" distribution="gaussian" name="lastz-SelfPeakRightHigh" path="/data/glenn.hickey/genomes/dm3/tracks/copynum/drosophila_coverage.right.90+.bw" valCol="3"/>
+	<track default="0.0" distribution="gaussian" name="lastz-SelfPeakRightLow" path="/data/glenn.hickey/genomes/dm3/tracks/copynum/drosophila_coverage.right.80-.bw" valCol="3"/>
+	<track default="0.0" distribution="gaussian" name="lastz-SelfPeakRightMed" path="/data/glenn.hickey/genomes/dm3/tracks/copynum/drosophila_coverage.right.80-90.bw" valCol="3"/>
 	<track distribution="multinomial" name="LTR_FINDER" path="/data/glenn.hickey/genomes/dm3/tracks/ltr_finder/dm3.ltr_finder.bed" preprocess="ltr_finder" valCol="3"/>
 	<track distribution="multinomial" name="LTR_Harvest" path="/data/glenn.hickey/genomes/dm3/tracks/ltr_harvest/dm3.ltr_harvest.bed" preprocess="ltr_finder" valCol="3"/>
 	<track distribution="binary" name="MITE-Hunter" path="/data/douglas.hoen/piatea/genomes/drosophila/tracks/mitehunter/dm3_mitehunter.bed" valCol="0"/>
