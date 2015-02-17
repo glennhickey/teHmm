@@ -25,4 +25,6 @@
 	<track distribution="multinomial" name="LTR_Harvest" path="/data/glenn.hickey/genomes/mm10/tracks/clean/mm10_ltrharvest_clean.bed" preprocess="ltr_finder" valCol="3"/>
 	<track distribution="multinomial" name="sequence" path="/data/glenn.hickey/genomes/mm10/sequence/mm10.fa" valCol="3"/>
 	<track distribution="binary" name="WindowMasker" path="/data/glenn.hickey/genomes/mm10/tracks/windowmasker/mm10.windowmasker.bb" valCol="0"/>
+	<track distribution="mask" name="Ns" path="/data/glenn.hickey/genomes/mm10/tracks/singleBaseRepeats/mm10_polyn.bed" valCol="0"/>
+	<track distribution="mask" name="TRF" path="/data/glenn.hickey/genomes/mm10/tracks/trf/mm10.trf.bed" valCol="0"/>
 </teModelConfig>

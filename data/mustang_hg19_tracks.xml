@@ -26,4 +26,6 @@
 	<track distribution="multinomial" name="mRNA" path="/data/glenn.hickey/genomes/hg19/tracks/mrna/hg19.mrna_clean.bed" valCol="3"/>
 	<track distribution="multinomial" name="sequence" path="/data/glenn.hickey/genomes/hg19/sequence/hg19.fa" valCol="3"/>
 	<track distribution="binary" name="WindowMasker" path="/data/douglas.hoen/piatea/genomes/human/hg19/tracks/windowmasker/hg19_windowmasker.bb" valCol="0"/>
+	<track distribution="mask" name="Ns" path="/data/glenn.hickey/genomes/hg19/tracks/singleBaseRepeats/hg19_polyn.bed" valCol="0"/>
+	<track distribution="mask" name="TRF" path="/data/glenn.hickey/genomes/hg19/tracks/trf/hg19.trf.bed" valCol="0"/>
 </teModelConfig>

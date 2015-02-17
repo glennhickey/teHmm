@@ -29,4 +29,6 @@
 	<track distribution="multinomial" name="sequence" path="/data/glenn.hickey/genomes/rice/sequence/rice.fa" valCol="3"/>
 	<track default="0.0" distribution="gaussian" logScale="1.0286" name="sRNA" path="/data/douglas.hoen/piatea/genomes/rice/tracks/jeong-srna/seedling_controls.bw" shift="1.0" valCol="3"/>
 	<track distribution="binary" name="WindowMasker" path="/data/douglas.hoen/piatea/genomes/rice/tracks/windowmasker/rice_windowmasker.bb" valCol="0"/>
+	<track distribution="mask" name="Ns" path="/data/glenn.hickey/genomes/rice/tracks/singleBaseRepeats/rice_polyn.bed" valCol="0"/>
+	<track distribution="mask" name="TRF" path="/data/glenn.hickey/genomes/rice/tracks/trf/rice_trf.bed" valCol="0"/>
 </teModelConfig>

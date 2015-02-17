@@ -32,4 +32,6 @@
 	<track distribution="multinomial" name="sequence" path="/data/douglas.hoen/piatea/genomes/alyrata/sequence/alyrata_scaffolds1to8.fas" valCol="3"/>
 	<track default="0.0" distribution="gaussian" logScale="4.0307" name="sRNA" path="/data/douglas.hoen/piatea/genomes/alyrata/tracks/misc/alyrata_srna.bw" shift="1.0" valCol="3"/>
 	<track distribution="binary" name="WindowMasker" path="/data/douglas.hoen/piatea/genomes/alyrata/tracks/windowmasker/alyrata_windowmasker.bb" valCol="0"/>
+	<track distribution="mask" name="Ns" path="/data/glenn.hickey/genomes/alyrata/tracks/singleBaseRepeats/alyrata_polyn.bed" valCol="0"/>
+	<track distribution="mask" name="TRF" path="/data/douglas.hoen/piatea/genomes/alyrata/tracks/misc/alyrata_trf.bed" valCol="0"/>
 </teModelConfig>

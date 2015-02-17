@@ -1,7 +1,7 @@
 <?xml version="1.0" ?>
 <teModelConfig>
 	<track distribution="multinomial" name="RM-RepeatModeler" path="/data/glenn.hickey/genomes/rice/tracks/repeatmodeler/rice_repeatmodeler.bed" preprocess="rm" valCol="3"/>
-	<track distribution="multinomial" name="RM-RepBase" path="/data/glenn.hickey/genomes/rice/tracks/rice.repbase.bed" preprocess="rm" valCol="3"/>
+	<track distribution="multinomial" name="RM-RepBase" path="/data/glenn.hickey/genomes/rice/tracks/repbase/rice.repbase.bed" preprocess="rm" valCol="3"/>
 	<track distribution="multinomial" name="REPET" path="/data/glenn.hickey/genomes/rice/tracks/repet/rice_repet_clean.bed" valCol="3"/>
 	<track distribution="multinomial" name="softmask" path="/data/glenn.hickey/genomes/rice/tracks/softmaskRepeats/rice_softmaskRepeats.bed" valCol="3"/>
 	<track distribution="multinomial" name="tigr-repeats" path="/data/glenn.hickey/genomes/rice/tracks/oryzaRepeatDb/rice_tigr_clean.bed" valCol="3"/>
@@ -30,4 +30,6 @@
 	<track distribution="multinomial" name="sequence" path="/data/glenn.hickey/genomes/rice/sequence/rice.fa" valCol="3"/>
 	<track default="0.0" distribution="gaussian" name="sRNA" path="/data/douglas.hoen/piatea/genomes/rice/tracks/jeong-srna/seedling_controls.bw" valCol="3"/>
 	<track distribution="binary" name="WindowMasker" path="/data/douglas.hoen/piatea/genomes/rice/tracks/windowmasker/rice_windowmasker.bb" valCol="0"/>
+	<track distribution="mask" name="Ns" path="/data/glenn.hickey/genomes/rice/tracks/singleBaseRepeats/rice_polyn.bed" valCol="0"/>
+	<track distribution="mask" name="TRF" path="/data/glenn.hickey/genomes/rice/tracks/trf/rice_trf.bed" valCol="0"/>
 </teModelConfig>

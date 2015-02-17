@@ -27,4 +27,6 @@
 	<track distribution="binary" name="MITE-Hunter" path="/data/douglas.hoen/piatea/genomes/drosophila/tracks/mitehunter/dm3_mitehunter.bed" valCol="0"/>
 	<track distribution="multinomial" name="sequence" path="/data/douglas.hoen/piatea/genomes/drosophila/sequence/drosophila3.fa" valCol="3"/>
 	<track distribution="binary" name="WindowMasker" path="/data/douglas.hoen/piatea/genomes/drosophila/tracks/windowmasker/dm3_windowmasker.bed" valCol="0"/>
+	<track distribution="mask" name="Ns" path="/data/glenn.hickey/genomes/dm3/tracks/singleBaseRepeats/dm3_polyn.bed" valCol="0"/>
+	<track distribution="mask" name="TRF" path="/data/glenn.hickey/genomes/dm3/tracks/trf/dm3.trf.bed" valCol="0"/>
 </teModelConfig>
