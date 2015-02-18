@@ -23,6 +23,7 @@
 	<track default="0.0" distribution="gaussian" logScale="1.0428" name="lastz-SelfPeakRightMed" path="/data/glenn.hickey/genomes/mm10/tracks/copynum/coverage.right.80-90.bw" shift="1.0" valCol="3"/>
 	<track distribution="multinomial" name="LTR_FINDER" path="/data/glenn.hickey/genomes/mm10/tracks/clean/mm10_chr1_ltrfinder_clean.bed" preprocess="ltr_finder" valCol="3"/>
 	<track distribution="multinomial" name="LTR_Harvest" path="/data/glenn.hickey/genomes/mm10/tracks/clean/mm10_ltrharvest_clean.bed" preprocess="ltr_finder" valCol="3"/>
+	<track distribution="multinomial" name="mRNA" path="/data/glenn.hickey/genomes/mm10/tracks/mrna/mm10.mrna.clean.bed" valCol="3"/>
 	<track distribution="multinomial" name="sequence" path="/data/glenn.hickey/genomes/mm10/sequence/mm10.fa" valCol="3"/>
 	<track distribution="binary" name="WindowMasker" path="/data/glenn.hickey/genomes/mm10/tracks/windowmasker/mm10.windowmasker.bb" valCol="0"/>
 	<track distribution="mask" name="Ns" path="/data/glenn.hickey/genomes/mm10/tracks/singleBaseRepeats/mm10_polyn.bed" valCol="0"/>
