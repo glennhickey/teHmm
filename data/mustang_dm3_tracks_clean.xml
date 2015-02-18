@@ -25,6 +25,7 @@
 	<track distribution="multinomial" name="LTR_FINDER" path="/data/glenn.hickey/genomes/dm3/tracks/clean/dm3.ltr_finder_clean.bed" valCol="3"/>
 	<track distribution="multinomial" name="LTR_Harvest" path="/data/glenn.hickey/genomes/dm3/tracks/clean/dm3.ltr_harvest_clean.bed" valCol="3"/>
 	<track distribution="binary" name="MITE-Hunter" path="/data/douglas.hoen/piatea/genomes/drosophila/tracks/mitehunter/dm3_mitehunter.bed" valCol="0"/>
+	<track distribution="multinomial" name="mRNA" path="/data/glenn.hickey/genomes/dm3/tracks/mrna/dm3.mrna.clean.bed" valCol="3"/>
 	<track distribution="multinomial" name="sequence" path="/data/douglas.hoen/piatea/genomes/drosophila/sequence/drosophila3.fa" valCol="3"/>
 	<track distribution="binary" name="WindowMasker" path="/data/douglas.hoen/piatea/genomes/drosophila/tracks/windowmasker/dm3_windowmasker.bed" valCol="0"/>
 	<track distribution="mask" name="Ns" path="/data/glenn.hickey/genomes/dm3/tracks/singleBaseRepeats/dm3_polyn.bed" valCol="0"/>
