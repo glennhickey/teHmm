@@ -36,6 +36,8 @@ def main(argv=None):
                         action="store_true", default=False)
     parser.add_argument("--ec", help="Print emission distribution clusterings"
                         " to given file in PDF format", default=None)
+    parser.add_argument("--ecn", help="Like --ec option but only print non"
+                        " numeric tracks", default=None)
     parser.add_argument("--pca", help="Print emission pca scatters"
                         " to given file in PDF format", default=None)
     parser.add_argument("--hm", help="Print heatmap of emission distribution means"
@@ -75,7 +77,13 @@ def main(argv=None):
         if canPlot is False:
             raise RuntimeError("Unable to write plots.  Maybe matplotlib is "
                                "not installed?")
-        writeEmissionClusters(model, args)
+        writeEmissionClusters(model, args, False)
+
+    if args.ecn is not None:
+        if canPlot is False:
+            raise RuntimeError("Unable to write plots.  Maybe matplotlib is "
+                               "not installed?")
+        writeEmissionClusters(model, args, True)        
 
     if args.pca is not None:
         if canPlot is False:
@@ -93,7 +101,7 @@ def main(argv=None):
         writeTransitionGraph(model, args)
 
 
-def writeEmissionClusters(model, args):
+def writeEmissionClusters(model, args, onlyNonNumeric):
     """ print a hierachical clustering of states for each track (where each
     state is a point represented by its distribution for that track)"""
     trackList = model.getTrackList()
@@ -120,12 +128,20 @@ def writeEmissionClusters(model, args):
         allPoints.append([])
 
     for track in trackList:
-        hcNames.append(track.getName())
-        points = [emissionDist[track.getNumber()][x] for x in xrange(N)]
-        for j in xrange(N):
-            allPoints[j] += list(points[j])
-        hc = hierarchicalCluster(points, normalizeDistances=True)
-        hcList.append(hc)
+        nonNumeric = False
+        for symbol in emission.getTrackSymbols(track.getNumber()):
+            try:
+                val = float(track.getValueMap().getMapBack(symbol))
+            except:
+                nonNumeric = True
+                break
+        if nonNumeric is True or onlyNonNumeric is False:
+            hcNames.append(track.getName())
+            points = [emissionDist[track.getNumber()][x] for x in xrange(N)]
+            for j in xrange(N):
+                allPoints[j] += list(points[j])
+            hc = hierarchicalCluster(points, normalizeDistances=True)
+            hcList.append(hc)
 
     # all at once
     hc = hierarchicalCluster(allPoints, normalizeDistances=True)
@@ -135,9 +151,12 @@ def writeEmissionClusters(model, args):
     # write clusters to pdf (ranked in decreasing order based on total
     # branch length)
     ranks = rankHierarchies(hcList)
+    outPath = args.ec
+    if onlyNonNumeric is True:
+        outPath = args.ecn
     plotHierarchicalClusters([hcList[i] for i in ranks],
                              [hcNames[i] for i in ranks],
-                             stateNames, args.ec)
+                             stateNames, outPath)
 
 def writeEmissionScatters(model, args):
     """ print a pca scatterplot of states for each track (where each
