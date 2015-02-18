@@ -51,6 +51,8 @@ def main(argv=None):
                         action="store_true")
     parser.add_argument("--cutMultinomial", help="Cut non-gaussian, non-binary"
                         " tracks everytime", default=False, action="store_true")
+    parser.add_argument("--cutNonGaussian", help="Cut all but guassian tracks",
+                        default=False, action="store_true")
     parser.add_argument("--comp", help="Strategy for comparing columns for the "
                         "threshold cutoff.  Options are [first, prev], where"
                         " first compares with first column of segment and "
@@ -175,6 +177,16 @@ def main(argv=None):
               args.ignoreList[trackNo] == 0:
               assert trackNo < len(cutList)
               cutList[trackNo] = 1
+
+    #process the --cutNonGaussian option
+    if args.cutNonGaussian is True:
+        for track in trackList:
+            trackNo = track.getNumber()
+            if track.dist != "gaussian" and\
+              args.ignoreList[trackNo] == 0:
+              assert trackNo < len(cutList)
+              cutList[trackNo] = 1
+              
 
     # segment the tracks
     stats = dict()
