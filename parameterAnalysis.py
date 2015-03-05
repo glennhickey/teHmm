@@ -192,7 +192,7 @@ def plotHeatMap(array, rowNames, colNames, outFile):
     """
 
     width=10
-    height= 6
+    height= 7
     pdf = pltBack.PdfPages(outFile)
     fig = plt.figure(figsize=(width, height))
     print array

@@ -303,7 +303,7 @@ def parallelDispatch(argv, args):
         cmdToks[cmdToks.index("--chrom") + 1] = ""
         cmdToks[cmdToks.index("--chrom")] = ""
         
-        chromPath = getLocalTempPath("Temp", ".bed")
+        chromPath = getLocalTempPath("TempChromPath", ".bed")
         cpFile = open(chromPath, "w")
         cpFile.write("%s\t%d\t%d\t0\t0\t.\n" % (chrom[0], chrom[1], chrom[2]))
         cpFile.close()

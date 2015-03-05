@@ -275,6 +275,9 @@ def writeHeatMap(confMat, outPath):
             fromTotals[fromState] += count
     fromStates = list(fromStates)
     toStates = list(toStates)
+    toRanks = [sorted(toStates).index(i) for i in toStates]
+    frRanks = [sorted(fromStates).index(i) for i in fromStates]
+
     matrix = np.zeros((len(fromStates), len(toStates)))
     for fromIdx in xrange(len(fromStates)):
         for toIdx in xrange(len(toStates)):
@@ -287,9 +290,9 @@ def writeHeatMap(confMat, outPath):
                 count = float(confMat[fromState][toState])
                 # normalize
                 count /= float(fromTotals[fromState])
-            matrix[fromIdx, toIdx] = count
+            matrix[frRanks[fromIdx], toRanks[toIdx]] = count
 
-    plotHeatMap(matrix, fromStates, toStates, outPath)
+    plotHeatMap(matrix.T, sorted(toStates), sorted(fromStates), outPath)
 
 if __name__ == "__main__":
     sys.exit(main())

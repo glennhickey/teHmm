@@ -220,7 +220,7 @@ def writeEmissionHeatMap(model, args):
 
     sortedStateNames = sorted(stateNames)
     stateRanks = [sortedStateNames.index(state) for state in stateNames]
-    stateNames = sortedStateNames
+    #stateNames = sortedStateNames
 
     N = len(stateNames)
     emProbs = emission.getLogProbs()
@@ -238,7 +238,7 @@ def writeEmissionHeatMap(model, args):
         nameMap = track.getValueMap()
         trackMeans = np.zeros((emission.getNumStates()))
 
-        for state in stateRanks:
+        for idx, state in enumerate(stateRanks):
             if track.getDist() == "gaussian":
                 mean, stddev = emission.getGaussianParams(trackNo, state)
             else:
@@ -246,19 +246,23 @@ def writeEmissionHeatMap(model, args):
                 for symbol in emission.getTrackSymbols(trackNo):
                     # do we need to check for missing value here???
                     val = nameMap.getMapBack(symbol)
-                    try:
-                        val = float(val)
-                    except:
-                        nonNumeric = True
-                        break        
+                    temp = val
+                    val = str(val)
+                    if val != "None" and val != "0" and val.lower() != "simple" and \
+                      val.lower() != "intergenic" and val.lower() != "low":
+                        val = 1.
+                    else:
+                        val = 0.
+    
                     prob = np.exp(emProbs[trackNo][state][symbol])
+
                     assert prob >= 0. and prob <= 1.
                     mean += val * prob                
 
-            if nonNumeric is False:            
-                trackMeans[state] = mean
+            if nonNumeric is False:
+                trackMeans[stateRanks[state]] = mean
             else:
-                break
+                break                
 
         if nonNumeric is False:
             means = [trackMeans[state] for state in xrange(emission.getNumStates())]
@@ -267,7 +271,10 @@ def writeEmissionHeatMap(model, args):
             for state in xrange(emission.getNumStates()):
                 mean = trackMeans[state]
                 # normalize mean
-                trackMeans[state] = (mean - minVal) / (maxVal - minVal)
+                if minVal != maxVal:
+                    trackMeans[state] = (mean - minVal) / (maxVal - minVal)
+                else:
+                    trackMeans[state] = minVal
                 #hacky cutoff
                 #mean = min(0.23, mean)
         if nonNumeric is False:
@@ -283,7 +290,7 @@ def writeEmissionHeatMap(model, args):
 
     if len(meanArray) > 0:
         # note to self http://stackoverflow.com/questions/2455761/reordering-matrix-elements-to-reflect-column-and-row-clustering-in-naiive-python
-        plotHeatMap(meanArray, trackNames, stateNames, args.hm)
+        plotHeatMap(meanArray, trackNames, sortedStateNames, args.hm)
     
 
 def writeTransitionGraph(model, args):
