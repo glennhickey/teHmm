@@ -94,6 +94,10 @@ def main(argv=None):
                         "out mask tracks so they are removed from comparison."
                         " (convenience option to not have to manually run "
                         "subtractBed everytime...)", default=None)
+    parser.add_argument("--colOrder", help="List of states used to force"
+                        " ordering in heatmap (otherwise alphabetical) columns. These"
+                        " states will correspond to the tgtBed when --old used and"
+                        " --predBed otherwise.", default=None)
     
     addLoggingOptions(parser)
     args = parser.parse_args()
@@ -176,12 +180,12 @@ def main(argv=None):
     writeFittedBed(intervals2, stateMap, args.outBed, args.col-1, args.noMerge,
                    args.ignoreTgt)
 
-    # write the confusiont matrix as heatmap
+    # write the confusion matrix as heatmap
     if args.hm is not None:
         if canPlot is False:
             raise RuntimeError("Unable to write heatmap.  Maybe matplotlib is "
                                "not installed?")
-        writeHeatMap(confMat, args.hm)
+        writeHeatMap(confMat, args.hm, args.colOrder)
 
     if len(tempFiles) > 0:
         runShellCommand("rm -f %s" % " ".join(tempFiles))
@@ -259,7 +263,7 @@ def writeFittedBed(intervals, stateMap, outBed, col, noMerge, ignoreTgt):
                                             
     outFile.close()
 
-def writeHeatMap(confMat, outPath):
+def writeHeatMap(confMat, outPath, colOrder):
     """ make a heatmap PDF out of a confusion matrix using """
 
     # need to transform our dict[dict] confusion matrix into an array
@@ -275,8 +279,16 @@ def writeHeatMap(confMat, outPath):
             fromTotals[fromState] += count
     fromStates = list(fromStates)
     toStates = list(toStates)
+    if colOrder is not None:
+        colOrder = colOrder.split(",")
+        assert len(colOrder) == len(fromStates)
+        for x in colOrder:
+            assert fromStates.index(x) >= 0
+        sortedFromStates = colOrder
+    else:
+        sortedFromStates = sorted(fromStates)
     toRanks = [sorted(toStates).index(i) for i in toStates]
-    frRanks = [sorted(fromStates).index(i) for i in fromStates]
+    frRanks = [sortedFromStates.index(i) for i in fromStates]
 
     matrix = np.zeros((len(fromStates), len(toStates)))
     for fromIdx in xrange(len(fromStates)):
@@ -292,7 +304,7 @@ def writeHeatMap(confMat, outPath):
                 count /= float(fromTotals[fromState])
             matrix[frRanks[fromIdx], toRanks[toIdx]] = count
 
-    plotHeatMap(matrix.T, sorted(toStates), sorted(fromStates), outPath)
+    plotHeatMap(matrix.T, sorted(toStates), sortedFromStates, outPath)
 
 if __name__ == "__main__":
     sys.exit(main())

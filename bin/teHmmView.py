@@ -201,7 +201,7 @@ def writeEmissionScatters(model, args):
                      [hcNames[i] for i in ranking],
                      stateNames, args.pca)
 
-def writeEmissionHeatMap(model, args):
+def writeEmissionHeatMap(model, args, leftTree = True, topTree = True):
     """ print a heatmap from the emission distributions.  this is of the form of
     track x state where each value is the man of the distribution for that state
     for that track"""
@@ -290,7 +290,7 @@ def writeEmissionHeatMap(model, args):
 
     if len(meanArray) > 0:
         # note to self http://stackoverflow.com/questions/2455761/reordering-matrix-elements-to-reflect-column-and-row-clustering-in-naiive-python
-        plotHeatMap(meanArray, trackNames, sortedStateNames, args.hm)
+        plotHeatMap(meanArray, trackNames, sortedStateNames, args.hm, leftTree, topTree)
     
 
 def writeTransitionGraph(model, args):
