@@ -8,9 +8,9 @@ import os
 import argparse
 import numpy as np
 from pybedtools import BedTool, Interval
-from matplotlib import pyplot as plt
 # give up for now on drawing the venn diagram... just print out all the values to be
 # hand pasted into a picture...
+#from matplotlib import pyplot as plt
 #from matplotlib_venn import venn3, venn3_circles
 #from teHmm.scripts.venn_maker import venn_maker
 
