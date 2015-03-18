@@ -186,7 +186,8 @@ def plotPoints2d(distList, titles, stateNames, outFile, xRange=None,
     fig.savefig(pdf, format = 'pdf')
     pdf.close()
 
-def plotHeatMap(inputArray, rowNames, colNames, outFile, leftTree = False, topTree = False):
+def plotHeatMap(inputArray, rowNames, colNames, outFile, leftTree = False, topTree = False,
+                xLabelPosition=None, yLabelPosition=None, aspect='auto'):
     """ from here
     http://stackoverflow.com/questions/2455761/reordering-matrix-elements-to-reflect-column-and-row-clustering-in-naiive-python
     """
@@ -237,7 +238,7 @@ def plotHeatMap(inputArray, rowNames, colNames, outFile, leftTree = False, topTr
     # picture of built-in colormaps http://wiki.scipy.org/Cookbook/Matplotlib/Show_colormaps
     im = axmatrix.matshow(array,
                           #interpolation='nearest',
-                          aspect='auto',
+                          aspect=aspect,
                           #origin='lower',
                           cmap=plt.cm.YlGnBu)#, norm=LogNorm())
 
@@ -247,10 +248,10 @@ def plotHeatMap(inputArray, rowNames, colNames, outFile, leftTree = False, topTr
     axmatrix.set_xticks([i for i in xrange(-1, len(colNames))])
     axmatrix.set_yticks([i for i in xrange(-1, len(rowNames))])
 
-    if leftTree is True:
+    if leftTree is True or yLabelPosition == 'right':
         axmatrix.yaxis.set_label_position('right')
         axmatrix.yaxis.tick_right()
-    if topTree is True:
+    if topTree is True or xLabelPosition == "botton":
         axmatrix.xaxis.set_label_position('bottom')
         pylab.xticks(rotation=-90)
         axmatrix.xaxis.tick_bottom()

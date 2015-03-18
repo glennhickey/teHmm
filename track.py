@@ -181,6 +181,9 @@ class Track(object):
     def getName(self):
         return self.name
 
+    def setName(self, name):
+        self.name = name
+
     def getDist(self):
         return self.dist
 
