@@ -98,6 +98,10 @@ def main(argv=None):
                         " ordering in heatmap (otherwise alphabetical) columns. These"
                         " states will correspond to the tgtBed when --old used and"
                         " --predBed otherwise.", default=None)
+    parser.add_argument("--hmCovRow", help="Path to write 1-row heatmap of "
+                        "state coverage (fraction of bases). only works with --hm",
+                        default=None)
+
     
     addLoggingOptions(parser)
     args = parser.parse_args()
@@ -185,7 +189,7 @@ def main(argv=None):
         if canPlot is False:
             raise RuntimeError("Unable to write heatmap.  Maybe matplotlib is "
                                "not installed?")
-        writeHeatMap(confMat, args.hm, args.colOrder)
+        writeHeatMap(confMat, args.hm, args.colOrder, args.hmCovRow)
 
     if len(tempFiles) > 0:
         runShellCommand("rm -f %s" % " ".join(tempFiles))
@@ -263,7 +267,7 @@ def writeFittedBed(intervals, stateMap, outBed, col, noMerge, ignoreTgt):
                                             
     outFile.close()
 
-def writeHeatMap(confMat, outPath, colOrder):
+def writeHeatMap(confMat, outPath, colOrder, coverageRowPath):
     """ make a heatmap PDF out of a confusion matrix using """
 
     # need to transform our dict[dict] confusion matrix into an array
@@ -287,24 +291,51 @@ def writeHeatMap(confMat, outPath, colOrder):
         sortedFromStates = colOrder
     else:
         sortedFromStates = sorted(fromStates)
-    toRanks = [sorted(toStates).index(i) for i in toStates]
+    # make sure non-TE states tacked on at end
+    def toSortKey(x):
+        if x == '0' or x.lower() == 'background' or x.lower().find("low") == 0:
+            return "zzz" + x
+        elif x.lower().find('unknown') == 0:
+            return "zza" + x
+        return x
+    sortedToStates = sorted(toStates, key = toSortKey)
+    toRanks = [sortedToStates.index(i) for i in toStates]
     frRanks = [sortedFromStates.index(i) for i in fromStates]
 
     matrix = np.zeros((len(fromStates), len(toStates)))
+    countMatrix = np.zeros((len(fromStates), len(toStates)))
     for fromIdx in xrange(len(fromStates)):
         for toIdx in xrange(len(toStates)):
             fromState = fromStates[fromIdx]
             toState = toStates[toIdx]
             count = 0.
+            normalizedVal = 0.
             # dumb we need if -- should add zero-entries into confMat
             # (or at least change to defaultDict...)
             if fromState in confMat and toState in confMat[fromState]:
                 count = float(confMat[fromState][toState])
                 # normalize
-                count /= float(fromTotals[fromState])
-            matrix[frRanks[fromIdx], toRanks[toIdx]] = count
+                normalizedVal = count / float(fromTotals[fromState])
+            matrix[frRanks[fromIdx], toRanks[toIdx]] = normalizedVal
+            countMatrix[frRanks[fromIdx], toRanks[toIdx]] = count
 
-    plotHeatMap(matrix.T, sorted(toStates), sortedFromStates, outPath)
+    # little hack to change state 0 to "Background"
+    if '0' in sortedToStates:
+        sortedToStates[sortedToStates.index('0')] = "Background"
+    plotHeatMap(matrix.T, sortedToStates, sortedFromStates, outPath, yLabelPosition = "right",
+                aspect = None)
+
+    # write the coverage row in a second file
+    if coverageRowPath is not None:
+        sumVec = sum(countMatrix.T)
+        covMat = np.zeros((2, len(sumVec)))
+        covMat[0] = sumVec / sum(sumVec)
+        covMat[1] = sumVec / sum(sumVec)
+        # 2nd row a dummy that we need to cut out manually (matshow requires it) .  use it
+        # to make sure we have a 0-1 scale
+        covMat[1][0] = 1.
+        plotHeatMap(covMat, ["Coverage", ""], sortedFromStates, coverageRowPath,
+                    yLabelPosition = "right", aspect = None)
 
 if __name__ == "__main__":
     sys.exit(main())

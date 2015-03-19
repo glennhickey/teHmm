@@ -39,15 +39,27 @@ def main(argv=None):
                         " with --teNumbers)", default=None)
     parser.add_argument("--noMerge", help="dont merge adjacent intervals with same"
                         " name with --bed option", action="store_true",default=False)
+    parser.add_argument("--changeTrackName", help="dont do anything else, just change"
+                        " the name of one track.  specified value should be of form"
+                        " currentNAme, newName", default=None)
     
 
     args = parser.parse_args()
     assert args.inputModel != args.outputModel
-    assert (args.newNames is None) != (args.teNumbers is None)
 
     # load model created with teHmmTrain.py
     model = loadModel(args.inputModel)
 
+    # trackChangeName logic hacked in completely separate from everything else
+    if args.changeTrackName is not None:
+        oldName, newName = args.changeTrackName.split(",")
+        track = model.getTrackList().getTrackByName(oldName)
+        track.setName(newName)
+        saveModel(args.outputModel, model)
+        return 0
+
+    assert (args.newNames is None) != (args.teNumbers is None)
+    
     # names manually specified
     if args.newNames is not None:
         names = args.newNames.split(",")
