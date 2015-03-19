@@ -56,20 +56,20 @@ def main(argv=None):
 
 def minus(x, y, z1=None, z2=None):
     """ ((x - y) - z1) - z2 """
-    t = x.subtract(y)
+    t = x.subtract(y).sort()
     if z1 is not None:
-        t = t.subtract(z1)
+        t = t.subtract(z1).sort()
     if z2 is not None:
-        t = t.subtract(z2)
+        t = t.subtract(z2).sort()
     return t
 
 def inter(x, y, z1=None, z2=None):
     """ intersection of two or three bedtools """
-    t = x.intersect(y)
+    t = x.intersect(y).sort()
     if z1 is not None:
-        t = t.intersect(z1)
+        t = t.intersect(z1).sort()
     if z2 is not None:
-        t = t.intersect(z2)
+        t = t.intersect(z2).sort()
     return t
 
 def cov(x):
@@ -77,31 +77,31 @@ def cov(x):
     
 def venn1set(args):
     """ 1 set """
-    print "A: %s" % args.names[0]
-
     a = BedTool(args.inputFiles[0]).merge()
+    print "A: %s (%s)" % (args.names[0], cov(a))
+    print "--------------------"
     print "A: %s" % cov(a)
 
 def venn2set(args):
     """ 2 set """
-    print "A: %s" % args.names[0], args.inputFiles[0]
-    print "B: %s" % args.names[1], args.inputFiles[1]
-    
-    a = BedTool(args.inputFiles[0]).merge()
-    b = BedTool(args.inputFiles[1]).merge()
+    a = BedTool(args.inputFiles[0]).sort().merge()
+    b = BedTool(args.inputFiles[1]).sort().merge()
+    print "A: %s (%s)" % (args.names[0], cov(a))
+    print "B: %s (%s)" % (args.names[1], cov(b))
+    print "--------------------"
     print "A: %s" % cov(minus(a,b))
     print "B: %s" % cov(minus(b,a))
     print "AB: %s" % cov(inter(a,b))
 
 def venn3set(args):
-    """ 3 set """
-    print "A: %s" % args.names[0]
-    print "B: %s" % args.names[1]
-    print "C: %s" % args.names[2]
-    
-    a = BedTool(args.inputFiles[0]).merge()
-    b = BedTool(args.inputFiles[1]).merge()
-    c = BedTool(args.inputFiles[2]).merge()
+    """ 3 set """    
+    a = BedTool(args.inputFiles[0]).sort().merge()
+    b = BedTool(args.inputFiles[1]).sort().merge()
+    c = BedTool(args.inputFiles[2]).sort().merge()
+    print "A: %s (%s)" % (args.names[0], cov(a))
+    print "B: %s (%s)" % (args.names[1], cov(b))
+    print "C: %s (%s)" % (args.names[2], cov(c))
+    print "--------------------"
     print "A:   %s" % cov(minus(a, b, c))
     print "B:   %s" % cov(minus(b, a, c))
     print "C:   %s" % cov(minus(c, a, b))
@@ -112,15 +112,16 @@ def venn3set(args):
     
 def venn4set(args):
     """ 4 set """
-    print "A: %s" % args.names[0]
-    print "B: %s" % args.names[1]
-    print "C: %s" % args.names[2]
-    print "D: %s" % args.names[3]
-        
-    a = BedTool(args.inputFiles[0]).merge()
-    b = BedTool(args.inputFiles[1]).merge()
-    c = BedTool(args.inputFiles[2]).merge()
-    d = BedTool(args.inputFiles[3]).merge()    
+    a = BedTool(args.inputFiles[0]).sort().merge()
+    b = BedTool(args.inputFiles[1]).sort().merge()
+    c = BedTool(args.inputFiles[2]).sort().merge()
+    d = BedTool(args.inputFiles[3]).sort().merge()
+    print "A: %s (%s)" % (args.names[0], cov(a))
+    print "B: %s (%s)" % (args.names[1], cov(b))
+    print "C: %s (%s)" % (args.names[2], cov(c))
+    print "D: %s (%s)" % (args.names[3], cov(d))
+    print "--------------------"
+
     print "A:    %s" % cov(minus(a, b, c, d))
     print "B:    %s" % cov(minus(b, a, c, d))
     print "C:    %s" % cov(minus(c, a, b, d))
