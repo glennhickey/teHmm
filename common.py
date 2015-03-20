@@ -140,6 +140,18 @@ def intersectSize(interval1, interval2):
         overlap = max(0, overlap)
     return overlap
 
+def distance(interval1, interval2):
+    """ return the distance between two intervals """
+    if intersectSize(interval1, interval2) > 0:
+        return 0
+    elif interval1[0] != interval2[0]:
+        return sys.maxint
+    elif interval1[2] <= interval2[1]:
+        return interval2[1] - interval1[2]
+    else:
+        assert interval2[2] <= interval1[1]
+        return interval1[1] - interval2[2]        
+
 def checkRequirements():
     """ check some version numbers of pyhton libraries to see if
     things ought to run -- should be kept consistent with readme"""

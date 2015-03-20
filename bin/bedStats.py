@@ -17,7 +17,7 @@ from numpy.testing import assert_array_equal
 
 from teHmm.trackIO import readBedIntervals
 from teHmm.modelIO import loadModel
-from teHmm.common import intersectSize, initBedTool, cleanBedTool
+from teHmm.common import intersectSize, initBedTool, cleanBedTool, distance
 from teHmm.common import addLoggingOptions, setLoggingFromOptions, logger
 
 
@@ -49,6 +49,10 @@ def main(argv=None):
                         action="store_true", default=False)
     parser.add_argument("--noLen", help="Just do score stats",
                         action="store_true", default=False)
+    parser.add_argument("--nearness", help="Compute nearness stats (instead "
+                        "of normal stats) of input bed with given BED.  Output"
+                        " will be a BED instead of CSV, with nearness in the "
+                        "score position", default=None)
 
     addLoggingOptions(parser)
     args = parser.parse_args()
@@ -63,11 +67,16 @@ def main(argv=None):
     outFile = open(args.outCsv, "w")
     args.ignoreSet = set(args.ignore.split(","))
 
-    intervals = readBedIntervals(args.inBed, ncol = 5)
+    intervals = readBedIntervals(args.inBed, ncol = 5, sort = args.nearness is not None)
 
     csvStats = ""
+    # nearness stats
+    if args.nearness is not None:
+        args.noScore = True
+        csvStats = makeNearnessBED(intervals, args)
+        
     # length stats
-    if args.noLen is False:
+    elif args.noLen is False:
         csvStats = makeCSV(intervals, args, lambda x : int(x[2])-int(x[1]),
                            "Length")
     # score stats
@@ -199,6 +208,28 @@ def histogramStats(dataDict, summaryDict, args, start=None, end=None,
         histStats[name] = (freq, bins[:-1])
     
     return histStats
+
+def makeNearnessBED(intervals, args):
+    """ for each interval, measure distance to nearest interval in args.nearness and
+    write as score """
+    compIntervals = readBedIntervals(args.nearness, ncol = 4, sort = True)
+    if len(intervals) == 0:
+        return ""
+
+    # only correct if sorted non-overlapping
+    outBedString = ""
+    i = 0
+    for interval in intervals:
+        distI = sys.maxint
+        for j in xrange(i, len(compIntervals)):
+            distJ = distance(interval, compIntervals[j])
+            if distJ <= distI:
+                i, distI = j, distJ
+            else:
+                break
+        outBedString += "%s\t%d\t%d\t%s\t%d\n" % (interval[0], interval[1], interval[2],
+                                                  interval[3], distI)
+    return outBedString
 
 if __name__ == "__main__":
     sys.exit(main())

@@ -208,7 +208,7 @@ def plotHeatMap(inputArray, rowNames, colNames, outFile, leftTree = False, topTr
     # Compute and plot dendrogram.
     if leftTree is True:
         #axdendro = fig.add_axes([0.09,0.1,0.2,0.6], frame_on=False)
-        axdendro = fig.add_axes([0.19+sX,0.1+sY,0.1,0.6], frame_on=False)
+        axdendro = fig.add_axes([0.26+sX,0.1+sY,0.05,0.6], frame_on=False)
         #Y = sch.linkage(array, method='centroid')
         Y = hierarchicalCluster(array, linkageMethod = 'single')
         Z = sch.dendrogram(Y, orientation='right', color_threshold=100000)
@@ -218,7 +218,7 @@ def plotHeatMap(inputArray, rowNames, colNames, outFile, leftTree = False, topTr
     # Compute and plot second dendrogram.
     if topTree is True:
         #ax2 = fig.add_axes([0.3,0.71,0.6,0.2], frame_on=False)
-        ax2 = fig.add_axes([0.3+sX,0.71+sY,0.6,0.1], frame_on=False)
+        ax2 = fig.add_axes([0.3+sX,0.69+sY,0.6,0.05], frame_on=False)
         Y = hierarchicalCluster(array.T, linkageMethod = 'single')        
         Z2 = sch.dendrogram(Y, color_threshold=100000)
         ax2.set_xticks([])
@@ -251,7 +251,7 @@ def plotHeatMap(inputArray, rowNames, colNames, outFile, leftTree = False, topTr
     if leftTree is True or yLabelPosition == 'right':
         axmatrix.yaxis.set_label_position('right')
         axmatrix.yaxis.tick_right()
-    if topTree is True or xLabelPosition == "botton":
+    if topTree is True or xLabelPosition == "bottom":
         axmatrix.xaxis.set_label_position('bottom')
         pylab.xticks(rotation=-90)
         axmatrix.xaxis.tick_bottom()

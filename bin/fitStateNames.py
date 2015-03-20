@@ -329,13 +329,11 @@ def writeHeatMap(confMat, outPath, colOrder, coverageRowPath):
     if coverageRowPath is not None:
         sumVec = sum(countMatrix.T)
         covMat = np.zeros((2, len(sumVec)))
-        covMat[0] = sumVec / sum(sumVec)
-        covMat[1] = sumVec / sum(sumVec)
-        # 2nd row a dummy that we need to cut out manually (matshow requires it) .  use it
-        # to make sure we have a 0-1 scale
-        covMat[1][0] = 1.
-        plotHeatMap(covMat, ["Coverage", ""], sortedFromStates, coverageRowPath,
-                    yLabelPosition = "right", aspect = None)
+        covMat[1] = np.log(sumVec)# / sum(sumVec)
+        # matshow needs at least 2 rows.  make row backwards to be easier to cut by eye
+        covMat[0] = covMat[1][::-1]
+        plotHeatMap(covMat, ["log CoverageR", "log Coverage"], sortedFromStates, coverageRowPath,
+                    yLabelPosition = "right", xLabelPosition="bottom", aspect = None)
 
 if __name__ == "__main__":
     sys.exit(main())
