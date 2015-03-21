@@ -127,7 +127,7 @@ def venn4set(args):
     print "C:    %s" % cov(minus(c, a, b, d))
     print "D:    %s" % cov(minus(d, a, b, c))
     print "AB:   %s" % cov(minus(inter(a,b), c, d))
-    print "AC:   %s" % cov(minus(inter(a,b), b, d))
+    print "AC:   %s" % cov(minus(inter(a,c), b, d))
     print "AD:   %s" % cov(minus(inter(a,d), b, c))        
     print "BC:   %s" % cov(minus(inter(b,c), a, d))
     print "BD:   %s" % cov(minus(inter(b,d), a, c))
