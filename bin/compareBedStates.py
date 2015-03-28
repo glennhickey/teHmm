@@ -128,6 +128,7 @@ def main(argv=None):
         stats = compareBaseLevel(intervals1, intervals2, args.col - 1)[0]
 
         totalRight, totalWrong, accMap = summarizeBaseComparision(stats, args.ignore)
+        print "Base counts [False Negatives, False Positives, True Positives]:"
         print stats
         totalBoth = totalRight + totalWrong
         accuracy = float(totalRight) / float(totalBoth)
@@ -551,8 +552,12 @@ def getStateMapFromConfMatrix(reverseMatrix, truthTgt, truthIgnore, predIgnore, 
                         sureBets.append(predState)
                     else:
                         predCandidates.append(predState)
-                if fdr is not None and predFrac >= 1. - fdr:
-                    fdrSureBets.append(predState)
+                if fdr is not None:
+                    # above calculation of predFrac is effective heuristic but
+                    # runs against definition of fdr
+                    predFrac = float(overlap) / float(predStateSizes[predState])
+                    if predFrac >= 1. - fdr:
+                        fdrSureBets.append(predState)
             else:
                 logger.debug("state mapper skipping %s with othresh %f" % (
                     predState, float(overlap) / float(min(truthSize,
@@ -575,10 +580,12 @@ def getStateMapFromConfMatrix(reverseMatrix, truthTgt, truthIgnore, predIgnore, 
             candidateSet = list(candidateSetIter) + sureBets
             # compute the f1 score of this mapping
             p, r, f1, tp, fp, fn = 0.,0.,0.,0.,0., float(truthStateSizes[truthState])
+            bsSortMap = dict()
             for predState in candidateSet:
                 overlap = reverseMatrix[truthState][predState]
                 tp += overlap
                 fp += predStateSizes[predState] - overlap
+                bsSortMap[predState] = tp + fp
                 fn -= overlap
             if tp > 0.:
                 p = tp / (tp + fp)
@@ -586,7 +593,9 @@ def getStateMapFromConfMatrix(reverseMatrix, truthTgt, truthIgnore, predIgnore, 
                 f1 = (2. * p * r) / (p + r)
             #print f1, p, r, tp, fp, fn, str(candidateSet)
             if f1 > bestF1:
-                bestF1, bestMapSet = f1, candidateSet
+                # sort by total number of bases 
+                bestF1, bestMapSet = f1, sorted(candidateSet, reverse=True,
+                                                key = lambda x : bsSortMap[x])
                 
         # add best candidate set to prediction state name map
         for predState in bestMapSet:
@@ -628,8 +637,45 @@ def extractCompStatsFromFile(dumpPath):
         if baseStats is not None and intervalStats is not None and\
           weightedStats is not None:
           break
-    return baseStats, intervalStats, weightedStats
     dumpFile.close()
+    return baseStats, intervalStats, weightedStats
+
+def extractCompCountsFromFile(dumpPath):
+    """ like above, but return the first dictionary with counts instead of
+    precision recall. this is a little hack to play with computation of
+    sensitivity / specificity for two-class cases. """
+    dumpFile = open(dumpPath, "r")
+    counts = None
+    mode = None
+    for line in dumpFile:
+        if line.find("Base counts") == 0:
+            mode = "counts"
+        elif mode == "counts":
+            counts = ast.literal_eval(line)
+            break
+    dumpFile.close()
+    return counts
+
+def extract2ClassSpecificityFromFile(dumpPath, state):
+    """ Compute specificity for just one state name vs everything else """
+    countTable = extractCompCountsFromFile(dumpPath)
+    totalBases = 0
+    # count the total number of bases
+    for name, value in countTable.items():
+        fn, fp, tp = value[0], value[1], value[2]
+        totalBases += tp + fn
+    if state not in countTable:
+        fn, fp, tp = 0, 0, 0
+    else:
+        fn, fp, tp = countTable[state]
+    # are true negatives are everything but false pos/neg and true pos for the
+    # state in question
+    tn = totalBases - (fp + tp + fn)
+    if fp + tn == 0:
+        spec = 0.
+    else:
+        spec = float(tn) / (float(fp) + float(tn))
+    return spec
 
 def cutOutMaskIntervals(inBed, minLength, maxLength, tracksInfoPath):
     """ Filter out intervals of mask tracks from inBed with lengths

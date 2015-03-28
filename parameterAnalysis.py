@@ -29,7 +29,7 @@ from mpl_toolkits.axes_grid1 import make_axes_locatable
 from matplotlib.mlab import PCA
 import matplotlib.cm as cm
 from matplotlib.colors import LogNorm
-
+import scipy.cluster.hierarchy as sch
 
 
 
@@ -44,13 +44,13 @@ amazing performance for state selection but if it results in wrong predictions
 then it's not very useful.
 """
 
-def hierarchicalCluster(points, normalizeDistances=False):
+def hierarchicalCluster(points, normalizeDistances=False, linkageMethod='average'):
     """ Perform simple hiearchical clustering using euclidian distance"""
     assert points is not None and len(points) > 0
-    distanceMatrix = scipy.spatial.distance.pdist(points, "euclidean")
+    distanceMatrix = scipy.spatial.distance.pdist(points, "minkowski")
     if normalizeDistances is True:
         distanceMatrix /= math.pow(len(points[0]), 0.5)
-    hc = scipy.cluster.hierarchy.linkage(distanceMatrix, method='average')
+    hc = scipy.cluster.hierarchy.linkage(distanceMatrix, method=linkageMethod)
     return hc
 
 def rankHierarchies(hcList, rankStat = "branch_length"):
@@ -90,7 +90,7 @@ def plotHierarchicalClusters(hcList, titles, leafNames, outFile):
 #            truncate_mode='lastp')
         plt.title(titles[i])
         plt.setp(plt.xticks()[1], rotation=-90, fontsize=10)
-        ax.set_ylim((0.,0.5))
+#        ax.set_ylim((0.,0.5))
     fig.tight_layout()
     fig.savefig(pdf, format = 'pdf')
     pdf.close()
@@ -186,31 +186,85 @@ def plotPoints2d(distList, titles, stateNames, outFile, xRange=None,
     fig.savefig(pdf, format = 'pdf')
     pdf.close()
 
-def plotHeatMap(array, rowNames, colNames, outFile):
+def plotHeatMap(inputArray, rowNames, colNames, outFile, leftTree = False, topTree = False,
+                xLabelPosition=None, yLabelPosition=None, aspect='auto'):
     """ from here
     http://stackoverflow.com/questions/2455761/reordering-matrix-elements-to-reflect-column-and-row-clustering-in-naiive-python
     """
 
+    # make sure array is a numpy
+    array = np.array(inputArray, dtype=np.float)
+    
     width=10
-    height= 6
+    height= 9
+    sX = -0.15
+    sY = 0.0
     pdf = pltBack.PdfPages(outFile)
     fig = plt.figure(figsize=(width, height))
-    print array
-    print rowNames
-    print colNames
+    #print array
+    #print rowNames
+    #print colNames
+
+    # Compute and plot dendrogram.
+    if leftTree is True:
+        #axdendro = fig.add_axes([0.09,0.1,0.2,0.6], frame_on=False)
+        axdendro = fig.add_axes([0.26+sX,0.1+sY,0.05,0.6], frame_on=False)
+        #Y = sch.linkage(array, method='centroid')
+        Y = hierarchicalCluster(array, linkageMethod = 'single')
+        Z = sch.dendrogram(Y, orientation='right', color_threshold=100000)
+        axdendro.set_xticks([])
+        axdendro.set_yticks([])
+        
+    # Compute and plot second dendrogram.
+    if topTree is True:
+        #ax2 = fig.add_axes([0.3,0.71,0.6,0.2], frame_on=False)
+        ax2 = fig.add_axes([0.3+sX,0.69+sY,0.6,0.05], frame_on=False)
+        Y = hierarchicalCluster(array.T, linkageMethod = 'single')        
+        Z2 = sch.dendrogram(Y, color_threshold=100000)
+        ax2.set_xticks([])
+        ax2.set_yticks([])
+
+    # plot matrix as heatmap
+    #axmatrix = fig.add_axes([0.3,0.1,0.6,0.8])
+    axmatrix = fig.add_axes([0.3+sX,0.1+sY,0.6,0.6])
+    if leftTree is True:
+        idx1 = Z['leaves']
+        array = array[idx1,:]
+        rowNames = list(np.array(rowNames)[idx1])
+    if topTree is True:
+        idx2 = Z2['leaves']
+        array = array[:,idx2]
+        colNames = list(np.array(colNames)[idx2])
+    # picture of built-in colormaps http://wiki.scipy.org/Cookbook/Matplotlib/Show_colormaps
+    im = axmatrix.matshow(array,
+                          #interpolation='nearest',
+                          aspect=aspect,
+                          #origin='lower',
+                          cmap=plt.cm.YlGnBu)#, norm=LogNorm())
+
+    #axmatrix.set_xticks([])
+    #axmatrix.set_yticks([])
     
-    axmatrix = fig.add_axes([0.3,0.1,0.6,0.8])
-    im = axmatrix.matshow(array,interpolation='nearest')#, norm=LogNorm())
     axmatrix.set_xticks([i for i in xrange(-1, len(colNames))])
     axmatrix.set_yticks([i for i in xrange(-1, len(rowNames))])
+
+    if leftTree is True or yLabelPosition == 'right':
+        axmatrix.yaxis.set_label_position('right')
+        axmatrix.yaxis.tick_right()
+    if topTree is True or xLabelPosition == "bottom":
+        axmatrix.xaxis.set_label_position('bottom')
+        pylab.xticks(rotation=-90)
+        axmatrix.xaxis.tick_bottom()
+
 
     axmatrix.set_xticklabels(['']+colNames)
     axmatrix.set_yticklabels(['']+rowNames)
 
     plt.setp(plt.xticks()[1], rotation=90)
 
-
-    axcolor = fig.add_axes([0.91,0.1,0.02,0.8])
+    # Plot colorbar.
+    #axcolor = fig.add_axes([0.91,0.1,0.02,0.6])
+    axcolor = fig.add_axes([1.07+sX,0.1+sY,0.02,0.6])
     pylab.colorbar(im, cax=axcolor)
     
     fig.savefig(pdf, format = 'pdf')

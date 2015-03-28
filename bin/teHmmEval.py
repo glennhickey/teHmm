@@ -11,6 +11,7 @@ import logging
 import numpy as np
 import math
 import copy
+import itertools
 
 from teHmm.track import TrackData, CategoryMap
 from teHmm.hmm import MultitrackHmm
@@ -19,7 +20,7 @@ from teHmm.trackIO import getMergedBedIntervals, readBedIntervals
 from teHmm.modelIO import loadModel
 from teHmm.common import myLog, EPSILON, initBedTool, cleanBedTool
 from teHmm.common import addLoggingOptions, setLoggingFromOptions, logger
-
+from teHmm.common import runParallelShellCommands, runShellCommand, getLocalTempPath
 
 def main(argv=None):
     if argv is None:
@@ -80,6 +81,12 @@ def main(argv=None):
                         " is not a distribution, but a sum of distributions (and values"
                         " can exceed 1).  Mostly for debugging purposes. Note output in LOG",
                          default=None)
+    parser.add_argument("--chroms", help="list of chromosomes, or regions, to run in parallel"
+                        " (in BED format).  input regions will be intersected with each line"
+                        " in this file, and the result will correspsond to an individual job",
+                        default=None)
+    parser.add_argument("--proc", help="number of processes (use in conjunction with --chroms)",
+                        type=int, default=1)
     addLoggingOptions(parser)
     args = parser.parse_args()
     setLoggingFromOptions(args)
@@ -97,7 +104,12 @@ def main(argv=None):
         raise RuntimeError("Both --ed and --pd only usable in conjunction with"
                            " --bed")
 
-        
+    if args.chroms is not None:
+        # hack to allow chroms argument to chunk and rerun 
+        parallelDispatch(argv, args)
+        cleanBedTool(tempBedToolPath)
+        return 0
+    
     # load model created with teHmmTrain.py
     logger.info("loading model %s" % args.inputModel)
     model = loadModel(args.inputModel)
@@ -295,7 +307,81 @@ def getPosteriorsMask(pdStates, hmm):
         else:
             stateNumber = stateMap.getMap(state)
             mask[stateNumber] = 1
-    return mask    
-         
+    return mask
+
+def parallelDispatch(argv, args):
+    """ chunk up input with chrom option.  recursivlely launch eval. merge
+    results """
+    jobList = []
+    chromIntervals = readBedIntervals(args.chroms, sort=True)
+    chromFiles = []
+    regionFiles = []
+    bedFiles = []
+    pdFiles = []
+    bicFiles = []
+    edFiles = []
+    for chrom in chromIntervals:
+        cmdToks = copy.deepcopy(argv)
+        cmdToks[cmdToks.index("--chrom") + 1] = ""
+        cmdToks[cmdToks.index("--chrom")] = ""
+        
+        chromPath = getLocalTempPath("Temp", ".bed")
+        cpFile = open(chromPath, "w")
+        cpFile.write("%s\t%d\t%d\t0\t0\t.\n" % (chrom[0], chrom[1], chrom[2]))
+        cpFile.close()
+        
+        regionPath = getLocalTempPath("Temp", ".bed")
+        runShellCommand("intersectBed -a %s -b %s | sortBed > %s" % (args.bedRegions,
+                                                                     chromPath,
+                                                                     regionPath))
+
+        if os.path.getsize(regionPath) < 2:
+            continue
+        
+        regionFiles.append(regionPath)
+        chromFiles.append(chromPath)
+
+        cmdToks[3] = regionPath
+
+        if args.bed is not None:
+            bedPath =  getLocalTempPath("Temp", ".bed")
+            cmdToks[cmdToks.index("--bed")+1] = bedPath
+            bedFiles.append(bedPath)
+        if args.pd is not None:
+            pdPath = getLocalTempPath("Temp", ".bed")
+            cmdToks[cmdToks.index("--pd")+1] = pdPath
+            pdFiles.append(pdPath)
+        if args.ed is not None:
+            edPath = getLocalTempPath("Temp", ".bed")
+            cmdToks[cmdToks.index("--ed")+1] = edPath
+            edFiles.append(edPath)
+        if args.bic is not None:
+            bicPath = getLocalTempPath("Temp", ".bic")
+            cmdToks[cmdToks.index("--bic")+1] = bicPath
+            bicFiles.append(bicPath)
+        cmd = " ".join(cmdToks)
+        jobList.append(cmd)
+
+    runParallelShellCommands(jobList, args.proc)
+
+    for i in xrange(len(jobList)):
+        if i == 0:
+            ct = ">"
+        else:
+            ct = ">>"
+        if len(bedFiles) > 0:
+            runShellCommand("cat %s %s %s" % (bedFiles[i], ct, args.bed))
+        if len(pdFiles) > 0:
+            runShellCommand("cat %s %s %s" % (pdFiles[i], ct, args.pd))
+        if len(edFiles) > 0:
+            runShellCommand("cat %s %s %s" % (edFiles[i], ct, args.ed))
+        if len(bicFiles) > 0:
+            runShellCommand("cat %s %s %s" % (bicFiles[i], ct, args.bic))
+
+    for i in itertools.chain(chromFiles, regionFiles, bedFiles, pdFiles, edFiles,
+                             bicFiles):
+        runShellCommand("rm %s" % i)            
+    
+    
 if __name__ == "__main__":
     sys.exit(main())

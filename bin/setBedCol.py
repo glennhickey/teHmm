@@ -44,7 +44,7 @@ def main(argv=None):
             otherCol = col
     
     for line in ifile:
-        if line.lstrip()[0] == "#":
+        if len(line.lstrip()) == 0 or line.lstrip()[0] == "#":
             sys.stdout.write(line)
         else:
             tokens = line.split()

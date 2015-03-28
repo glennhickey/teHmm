@@ -12,12 +12,13 @@ import numpy as np
 import math
 import copy
 import scipy
+import itertools
 
 from teHmm.track import TrackList, TrackData
-from teHmm.trackIO import readTrackData, getMergedBedIntervals
+from teHmm.trackIO import readTrackData, getMergedBedIntervals, readBedIntervals
 from teHmm.common import myLog, EPSILON, initBedTool, cleanBedTool
 from teHmm.common import addLoggingOptions, setLoggingFromOptions, logger
-from teHmm.common import runShellCommand
+from teHmm.common import runParallelShellCommands, runShellCommand, getLocalTempPath
 from teHmm.bin.compareBedStates import cutOutMaskIntervals
 
 def main(argv=None):
@@ -50,6 +51,8 @@ def main(argv=None):
                         action="store_true")
     parser.add_argument("--cutMultinomial", help="Cut non-gaussian, non-binary"
                         " tracks everytime", default=False, action="store_true")
+    parser.add_argument("--cutNonGaussian", help="Cut all but guassian tracks",
+                        default=False, action="store_true")
     parser.add_argument("--comp", help="Strategy for comparing columns for the "
                         "threshold cutoff.  Options are [first, prev], where"
                         " first compares with first column of segment and "
@@ -76,7 +79,15 @@ def main(argv=None):
                         "they would just be ignored by HMM tools). The difference"
                         " here is that removed intervals will break contiguity.",
                         type=int, default=None)
-    
+    parser.add_argument("--chroms", help="list of chromosomes, or regions, to run in parallel"
+                        " (in BED format).  input regions will be intersected with each line"
+                        " in this file, and the result will correspsond to an individual job",
+                        default=None)
+    parser.add_argument("--proc", help="number of processes (use in conjunction with --chroms)",
+                        type=int, default=1)
+    parser.add_argument("--co", help="count offset for segment labels.  only used internally",
+                        type=int, default=0)
+        
     addLoggingOptions(parser)
     args = parser.parse_args()
     setLoggingFromOptions(args)
@@ -84,6 +95,12 @@ def main(argv=None):
 
     if args.comp != "first" and args.comp != "prev":
         raise RuntimeError("--comp must be either first or prev")
+
+    if args.chroms is not None:
+        # hack to allow chroms argument to chunk and rerun 
+        parallelDispatch(argv, args)
+        cleanBedTool(tempBedToolPath)
+        return 0
         
     # read query intervals from the bed file
     tempFiles = []
@@ -161,6 +178,16 @@ def main(argv=None):
               assert trackNo < len(cutList)
               cutList[trackNo] = 1
 
+    #process the --cutNonGaussian option
+    if args.cutNonGaussian is True:
+        for track in trackList:
+            trackNo = track.getNumber()
+            if track.dist != "gaussian" and\
+              args.ignoreList[trackNo] == 0:
+              assert trackNo < len(cutList)
+              cutList[trackNo] = 1
+              
+
     # segment the tracks
     stats = dict()
     segmentTracks(trackData, args, stats)
@@ -178,7 +205,7 @@ def segmentTracks(trackData, args, stats):
 
     trackTableList = trackData.getTrackTableList()
     # for every non-contiguous region
-    count = 0
+    count = int(args.co)
     for trackTable in trackTableList:
         start = trackTable.getStart()
         end = trackTable.getEnd()
@@ -192,8 +219,8 @@ def segmentTracks(trackData, args, stats):
         for i in xrange(1, intervalLen):
             curLen += 1
             if isNewSegment(trackTable, pi, i, curLen, args, stats) is True:
-                oFile.write("%s\t%d\t%d\t%d\n" % (chrom, interval[1], start + i,
-                                                  count))
+                oFile.write("%s\t%d\t%d\t%s\n" % (chrom, interval[1], start + i,
+                                                  hex(count)[2:]))
                 interval[1] = start + i
                 interval[2] = interval[1] + 1
                 count += 1
@@ -203,9 +230,10 @@ def segmentTracks(trackData, args, stats):
                 pi = i
         # write last segment
         if interval[1] < trackTable.getEnd():
-            oFile.write("%s\t%d\t%d\t%d\n" % (chrom, interval[1],
+            oFile.write("%s\t%d\t%d\t%s\n" % (chrom, interval[1],
                                               trackTable.getEnd(),
-                                              count))        
+                                              hex(count)[2:]))
+            count += 1        
     
     oFile.close()
 
@@ -260,6 +288,72 @@ def writeStats(trackData, args, stats):
             statFile.write("%s\t%d\t%f\n" % (trackName, difCount, avgDifPct))
         statFile.close()
         
-                
+def parallelDispatch(argv, args):
+    """ chunk up input with chrom option.  recursivlely launch eval. merge
+    results """
+    jobList = []
+    chromIntervals = readBedIntervals(args.chroms, sort=True)
+    chromFiles = []
+    regionFiles = []
+    segFiles = []
+    statsFiles = []
+    offset = args.co
+    for chrom in chromIntervals:
+        cmdToks = copy.deepcopy(argv)
+        cmdToks[cmdToks.index("--chrom") + 1] = ""
+        cmdToks[cmdToks.index("--chrom")] = ""
+        
+        chromPath = getLocalTempPath("TempChromPath", ".bed")
+        cpFile = open(chromPath, "w")
+        cpFile.write("%s\t%d\t%d\t0\t0\t.\n" % (chrom[0], chrom[1], chrom[2]))
+        cpFile.close()
+        
+        regionPath = getLocalTempPath("Temp", ".bed")
+        runShellCommand("intersectBed -a %s -b %s | sortBed > %s" % (args.allBed,
+                                                                     chromPath,
+                                                                     regionPath))
+
+        if os.path.getsize(regionPath) < 2:
+            continue
+
+        offset += int(chrom[2]) - int(chrom[1])
+        
+        regionFiles.append(regionPath)
+        chromFiles.append(chromPath)
+
+        cmdToks[2] = regionPath
+
+        segPath =  getLocalTempPath("Temp", ".bed")
+        cmdToks[3] = segPath
+        segFiles.append(segPath)
+
+        if "--co" in cmdToks:
+            cmdToks[cmdToks.index("--co")+1] = str(offset)
+        else:
+            cmdToks.append("--co")
+            cmdToks.append(str(offset))
+        
+        if args.stats is not None:
+            statsPath = getLocalTempPath("Temp", ".bed")
+            cmdToks[cmdToks.index("--stats")+1] = statsPath
+            statsFiles.append(statsPath)
+        cmd = " ".join(cmdToks)
+        jobList.append(cmd)
+
+    runParallelShellCommands(jobList, args.proc)
+
+    for i in xrange(len(jobList)):
+        if i == 0:
+            ct = ">"
+        else:
+            ct = ">>"
+        runShellCommand("cat %s %s %s" % (segFiles[i], ct, args.outBed))
+        if len(statsFiles) > 0:
+            runShellCommand("cat %s %s %s" % (statsFiles[i], ct, args.stats))
+
+    for i in itertools.chain(chromFiles, regionFiles, segFiles, statsFiles):
+        runShellCommand("rm %s" % i)            
+
+                        
 if __name__ == "__main__":
     sys.exit(main())

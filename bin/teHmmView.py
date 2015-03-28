@@ -13,6 +13,7 @@ from teHmm.track import TrackData
 from teHmm.hmm import MultitrackHmm
 from teHmm.cfg import MultitrackCfg
 from teHmm.modelIO import loadModel
+from teHmm.common import EPSILON
 try:
     from teHmm.parameterAnalysis import plotHierarchicalClusters
     from teHmm.parameterAnalysis import hierarchicalCluster, rankHierarchies
@@ -35,6 +36,8 @@ def main(argv=None):
                         action="store_true", default=False)
     parser.add_argument("--ec", help="Print emission distribution clusterings"
                         " to given file in PDF format", default=None)
+    parser.add_argument("--ecn", help="Like --ec option but only print non"
+                        " numeric tracks", default=None)
     parser.add_argument("--pca", help="Print emission pca scatters"
                         " to given file in PDF format", default=None)
     parser.add_argument("--hm", help="Print heatmap of emission distribution means"
@@ -42,11 +45,19 @@ def main(argv=None):
     parser.add_argument("--t", help="Print transition matrix to given"
                         " file in GRAPHVIZ DOT format.  Convert to PDF with "
                         " dot <file> -Tpdf > <outFile>", default=None)
+    parser.add_argument("--minTP", help="Minimum tranisition probability "
+                        "to include in transition matrix output from --t option.",
+                        type=float, default=EPSILON)
+    parser.add_argument("--teStates", help="comma-separated list of state names"
+                        " to consider TE-1, TE-2, ... etc", default=None)
     
     args = parser.parse_args()
 
     # load model created with teHmmTrain.py
     model = loadModel(args.inputModel)
+
+    if args.teStates is not None:
+        args.teStates = set(x for x in args.teStates.split(","))
 
     # crappy print method
     print model
@@ -66,7 +77,13 @@ def main(argv=None):
         if canPlot is False:
             raise RuntimeError("Unable to write plots.  Maybe matplotlib is "
                                "not installed?")
-        writeEmissionClusters(model, args)
+        writeEmissionClusters(model, args, False)
+
+    if args.ecn is not None:
+        if canPlot is False:
+            raise RuntimeError("Unable to write plots.  Maybe matplotlib is "
+                               "not installed?")
+        writeEmissionClusters(model, args, True)        
 
     if args.pca is not None:
         if canPlot is False:
@@ -84,17 +101,22 @@ def main(argv=None):
         writeTransitionGraph(model, args)
 
 
-def writeEmissionClusters(model, args):
+def writeEmissionClusters(model, args, onlyNonNumeric):
     """ print a hierachical clustering of states for each track (where each
     state is a point represented by its distribution for that track)"""
     trackList = model.getTrackList()
     stateNameMap = model.getStateNameMap()
+
     emission = model.getEmissionModel()
     # [TRACK][STATE][SYMBOL]
     emissionDist = np.exp(emission.getLogProbs())
 
     # leaf names of our clusters are the states
-    stateNames = map(stateNameMap.getMapBack, xrange(len(stateNameMap)))
+    if stateNameMap is not None:
+        stateNames = map(stateNameMap.getMapBack, xrange(len(stateNameMap)))
+    else:
+        stateNames = [str(x) for x in xrange(model.n_components)]
+    stateNames = applyTEStateNaming(args.teStates, stateNames)
     N = len(stateNames)
 
     # cluster for each track
@@ -106,12 +128,20 @@ def writeEmissionClusters(model, args):
         allPoints.append([])
 
     for track in trackList:
-        hcNames.append(track.getName())
-        points = [emissionDist[track.getNumber()][x] for x in xrange(N)]
-        for j in xrange(N):
-            allPoints[j] += list(points[j])
-        hc = hierarchicalCluster(points, normalizeDistances=True)
-        hcList.append(hc)
+        nonNumeric = False
+        for symbol in emission.getTrackSymbols(track.getNumber()):
+            try:
+                val = float(track.getValueMap().getMapBack(symbol))
+            except:
+                nonNumeric = True
+                break
+        if nonNumeric is True or onlyNonNumeric is False:
+            hcNames.append(track.getName())
+            points = [emissionDist[track.getNumber()][x] for x in xrange(N)]
+            for j in xrange(N):
+                allPoints[j] += list(points[j])
+            hc = hierarchicalCluster(points, normalizeDistances=True)
+            hcList.append(hc)
 
     # all at once
     hc = hierarchicalCluster(allPoints, normalizeDistances=True)
@@ -121,9 +151,12 @@ def writeEmissionClusters(model, args):
     # write clusters to pdf (ranked in decreasing order based on total
     # branch length)
     ranks = rankHierarchies(hcList)
+    outPath = args.ec
+    if onlyNonNumeric is True:
+        outPath = args.ecn
     plotHierarchicalClusters([hcList[i] for i in ranks],
                              [hcNames[i] for i in ranks],
-                             stateNames, args.ec)
+                             stateNames, outPath)
 
 def writeEmissionScatters(model, args):
     """ print a pca scatterplot of states for each track (where each
@@ -135,7 +168,12 @@ def writeEmissionScatters(model, args):
     emissionDist = np.exp(emission.getLogProbs())
 
     # leaf names of our clusters are the states
-    stateNames = map(stateNameMap.getMapBack, xrange(len(stateNameMap)))
+    if stateNameMap is not None:
+        stateNames = map(stateNameMap.getMapBack, xrange(len(stateNameMap)))
+    else:
+        stateNames = [str(x) for x in xrange(model.n_components)]
+    stateNames = applyTEStateNaming(args.teStates, stateNames)
+
     N = len(stateNames)
 
     # scatter for each track
@@ -163,7 +201,7 @@ def writeEmissionScatters(model, args):
                      [hcNames[i] for i in ranking],
                      stateNames, args.pca)
 
-def writeEmissionHeatMap(model, args):
+def writeEmissionHeatMap(model, args, leftTree = True, topTree = True):
     """ print a heatmap from the emission distributions.  this is of the form of
     track x state where each value is the man of the distribution for that state
     for that track"""
@@ -174,7 +212,16 @@ def writeEmissionHeatMap(model, args):
     emissionDist = np.exp(emission.getLogProbs())
 
     # leaf names of our clusters are the states
-    stateNames = map(stateNameMap.getMapBack, xrange(len(stateNameMap)))
+    if stateNameMap is not None:
+        stateNames = map(stateNameMap.getMapBack, xrange(len(stateNameMap)))
+    else:
+        stateNames = [str(x) for x in xrange(model.n_components)]
+    stateNames = applyTEStateNaming(args.teStates, stateNames)
+
+    sortedStateNames = sorted(stateNames)
+    stateRanks = [sortedStateNames.index(state) for state in stateNames]
+    #stateNames = sortedStateNames
+
     N = len(stateNames)
     emProbs = emission.getLogProbs()
 
@@ -190,35 +237,46 @@ def writeEmissionHeatMap(model, args):
         trackNo = track.getNumber()
         nameMap = track.getValueMap()
         trackMeans = np.zeros((emission.getNumStates()))
-#        if len([x for x in emission.getTrackSymbols(trackNo)]) is not 2:
-#            continue
-        for state in xrange(emission.getNumStates()):
-            mean = 0.0
-            minVal = float(10e10)
-            maxVal = float(-10e10)
 
-            print state            
-            for symbol in emission.getTrackSymbols(trackNo):
-                # do we need to check for missing value here???
-                val = nameMap.getMapBack(symbol)
-                try:
-                    val = float(val)
-                except:
-                    nonNumeric = True
-                    break        
-                prob = np.exp(emProbs[trackNo][state][symbol])
-                print "%f += %f * %f = %f" % (mean, val, prob, mean + val * prob)
-                mean += val * prob
-                minVal, maxVal = min(val, minVal), max(val, maxVal)
-            if nonNumeric is False:
-                # normalize the mean
-                if maxVal > minVal:
-                    mean = (mean - minVal) / (maxVal - minVal)
-                # hacky cutoff
-                mean = min(0.23, mean)
-                trackMeans[state] = mean
+        for idx, state in enumerate(stateRanks):
+            if track.getDist() == "gaussian":
+                mean, stddev = emission.getGaussianParams(trackNo, state)
             else:
-                break
+                mean = 0.0                
+                for symbol in emission.getTrackSymbols(trackNo):
+                    # do we need to check for missing value here???
+                    val = nameMap.getMapBack(symbol)
+                    temp = val
+                    val = str(val)
+                    if val != "None" and val != "0" and val.lower() != "simple" and \
+                      val.lower() != "intergenic" and val.lower() != "low":
+                        val = 1.
+                    else:
+                        val = 0.
+    
+                    prob = np.exp(emProbs[trackNo][state][symbol])
+
+                    assert prob >= 0. and prob <= 1.
+                    mean += val * prob                
+
+            if nonNumeric is False:
+                trackMeans[stateRanks[state]] = mean
+            else:
+                break                
+
+        if nonNumeric is False:
+            means = [trackMeans[state] for state in xrange(emission.getNumStates())]
+            minVal = min(means)
+            maxVal = max(means)
+            for state in xrange(emission.getNumStates()):
+                mean = trackMeans[state]
+                # normalize mean
+                if minVal != maxVal:
+                    trackMeans[state] = (mean - minVal) / (maxVal - minVal)
+                else:
+                    trackMeans[state] = minVal
+                #hacky cutoff
+                #mean = min(0.23, mean)
         if nonNumeric is False:
             meanArray.append(trackMeans)
             trackNames.append(track.getName())
@@ -232,14 +290,18 @@ def writeEmissionHeatMap(model, args):
 
     if len(meanArray) > 0:
         # note to self http://stackoverflow.com/questions/2455761/reordering-matrix-elements-to-reflect-column-and-row-clustering-in-naiive-python
-        plotHeatMap(meanArray, trackNames, stateNames, args.hm)
+        plotHeatMap(meanArray, trackNames, sortedStateNames, args.hm, leftTree, topTree)
     
 
 def writeTransitionGraph(model, args):
     """ write a graphviz text file """
     trackList = model.getTrackList()
     stateNameMap = model.getStateNameMap()
-    stateNames = map(stateNameMap.getMapBack, xrange(len(stateNameMap)))
+    if stateNameMap is not None:
+        stateNames = map(stateNameMap.getMapBack, xrange(len(stateNameMap)))
+    else:
+        stateNames = [str(x) for x in xrange(model.n_components)]
+    stateNames = applyTEStateNaming(args.teStates, stateNames)
     stateNames = map(lambda x: x.replace("-", "_"), stateNames)
     stateNames = map(lambda x: x.replace("|", "_"), stateNames)
     
@@ -249,12 +311,32 @@ def writeTransitionGraph(model, args):
     for i, state in enumerate(stateNames):
         for j, toState in enumerate(stateNames):
             tp = model.getTransitionProbs()[i, j]
-            if tp > 0. and i != j:
+            if tp > args.minTP and i != j:
                 label = "label=\"%.2f\"" % (tp * 100.)
                 width = "penwidth=%d" % (1 + int(tp / 20))
                 f.write("%s -> %s [%s,%s];\n" % (state, toState, label, width))
     f.write("}\n")
     f.close()
+
+def applyTEStateNaming(teStates, states):
+    if teStates is None or len(teStates) is 0:
+        return states
     
+    teCount = 0
+    otherCount = 0
+    output = []
+    for state in states:
+        if state in teStates:
+            output.append("TE-%d" % teCount)
+            teCount += 1
+        else:
+            output.append("Other-%d" % otherCount)
+            otherCount += 1
+
+    if teCount + otherCount == 0:
+        return states
+    return output
+
+
 if __name__ == "__main__":
     sys.exit(main())

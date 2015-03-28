@@ -243,7 +243,7 @@ def main(argv=None):
                     logger.warning("Coudn't find bic %s" % outBic)
                     printBics.append("ERROR")
             # write row
-            tableFile.write("%d, %d, %d" % (trainingBed, int(trainingSize), int(numStates)))
+            tableFile.write("%s, %d, %d" % (trainingBed, int(trainingSize), int(numStates)))
             if len(bics) > 0:
                 tableFile.write(", %f, %f, %f" % (np.mean(bics), np.min(bics),
                                                   np.max(bics)))

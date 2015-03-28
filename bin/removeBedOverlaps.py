@@ -17,7 +17,8 @@ from teHmm.common import getLocalTempPath, runShellCommand
 Filter out bed intervals that overlap other intervals.
 
 Algorithm:  for each interval in sorted list, cut (or remove) such that it
-doesn't overlap any intervals before it in the list. 
+doesn't overlap any intervals before it in the list.
+
 """
 
 def main(argv=None):

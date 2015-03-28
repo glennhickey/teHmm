@@ -1,50 +1,31 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<currentTracks>
-<track name="repbase"       path="/data/glenn.hickey/genomes/hg19/tracks/repbase/hg19.repbase.bed" distribution="multinomial" preprocess="rm"/>
-<track name="transposon_psi" path="/data/douglas.hoen/piatea/genomes/human/hg19/tracks/transposonpsi/hg19_transposonpsi.bed" distribution="multinomial" preprocess="rmu"/>
-<track name="repeat_modeler" path="/data/douglas.hoen/piatea/genomes/human/hg19/tracks/repeatmodeler/hg19_repeatmodeler_unfiltered.bed" distribution="multinomial" preprocess="rm"/>
-
-<track name="cov_80-"          path="/data/glenn.hickey/genomes/hg19/tracks/copynum/coverage_hg19.fa.chr22.cov.80-.bw" default="0.0" distribution="gaussian"/>
-<track name="left_peak_80-"    path="/data/glenn.hickey/genomes/hg19/tracks/copynum/coverage_hg19.fa.chr22.left.80-.bw" default="0.0" distribution="gaussian"/>
-<track name="right_peak_80-"   path="/data/glenn.hickey/genomes/hg19/tracks/copynum/coverage_hg19.fa.chr22.right.80-.bw" default="0.0" distribution="gaussian"/>
-<track name="cov_80-90"        path="/data/glenn.hickey/genomes/hg19/tracks/copynum/coverage_hg19.fa.chr22.cov.80-90.bw" default="0.0" distribution="gaussian"/>
-<track name="left_peak_80-90"  path="/data/glenn.hickey/genomes/hg19/tracks/copynum/coverage_hg19.fa.chr22.left.80-90.bw" default="0.0" distribution="gaussian"/>
-<track name="right_peak_80-90" path="/data/glenn.hickey/genomes/hg19/tracks/copynum/coverage_hg19.fa.chr22.right.80-90.bw" default="0.0" distribution="gaussian"/>
-<track name="cov_90+"          path="/data/glenn.hickey/genomes/hg19/tracks/copynum/coverage_hg19.fa.chr22.cov.90+.bw" default="0.0" distribution="gaussian"/>
-<track name="left_peak_90+"    path="/data/glenn.hickey/genomes/hg19/tracks/copynum/coverage_hg19.fa.chr22.left.90+.bw" default="0.0" distribution="gaussian"/>
-<track name="right_peak_90+"   path="/data/glenn.hickey/genomes/hg19/tracks/copynum/coverage_hg19.fa.chr22.right.90+.bw" default="0.0" distribution="gaussian"/>
-<track name="cov_maxPId"       path="/data/glenn.hickey/genomes/hg19/tracks/copynum/coverage_hg19.fa.chr22.maxPId.bw" default="0.0" distribution="gaussian"/>
-
-<track name="ltr_finder"    path="/data/glenn.hickey/genomes/hg19/tracks/ltr_finder/hg19.ltr_finder.bed" distribution="multinomial" preprocess="ltr_finder"/>
-<track name="ltr_harvest"   path="/data/glenn.hickey/genomes/hg19/tracks/ltr_harvest/hg19.ltrharvest.bed" distribution="multinomial" preprocess="ltr_finder"/>
-<track name="helitronscanner" path="/data/douglas.hoen/piatea/genomes/human/hg19/tracks/helitronscanner/hg19_helitronscanner.bed" distribution="binary"/>
-
-<track name="mappability"   path="/data/glenn.hickey/genomes/hg19/tracks/mappability/H.sapiens.genome.hg19.main.mappability-24.bw" distribution="gaussian" default="0"/>
-<track name="orthology"     path="/data/glenn.hickey/genomes/hg19/tracks/alignability/chr22.alignability.bw" distribution="gaussian" default="0"/>
-
-<track name="mrna"          path="/data/glenn.hickey/genomes/hg19/tracks/mrna/hg19.mrna_clean.bed" distribution="multinomial"/>
-<track name="refseq"        path="/data/glenn.hickey/genomes/hg19/tracks/genes/hg19.refseq_clean.bed" distribution="multinomial"/>
-<track name="phastcons"     path="/data/glenn.hickey/genomes/hg19/tracks/cons/hg19.100way.phastCons.bw" default="0.0" distribution="gaussian"/>
-<track name="phylop"        path="/data/glenn.hickey/genomes/hg19/tracks/cons/hg19.100way.phyloP100way.bw" default="0.0" distribution="gaussian"/>
-<track name="gcpct"         path="/data/glenn.hickey/genomes/hg19/tracks/gcpct/hg19_gcPercentWin20.bw" distribution="gaussian" default="0"/>
-
-<track name="trf"           path="/data/glenn.hickey/genomes/hg19/tracks/trf/hg19.trf.bed" distribution="mask"/>
-<track name="dustmasker"    path="/data/douglas.hoen/piatea/genomes/human/hg19/tracks/dustmasker/hg19_dustmasker.bb" distribution="binary"/>
-<track name="windowmasker"  path="/data/douglas.hoen/piatea/genomes/human/hg19/tracks/windowmasker/hg19_windowmasker.bb" distribution="binary"/>
-<track name="tantan"            path="/data/douglas.hoen/piatea/genomes/human/hg19/tracks/tantan/hg19_tantan.bed"                   distribution="binary"/>
-<track name="polyA"         path="/data/glenn.hickey/genomes/hg19/tracks/singleBaseRepeats/hg19_polya.bed" distribution="binary"/>
-<track name="polyN"         path="/data/glenn.hickey/genomes/hg19/tracks/singleBaseRepeats/hg19_polyn.bed" distribution="mask"/>
-
-<track name="encseg_gm12878" path="/data/glenn.hickey/genomes/hg19/tracks/encode/hg19.encodeSegmentsCombined.gm12878.bed" distribution="multinomial"/>
-<track name="encseg_h1hesc"  path="/data/glenn.hickey/genomes/hg19/tracks/encode/hg19.encodeSegmentsCombined.h1hesc.bed" distribution="multinomial"/>
-<track name="encseg_k562"    path="/data/glenn.hickey/genomes/hg19/tracks/encode/hg19.encodeSegmentsCombined.k562.bed" distribution="multinomial"/>
-
-<track name="sequence"      path="/data/glenn.hickey/genomes/hg19/sequence/hg19.fa" distribution="multinomial"/>
-
-<!--
-Using only tier 1 encode tracks.  3 more available
-<track name="encseg_helas3" path="/data/glenn.hickey/genomes/hg19/tracks/encode/hg19.encodeSegmentsCombined.helas3.bed"/>
-<track name="encseg_hepg2" path="/data/glenn.hickey/genomes/hg19/tracks/encode/hg19.encodeSegmentsCombined.hepg2.bed"/>
-<track name="encseg_huvec" path="/data/glenn.hickey/genomes/hg19/tracks/encode/hg19.encodeSegmentsCombined.huvec.bed"/>
--->
-</currentTracks>
+<?xml version="1.0" ?>
+<teModelConfig>
+	<track distribution="multinomial" name="RM-RepeatModeler" path="/data/douglas.hoen/piatea/genomes/human/hg19/tracks/repeatmodeler/hg19_repeatmodeler_unfiltered.bed" preprocess="rm" valCol="3"/>
+	<track distribution="multinomial" name="RM-RepBase" path="/data/glenn.hickey/genomes/hg19/tracks/repbase/hg19.repbase.bed" preprocess="rm" valCol="3"/>
+	<track default="0" distribution="gaussian" name="Alignment-Depth" path="/data/glenn.hickey/genomes/hg19/tracks/alignability/chr22.alignability.bw" valCol="3"/>
+	<track default="0.0" distribution="gaussian" name="Conservation" path="/data/glenn.hickey/genomes/hg19/tracks/cons/hg19.100way.phyloP100way.bw" valCol="3"/>
+	<track distribution="multinomial" name="encseg_gm12878" path="/data/glenn.hickey/genomes/hg19/tracks/encode/hg19.encodeSegmentsCombined.gm12878.bed" valCol="3"/>
+	<track distribution="multinomial" name="encseg_h1hesc" path="/data/glenn.hickey/genomes/hg19/tracks/encode/hg19.encodeSegmentsCombined.h1hesc.bed" valCol="3"/>
+	<track distribution="multinomial" name="encseg_k562" path="/data/glenn.hickey/genomes/hg19/tracks/encode/hg19.encodeSegmentsCombined.k562.bed" valCol="3"/>
+	<track default="0" distribution="gaussian" name="GC" path="/data/glenn.hickey/genomes/hg19/tracks/gcpct/hg19_gcPercentWin20.bw" valCol="3"/>
+	<track distribution="multinomial" name="Genes" path="/data/glenn.hickey/genomes/hg19/tracks/genes/hg19.refseq_clean.bed" valCol="3"/>
+	<track distribution="binary" name="HelitronScanner" path="/data/douglas.hoen/piatea/genomes/human/hg19/tracks/helitronscanner/hg19_helitronscanner.bed" valCol="0"/>
+	<track default="0.0" distribution="gaussian" name="lastz-SelfHighId" path="/data/glenn.hickey/genomes/hg19/tracks/copynum/coverage_hg19.fa.chr22.cov.90+.bw" valCol="3"/>
+	<track default="0.0" distribution="gaussian" name="lastz-SelfLowId" path="/data/glenn.hickey/genomes/hg19/tracks/copynum/coverage_hg19.fa.chr22.cov.80-.bw" valCol="3"/>
+	<track default="0.0" distribution="gaussian" name="lastz-SelfMedId" path="/data/glenn.hickey/genomes/hg19/tracks/copynum/coverage_hg19.fa.chr22.cov.80-90.bw" valCol="3"/>
+	<track default="0.0" distribution="gaussian" name="lastz-SelfPctMaxId" path="/data/glenn.hickey/genomes/hg19/tracks/copynum/coverage_hg19.fa.chr22.maxPId.bw" valCol="3"/>
+	<track default="0.0" distribution="gaussian" name="lastz-SelfPeakLeftHigh" path="/data/glenn.hickey/genomes/hg19/tracks/copynum/coverage_hg19.fa.chr22.left.90+.bw" valCol="3"/>
+	<track default="0.0" distribution="gaussian" name="lastz-SelfPeakLeftLow" path="/data/glenn.hickey/genomes/hg19/tracks/copynum/coverage_hg19.fa.chr22.left.80-.bw" valCol="3"/>
+	<track default="0.0" distribution="gaussian" name="lastz-SelfPeakLeftMed" path="/data/glenn.hickey/genomes/hg19/tracks/copynum/coverage_hg19.fa.chr22.left.80-90.bw" valCol="3"/>
+	<track default="0.0" distribution="gaussian" name="lastz-SelfPeakRightHigh" path="/data/glenn.hickey/genomes/hg19/tracks/copynum/coverage_hg19.fa.chr22.right.90+.bw" valCol="3"/>
+	<track default="0.0" distribution="gaussian" name="lastz-SelfPeakRightLow" path="/data/glenn.hickey/genomes/hg19/tracks/copynum/coverage_hg19.fa.chr22.right.80-.bw" valCol="3"/>
+	<track default="0.0" distribution="gaussian" name="lastz-SelfPeakRightMed" path="/data/glenn.hickey/genomes/hg19/tracks/copynum/coverage_hg19.fa.chr22.right.80-90.bw" valCol="3"/>
+	<track distribution="multinomial" name="LTR_FINDER" path="/data/glenn.hickey/genomes/hg19/tracks/ltr_finder/hg19.ltr_finder.bed" preprocess="ltr_finder" valCol="3"/>
+	<track distribution="multinomial" name="LTR_Harvest" path="/data/glenn.hickey/genomes/hg19/tracks/ltr_harvest/hg19.ltrharvest.bed" preprocess="ltr_finder" valCol="3"/>
+	<track default="0" distribution="gaussian" name="mappability" path="/data/glenn.hickey/genomes/hg19/tracks/mappability/H.sapiens.genome.hg19.main.mappability-24.bw" valCol="3"/>
+	<track distribution="multinomial" name="mRNA" path="/data/glenn.hickey/genomes/hg19/tracks/mrna/hg19.mrna_clean.bed" valCol="3"/>
+	<track distribution="multinomial" name="sequence" path="/data/glenn.hickey/genomes/hg19/sequence/hg19.fa" valCol="3"/>
+	<track distribution="binary" name="WindowMasker" path="/data/douglas.hoen/piatea/genomes/human/hg19/tracks/windowmasker/hg19_windowmasker.bb" valCol="0"/>
+	<track distribution="mask" name="Ns" path="/data/glenn.hickey/genomes/hg19/tracks/singleBaseRepeats/hg19_polyn.bed" valCol="0"/>
+	<track distribution="mask" name="TRF" path="/data/glenn.hickey/genomes/hg19/tracks/trf/hg19.trf.bed" valCol="0"/>
+</teModelConfig>
