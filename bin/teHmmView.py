@@ -48,6 +48,9 @@ def main(argv=None):
     parser.add_argument("--minTP", help="Minimum tranisition probability "
                         "to include in transition matrix output from --t option.",
                         type=float, default=EPSILON)
+    parser.add_argument("--minTPns", help="Minimum transition probability after "
+                        "self transition is normalized out (ie after dividing by 1-self)",
+                        type=float, default=EPSILON)
     parser.add_argument("--teStates", help="comma-separated list of state names"
                         " to consider TE-1, TE-2, ... etc", default=None)
     
@@ -311,7 +314,11 @@ def writeTransitionGraph(model, args):
     for i, state in enumerate(stateNames):
         for j, toState in enumerate(stateNames):
             tp = model.getTransitionProbs()[i, j]
-            if tp > args.minTP and i != j:
+            tpNor = tp
+            selfProb = model.getTransitionProbs()[i, i]
+            if selfProb > EPSILON:
+                tpNor = tp / (1. - selfProb)
+            if tp > args.minTP and i != j and tpNor > args.minTPns:
                 label = "label=\"%.2f\"" % (tp * 100.)
                 width = "penwidth=%d" % (1 + int(tp / 20))
                 f.write("%s -> %s [%s,%s];\n" % (state, toState, label, width))
