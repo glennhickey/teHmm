@@ -392,7 +392,8 @@ In general, running any executable with `--help` will print a brief description 
 * **teHmmView.py**: Print all parameters of a given model.  Options to generate some figures. 
 * **createStartingModel.py** :  Given an input track and a prior confidence value, create transition and probability matrix files (which can be tuned by hand) to pass to teHmmTrain.py
 * **bootstrapModel.py** : Create transition and probability matrix files (like above) from an existing model.  Facilliates use of multiple rounds of training (say supervised then unsupervised).
-* **interpolateMaskedRegions.py** : If masking tracks are used, they will result in gaps in the HMM predictions.  This script can fill these gaps in as a postprocessing step using some simple heuristics.  
+* **interpolateMaskedRegions.py** : If masking tracks are used, they will result in gaps in the HMM predictions.  This script can fill these gaps in as a postprocessing step using some simple heuristics.
+* **applyStateNames.py** : Rename the states of a model.  Useful for fully unsupervised models. 
 
 **Parameter Selection**
 * **statesVsBic.py** : Compute a table of number of unsupervised states vs Bayesian Information Criterion.  
@@ -446,7 +447,7 @@ In general, running any executable with `--help` will print a brief description 
 
 **Validation and Comparison**
 
-* **teHmmBenchmark.py** : Wrapper to train, evaluate, and compare model on given data
+* **teHmmBenchmark.py** : Wrapper to train, evaluate, and compare model on given data (has grown rather deprecated in that it does not support all options). 
 * **compareBedStates.py** : Compute base and interval-level precision and recall of one bed file vis-a-vis another.  Both files must cover exactly the same region.
 * **fitStateNames.py** : Assign predicted states names according to how well they match a given annotation.  Useful for generating meaningful names for states that were learned in a completely unsupervised manner. 
 * **trackRanking.py** : Iteratively call teHmmBenchmark to rank tracks based on their impact on accuracy
