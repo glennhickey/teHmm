@@ -10,7 +10,7 @@ We welcome feedback:  Please use the GitHub "issues" (top right) for any comment
 Installation
 -----
 
-Python 2.7, NumPy, Cython and BedTools are required for this package to run.  As it stands now, they must be manually installed first.  Normally this is a straightforward process using `easy_install` for the Python packages and `apt-get` (Linux) or `Mac Ports` (OSX) for everything else.  This is a complete list of the dependencies is as follows (Make sure PATH and PYTHONPATH are updated accordingly):
+Python 2.7, NumPy, Cython and BedTools are required for this package to run.  We are working on a one-shot installer, but as it stands now, they must be manually installed first.  Normally this is a straightforward process using `easy_install` for the Python packages and `apt-get` (Linux) or `Mac Ports` (OSX) for everything else.  This is a complete list of the dependencies is as follows (Make sure PATH and PYTHONPATH are updated accordingly):
 * [git](http://git-scm.com/downloads)
 * [python 2.7](http://www.python.org/getit/)
 * [cython 0.19.2](http://docs.cython.org/src/quickstart/install.html)
@@ -20,7 +20,7 @@ Python 2.7, NumPy, Cython and BedTools are required for this package to run.  As
 * [bigWigToBedGraph for BigWig support](http://hgdownload.cse.ucsc.edu/admin/exe/)
 * [bigBedToBed for BigBed support](http://hgdownload.cse.ucsc.edu/admin/exe/)
 
-The PIATEA teHmm package can then be downloaded and installed as follows:
+The PIATEA teHmm package can then be downloaded and compiled as follows:
 
      git clone https://github.com/glennhickey/teHmm.git
      cd teHmm
@@ -50,7 +50,9 @@ These are the steps required to run PIATEA.  Each one is explained in more detai
 5. Trained HMM used to compute Viterbi (or MPP) prediction across whole genome (or arbitrary subselection), along with posterior probabilities.
 6. Guide track is used to label HMM states (optional)
 7. Accuracy computed wrt to other annotation (optional)
-8. Heatmap and network diagram generated to visualize model (optional). 
+8. Heatmap and network diagram generated to visualize model (optional).
+
+The set of commands used to generate the results in the paper is given at the end. 
 
 Logging
 -
@@ -60,12 +62,12 @@ By default, most scripts will not display anything to the screen.  Virtually all
 Temporary Files
 -
 
-Some temporary files and directories can will be created by many of the programs in this package.  These will always be created in the directory from which the executable is run.  These files can be left on the drive in the event of an early termination, so it it wise to  check for them periodicalyl and delete them (as they can be quite large).  They will generally contain tempXXXXX (where the Xs signify random alhpa-numeric characters).  The temporary files will be listed in the logging output if set to debug (--logDebug).   
+Some temporary files and directories can will be created by many of the programs in this package.  These will always be created in the directory from which the executable is run.  These files can be left on the drive in the event of an early termination, so it it wise to  check for them periodically and delete them (as they can be quite large).  They will generally contain tempXXXXX (where the Xs signify random alhpa-numeric characters).  The temporary files will be listed in the logging output if set to debug (--logDebug).   
 
 Annotation Tracks
 -----
 
-Genome annotation tracks are specified in files in [BED](http://genome.ucsc.edu/FAQ/FAQformat.html#format1),  [BigBed](http://genome.ucsc.edu/FAQ/FAQformat.html#format1.5), ([BigWig](http://genome.ucsc.edu/goldenPath/help/bigWig.html) or [Fasta](http://en.wikipedia.org/wiki/FASTA_format) format.  Each track should be in a single file.  In general, BED files should be sorted and not contain any overlapping intervals (as each track is collapsed to one dimension).  A script is included to do both these operations:
+Genome annotation tracks are specified in files in [BED](http://genome.ucsc.edu/FAQ/FAQformat.html#format1),  [BigBed](http://genome.ucsc.edu/FAQ/FAQformat.html#format1.5), [BigWig](http://genome.ucsc.edu/goldenPath/help/bigWig.html) or [Fasta](http://en.wikipedia.org/wiki/FASTA_format) format.  Each track should be in a single file.  In general, BED files should be sorted and not contain any overlapping intervals (as each track is collapsed to one dimension).  A script is included to do both these operations:
 
      removeBedOverlaps.py rawBed.bed > cleanBed.bed
 
@@ -82,7 +84,7 @@ Chromosome (or contig) names must be consistent within all the track files.  Tra
 The track list file contains a single *teModelConfig* element which in turn contains a list of *track* elements.  Each *track* element must have a (unique) *name* attribute and a *path* attribute.  The *path* is either absolute or relative to where ever you launch the stript from. Optional attributes are as follows:
 * *distribution* which can take the following values: 
   * *binary*, where bed intervals specify 1 and all other regions are 0.  Useful if it doesn't make sense to have a unique HMM symbol for each BED id (which would be behaviour of Multinomial).
-  * *multnomial* (**DEFAULT**) where the bed value is read from the *name* column of the bed file. Regions outside bed intervals are assumed to have a default value
+  * *multinomial* (**DEFAULT**) where the bed value is read from the *name* column of the bed file. Regions outside bed intervals are assumed to have a default value
   * *sparse_multinomial* same as above except regions outside of intervals are considered unobserved.
   * *gaussian* where each bed value (read as in *multinomial*) must be numeric, and is assumed to be drawn from a Gaussian distribution.  A numeric *default* value must be specified.
   * *mask* track is treated as a masking track where all intervals it covers are completely ignored by the HMM. 
@@ -127,18 +129,20 @@ Segmenting the Genome
 
 By default, the HMM emits a vector of symbols (one symbol per track) for each *base* of the target genomic region.   Performance can be substantially increased, at least in theory, by pre-segmenting the data so that states are emitted for multi-base blocks.   These blocks should contain a minimal amount of variation across all tracks within them.  A tool, `segmentTracks.py`,  is included to use a simple heuristic to generate a segmentation from some input tracks.  The generated segmentation is itself a BED interval (supporting either fixed or variable length segments), which can be passed as an optional parameter to all HMM tools.  The variable-length segmentation uses a very simple smoothing function to assign segments based on track variation, and the HMM algorithms use a heuristic correction to weight the segments by their lengths.  
 
-HMM algorithms are generally (linear) functions of *N*, the number of observations.   Using a segment size with average length 100 will therefore result in a 100-fold speed-up for these computations.  Segmentation can also play an important role addressing convergence and numeric stability problems in training.   An example of variable length segmentation, followed by fixed length semgentation:
+HMM algorithms are generally (linear) functions of *N*, the number of observations.   Using a segment size with average length 100 will therefore result in a 100-fold speed-up for these computations.  Segmentation can also play an important role addressing convergence and numeric stability problems in training.  The HMM will consider a single value for each segment for each track.  In the case of numeric tracks (Gaussian distribution), this will be the mean value, otherwise it will be the mode.  An example of variable length segmentation, followed by fixed length semgentation:
 
 	segmentTracks.py tracks.xml alyrata.bed variable_segments.bed 
     segmentTracks.py tracks.xml alyrata.bed fixed100_segments.bed --thresh 999999 --maxLen100
 
-Note that in the results in the paper, we use a fixed length segmentation for training, and a variable length segmentation for evaluation.  This is something that was arrived at by trial and error, but seemed to perform the best on our tests.  The exact parameters will be presented in the complete example at the end. 
+To activate segmentation, make sure to use the `--segment` option of all HMM tools. 
+
+In the results in the paper, we use a fixed length segmentation for training, and a variable length segmentation for evaluation.  This is something that was arrived at by trial and error, but seemed to perform the best on our tests.  The exact parameters will be presented in the complete example at the end. 
 
 Training
 -----
 The TE model is created by training on given track data using the `teHmmTrain.py` script. Two training modes are supported:
 
-* **EM (default)** Model is trained directly from the track data using expectation-maximization (Baum-Welch algorithm for HMMs).
+* **Unsupervised/EM (default)** Model is trained directly from the track data using expectation-maximization (Baum-Welch algorithm for HMMs).
 * **supervised** (`--supervised` option) Model is trained on given states in a bed file which represents a known, true annotation. 
 
 ### Unsupervised (EM) Training
@@ -228,7 +232,7 @@ Because the outgoing probabilities of each state above sum to 1, all other trans
 	Outside  ltrFinder  LTR|left|LTR_TE  0.001
 	Outside  ltrFinder   inside|-|LTR_TE 0.001
 
-This is essentially saying that we start training under the assumption that the ltrFinder and chaux tracks have 90% sensitivity and 99.9% specificity.  It is important to note that the Baum-Welch algorithm is still free to change any of these probabilities in any direction.   Note: the script `fitStateNames.py` can be used to rename the OtherX states in the model's prediction to more meaningul names by comparing them to a different annotation.
+This is essentially saying that we start training under the assumption that the ltrFinder and chaux tracks have 90% sensitivity and 99.9% specificity.  It is important to note that the Baum-Welch algorithm is still free to change any of these probabilities in any direction.   The script `fitStateNames.py` can be used to rename the OtherX states in the model's prediction to more meaningul names by comparing them to a different annotation.
 
 *Note* Tracks whose distribution is set to gaussian require a different format when specifying emission parameters.  Ex
 
@@ -263,13 +267,13 @@ Suppose we have a file, `ltrfinder.bed`, that was produced by LTR_FINDER that we
 
     cleanLtrFinderID.py ltrfinder_no.bed ltrfinder_clean.bed
 
-Note that this script (see the comments in the script file for more details) will also produce a series of other outputs with, for example, symmetric termini, TSDs removed, etc. These bed files are suitable for training. 
+This script (see the comments in the script file for more details) will also produce a series of other outputs with, for example, symmetric termini, TSDs removed, etc. These bed files are suitable for training. 
 
 3) Make sure that regions between LTR-TEs get a state:
 
      addBedGaps.py all.bed ltrfinder_clean.bed > ltrfinder_all.bed
 
-Note that here all.bed is a BED file **(with the same number of columns as ltrfinder_no.bed)** containing a single interval for each chromosome or scaffold in the file.  This file is only used to know the size of the genome and only the coordinates are used.  An example for Alyrata is
+Here all.bed is a BED file **(with the same number of columns as ltrfinder_no.bed)** containing a single interval for each chromosome or scaffold in the file.  This file is only used to know the size of the genome and only the coordinates are used.  An example for Alyrata is
 
      scaffold_1	0	33132539	0		  0		 +
      scaffold_2	0	19320864	0		  0		 +	
@@ -351,7 +355,7 @@ Divide the genome into 100kb chunks, and randomly draw 350 chunks for training
     chunkBedRegions.py alyrata.bed 100000 > alyrata_chunks.bed
 	sampleBedChunks.py alyrata_chunks.bed 35000000 | sortBed > alyrata_sample.bed
 	
-Create a variable length segmentation of the training region and a fixed length segmentation of the entire genome.  Note the `--delMask 500` parameter: it specifies how the masking tracks are used.  In this case intervals in the masking tracks < 5000b are ignored and positions on either side of such intervals are considered contiguous.  Mask intervals >= 5000b are cut out, with positions on either side forming endpoints of new scaffolds.    
+Create a variable length segmentation of the training region and a fixed length segmentation of the entire genome.  Note the `--delMask 5000` parameter: it specifies how the masking tracks are used.  In this case intervals in the masking tracks < 5000b are ignored and positions on either side of such intervals are considered contiguous.  Mask intervals >= 5000b are cut out, with positions on either side forming endpoints of new scaffolds.    
 
 	segmentTracks.py segTracks.xml alyrata_sample.bed training_segments.bed --thresh 99999 --delMask 5000 --maxLen 100
 	segmentTracks.py segTracks.xml alyrata.bed eval_segments.bed --thresh 0  --delMask 5000 --stats segStats.txt --chrom alyrata.bed --proc 10
@@ -454,7 +458,7 @@ In general, running any executable with `--help` will print a brief description 
 Credits
 -----
 
-This project was developed by Glenn Hickey in [Professor Mathieu Blanchette's](http://www.mcb.mcgill.ca/~blanchem/) lab under his supervision.  Douglas Hoen, Adrian Platts and Professor Thomas Bureau at McGill contributed valuable input and discussions, and provided much of the input tracks for the *A.Lyrata* genome.
+This project was developed by Glenn Hickey in [Professor Mathieu Blanchette's](http://www.mcb.mcgill.ca/~blanchem/) lab under his supervision.  Douglas Hoen, Adrian Platts and Professor Thomas Bureau at McGill contributed valuable input and discussions, and provided many of the input tracks.
 
 Copyright
 -----
